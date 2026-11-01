@@ -37,7 +37,12 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 - [x] Free the device: quitting the Loupedeck app also stops `LogiPluginService`. Roll back: `launchctl kickstart gui/$(id -u)/com.logi.pluginservice.launch` and open Loupedeck
 - [ ] Disable Loupedeck autostart once Companion is the daily driver: `launchctl disable gui/$(id -u)/com.logi.pluginservice.launch` (undo: `enable`)
 - [x] Surfaces → Add Surface Integration → Loupedeck v1.1.1 (store module; split-strips isn't in the store). RSC detected as `loupedeck:<serial>`
-- [ ] Check all 12 tiles, 6 knobs (turn + press), 8 buttons + LEDs
+- [x] Input reaches Companion: tiles, knob press, bottom buttons show up in the debug log as `Button <page>/<row>/<col> pressed`
+  - Raw device events checked with `tools/sniff.py` (quit Companion first): press `0x00 <id> 00|01`, rotate `0x01 <id> ±1`, touch `0x4d`/`0x6d`.
+    IDs: buttons `0x07..0x0e`, left knobs `0x01..0x03`, right knobs `0x04..0x06`
+  - Firmware 0.2.14 echoes the handshake back as `0x73` frames; Companion logs them as "unhandled incoming message", harmless
+  - "No reaction" on knobs / buttons / strips = nothing configured there: no actions, LED = black background, no buttons in strip columns. Page nav doesn't wrap past the last page
+- [ ] Check knob rotation (needs a button with rotary actions enabled), strips, button LEDs (background colour)
 - [ ] Try the split-strips surface; keep whichever maps better
 - [ ] Autostart Companion at login, headless (no window)
 
