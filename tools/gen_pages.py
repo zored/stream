@@ -169,6 +169,7 @@ def call_led(var):
     return button([canvas(), box("box0", by_state(var, {
         "on": f"$(internal:time_unix) % 4 == 0 ? {0x003300} : {0x00FF00}",
         "off": 0x400000,
+        "pending": 0xFFB000,
         "unknown": f"$(internal:time_unix) % 2 == 0 ? {0xFFB000} : 0",
     }))], **call_actions(var))
 
@@ -177,11 +178,27 @@ def call_tile(var, name):
     state = f"$(custom:{var})"
     return button([
         canvas(),
-        box("box0", by_state(var, {"on": 0x1B5E20, "off": 0xB3261E, "unknown": 0x8A6100})),
+        box("box0", by_state(var, {"on": 0x1B5E20, "off": 0xB3261E, "pending": 0x8A6100, "unknown": 0x8A6100})),
         image("on", icon(name), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
         image("off", icon(f"{name}-off"), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
-        text("unknown", "?", fontsize=60, opacity=expr(f'{state} == "unknown" ? 100 : 0')),
+        text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60,
+             opacity=expr(f'{state} == "unknown" || {state} == "pending" ? 100 : 0')),
     ], **call_actions(var))
+
+
+IN_CALL = '$(custom:call_mic) != "none"'
+
+
+def hangup_led():
+    return button([canvas(), box("box0", expr(f"{IN_CALL} ? {0xFFFFFF} : 0"))], down=vkcall("/call/end"))
+
+
+def hangup_tile():
+    return button([
+        canvas(),
+        box("box0", 0x000000),
+        image("icon", icon("hangup"), opacity=expr(f"{IN_CALL} ? 100 : 0"), x=v(15), y=v(15), width=v(70), height=v(70)),
+    ], down=vkcall("/call/end"))
 
 
 def clock():
@@ -213,9 +230,11 @@ def media_page():
         (0, 2): play_pause(),
         (2, 2): call_tile("call_mic", "mic"),
         (2, 3): call_tile("call_cam", "cam"),
+        (2, 4): hangup_tile(),
         (2, 5): clock(),
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),
+        (3, 3): hangup_led(),
     }
 
 

@@ -8,12 +8,14 @@ macOS only. Verified on VK WorkSpace Beta 27.1.0.144826 (calls SDK 26.2.0), macO
 |---|---|---|
 | button 2 (`3/1`) | tap = toggle mic; hold ≥ 300 ms = push-to-talk (mic was on → mute while held) | LED |
 | button 3 (`3/2`) | toggle camera | LED |
+| button 4 (`3/3`), tile `2/4` | hang up | white LED / red icon on black while in a call |
 | tile `2/2` / `2/3` | same as button 2 / 3 | mic / camera icon |
 
 | State | LED | Tile |
 |---|---|---|
 | `on` | green, dims for 1 s every 4 s | dark green, white icon |
 | `off` | dim red | red, crossed icon |
+| `pending` (asked, not confirmed yet: camera takes seconds) | yellow | amber, `…` |
 | `unknown` | yellow, blinks every 2 s | amber, `?` |
 | `none` (no call, client not running) | off | black |
 
@@ -36,7 +38,9 @@ that the main app talks to; `vkcall` is just another client.
   `MediaState{1 microOn, 2 cameraOn, 3 screencastOn}`; `8 ended`. First message is a snapshot; mouse clicks in the client
   arrive within a few ms. Several subscribers are fine: the client's own subscription keeps working.
 - `ChangeMyMedia(ChangeMyMediaRequest{hdr, 2 microOn, 3 cameraOn})` → `GenericResponse{2 accepted, 3 errorCode}`. Sets **both**
-  flags, so send the current value of the one you don't change. Camera start takes ~1 s.
+  flags, so send the current value of the one you don't change. Camera start takes ~1–3 s.
+- `EndCall(EndCallRequest{hdr.callId})` → `GenericResponse`. The call is addressed by `hdr.callId` or by `2 origReqId` (the client's
+  call request number, `CallEvent.2`), not both: both → `valid: 0`, `errorCode 400`.
 
 Dead ends (verified):
 
@@ -52,12 +56,13 @@ Dead ends (verified):
 `tools/vkcall/main.go`, `make vkcall` → `~/.local/bin/vkcall` + LaunchAgent `com.zored.stream.vkcall`.
 Log: `~/Library/Logs/zored-stream/vkcall.log`. `make vkcall-uninstall` removes it.
 
-- HTTP on `127.0.0.1:47114`: `POST /mic/down`, `/mic/up`, `/cam/down`; `409` when there is no call with a known state.
+- HTTP on `127.0.0.1:47114`: `POST /mic/down`, `/mic/up`, `/cam/down`, `/call/end`; `409` when there is no call with a known state.
   Push-to-talk timing lives in the daemon (down/up arrival times).
 - Finds the process with `sysctl` (`kern.proc.all`, `kern.procargs2`) every 2 s while disconnected; while connected everything
   is stream-driven, no polling. Variables are pushed on change and re-sent every 10 s (heals a Companion restart).
 - A call that appears while the daemon runs is muted (mic and camera) if the client joined it with either on.
-- `unknown`: stream error while the client runs, unparsable message, rejected `ChangeMyMedia`, or no confirming event within 2 s
+- `pending`: a flag asked to change until the client's event confirms it.
+- `unknown`: stream error while the client runs, unparsable message, rejected `ChangeMyMedia`, or no confirming event within 5 s
   (then it resubscribes and takes the snapshot).
 - A client update can rename or renumber fields; the daemon then logs the error and the buttons go yellow.
 

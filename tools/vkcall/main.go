@@ -25,7 +25,7 @@ const (
 	callAgent     = "/com.vk.calls.sdk.v1.CallAgent/"
 	processPrefix = "vkws-call-serv"
 	holdMin       = 300 * time.Millisecond
-	confirmIn     = 2 * time.Second
+	confirmIn     = 5 * time.Second
 	rescanEvery   = 2 * time.Second
 	resendEvery   = 10 * time.Second
 )
@@ -35,6 +35,7 @@ const (
 	off     = "off"
 	none    = "none"
 	unknown = "unknown"
+	pending = "pending"
 )
 
 var errNoCall = errors.New("no call with known media state")
@@ -213,10 +214,23 @@ func (d *daemon) setMedia(callID string, mic, cam bool) {
 	if d.callID != callID {
 		return
 	}
-	if d.confirm != nil && d.want == [2]bool{mic, cam} {
+	actual, states := [2]bool{mic, cam}, [2]string{onOff(mic), onOff(cam)}
+	if d.confirm != nil && d.want == actual {
 		d.stopConfirmLocked()
 	}
-	d.setLocked(onOff(mic), onOff(cam))
+	if d.confirm != nil {
+		for i := range states {
+			if d.want[i] != actual[i] {
+				states[i] = pending
+			}
+		}
+	}
+	d.setLocked(states[0], states[1])
+}
+
+func (d *daemon) isOn(i int) bool {
+	state := [2]string{d.mic, d.cam}[i]
+	return state == on || state == pending && d.want[i]
 }
 
 func (d *daemon) stopConfirmLocked() {
@@ -390,7 +404,7 @@ func (d *daemon) changeLocked(next func(mic, cam bool) (bool, bool)) error {
 	if d.conn == nil || d.callID == "" || !known(d.mic) || !known(d.cam) {
 		return errNoCall
 	}
-	mic, cam := next(d.mic == on, d.cam == on)
+	mic, cam := next(d.isOn(0), d.isOn(1))
 	req := appendBool(appendBool(header(d.callID), 2, mic), 3, cam)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -404,15 +418,42 @@ func (d *daemon) changeLocked(next func(mic, cam bool) (bool, bool)) error {
 		d.setLocked(unknown, unknown)
 		return fmt.Errorf("ChangeMyMedia rejected: %x", resp)
 	}
-	if d.want = [2]bool{mic, cam}; d.want == [2]bool{d.mic == on, d.cam == on} {
-		return nil
+	d.want = [2]bool{mic, cam}
+	states := [2]string{d.mic, d.cam}
+	for i, state := range states {
+		if state != onOff(d.want[i]) {
+			states[i] = pending
+		}
 	}
 	d.stopConfirmLocked()
-	d.confirm = time.AfterFunc(confirmIn, d.confirmTimeout)
+	if states != [2]string{d.mic, d.cam} {
+		d.confirm = time.AfterFunc(confirmIn, d.confirmTimeout)
+	}
+	d.setLocked(states[0], states[1])
 	return nil
 }
 
-func known(s string) bool { return s == on || s == off }
+func known(s string) bool { return s == on || s == off || s == pending }
+
+func (d *daemon) hangUp() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.conn == nil || d.callID == "" {
+		return errNoCall
+	}
+	req := header(d.callID)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	var resp []byte
+	if err := d.conn.Invoke(ctx, callAgent+"EndCall", &req, &resp); err != nil {
+		return fmt.Errorf("EndCall: %w", err)
+	}
+	if r, err := parse(resp); err != nil || !r.flag(2) {
+		return fmt.Errorf("EndCall rejected: %x", resp)
+	}
+	log.Printf("call %q: hung up", d.callID)
+	return nil
+}
 
 func (d *daemon) confirmTimeout() {
 	d.mu.Lock()
@@ -434,7 +475,7 @@ func (d *daemon) micDown() error {
 	if !known(d.mic) {
 		return errNoCall
 	}
-	d.pressed, d.micWas = time.Now(), d.mic == on
+	d.pressed, d.micWas = time.Now(), d.isOn(0)
 	return d.changeLocked(func(mic, cam bool) (bool, bool) { return !d.micWas, cam })
 }
 
@@ -514,5 +555,6 @@ func main() {
 	handle(mux, "/mic/down", d.micDown)
 	handle(mux, "/mic/up", d.micUp)
 	handle(mux, "/cam/down", d.camDown)
+	handle(mux, "/call/end", d.hangUp)
 	log.Fatal(http.ListenAndServe(listenAddr, mux))
 }

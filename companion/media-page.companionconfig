@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "brfkm_MUo4mUmwwWWq5Wt",
+  "id": "2lZ9rQOque2qDf7cmoH-d",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -2767,7 +2767,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_mic) == \"on\" ? (1793568) : ($(custom:call_mic) == \"off\" ? (11740702) : ($(custom:call_mic) == \"unknown\" ? (9068800) : (0)))",
+         "value": "$(custom:call_mic) == \"on\" ? (1793568) : ($(custom:call_mic) == \"off\" ? (11740702) : ($(custom:call_mic) == \"pending\" ? (9068800) : ($(custom:call_mic) == \"unknown\" ? (9068800) : (0))))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -2915,7 +2915,7 @@
          "isExpression": false
         },
         "opacity": {
-         "value": "$(custom:call_mic) == \"unknown\" ? 100 : 0",
+         "value": "$(custom:call_mic) == \"unknown\" || $(custom:call_mic) == \"pending\" ? 100 : 0",
          "isExpression": true
         },
         "x": {
@@ -2939,8 +2939,8 @@
          "isExpression": false
         },
         "text": {
-         "value": "?",
-         "isExpression": false
+         "value": "$(custom:call_mic) == \"pending\" ? \"\u2026\" : \"?\"",
+         "isExpression": true
         },
         "color": {
          "value": 16777215,
@@ -3109,7 +3109,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_cam) == \"on\" ? (1793568) : ($(custom:call_cam) == \"off\" ? (11740702) : ($(custom:call_cam) == \"unknown\" ? (9068800) : (0)))",
+         "value": "$(custom:call_cam) == \"on\" ? (1793568) : ($(custom:call_cam) == \"off\" ? (11740702) : ($(custom:call_cam) == \"pending\" ? (9068800) : ($(custom:call_cam) == \"unknown\" ? (9068800) : (0))))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -3257,7 +3257,7 @@
          "isExpression": false
         },
         "opacity": {
-         "value": "$(custom:call_cam) == \"unknown\" ? 100 : 0",
+         "value": "$(custom:call_cam) == \"unknown\" || $(custom:call_cam) == \"pending\" ? 100 : 0",
          "isExpression": true
         },
         "x": {
@@ -3281,8 +3281,8 @@
          "isExpression": false
         },
         "text": {
-         "value": "?",
-         "isExpression": false
+         "value": "$(custom:call_cam) == \"pending\" ? \"\u2026\" : \"?\"",
+         "isExpression": true
         },
         "color": {
          "value": 16777215,
@@ -3444,6 +3444,61 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "icon",
+        "name": "icon",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_mic) != \"none\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 15,
+         "isExpression": false
+        },
+        "y": {
+         "value": 15,
+         "isExpression": false
+        },
+        "width": {
+         "value": 70,
+         "isExpression": false
+        },
+        "height": {
+         "value": 70,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0QzMkYyRiIgZD0iTTI0IDE1Yy03LjYgMC0xNC42IDIuNS0xOSA2LjZhMi42IDIuNiAwIDAgMC0uMSAzLjdsNC4zIDQuM2EyLjYgMi42IDAgMCAwIDMuMy4zbDQuNS0zLjFhMi42IDIuNiAwIDAgMCAxLjEtMi4xdi0zLjVjMS45LS42IDMuOS0uOSA1LjktLjlzNCAuMyA1LjkuOXYzLjVjMCAuOC40IDEuNiAxLjEgMi4xbDQuNSAzLjFhMi42IDIuNiAwIDAgMCAzLjMtLjNsNC4zLTQuM2EyLjYgMi42IDAgMCAwLS4xLTMuN0MzOC42IDE3LjUgMzEuNiAxNSAyNCAxNXoiLz48L3N2Zz4K",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -3451,7 +3506,33 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
+        "down": [
+         {
+          "type": "action",
+          "id": "8_Oz4CMoARGhR_gE0jKei",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/call/end",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
         "up": []
        },
        "options": {
@@ -3999,7 +4080,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_mic) == \"off\" ? (4194304) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0)))",
+         "value": "$(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_mic) == \"off\" ? (4194304) : ($(custom:call_mic) == \"pending\" ? (16756736) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0))))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -4028,7 +4109,7 @@
         "down": [
          {
           "type": "action",
-          "id": "8_Oz4CMoARGhR_gE0jKei",
+          "id": "NEhc6wXoN3o_aiQS9jWA8",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4055,7 +4136,7 @@
         "up": [
          {
           "type": "action",
-          "id": "NEhc6wXoN3o_aiQS9jWA8",
+          "id": "mMrZcky5FM1UeeGfia7qg",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4149,7 +4230,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_cam) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_cam) == \"off\" ? (4194304) : ($(custom:call_cam) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0)))",
+         "value": "$(custom:call_cam) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_cam) == \"off\" ? (4194304) : ($(custom:call_cam) == \"pending\" ? (16756736) : ($(custom:call_cam) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0))))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -4178,7 +4259,7 @@
         "down": [
          {
           "type": "action",
-          "id": "mMrZcky5FM1UeeGfia7qg",
+          "id": "brfkm_MUo4mUmwwWWq5Wt",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4273,8 +4354,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:call_mic) != \"none\" ? 16777215 : 0",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -4299,7 +4380,33 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
+        "down": [
+         {
+          "type": "action",
+          "id": "Qja8eYVJtNuXe6fpv6QRa",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/call/end",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
         "up": []
        },
        "options": {
