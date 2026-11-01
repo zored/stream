@@ -63,7 +63,7 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 - [x] Volume on the left touch strip while turning + ~1 s: `mediakey` prints the level → `exec` target variable `custom:volume`,
   `custom:volume_until` = `time_unix + 1`, strip layers use expressions (`enabled`, `y`, `height`)
 - [x] Clock tile: `$(internal:time_hm)` + `$(internal:date_d).$(internal:date_m)`
-- [ ] Check play/pause / next / prev with browser audio after the rewrite
+- [x] Play / pause / next / prev verified with browser audio (Chrome)
 - [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)
