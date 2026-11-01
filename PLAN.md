@@ -27,7 +27,10 @@ Facts:
   - cols 2–5, rows 0–2: the 12 touch tiles (80×80 px)
   - col 6: right touch strip · col 7, rows 0–2: right knobs
   - row 3, cols 0–7: the 8 RGB buttons (LED = button background colour)
-- Companion 5.1 buttons are layered: the legacy `POST /api/location/<p>/<r>/<c>/style` returns 200 but doesn't change them. Edit buttons in the UI, or via import
+- Companion 5.1 buttons are layered. The legacy `POST /api/location/<p>/<r>/<c>/style` only works on buttons with `options.canModifyStyleInApis: true`
+- REST API v2 (`/api/v2`, bearer key, Settings → Protocols) covers only connections and surfaces in 5.1.1 — no buttons
+- Config as code: `GET /int/export/page/<n>?format=json|yaml` (no auth) exports a page; import is UI-only (Import / Export). Format: `version: 12`, `page.controls[row][col]`
+- Debug log: `~/Library/Application Support/companion/logs/`; internal action `custom_log` writes to it
 
 Known weak spots to check early: keystrokes on macOS need a helper; per-app page switching may need a module or script.
 
@@ -42,7 +45,9 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
     IDs: buttons `0x07..0x0e`, left knobs `0x01..0x03`, right knobs `0x04..0x06`
   - Firmware 0.2.14 echoes the handshake back as `0x73` frames; Companion logs them as "unhandled incoming message", harmless
   - "No reaction" on knobs / buttons / strips = nothing configured there: no actions, LED = black background, no buttons in strip columns. Page nav doesn't wrap past the last page
-- [ ] Check knob rotation (needs a button with rotary actions enabled), strips, button LEDs (background colour)
+- [x] Full input check with a generated test page (`tools/gen_test_page.py` → `companion/test-page.companionconfig`, import via Import / Export):
+  all 12 tiles, 8 buttons, 6 knobs (press + left + right), 6 strip cells log `TEST <control> <event>`
+- [ ] Button LEDs show the background colours of the test page
 - [ ] Try the split-strips surface; keep whichever maps better
 - [ ] Autostart Companion at login, headless (no window)
 
