@@ -9,7 +9,7 @@ RAINBOW = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0x8000FF,
 MEDIAKEY = "$HOME/.local/bin/mediakey"
 STREAMD = "http://127.0.0.1:47113"
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_marquee", "np_track")}
+    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 rng = random.Random()
@@ -128,8 +128,7 @@ def play_pause():
     return button([
         canvas(),
         box("box0", 0x000000),
-        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), height=v(45)),
-        text("title", "$(custom:np_marquee)", fontsize=44, x=v(-4), width=v(108), y=v(45), height=v(55)),
+        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), fontsize=110),
     ], down=[mediakey("play")])
 
 

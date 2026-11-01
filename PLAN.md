@@ -57,7 +57,7 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 - [ ] Shell / open app / open URL via internal actions
 - [x] Media page MEDIA (page 1): black tiles, no Companion top bar / status icons (`decoration`, `showStatusIcons: none`), every empty cell is an explicit black button
   - left knob 1 = volume (press = mute) → `streamd`; left knob 2 = tracks (press = play/pause) → `mediakey`
-  - play tile: ⏸/▶ from the OS playback state + scrolling track name (`np_marquee`); B2 LED bright green while playing
+  - play tile: big ⏸/▶ from the OS playback state; B2 LED bright green while playing
   - left touch strip: "artist — title" rotated 90° across all 3 cells (one 270×60 text layer, offset per 60×90 cell, clipped);
     while the volume changes it fades into the volume bar. Swiping the strip changes the volume (needs `make patch-module`)
   - clock tile bottom-right
@@ -70,12 +70,14 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
   - now playing every 0.5 s → `custom:np_playing`, `np_title`, `np_artist`. Since macOS 15.4 MediaRemote reads return nothing
     for third-party processes; running inside Apple-signed `/usr/bin/perl` (DynaLoader) gets around it
 - [x] LaunchAgent installed (`make streamd`; restart = `launchctl kickstart -k`, a bootout + bootstrap pair races)
-- [ ] `make patch-module` + restart Companion: patches the installed Loupedeck surface module (idempotent, fails if the code changed)
-  - haptic tap on button / tile press (driver has `vibrate()`, the module never calls it)
+- [x] `make patch-module` + restart Companion: patches the installed Loupedeck surface module (idempotent, fails if the code changed)
+  - haptic tap on button / tile press (driver has `vibrate()`, the module never calls it). Pattern: `make patch-module HAPTIC=0x33`
+    (default `SHORT_LOWER`; list in foxxyz/loupedeck `constants.js`: `0x01` short, `0x41` lowest, …); re-running updates it
   - left strip swipe → `streamd /volume/drag?dy=` (buttons mode doesn't expose continuous touch position, slider mode can't draw text)
   - module updates wipe the patch → re-run; upstream PR to companion-surface-loupedeck is the proper fix
 - Companion's custom-variable HTTP API rejects an empty text body ("No value"); `streamd` sends JSON strings
-- `streamd` idle CPU ~1.7 %: animation timer runs only while the volume changes; marquee = one tiny update per 0.3 s
+- `streamd` idle CPU ~1.7 %: animation timer runs only while the volume changes
+- [ ] Like on long press: MediaRemote has `LikeTrack` (21), but only players implementing it react (Music.app); Chrome's Media Session has no like action → needs a per-service way
 - [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)

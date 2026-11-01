@@ -4,6 +4,7 @@ SHARE ?= $(HOME)/.local/share/zored-stream
 AGENT = com.zored.stream.streamd
 AGENT_PLIST = $(HOME)/Library/LaunchAgents/$(AGENT).plist
 DOMAIN = gui/$(shell id -u)
+HAPTIC ?= 0x33
 
 .PHONY: mediakey streamd streamd-uninstall patch-module pages deploy
 
@@ -25,7 +26,7 @@ streamd-uninstall:
 	rm -f $(AGENT_PLIST)
 
 patch-module:
-	python3 -I tools/patch_module.py
+	HAPTIC=$(HAPTIC) python3 -I tools/patch_module.py
 
 pages:
 	python3 -I tools/gen_pages.py companion

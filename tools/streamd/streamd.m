@@ -13,8 +13,6 @@ static const double AnimationHz = 30;
 static const double Easing = 0.3;
 static const double FadeIn = 0.6;
 static const double FadeOut = 0.25;
-static const NSUInteger MarqueeWidth = 6;
-static const double MarqueeSeconds = 0.3;
 static const double DragPercentPerPixel = 0.4;
 
 typedef void (*GetNowPlayingInfo)(dispatch_queue_t, void (^)(CFDictionaryRef));
@@ -29,8 +27,6 @@ static int volume = -1;
 static bool muted;
 static double shown = -1;
 static double alpha;
-static NSString *track = @"";
-static NSUInteger marqueeOffset;
 static dispatch_source_t animation;
 static bool animating;
 static double dragRemainder;
@@ -186,14 +182,6 @@ static void animate(void) {
     }
 }
 
-static void scrollTrack(void) {
-    if (track.length <= MarqueeWidth) return setVariable(@"np_marquee", track);
-    NSString *loop = [track stringByAppendingString:@"   "];
-    NSString *doubled = [loop stringByAppendingString:loop];
-    marqueeOffset = (marqueeOffset + 1) % loop.length;
-    setVariable(@"np_marquee", [doubled substringWithRange:NSMakeRange(marqueeOffset, MarqueeWidth)]);
-}
-
 static NSString *stringValue(CFDictionaryRef info, NSString *key) {
     id value = info ? ((__bridge NSDictionary *)info)[key] : nil;
     return [value isKindOfClass:NSString.class] ? value : @"";
@@ -205,12 +193,7 @@ static void pollNowPlaying(void) {
         NSString *artist = stringValue(info, @"kMRMediaRemoteNowPlayingInfoArtist");
         setVariable(@"np_title", title);
         setVariable(@"np_artist", artist);
-        NSString *current = artist.length && title.length ? [NSString stringWithFormat:@"%@ — %@", artist, title] : title;
-        if (![current isEqualToString:track]) {
-            track = current;
-            marqueeOffset = 0;
-        }
-        setVariable(@"np_track", track);
+        setVariable(@"np_track", artist.length && title.length ? [NSString stringWithFormat:@"%@ — %@", artist, title] : title);
     });
     getIsPlaying(dispatch_get_main_queue(), ^(Boolean playing) {
         setVariable(@"np_playing", playing ? @"1" : @"0");
@@ -288,7 +271,6 @@ void streamd_main(void *perl, void *cv) {
     listenHTTP();
     every(0.25, ^{ pollAudio(); });
     every(0.5, ^{ pollNowPlaying(); });
-    every(MarqueeSeconds, ^{ scrollTrack(); });
     every(10, ^{
         [sent removeAllObjects];
         pushVolume();

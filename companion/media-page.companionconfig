@@ -619,7 +619,7 @@
          "isExpression": false
         },
         "height": {
-         "value": 45,
+         "value": 100,
          "isExpression": false
         },
         "rotation": {
@@ -643,89 +643,7 @@
          "isExpression": false
         },
         "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
-         "isExpression": false
-        }
-       },
-       {
-        "id": "title",
-        "name": "title",
-        "usage": "auto",
-        "type": "text",
-        "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": 100,
-         "isExpression": false
-        },
-        "x": {
-         "value": -4,
-         "isExpression": false
-        },
-        "y": {
-         "value": 45,
-         "isExpression": false
-        },
-        "width": {
-         "value": 108,
-         "isExpression": false
-        },
-        "height": {
-         "value": 55,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "text": {
-         "value": "$(custom:np_marquee)",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
-         "isExpression": false
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fontsize": {
-         "value": 44,
+         "value": 110,
          "isExpression": false
         },
         "fontsizeAllowShrink": {

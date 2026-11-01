@@ -1,8 +1,9 @@
 import glob
 import os
+import re
 import sys
 
-HAPTIC = 0x01
+HAPTIC = int(os.environ.get("HAPTIC", "0x33"), 0)
 MARKER = "/*zored-stream*/"
 STREAMD = "http://127.0.0.1:47113"
 MODULES = os.path.expanduser("~/Library/Application Support/companion/surfaces/loupedeck-*/main.js")
@@ -31,7 +32,10 @@ if not paths:
 for path in paths:
     source = open(path, encoding="utf-8").read()
     if MARKER in source:
-        print(f"already patched: {path}")
+        updated = re.sub(r"(/\*zored-stream\*/this\.#e\.vibrate\()(\d+)", rf"\g<1>{HAPTIC}", source)
+        if updated != source:
+            open(path, "w", encoding="utf-8").write(updated)
+        print(f"already patched, haptic {HAPTIC:#04x}: {path}")
         continue
     for old, new in PATCHES:
         if source.count(old) != 1:
