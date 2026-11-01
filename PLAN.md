@@ -29,8 +29,34 @@ Facts live in `docs/`; this file tracks status.
 - [ ] Keystrokes on macOS (candidates: `osascript` via `exec`, or post key events like `mediakey`)
 - [ ] IDE / terminal / calls pages; page switching by frontmost app (`streamd` can watch `NSWorkspace` and push a variable)
 - [ ] Right knobs and right strip: free now
-- [ ] Display brightness
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
+
+### Ideas (2026-11-02, mechanisms assumed, not checked)
+
+Desk and display:
+- [ ] Keep-awake toggle with time left on the tile: Amphetamine via AppleScript, or `caffeinate -t` owned by `streamd`; ties into wake Plan A
+- [ ] Controller brightness on a knob: Companion internal surface brightness action
+- [ ] Monitor brightness, input switch (KVM), PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
+- [ ] Sleep buttons: display off (`pmset displaysleepnow`), lock, system sleep
+
+Windows and apps:
+- [ ] Window switcher on a knob (Alt+Tab / Ctrl+Tab): needs keystrokes (above); hold modifier while turning, release on knob stop
+- [ ] Timers on a knob: turn sets the duration, press starts, countdown on the strip, haptic at the end
+- [ ] Frontmost app icon on a tile, press cycles its windows
+
+AI agents:
+- [ ] AI limits on a tile: Claude Code statusline JSON `rate_limits`, Codex `token_count` events in `~/.codex/sessions`
+- [ ] Model + effort switch for Claude Code / Codex: settings files or app keystrokes, research first
+- [ ] Dictation into the prompt: hold a button and speak (Superwhisper or macOS dictation), text lands in the agent input
+- [ ] Agent waiting for me: Claude Code `Notification`/`Stop` hooks → Companion variable → blinking LED with the count; press focuses the session
+
+Communication:
+- [ ] Calendar: next meeting countdown on the strip, LED turns orange 5 min before, press joins the call
+- [ ] Unread Telegram / VK WorkSpace: Dock badge via AX (`AXStatusLabel`), works for any app; press opens the app
+
+Network:
+- [ ] Viscosity VPN on/off with status color: Viscosity AppleScript (`connect`, `disconnect`, connection state)
+- [ ] Current Wi-Fi network on a tile: SSID needs Location permission on recent macOS, `streamd` via CoreWLAN
 
 ### Windows
 
