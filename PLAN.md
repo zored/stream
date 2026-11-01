@@ -22,6 +22,12 @@ Facts:
 - macOS: `brew install --cask companion` → 5.1.1 (macOS 13+)
 - Touch strips can be split into 6 controls with the community [split-strips surface](https://github.com/ninoleto/companion-surface-loupedeck-split-strips)
 - Loupedeck's service autostarts via launch agent `com.logi.pluginservice.launch` (`RunAtLoad`, no `KeepAlive`)
+- Grid: 4 rows × 8 columns (from `@loupedeck/node` model `live.ts`), `row/column`:
+  - col 0, rows 0–2: left knobs · col 1: left touch strip (3 cells)
+  - cols 2–5, rows 0–2: the 12 touch tiles (80×80 px)
+  - col 6: right touch strip · col 7, rows 0–2: right knobs
+  - row 3, cols 0–7: the 8 RGB buttons (LED = button background colour)
+- Companion 5.1 buttons are layered: the legacy `POST /api/location/<p>/<r>/<c>/style` returns 200 but doesn't change them. Edit buttons in the UI, or via import
 
 Known weak spots to check early: keystrokes on macOS need a helper; per-app page switching may need a module or script.
 
