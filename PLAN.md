@@ -55,15 +55,18 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 
 - [ ] Find how to send keystrokes on macOS (candidates: VICREO Hotkey module + listener, internal shell action with `osascript`)
 - [ ] Shell / open app / open URL via internal actions
-- [x] Media + volume: page MEDIA (page 1). `tools/mediakey` (Swift, `make mediakey` → `~/.local/bin/mediakey`) posts system media keys,
-  so it reaches whatever owns "Now Playing" (browser included) and shows the native volume HUD. Needs Companion in Accessibility.
-  - Gotcha: the process must sleep ~100 ms after `CGEvent.post` before exiting, otherwise the events are silently dropped
-  - Dead end: private MediaRemote `MRMediaRemoteSendCommand` returns true but browsers ignore it
-  - Left knob = volume (press = mute), right knob = tracks (press = play/pause), tiles + B1–B3 = prev / play / next
-- [x] Volume on the left touch strip while turning + ~1 s: `mediakey` prints the level → `exec` target variable `custom:volume`,
-  `custom:volume_until` = `time_unix + 1`, strip layers use expressions (`enabled`, `y`, `height`)
-- [x] Clock tile: `$(internal:time_hm)` + `$(internal:date_d).$(internal:date_m)`
-- [x] Play / pause / next / prev verified with browser audio (Chrome)
+- [x] Media page MEDIA (page 1), black tiles, no Companion top bar (`decoration: none`):
+  - left knob 1 = volume (press = mute) → `streamd`; left knob 2 = tracks (press = play/pause) → `mediakey`
+  - play tile: ⏸/▶ from the OS playback state + track title; B2 LED bright green while playing; clock tile
+- [x] `tools/mediakey` (Swift, `make mediakey`): system media key events (play / next / prev), reaches the browser too.
+  Needs Companion in Accessibility. Gotcha: sleep ~100 ms after `CGEvent.post`, otherwise events are dropped.
+  Dead end: MediaRemote `MRMediaRemoteSendCommand` returns true but browsers ignore it
+- [x] `tools/streamd` (Objective-C dylib hosted by `/usr/bin/perl`, `make streamd` installs a LaunchAgent):
+  - volume via CoreAudio with acceleration (1 → 4 % per detent), HTTP `127.0.0.1:47113/volume/{up,down,mute}`
+  - pushes `custom:volume`, `volume_anim` (30 fps easing), `volume_visible` (any change + 1 s, keyboard too) to Companion
+  - now playing every 0.5 s → `custom:np_playing`, `np_title`, `np_artist`. Since macOS 15.4 MediaRemote reads return nothing
+    for third-party processes; running inside Apple-signed `/usr/bin/perl` (DynaLoader) gets around it
+- [ ] Install the LaunchAgent (`make streamd`) — needs your OK, auto mode blocked it
 - [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)

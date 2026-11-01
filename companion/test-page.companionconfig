@@ -23,7 +23,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -261,7 +261,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -499,7 +499,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -707,7 +707,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -915,7 +915,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -1123,7 +1123,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -1331,7 +1331,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -1539,7 +1539,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -1749,7 +1749,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -1987,7 +1987,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -2225,7 +2225,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -2433,7 +2433,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -2641,7 +2641,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -2849,7 +2849,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -3057,7 +3057,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -3265,7 +3265,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -3475,7 +3475,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -3713,7 +3713,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -3951,7 +3951,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -4159,7 +4159,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -4367,7 +4367,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -4575,7 +4575,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -4783,7 +4783,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -4991,7 +4991,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -5201,7 +5201,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -5409,7 +5409,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -5617,7 +5617,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -5825,7 +5825,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -6033,7 +6033,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -6241,7 +6241,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -6449,7 +6449,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {
@@ -6657,7 +6657,7 @@
         "usage": "auto",
         "type": "canvas",
         "decoration": {
-         "value": "default",
+         "value": "none",
          "isExpression": false
         },
         "showStatusIcons": {

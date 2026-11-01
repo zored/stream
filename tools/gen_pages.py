@@ -7,8 +7,10 @@ import sys
 ALPHABET = string.ascii_letters + string.digits + "_-"
 RAINBOW = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0x8000FF, 0xFF00FF]
 MEDIAKEY = "$HOME/.local/bin/mediakey"
-CUSTOM_VARIABLES = {"volume": "0", "volume_until": "0"}
-VOLUME_VISIBLE = "$(internal:time_unix) <= $(custom:volume_until)"
+STREAMD = "http://127.0.0.1:47113"
+CUSTOM_VARIABLES = {name: "" for name in ("volume", "volume_anim", "volume_visible", "np_playing", "np_title", "np_artist")}
+VOLUME_VISIBLE = "$(custom:volume_visible) == 1"
+PLAYING = "$(custom:np_playing) == 1"
 rng = random.Random()
 
 
@@ -24,32 +26,36 @@ def expr(value):
     return {"value": value, "isExpression": True}
 
 
+def prop(value):
+    return value if isinstance(value, dict) else v(value)
+
+
 def geometry(enabled=None, y=None, height=None):
     return {"enabled": enabled or v(True), "opacity": v(100), "x": v(0), "y": y or v(0), "width": v(100),
             "height": height or v(100), "rotation": v(0)}
 
 
-def canvas(decoration="default"):
+def canvas(decoration="none"):
     return {"id": "canvas", "name": "Canvas", "usage": "auto", "type": "canvas",
             "decoration": v(decoration), "showStatusIcons": v("default")}
 
 
 def box(layer_id, color, **geo):
     return {"id": layer_id, "name": layer_id, "usage": "auto", "type": "box", "pinnedProperties": ["color"],
-            **geometry(**geo), "color": v(color), "cornerRadius": v(0), "borderWidth": v(0), "borderColor": v(0),
+            **geometry(**geo), "color": prop(color), "cornerRadius": v(0), "borderWidth": v(0), "borderColor": v(0),
             "borderPosition": v("inside")}
 
 
-def text(layer_id, value, color=0xFFFFFF, **geo):
+def text(layer_id, value, color=0xFFFFFF, fontsize=100, shrink=True, **geo):
     return {"id": layer_id, "name": layer_id, "usage": "auto", "type": "text",
             "pinnedProperties": ["text", "fontsize", "fontsizeAllowShrink", "color", "halign", "valign"],
-            **geometry(**geo), "text": v(value), "color": v(color), "halign": v("center"), "valign": v("center"),
-            "fontsize": v(100), "fontsizeAllowShrink": v(True), "font": v("companion-sans"), "weight": v("normal"),
+            **geometry(**geo), "text": prop(value), "color": prop(color), "halign": v("center"), "valign": v("center"),
+            "fontsize": v(fontsize), "fontsizeAllowShrink": v(shrink), "font": v("companion-sans"), "weight": v("normal"),
             "styles": v([]), "outlineColor": v(4278190080)}
 
 
-def labelled(label, bg, fg=0xFFFFFF, decoration="default"):
-    return [canvas(decoration), box("box0", bg), text("text0", label, fg)]
+def labelled(label, bg=0x000000, fg=0xFFFFFF):
+    return [canvas(), box("box0", bg), text("text0", label, fg)]
 
 
 def action(definition, options):
@@ -69,12 +75,8 @@ def mediakey(key):
     return sh(f"{MEDIAKEY} {key}")
 
 
-def volume(key):
-    return [
-        sh(f"{MEDIAKEY} {key}", target="volume"),
-        action("custom_variable_set_value",
-               {"name": "volume_until", "create": True, "value": expr("$(internal:time_unix) + 1")}),
-    ]
+def streamd(path):
+    return [sh(f"curl -fsS -m 1 -X POST {STREAMD}{path}")]
 
 
 def button(style, down=(), up=(), left=None, right=None):
@@ -104,10 +106,10 @@ def logged(name, label, bg, fg=0xFFFFFF, rotary=False):
 
 def volume_cell(row):
     base = (2 - row) * 100 / 3
-    fill = f"max(0, min(100, ($(custom:volume) - {base:.2f}) * 3))"
+    fill = f"max(0, min(100, ($(custom:volume_anim) - {base:.2f}) * 3))"
     visible = expr(VOLUME_VISIBLE)
     style = [
-        canvas("none"),
+        canvas(),
         box("track", 0x202020, enabled=visible),
         box("fill", 0x3FA9F5, enabled=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
     ]
@@ -116,8 +118,22 @@ def volume_cell(row):
     return button(style)
 
 
+def play_pause():
+    return button([
+        canvas(),
+        box("box0", 0x000000),
+        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), height=v(55)),
+        text("title", "$(custom:np_title)", color=0xAAAAAA, fontsize=14, shrink=False, y=v(55), height=v(45)),
+    ], down=[mediakey("play")])
+
+
+def play_led():
+    return button([canvas(), box("box0", expr(f"{PLAYING} ? {0x00FF00} : {0x002200}")), text("text0", "PLAY")],
+                  down=[mediakey("play")])
+
+
 def clock():
-    return button([canvas("none"), box("box0", 0x101010),
+    return button([canvas(), box("box0", 0x000000),
                    text("text0", "$(internal:time_hm)\n$(internal:date_d).$(internal:date_m)")])
 
 
@@ -137,18 +153,14 @@ def test_page():
 
 
 def media_page():
-    blue, green = 0x1F3A5F, 0x1E6B32
     return "MEDIA", {
-        (0, 0): button(labelled("VOL", 0), down=volume("mute"), left=volume("voldown"), right=volume("volup")),
-        (0, 7): button(labelled("TRACK", 0), down=[mediakey("play")], left=[mediakey("prev")], right=[mediakey("next")]),
+        (0, 0): button(labelled("VOL"), down=streamd("/volume/mute"),
+                       left=streamd("/volume/down"), right=streamd("/volume/up")),
+        (1, 0): button(labelled("TRACK"), down=[mediakey("play")], left=[mediakey("prev")], right=[mediakey("next")]),
         **{(r, 1): volume_cell(r) for r in range(3)},
-        (0, 2): button(labelled("PREV", blue), down=[mediakey("prev")]),
-        (0, 3): button(labelled("PLAY\nPAUSE", green), down=[mediakey("play")]),
-        (0, 4): button(labelled("NEXT", blue), down=[mediakey("next")]),
+        (0, 2): play_pause(),
         (0, 5): clock(),
-        (3, 0): button(labelled("PREV", blue), down=[mediakey("prev")]),
-        (3, 1): button(labelled("PLAY", green), down=[mediakey("play")]),
-        (3, 2): button(labelled("NEXT", blue), down=[mediakey("next")]),
+        (3, 1): play_led(),
     }
 
 

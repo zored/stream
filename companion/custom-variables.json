@@ -1,4 +1,8 @@
 {
- "volume": "0",
- "volume_until": "0"
+ "volume": "",
+ "volume_anim": "",
+ "volume_visible": "",
+ "np_playing": "",
+ "np_title": "",
+ "np_artist": ""
 }
