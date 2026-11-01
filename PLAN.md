@@ -8,45 +8,34 @@
 - [ ] Sync current Loupedeck profiles into `profiles/loupedeck/` as a reference for the Companion rebuild
 - [ ] List what the official app can't do → requirements for phase 2
 
-## 2. Host client: Companion vs own Node client
+## 2. Bitfocus Companion as the host client
 
 Custom firmware isn't needed for own buttons: the device only draws tiles and reports input,
-all behaviour lives in the host client. Try both tracks, then pick one.
-Only one process can hold the serial port: run them one at a time, never together with Loupedeck.
-
-| | Bitfocus Companion | Own client on `@loupedeck/node` | Own client on `foxxyz/loupedeck` |
-|---|---|---|---|
-| What | Ready app, web UI, hundreds of modules | Device library, we write the app | Device library, we write the app |
-| Device driver | `@loupedeck/node` ^2.2.2 (via [companion-surface-loupedeck](https://github.com/bitfocus/companion-surface-loupedeck)) | same | own implementation |
-| Maintainer | Bitfocus, ⭐2.3k | Julusian (Companion dev), ⭐11 but battle-tested inside Companion | foxxyz, ⭐140, v7.1.0 (2026-10-29) |
-| Drawing | Built-in button styles, text, PNG | Raw pixel buffers, bring own renderer | Built-in via `canvas` (native dep) |
-| Config | UI, export to file | Ours: YAML in repo | Ours: YAML in repo |
-| Keystrokes on macOS | Needs a helper (VICREO / shell) | Ours: shell / native module | Ours: shell / native module |
-| Per-app pages | Unclear, needs a module or script | Ours | Ours |
-| Cost | Zero code, generic UX | Code + maintenance, full control | Code + maintenance, full control |
-
-Node library pick: `@loupedeck/node` — same driver as Companion, so protocol fixes land in both;
-`foxxyz/loupedeck` only if its built-in drawing saves real time.
+all behaviour lives in the host client. Decision: Companion only, no own client.
+Only one process can hold the serial port: never run Companion together with Loupedeck.
 
 Facts:
 
+- Companion's Loupedeck surface ([companion-surface-loupedeck](https://github.com/bitfocus/companion-surface-loupedeck)) is built on `@loupedeck/node` ^2.2.2
 - Companion docs (v4.2): RSC supported, firmware ≥ v0.2.0, **Loupedeck software must not be running**
 - Since 4.3 surfaces are modules: Surfaces page → Add Surface Integration → Loupedeck. Current docs: v5.1
-- macOS: `brew install --cask companion` was 4.2.x at last check; 5.x from [GitHub releases](https://github.com/bitfocus/companion/releases) (macOS 13.5+)
+- macOS: `brew install --cask companion` → 5.1.1 (macOS 13+)
 - Touch strips can be split into 6 controls with the community [split-strips surface](https://github.com/ninoleto/companion-surface-loupedeck-split-strips)
+- Loupedeck's service autostarts via launch agent `com.logi.pluginservice.launch` (`RunAtLoad`, no `KeepAlive`)
 
-Other ready apps, not planned: [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck) (no macOS),
-[ShoelessTim/RazerStream](https://github.com/ShoelessTim/RazerStream) (no Windows).
+Known weak spots to check early: keystrokes on macOS need a helper; per-app page switching may need a module or script.
 
-### 2a. Companion bring-up on macOS
+### 2a. Bring-up on macOS
 
-- [ ] Install Companion 5.x
-- [ ] Free the device: quit Loupedeck, stop `LogiPluginService`, disable its login item / launch agent (write down how to roll back)
-- [ ] Add the Loupedeck surface integration, rescan USB, check all 12 tiles, 6 knobs (turn + press), 8 buttons + LEDs
+- [x] Install Companion 5.x: `brew install --cask companion` → 5.1.1; first run asks for interface/port, then web UI at `http://127.0.0.1:8000`
+- [x] Free the device: quitting the Loupedeck app also stops `LogiPluginService`. Roll back: `launchctl kickstart gui/$(id -u)/com.logi.pluginservice.launch` and open Loupedeck
+- [ ] Disable Loupedeck autostart once Companion is the daily driver: `launchctl disable gui/$(id -u)/com.logi.pluginservice.launch` (undo: `enable`)
+- [x] Surfaces → Add Surface Integration → Loupedeck v1.1.1 (store module; split-strips isn't in the store). RSC detected as `loupedeck:<serial>`
+- [ ] Check all 12 tiles, 6 knobs (turn + press), 8 buttons + LEDs
 - [ ] Try the split-strips surface; keep whichever maps better
 - [ ] Autostart Companion at login, headless (no window)
 
-### 2b. Companion actions
+### 2b. Actions
 
 - [ ] Find how to send keystrokes on macOS (candidates: VICREO Hotkey module + listener, internal shell action with `osascript`)
 - [ ] Shell / open app / open URL via internal actions
@@ -55,31 +44,14 @@ Other ready apps, not planned: [LoupixDeck](https://github.com/RadiatorTwo/Loupi
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)
 - [ ] Integrations worth a look: OBS, Zoom, Spotify, GitHub/CI status via HTTP
 
-### 2c. Companion config as code
+### 2c. Config as code
 
 - [ ] Export Companion config into `companion/` (full export), commit after every meaningful change
 - [ ] Document restore: fresh install → import → works
 - [ ] Windows: install Companion, import the same export, note OS-specific actions (keystrokes, shell)
 
-### 2d. Own Node client spike (`client/`)
-
-- [ ] TypeScript + `@loupedeck/node`, Node 22 (same as Companion's surface)
-- [ ] Connect, draw a tile (text + PNG), read knob turn/press, touch, set button LED
-- [ ] YAML config: pages → controls → actions (keystroke, shell, open URL/app, media)
-- [ ] Per-app page switching (frontmost app: `NSWorkspace` via a tiny helper on macOS, `GetForegroundWindow` on Windows)
-- [ ] Autostart: launchd agent (macOS), scheduled task (Windows)
-- [ ] Same spike on Windows
-
-### 2e. Decide
-
-Rebuild the same 2–3 pages in both, then compare:
-
-- [ ] Time to add a new button / page
-- [ ] Must-haves covered: keystrokes, per-app pages, LED state, wake handling (phase 3)
-- [ ] Latency and stability over a week of daily use
-- [ ] Windows parity
-
-Pick one, archive the other track's notes here.
+Not planned: own client on `@loupedeck/node` / `foxxyz/loupedeck`, [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck) (no macOS),
+[ShoelessTim/RazerStream](https://github.com/ShoelessTim/RazerStream) (no Windows).
 
 ## 3. Wake the PC from the controller
 

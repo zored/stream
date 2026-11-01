@@ -28,7 +28,7 @@ First device: **Razer Stream Controller** — a rebranded Loupedeck Live.
 None of these replace the device firmware: they are host-side clients.
 The device only draws tiles and reports input; behaviour lives on the host.
 No public custom firmware for this device is known yet, and the vendor firmware image is encrypted.
-Main client here: Bitfocus Companion.
+Host client: Bitfocus Companion.
 
 USB interfaces: CDC serial, vendor-specific, audio. No HID, so no keyboard-style wake from sleep.
 
