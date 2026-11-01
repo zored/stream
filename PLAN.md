@@ -77,7 +77,7 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
   - module updates wipe the patch → re-run; upstream PR to companion-surface-loupedeck is the proper fix
 - Companion's custom-variable HTTP API rejects an empty text body ("No value"); `streamd` sends JSON strings
 - `streamd` idle CPU ~1.7 %: animation timer runs only while the volume changes
-- [ ] Like on long press: MediaRemote has `LikeTrack` (21), but only players implementing it react (Music.app); Chrome's Media Session has no like action → needs a per-service way
+- Like on long press — parked: MediaRemote has `LikeTrack` (21), but only players implementing it react (Music.app); Chrome's Media Session has no like action, a per-service extension isn't worth it now
 - [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)
