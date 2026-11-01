@@ -47,7 +47,7 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
   - "No reaction" on knobs / buttons / strips = nothing configured there: no actions, LED = black background, no buttons in strip columns. Page nav doesn't wrap past the last page
 - [x] Full input check with a generated test page (`tools/gen_test_page.py` → `companion/test-page.companionconfig`, import via Import / Export):
   all 12 tiles, 8 buttons, 6 knobs (press + left + right), 6 strip cells log `TEST <control> <event>`
-- [ ] Button LEDs show the background colours of the test page
+- [x] Button LEDs show the background colours of the test page (rainbow verified)
 - [ ] Try the split-strips surface; keep whichever maps better
 - [ ] Autostart Companion at login, headless (no window)
 
