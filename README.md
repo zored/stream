@@ -11,6 +11,7 @@ First device: **Razer Stream Controller** — a rebranded Loupedeck Live.
 | Same hardware as | Loupedeck Live |
 | USB | VID `0x1532`, PID `0x0D06` (Stream Controller X: `0x0D09`) |
 | Transport | USB CDC serial → WebSocket upgrade → binary frames |
+| Firmware | 0.2.14 (tested) |
 | Protocol notes | [ShoelessTim/RazerStream PROTOCOL.md](https://github.com/ShoelessTim/RazerStream/blob/main/PROTOCOL.md) |
 
 ## Ways to drive it
@@ -26,7 +27,8 @@ First device: **Razer Stream Controller** — a rebranded Loupedeck Live.
 
 None of these replace the device firmware: they are host-side clients.
 The device only draws tiles and reports input; behaviour lives on the host.
-No public custom firmware for this device is known yet.
+No public custom firmware for this device is known yet, and the vendor firmware image is encrypted.
+Main client here: Bitfocus Companion.
 
 USB interfaces: CDC serial, vendor-specific, audio. No HID, so no keyboard-style wake from sleep.
 
