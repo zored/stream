@@ -22,9 +22,13 @@ First device: **Razer Stream Controller** — a rebranded Loupedeck Live.
 | [@loupedeck/node](https://github.com/Julusian/node-loupedeck) | ✅ | ✅ | Node library, base for a custom host |
 | [foxxyz/loupedeck](https://github.com/foxxyz/loupedeck) | ✅ | ✅ | Node API: buttons, knobs, touch, drawing |
 | [Bitfocus Companion](https://github.com/bitfocus/companion) | ✅ | ✅ | Open-source control surface app, supports Loupedeck Live / RSC |
+| [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck/wiki) | ❌ | ✅ | .NET app for Loupedeck / RSC, plugin SDK |
 
-None of these replace the device firmware: they are host-side drivers.
+None of these replace the device firmware: they are host-side clients.
+The device only draws tiles and reports input; behaviour lives on the host.
 No public custom firmware for this device is known yet.
+
+USB interfaces: CDC serial, vendor-specific, audio. No HID, so no keyboard-style wake from sleep.
 
 ## Status
 
