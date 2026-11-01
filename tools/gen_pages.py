@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import random
@@ -8,8 +9,10 @@ ALPHABET = string.ascii_letters + string.digits + "_-"
 RAINBOW = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0x8000FF, 0xFF00FF]
 MEDIAKEY = "$HOME/.local/bin/mediakey"
 STREAMD = "http://127.0.0.1:47113"
+VKCALL = "http://127.0.0.1:47114"
+ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track")}
+    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "call_mic", "call_cam")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 rng = random.Random()
@@ -55,6 +58,17 @@ def text(layer_id, value, color=0xFFFFFF, fontsize=100, shrink=True, **geo):
             "styles": v([]), "outlineColor": v(4278190080)}
 
 
+def image(layer_id, data, **geo):
+    return {"id": layer_id, "name": layer_id, "usage": "auto", "type": "image",
+            "pinnedProperties": ["base64Image", "halign", "valign"], **geometry(**geo), "base64Image": v(data),
+            "halign": v("center"), "valign": v("center"), "fillMode": v("fit")}
+
+
+def icon(name):
+    with open(os.path.join(ICONS, f"{name}.svg"), "rb") as f:
+        return "data:image/svg+xml;base64," + base64.b64encode(f.read()).decode()
+
+
 def labelled(label, bg=0x000000, fg=0xFFFFFF):
     return [canvas(), box("box0", bg), text("text0", label, fg)]
 
@@ -76,8 +90,16 @@ def mediakey(key):
     return sh(f"{MEDIAKEY} {key}")
 
 
+def post(url):
+    return sh(f"curl -fsS -m 1 -X POST {url}")
+
+
 def streamd(path):
-    return [sh(f"curl -fsS -m 1 -X POST {STREAMD}{path}")]
+    return [post(STREAMD + path)]
+
+
+def vkcall(path):
+    return [post(VKCALL + path)]
 
 
 def button(style, down=(), up=(), left=None, right=None):
@@ -132,9 +154,34 @@ def play_pause():
     ], down=[mediakey("play")])
 
 
-def play_led():
-    return button([canvas(), box("box0", expr(f"{PLAYING} ? {0x00FF00} : {0x002200}")), text("text0", "PLAY")],
-                  down=[mediakey("play")])
+def by_state(var, colors):
+    out = "0"
+    for state, color in reversed(colors.items()):
+        out = f'$(custom:{var}) == "{state}" ? ({color}) : ({out})'
+    return expr(out)
+
+
+def call_actions(var):
+    return {"down": vkcall("/mic/down"), "up": vkcall("/mic/up")} if var == "call_mic" else {"down": vkcall("/cam/down")}
+
+
+def call_led(var):
+    return button([canvas(), box("box0", by_state(var, {
+        "on": f"$(internal:time_unix) % 4 == 0 ? {0x003300} : {0x00FF00}",
+        "off": 0x400000,
+        "unknown": f"$(internal:time_unix) % 2 == 0 ? {0xFFB000} : 0",
+    }))], **call_actions(var))
+
+
+def call_tile(var, name):
+    state = f"$(custom:{var})"
+    return button([
+        canvas(),
+        box("box0", by_state(var, {"on": 0x1B5E20, "off": 0xB3261E, "unknown": 0x8A6100})),
+        image("on", icon(name), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
+        image("off", icon(f"{name}-off"), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
+        text("unknown", "?", fontsize=60, opacity=expr(f'{state} == "unknown" ? 100 : 0')),
+    ], **call_actions(var))
 
 
 def clock():
@@ -164,8 +211,11 @@ def media_page():
         (1, 0): button(labelled("TRACK"), down=[mediakey("play")], left=[mediakey("prev")], right=[mediakey("next")]),
         **{(r, 1): volume_cell(r) for r in range(3)},
         (0, 2): play_pause(),
+        (2, 2): call_tile("call_mic", "mic"),
+        (2, 3): call_tile("call_cam", "cam"),
         (2, 5): clock(),
-        (3, 1): play_led(),
+        (3, 1): call_led("call_mic"),
+        (3, 2): call_led("call_cam"),
     }
 
 

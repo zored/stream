@@ -5,5 +5,7 @@
  "np_playing": "",
  "np_title": "",
  "np_artist": "",
- "np_track": ""
+ "np_track": "",
+ "call_mic": "",
+ "call_cam": ""
 }

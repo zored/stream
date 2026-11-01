@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "ZUFP98x9D3Dav21qpmNt5",
+  "id": "brfkm_MUo4mUmwwWWq5Wt",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -2767,8 +2767,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:call_mic) == \"on\" ? (1793568) : ($(custom:call_mic) == \"off\" ? (11740702) : ($(custom:call_mic) == \"unknown\" ? (9068800) : (0)))",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -2786,6 +2786,198 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "on",
+        "name": "on",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_mic) == \"on\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 20,
+         "isExpression": false
+        },
+        "y": {
+         "value": 20,
+         "isExpression": false
+        },
+        "width": {
+         "value": 60,
+         "isExpression": false
+        },
+        "height": {
+         "value": 60,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIxOCIgeT0iNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjIzIiByeD0iNiIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0xMSAyMmExMyAxMyAwIDAgMCAyNiAwTTI0IDM1djdNMTcgNDJoMTQiLz48L3N2Zz4K",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "off",
+        "name": "off",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_mic) == \"off\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 20,
+         "isExpression": false
+        },
+        "y": {
+         "value": 20,
+         "isExpression": false
+        },
+        "width": {
+         "value": 60,
+         "isExpression": false
+        },
+        "height": {
+         "value": 60,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48bWFzayBpZD0ibSI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTYgNmwzNiAzNiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjkiLz48L21hc2s+PGcgbWFzaz0idXJsKCNtKSI+PHJlY3QgeD0iMTgiIHk9IjUiIHdpZHRoPSIxMiIgaGVpZ2h0PSIyMyIgcng9IjYiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMTEgMjJhMTMgMTMgMCAwIDAgMjYgME0yNCAzNXY3TTE3IDQyaDE0Ii8+PC9nPjxwYXRoIGQ9Ik02IDZsMzYgMzYiLz48L3N2Zz4K",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "unknown",
+        "name": "unknown",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_mic) == \"unknown\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "?",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 60,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
        }
       ]
      },
@@ -2793,8 +2985,60 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": []
+        "down": [
+         {
+          "type": "action",
+          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -2865,8 +3109,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:call_cam) == \"on\" ? (1793568) : ($(custom:call_cam) == \"off\" ? (11740702) : ($(custom:call_cam) == \"unknown\" ? (9068800) : (0)))",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -2884,6 +3128,198 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "on",
+        "name": "on",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_cam) == \"on\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 20,
+         "isExpression": false
+        },
+        "y": {
+         "value": 20,
+         "isExpression": false
+        },
+        "width": {
+         "value": 60,
+         "isExpression": false
+        },
+        "height": {
+         "value": 60,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSI0IiB5PSIxMyIgd2lkdGg9IjI4IiBoZWlnaHQ9IjIyIiByeD0iNSIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0zNCAyMWwxMC02djE4bC0xMC02eiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPgo=",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "off",
+        "name": "off",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_cam) == \"off\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 20,
+         "isExpression": false
+        },
+        "y": {
+         "value": 20,
+         "isExpression": false
+        },
+        "width": {
+         "value": 60,
+         "isExpression": false
+        },
+        "height": {
+         "value": 60,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48bWFzayBpZD0ibSI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTYgNmwzNiAzNiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjkiLz48L21hc2s+PGcgbWFzaz0idXJsKCNtKSI+PHJlY3QgeD0iNCIgeT0iMTMiIHdpZHRoPSIyOCIgaGVpZ2h0PSIyMiIgcng9IjUiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMzQgMjFsMTAtNnYxOGwtMTAtNnoiIGZpbGw9IiNmZmYiLz48L2c+PHBhdGggZD0iTTYgNmwzNiAzNiIvPjwvc3ZnPgo=",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "unknown",
+        "name": "unknown",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_cam) == \"unknown\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "?",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 60,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
        }
       ]
      },
@@ -2891,7 +3327,33 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
+        "down": [
+         {
+          "type": "action",
+          "id": "WUftSx60QPUkjoE3kxzDy",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/cam/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
         "up": []
        },
        "options": {
@@ -3537,7 +3999,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:np_playing) == 1 ? 65280 : 8704",
+         "value": "$(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_mic) == \"off\" ? (4194304) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0)))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -3556,88 +4018,6 @@
          "value": "inside",
          "isExpression": false
         }
-       },
-       {
-        "id": "text0",
-        "name": "text0",
-        "usage": "auto",
-        "type": "text",
-        "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": 100,
-         "isExpression": false
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "text": {
-         "value": "PLAY",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
-         "isExpression": false
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
-         "isExpression": false
-        }
        }
       ]
      },
@@ -3648,12 +4028,12 @@
         "down": [
          {
           "type": "action",
-          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "id": "8_Oz4CMoARGhR_gE0jKei",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "$HOME/.local/bin/mediakey play",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/down",
             "isExpression": false
            },
            "cwd": {
@@ -3672,7 +4052,33 @@
           "upgradeIndex": null
          }
         ],
-        "up": []
+        "up": [
+         {
+          "type": "action",
+          "id": "NEhc6wXoN3o_aiQS9jWA8",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -3743,8 +4149,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:call_cam) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_cam) == \"off\" ? (4194304) : ($(custom:call_cam) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0)))",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -3769,7 +4175,33 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
+        "down": [
+         {
+          "type": "action",
+          "id": "mMrZcky5FM1UeeGfia7qg",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/cam/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
         "up": []
        },
        "options": {

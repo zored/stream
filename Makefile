@@ -1,29 +1,45 @@
 BIN ?= $(HOME)/.local/bin
 LIB ?= $(HOME)/.local/lib
 SHARE ?= $(HOME)/.local/share/zored-stream
-AGENT = com.zored.stream.streamd
-AGENT_PLIST = $(HOME)/Library/LaunchAgents/$(AGENT).plist
+AGENTS = $(HOME)/Library/LaunchAgents
 DOMAIN = gui/$(shell id -u)
 HAPTIC ?= 0x33
 
-.PHONY: mediakey streamd streamd-uninstall patch-module pages deploy
+define install-agent
+	mkdir -p $(HOME)/Library/Logs/zored-stream
+	sed 's|@HOME@|$(HOME)|g' tools/$(1)/com.zored.stream.$(1).plist > $(AGENTS)/com.zored.stream.$(1).plist
+	if launchctl print $(DOMAIN)/com.zored.stream.$(1) >/dev/null 2>&1; then launchctl kickstart -k $(DOMAIN)/com.zored.stream.$(1); \
+	else launchctl bootstrap $(DOMAIN) $(AGENTS)/com.zored.stream.$(1).plist; fi
+endef
+
+define uninstall-agent
+	if launchctl print $(DOMAIN)/com.zored.stream.$(1) >/dev/null 2>&1; then launchctl bootout $(DOMAIN)/com.zored.stream.$(1); fi
+	rm -f $(AGENTS)/com.zored.stream.$(1).plist
+endef
+
+.PHONY: mediakey streamd streamd-uninstall vkcall vkcall-uninstall patch-module pages deploy
 
 mediakey:
 	mkdir -p $(BIN)
 	swiftc -O tools/mediakey/main.swift -o $(BIN)/mediakey
 
 streamd:
-	mkdir -p $(LIB) $(SHARE) $(HOME)/Library/Logs/zored-stream
+	mkdir -p $(LIB) $(SHARE)
 	clang -dynamiclib -arch arm64 -arch arm64e -fobjc-arc -framework Foundation -framework CoreAudio \
 		-framework AudioToolbox -o $(LIB)/libstreamd.dylib tools/streamd/streamd.m
 	cp tools/streamd/streamd.pl $(SHARE)/streamd.pl
-	sed 's|@HOME@|$(HOME)|g' tools/streamd/$(AGENT).plist > $(AGENT_PLIST)
-	if launchctl print $(DOMAIN)/$(AGENT) >/dev/null 2>&1; then launchctl kickstart -k $(DOMAIN)/$(AGENT); \
-	else launchctl bootstrap $(DOMAIN) $(AGENT_PLIST); fi
+	$(call install-agent,streamd)
 
 streamd-uninstall:
-	if launchctl print $(DOMAIN)/$(AGENT) >/dev/null 2>&1; then launchctl bootout $(DOMAIN)/$(AGENT); fi
-	rm -f $(AGENT_PLIST)
+	$(call uninstall-agent,streamd)
+
+vkcall:
+	mkdir -p $(BIN)
+	cd tools/vkcall && GOWORK=off go build -o $(BIN)/vkcall .
+	$(call install-agent,vkcall)
+
+vkcall-uninstall:
+	$(call uninstall-agent,vkcall)
 
 patch-module:
 	HAPTIC=$(HAPTIC) python3 -I tools/patch_module.py

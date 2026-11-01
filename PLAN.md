@@ -11,6 +11,10 @@ Facts live in `docs/`; this file tracks status.
   animated volume bar, strip swipe volume, haptics ([companion.md](docs/companion.md), [macos.md](docs/macos.md))
 - `mediakey`, `streamd` (LaunchAgent), `patch-module` installed on the Mac
 
+## Done (2026-11-02)
+
+- VK WorkSpace calls: buttons 2/3 toggle mic/camera, push-to-talk, LEDs + tiles from the client's real state via its local gRPC ([vkcall.md](docs/vkcall.md))
+
 ## Next
 
 ### macOS polish

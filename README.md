@@ -7,7 +7,9 @@ What the MEDIA page does today (macOS):
 
 - left knob 1 — volume with acceleration, press = mute; left knob 2 — previous/next track, press = play/pause
 - left touch strip — current track rotated 90°, turns into an animated volume bar while the volume changes; swipe it to change the volume
-- play tile — big ⏸/▶ from the OS playback state; bottom button 2 glows green while playing
+- play tile — big ⏸/▶ from the OS playback state
+- VK WorkSpace calls — bottom button 2 toggles the microphone, button 3 the camera (tap = toggle, hold = push-to-talk);
+  LEDs and two tiles show the real state from the client, mouse clicks included ([vkcall.md](docs/vkcall.md))
 - clock tile, haptic tap on presses, black tiles without Companion decorations
 
 ## Setup (macOS)
@@ -18,13 +20,13 @@ What the MEDIA page does today (macOS):
 4. Run:
 
 ```bash
-make mediakey streamd deploy
+make mediakey streamd vkcall deploy
 make patch-module
 ```
 
 5. Restart Companion.
 
-Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Node 22+, Python 3.
+Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+, Python 3.
 
 ## Layout
 
@@ -34,9 +36,11 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Node 22+, Python 3.
 | `tools/deploy.mjs` | Imports pages into a running Companion over its internal tRPC API |
 | `tools/mediakey/` | Media key helper (Swift) |
 | `tools/streamd/` | Volume + Now Playing daemon (Objective-C, hosted by `/usr/bin/perl`) |
+| `tools/vkcall/` | VK WorkSpace call mic/camera daemon (Go, the client's local gRPC) |
+| `tools/icons/` | SVG icons embedded into pages |
 | `tools/patch_module.py` | Adds haptics and strip swipe to the Companion Loupedeck module |
 | `tools/sniff.py` | Raw device event sniffer |
-| `docs/` | [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [Windows port](docs/windows.md), [device](docs/device.md) |
+| `docs/` | [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Windows port](docs/windows.md), [device](docs/device.md) |
 
 ## Other ways to drive the device
 
