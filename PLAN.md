@@ -55,15 +55,19 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 
 - [ ] Find how to send keystrokes on macOS (candidates: VICREO Hotkey module + listener, internal shell action with `osascript`)
 - [ ] Shell / open app / open URL via internal actions
-- [ ] Media + volume, display brightness
+- [ ] Media + volume: page MEDIA (page 1). `tools/mediakey` (Swift, `make mediakey` → `~/.local/bin/mediakey`) posts system media keys: native volume HUD, works with any player.
+  Needs Companion in System Settings → Privacy & Security → Accessibility; without it the helper exits 1 and Companion logs "Shell command failed"
+- [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)
 - [ ] Integrations worth a look: OBS, Zoom, Spotify, GitHub/CI status via HTTP
 
 ### 2c. Config as code
 
-- [ ] Export Companion config into `companion/` (full export), commit after every meaningful change
-- [ ] Document restore: fresh install → import → works
+- [x] Pages are generated: `tools/gen_pages.py` (`make pages`) → `companion/*-page.companionconfig`, deterministic IDs
+- [x] Deploy without UI: `make deploy` → `tools/deploy.mjs` imports pages over Companion's internal tRPC WebSocket
+  (`ws://127.0.0.1:8000/trpc`: `importExport.prepareImport.start` → `uploadChunk` → `complete` → `importSinglePage`)
+- [ ] Document restore: fresh install → `make mediakey deploy` → works
 - [ ] Windows: install Companion, import the same export, note OS-specific actions (keystrokes, shell)
 
 Not planned: own client on `@loupedeck/node` / `foxxyz/loupedeck`, [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck) (no macOS),
