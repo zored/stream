@@ -8,11 +8,25 @@
 - [ ] Sync current Loupedeck profiles into `profiles/loupedeck/` as a reference for the Companion rebuild
 - [ ] List what the official app can't do → requirements for phase 2
 
-## 2. Bitfocus Companion as the host client
+## 2. Host client: Companion vs own Node client
 
 Custom firmware isn't needed for own buttons: the device only draws tiles and reports input,
-all behaviour lives in the host client. Companion is the main choice: macOS + Windows, open source,
-big module ecosystem, config is exportable.
+all behaviour lives in the host client. Try both tracks, then pick one.
+Only one process can hold the serial port: run them one at a time, never together with Loupedeck.
+
+| | Bitfocus Companion | Own client on `@loupedeck/node` | Own client on `foxxyz/loupedeck` |
+|---|---|---|---|
+| What | Ready app, web UI, hundreds of modules | Device library, we write the app | Device library, we write the app |
+| Device driver | `@loupedeck/node` ^2.2.2 (via [companion-surface-loupedeck](https://github.com/bitfocus/companion-surface-loupedeck)) | same | own implementation |
+| Maintainer | Bitfocus, ⭐2.3k | Julusian (Companion dev), ⭐11 but battle-tested inside Companion | foxxyz, ⭐140, v7.1.0 (2026-10-29) |
+| Drawing | Built-in button styles, text, PNG | Raw pixel buffers, bring own renderer | Built-in via `canvas` (native dep) |
+| Config | UI, export to file | Ours: YAML in repo | Ours: YAML in repo |
+| Keystrokes on macOS | Needs a helper (VICREO / shell) | Ours: shell / native module | Ours: shell / native module |
+| Per-app pages | Unclear, needs a module or script | Ours | Ours |
+| Cost | Zero code, generic UX | Code + maintenance, full control | Code + maintenance, full control |
+
+Node library pick: `@loupedeck/node` — same driver as Companion, so protocol fixes land in both;
+`foxxyz/loupedeck` only if its built-in drawing saves real time.
 
 Facts:
 
@@ -21,15 +35,10 @@ Facts:
 - macOS: `brew install --cask companion` was 4.2.x at last check; 5.x from [GitHub releases](https://github.com/bitfocus/companion/releases) (macOS 13.5+)
 - Touch strips can be split into 6 controls with the community [split-strips surface](https://github.com/ninoleto/companion-surface-loupedeck-split-strips)
 
-Other clients, if Companion falls short:
+Other ready apps, not planned: [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck) (no macOS),
+[ShoelessTim/RazerStream](https://github.com/ShoelessTim/RazerStream) (no Windows).
 
-| Client | macOS | Windows | What it is |
-|---|---|---|---|
-| [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck) | ❌ | ✅ | .NET app for Loupedeck/RSC with a plugin SDK; Linux too |
-| [ShoelessTim/RazerStream](https://github.com/ShoelessTim/RazerStream) | ✅ | ❌ | Native Swift app, imports Loupedeck profiles |
-| Own client on [@loupedeck/node](https://github.com/Julusian/node-loupedeck) | ✅ | ✅ | Full control, ours to maintain |
-
-### 2a. Bring-up on macOS
+### 2a. Companion bring-up on macOS
 
 - [ ] Install Companion 5.x
 - [ ] Free the device: quit Loupedeck, stop `LogiPluginService`, disable its login item / launch agent (write down how to roll back)
@@ -37,7 +46,7 @@ Other clients, if Companion falls short:
 - [ ] Try the split-strips surface; keep whichever maps better
 - [ ] Autostart Companion at login, headless (no window)
 
-### 2b. Actions
+### 2b. Companion actions
 
 - [ ] Find how to send keystrokes on macOS (candidates: VICREO Hotkey module + listener, internal shell action with `osascript`)
 - [ ] Shell / open app / open URL via internal actions
@@ -46,26 +55,42 @@ Other clients, if Companion falls short:
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)
 - [ ] Integrations worth a look: OBS, Zoom, Spotify, GitHub/CI status via HTTP
 
-### 2c. Config as code
+### 2c. Companion config as code
 
 - [ ] Export Companion config into `companion/` (full export), commit after every meaningful change
 - [ ] Document restore: fresh install → import → works
 - [ ] Windows: install Companion, import the same export, note OS-specific actions (keystrokes, shell)
 
-### 2d. Fallback
+### 2d. Own Node client spike (`client/`)
 
-- [ ] RazerStream build: suspect only Command Line Tools, no Xcode (`xcodebuild` missing)
-- [ ] Own client on @loupedeck/node only if Companion can't cover a must-have
+- [ ] TypeScript + `@loupedeck/node`, Node 22 (same as Companion's surface)
+- [ ] Connect, draw a tile (text + PNG), read knob turn/press, touch, set button LED
+- [ ] YAML config: pages → controls → actions (keystroke, shell, open URL/app, media)
+- [ ] Per-app page switching (frontmost app: `NSWorkspace` via a tiny helper on macOS, `GetForegroundWindow` on Windows)
+- [ ] Autostart: launchd agent (macOS), scheduled task (Windows)
+- [ ] Same spike on Windows
+
+### 2e. Decide
+
+Rebuild the same 2–3 pages in both, then compare:
+
+- [ ] Time to add a new button / page
+- [ ] Must-haves covered: keystrokes, per-app pages, LED state, wake handling (phase 3)
+- [ ] Latency and stability over a week of daily use
+- [ ] Windows parity
+
+Pick one, archive the other track's notes here.
 
 ## 3. Wake the PC from the controller
 
 Facts (verified via `ioreg`): the device exposes CDC serial + vendor + audio interfaces, **no HID**.
 So it can't send a keyboard "wake" like a normal keyboard. Whether it sets USB remote wakeup at all is unknown.
 
-- [ ] Test: put the machine to sleep, press a button / turn a knob. macOS and Windows. Write down the result
+- [x] Test on MacBook: asleep, status button stays blue (USB power kept), presses **don't wake** it
+- [ ] Same test on Windows
 - [ ] Windows: Device Manager → device → Power Management → "Allow this device to wake the computer", if present
-- [ ] Plan A — don't sleep, only turn off the display: system stays awake, Companion dims the deck and on any press wakes the display
-  (`caffeinate -u` on macOS, `SetThreadExecutionState` on Windows). Cost: power draw
+- [ ] Plan A — don't sleep, only turn off the display: system stays awake, the client dims the deck and on any press wakes the display
+  (`caffeinate -u` on macOS, `SetThreadExecutionState` on Windows). Cost: power draw; on a MacBook only sensible on AC / clamshell
 - [ ] Plan B — companion HID: tiny USB board (RP2040 / Pro Micro, QMK/KMK) with one key that sends a wake keystroke
 - [ ] Plan C — Wake-on-LAN from phone / another box (Windows desktop mainly; Mac: "Wake for network access")
 
