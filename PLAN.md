@@ -55,8 +55,11 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 
 - [ ] Find how to send keystrokes on macOS (candidates: VICREO Hotkey module + listener, internal shell action with `osascript`)
 - [ ] Shell / open app / open URL via internal actions
-- [ ] Media + volume: page MEDIA (page 1). `tools/mediakey` (Swift, `make mediakey` → `~/.local/bin/mediakey`) posts system media keys: native volume HUD, works with any player.
-  Needs Companion in System Settings → Privacy & Security → Accessibility; without it the helper exits 1 and Companion logs "Shell command failed"
+- [ ] Media + volume: page MEDIA (page 1). `tools/mediakey` (Swift, `make mediakey` → `~/.local/bin/mediakey`), no permissions needed:
+  - [x] volume / mute via AppleScript `set volume` (verified: 31 → 37 → 31 through Companion). No native HUD
+  - [ ] play / next / prev via private MediaRemote `MRMediaRemoteSendCommand`
+  - Dead end: synthetic media keys (`NSEvent` system-defined + `CGEvent.post`) from a Companion child process are silently ignored on macOS 26,
+    even with Accessibility granted and `CGPreflightPostEventAccess()` = true
 - [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)

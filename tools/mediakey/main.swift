@@ -1,37 +1,42 @@
-import AppKit
+import Foundation
 
-let keys: [String: Int] = ["volup": 0, "voldown": 1, "mute": 7, "play": 16, "next": 17, "prev": 18]
+let volumeStep = 6
+
+let scripts: [String: String] = [
+    "volup": "set volume output volume ((output volume of (get volume settings)) + \(volumeStep))",
+    "voldown": "set volume output volume ((output volume of (get volume settings)) - \(volumeStep))",
+    "mute": "set volume output muted (not (output muted of (get volume settings)))",
+]
+
+let mediaCommands: [String: Int32] = ["play": 2, "next": 4, "prev": 5]
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write((message + "\n").data(using: .utf8)!)
     exit(1)
 }
 
-guard CommandLine.arguments.count == 2, let key = keys[CommandLine.arguments[1]] else {
-    fail("usage: mediakey \(keys.keys.sorted().joined(separator: "|"))")
+func runScript(_ source: String) {
+    var error: NSDictionary?
+    NSAppleScript(source: source)!.executeAndReturnError(&error)
+    if let error { fail("mediakey: AppleScript failed: \(error)") }
 }
 
-guard AXIsProcessTrusted() else {
-    fail("mediakey: no Accessibility permission for the calling app (System Settings → Privacy & Security → Accessibility)")
-}
-
-func post(down: Bool) {
-    let state = down ? 0xa : 0xb
-    guard let event = NSEvent.otherEvent(
-        with: .systemDefined,
-        location: .zero,
-        modifierFlags: NSEvent.ModifierFlags(rawValue: UInt(state << 8)),
-        timestamp: 0,
-        windowNumber: 0,
-        context: nil,
-        subtype: 8,
-        data1: (key << 16) | (state << 8),
-        data2: -1
-    ), let cgEvent = event.cgEvent else {
-        fail("mediakey: can't create event")
+func sendMediaCommand(_ command: Int32) {
+    typealias SendCommand = @convention(c) (Int32, CFDictionary?) -> Bool
+    guard let handle = dlopen("/System/Library/PrivateFrameworks/MediaRemote.framework/MediaRemote", RTLD_NOW),
+          let symbol = dlsym(handle, "MRMediaRemoteSendCommand") else {
+        fail("mediakey: MediaRemote unavailable")
     }
-    cgEvent.post(tap: .cghidEventTap)
+    guard unsafeBitCast(symbol, to: SendCommand.self)(command, nil) else {
+        fail("mediakey: MediaRemote rejected command \(command)")
+    }
 }
 
-post(down: true)
-post(down: false)
+let name = CommandLine.arguments.count == 2 ? CommandLine.arguments[1] : ""
+if let script = scripts[name] {
+    runScript(script)
+} else if let command = mediaCommands[name] {
+    sendMediaCommand(command)
+} else {
+    fail("usage: mediakey \((Array(scripts.keys) + Array(mediaCommands.keys)).sorted().joined(separator: "|"))")
+}
