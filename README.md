@@ -1,39 +1,53 @@
 # stream
 
-Notes, configs and tooling for stream controllers (macro decks).
-First device: **Razer Stream Controller** — a rebranded Loupedeck Live.
+Config-as-code for stream controllers. First device: **Razer Stream Controller** (a rebranded Loupedeck Live),
+driven by [Bitfocus Companion](https://github.com/bitfocus/companion).
 
-## Hardware
+What the MEDIA page does today (macOS):
 
-| | Razer Stream Controller |
+- left knob 1 — volume with acceleration, press = mute; left knob 2 — previous/next track, press = play/pause
+- left touch strip — current track rotated 90°, turns into an animated volume bar while the volume changes; swipe it to change the volume
+- play tile — big ⏸/▶ from the OS playback state; bottom button 2 glows green while playing
+- clock tile, haptic tap on presses, black tiles without Companion decorations
+
+## Setup (macOS)
+
+1. Close the Loupedeck app. Install Companion: `brew install --cask companion`, open `http://127.0.0.1:8000`.
+2. Surfaces → Add Surface Integration → Loupedeck. Settings → Protocols: enable shell command support.
+3. System Settings → Privacy & Security → Accessibility → add Companion.
+4. Run:
+
+```bash
+make mediakey streamd deploy
+make patch-module
+```
+
+5. Restart Companion.
+
+Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Node 22+, Python 3.
+
+## Layout
+
+| Path | What |
 |---|---|
-| Controls | 12 touch tiles, 6 rotary encoders (turn + press), 8 RGB buttons |
-| Same hardware as | Loupedeck Live |
-| USB | VID `0x1532`, PID `0x0D06` (Stream Controller X: `0x0D09`) |
-| Transport | USB CDC serial → WebSocket upgrade → binary frames |
-| Firmware | 0.2.14 (tested) |
-| Protocol notes | [ShoelessTim/RazerStream PROTOCOL.md](https://github.com/ShoelessTim/RazerStream/blob/main/PROTOCOL.md) |
+| `tools/gen_pages.py` | Page definitions → `companion/*.companionconfig` |
+| `tools/deploy.mjs` | Imports pages into a running Companion over its internal tRPC API |
+| `tools/mediakey/` | Media key helper (Swift) |
+| `tools/streamd/` | Volume + Now Playing daemon (Objective-C, hosted by `/usr/bin/perl`) |
+| `tools/patch_module.py` | Adds haptics and strip swipe to the Companion Loupedeck module |
+| `tools/sniff.py` | Raw device event sniffer |
+| `docs/` | [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [Windows port](docs/windows.md), [device](docs/device.md) |
 
-## Ways to drive it
+## Other ways to drive the device
 
 | Approach | macOS | Windows | Notes |
 |---|---|---|---|
-| [Loupedeck software](https://loupedeck.com/downloads/) | ✅ | ✅ | Official. Razer support kept in 6.4.1+ |
-| [ShoelessTim/RazerStream](https://github.com/ShoelessTim/RazerStream) | ✅ | ❌ | Native Swift host app, talks the wire protocol directly |
-| [@loupedeck/node](https://github.com/Julusian/node-loupedeck) | ✅ | ✅ | Node library, base for a custom host |
-| [foxxyz/loupedeck](https://github.com/foxxyz/loupedeck) | ✅ | ✅ | Node API: buttons, knobs, touch, drawing |
-| [Bitfocus Companion](https://github.com/bitfocus/companion) | ✅ | ✅ | Open-source control surface app, supports Loupedeck Live / RSC |
-| [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck/wiki) | ❌ | ✅ | .NET app for Loupedeck / RSC, plugin SDK |
+| [Loupedeck software](https://loupedeck.com/downloads/) | ✅ | ✅ | Official, Razer support kept in 6.4.1+ |
+| [ShoelessTim/RazerStream](https://github.com/ShoelessTim/RazerStream) | ✅ | ❌ | Native Swift app |
+| [@loupedeck/node](https://github.com/Julusian/node-loupedeck) | ✅ | ✅ | Node driver, used by Companion |
+| [foxxyz/loupedeck](https://github.com/foxxyz/loupedeck) | ✅ | ✅ | Node driver with drawing |
+| [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck) | ❌ | ✅ | .NET app, plugin SDK |
 
-None of these replace the device firmware: they are host-side clients.
-The device only draws tiles and reports input; behaviour lives on the host.
-No public custom firmware for this device is known yet, and the vendor firmware image is encrypted.
-Host client: Bitfocus Companion.
+All of them are host-side clients: the device only draws and reports input. No public custom firmware exists; see [device.md](docs/device.md).
 
-USB interfaces: CDC serial, vendor-specific, audio. No HID, so no keyboard-style wake from sleep.
-
-## Status
-
-See [PLAN.md](PLAN.md).
-
-Not affiliated with Razer, Loupedeck or Logitech.
+Status: [PLAN.md](PLAN.md). Not affiliated with Razer, Loupedeck, Logitech or Bitfocus.

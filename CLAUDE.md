@@ -1,27 +1,30 @@
 # CLAUDE.md
 
-Repo about stream controllers: configs, protocol notes, custom host software and (maybe) firmware.
-Current device: Razer Stream Controller (= Loupedeck Live hardware). Roadmap in `PLAN.md`.
+Config-as-code for a Razer Stream Controller (= Loupedeck Live) driven by Bitfocus Companion, on macOS now, Windows next.
+Status and next steps: `PLAN.md`.
 
-## Facts
+## Docs — read before touching the area
 
-- USB VID `0x1532`, PID `0x0D06`; serial CDC, WebSocket upgrade, binary frames. Details: `PROTOCOL.md` in ShoelessTim/RazerStream.
-- Official app (Loupedeck) holds the USB port: quit it before talking to the device from anything else.
-- Existing tools are host-side drivers, not firmware. Don't call them firmware.
-- Loupedeck 6.4.1 on macOS = Electron UI `/Applications/Loupedeck.app` + `/Applications/Utilities/LogiPluginService.app` (the service owns the device).
-- Service data: `~/Library/Application Support/Logi/LogiPluginService/`. RSC is device type `Loupedeck40`.
-  - Profiles: `Applications/Loupedeck40/<app>/Profiles/<GUID>/ProfileInfo.json` (pages, controls, actions) + `ActionImages/`, `ActionIcons/`, `ActionColors/`.
-  - Settings: `LoupedeckSettings.ini` (don't edit while the service runs). Auto backups: `Applications.Backups/*.zip`.
-  - Firmware downloads: `SotfwareUpdates/FW_C40_T0_<ver>.bin` (vendor blob, research only, never commit).
+- `docs/companion.md` — grid, button JSON, expressions, internal actions, HTTP/tRPC APIs, debugging, the module patch
+- `docs/macos.md` — `mediakey` and `streamd` (volume, Now Playing via perl), permissions, LaunchAgent
+- `docs/windows.md` — port plan: what carries over, what needs a Windows build
+- `docs/device.md` — USB, raw protocol events, `tools/sniff.py`, firmware
 
-## Local references
+## Loop
 
-- `~/git/github.com/SoelessTim/RazerStream` — clone of ShoelessTim/RazerStream (Swift, macOS 14+, SwiftPM + Makefile). Folder name has a typo, the GitHub owner is `ShoelessTim`.
+1. Edit pages in `tools/gen_pages.py` (the generated `companion/*` files are build output, committed).
+2. `make deploy` — regenerates pages, creates custom variables, imports pages into the running Companion. Overwrites pages 1 (MEDIA) and 2 (TEST).
+3. Verify before reporting done:
+   - inputs: `custom_log` actions or debug log lines `Button <page>/<row>/<col> pressed`
+   - state: `GET /api/custom-variable/<name>/value`, `POST /api/location/<p>/<r>/<c>/press`
+   - looks: web preview at `http://127.0.0.1:8000/buttons/1`; strips and haptics only on the device — ask the user
+
+Helpers: `make mediakey`, `make streamd` (LaunchAgent), `make patch-module` (+ Companion restart). Auto mode blocks the last two: hand them to the user.
 
 ## Rules
 
-- Never flash firmware or send firmware-update commands to the device without explicit confirmation in chat: bricking risk.
-- Don't commit vendor binaries (firmware dumps, Loupedeck installers, plugins). Link them instead.
-- Mark findings as verified (tried on the device) or assumed (read somewhere).
-- Builds and knowledge sharing go through GitHub Actions: anything that only builds on one laptop isn't done.
-- `gh`: `GITHUB_TOKEN` in the env may be stale; the keyring login works with `env -u GITHUB_TOKEN gh …`.
+- One process owns the serial port: Companion, Loupedeck or `sniff.py`.
+- Firmware: flash or send update commands only after explicit confirmation in chat (bricking risk). Vendor binaries stay out of git.
+- Mark findings verified (observed) or assumed (read).
+- Secrets stay out of the repo: the Companion REST key lives in `~/.config/zored-stream/companion-token`.
+- `gh`: run as `env -u GITHUB_TOKEN gh …` (the env token is stale, the keyring login works).
