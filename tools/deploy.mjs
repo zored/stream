@@ -5,12 +5,16 @@ import { basename } from 'node:path'
 const url = process.env.COMPANION_TRPC ?? 'ws://127.0.0.1:8000/trpc'
 const CHUNK = 64 * 1024
 
-const targets = process.argv.slice(2).map((arg) => {
+const args = process.argv.slice(2)
+const varsFlag = args.indexOf('--vars')
+const variables = varsFlag === -1 ? {} : JSON.parse(readFileSync(args.splice(varsFlag, 2)[1], 'utf8'))
+
+const targets = args.map((arg) => {
 	const [file, page] = arg.split(':')
 	if (!file || !page) throw new Error(`expected <file>:<page>, got "${arg}"`)
 	return { file, page: Number(page) }
 })
-if (targets.length === 0) throw new Error('usage: node tools/deploy.mjs <file>:<page> ...')
+if (targets.length === 0) throw new Error('usage: node tools/deploy.mjs [--vars <file>] <file>:<page> ...')
 
 const ws = new WebSocket(url)
 const pending = new Map()
@@ -55,7 +59,13 @@ await new Promise((resolve, reject) => {
 	ws.addEventListener('open', resolve, { once: true })
 	ws.addEventListener('error', () => reject(new Error(`can't connect to ${url}`)), { once: true })
 })
+async function ensureVariable(name, defaultVal) {
+	const error = await mutate('customVariables.create', { name, defaultVal })
+	if (error && error !== `Variable "${name}" already exists`) throw new Error(`custom variable ${name}: ${error}`)
+}
+
 try {
+	for (const [name, defaultVal] of Object.entries(variables)) await ensureVariable(name, defaultVal)
 	for (const target of targets) await deploy(target)
 } finally {
 	ws.close()

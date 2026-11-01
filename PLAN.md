@@ -55,11 +55,15 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 
 - [ ] Find how to send keystrokes on macOS (candidates: VICREO Hotkey module + listener, internal shell action with `osascript`)
 - [ ] Shell / open app / open URL via internal actions
-- [ ] Media + volume: page MEDIA (page 1). `tools/mediakey` (Swift, `make mediakey` → `~/.local/bin/mediakey`), no permissions needed:
-  - [x] volume / mute via AppleScript `set volume` (verified: 31 → 37 → 31 through Companion). No native HUD
-  - [ ] play / next / prev via private MediaRemote `MRMediaRemoteSendCommand`
-  - Dead end: synthetic media keys (`NSEvent` system-defined + `CGEvent.post`) from a Companion child process are silently ignored on macOS 26,
-    even with Accessibility granted and `CGPreflightPostEventAccess()` = true
+- [x] Media + volume: page MEDIA (page 1). `tools/mediakey` (Swift, `make mediakey` → `~/.local/bin/mediakey`) posts system media keys,
+  so it reaches whatever owns "Now Playing" (browser included) and shows the native volume HUD. Needs Companion in Accessibility.
+  - Gotcha: the process must sleep ~100 ms after `CGEvent.post` before exiting, otherwise the events are silently dropped
+  - Dead end: private MediaRemote `MRMediaRemoteSendCommand` returns true but browsers ignore it
+  - Left knob = volume (press = mute), right knob = tracks (press = play/pause), tiles + B1–B3 = prev / play / next
+- [x] Volume on the left touch strip while turning + ~1 s: `mediakey` prints the level → `exec` target variable `custom:volume`,
+  `custom:volume_until` = `time_unix + 1`, strip layers use expressions (`enabled`, `y`, `height`)
+- [x] Clock tile: `$(internal:time_hm)` + `$(internal:date_d).$(internal:date_m)`
+- [ ] Check play/pause / next / prev with browser audio after the rewrite
 - [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)
@@ -71,7 +75,9 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 - [x] Deploy without UI: `make deploy` → `tools/deploy.mjs` imports pages over Companion's internal tRPC WebSocket
   (`ws://127.0.0.1:8000/trpc`: `importExport.prepareImport.start` → `uploadChunk` → `complete` → `importSinglePage`)
 - [ ] Document restore: fresh install → `make mediakey deploy` → works
-- [ ] Windows: install Companion, import the same export, note OS-specific actions (keystrokes, shell)
+- [ ] Windows: Companion, `deploy.mjs` (Node) and the page files are cross-platform. Only `exec` commands are OS-specific:
+  build `mediakey.exe` with the same CLI (`volup|voldown|mute|play|next|prev`, prints the level) — `SendInput` media keys + Core Audio
+  `IAudioEndpointVolume` — and let `gen_pages.py` pick the command per OS. `make` → plain `node`/`python` commands or npm scripts
 
 Not planned: own client on `@loupedeck/node` / `foxxyz/loupedeck`, [LoupixDeck](https://github.com/RadiatorTwo/LoupixDeck) (no macOS),
 [ShoelessTim/RazerStream](https://github.com/ShoelessTim/RazerStream) (no Windows).

@@ -10,4 +10,4 @@ pages:
 	python3 -I tools/gen_pages.py companion
 
 deploy: pages
-	node tools/deploy.mjs companion/media-page.companionconfig:1 companion/test-page.companionconfig:2
+	node tools/deploy.mjs --vars companion/custom-variables.json companion/media-page.companionconfig:1 companion/test-page.companionconfig:2

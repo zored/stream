@@ -1,42 +1,55 @@
-import Foundation
+import AppKit
 
-let volumeStep = 6
-
-let scripts: [String: String] = [
-    "volup": "set volume output volume ((output volume of (get volume settings)) + \(volumeStep))",
-    "voldown": "set volume output volume ((output volume of (get volume settings)) - \(volumeStep))",
-    "mute": "set volume output muted (not (output muted of (get volume settings)))",
-]
-
-let mediaCommands: [String: Int32] = ["play": 2, "next": 4, "prev": 5]
+let keys: [String: Int] = ["volup": 0, "voldown": 1, "mute": 7, "play": 16, "next": 17, "prev": 18]
+let volumeKeys: Set<String> = ["volup", "voldown", "mute"]
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write((message + "\n").data(using: .utf8)!)
     exit(1)
 }
 
-func runScript(_ source: String) {
-    var error: NSDictionary?
-    NSAppleScript(source: source)!.executeAndReturnError(&error)
-    if let error { fail("mediakey: AppleScript failed: \(error)") }
-}
-
-func sendMediaCommand(_ command: Int32) {
-    typealias SendCommand = @convention(c) (Int32, CFDictionary?) -> Bool
-    guard let handle = dlopen("/System/Library/PrivateFrameworks/MediaRemote.framework/MediaRemote", RTLD_NOW),
-          let symbol = dlsym(handle, "MRMediaRemoteSendCommand") else {
-        fail("mediakey: MediaRemote unavailable")
-    }
-    guard unsafeBitCast(symbol, to: SendCommand.self)(command, nil) else {
-        fail("mediakey: MediaRemote rejected command \(command)")
-    }
-}
-
 let name = CommandLine.arguments.count == 2 ? CommandLine.arguments[1] : ""
-if let script = scripts[name] {
-    runScript(script)
-} else if let command = mediaCommands[name] {
-    sendMediaCommand(command)
-} else {
-    fail("usage: mediakey \((Array(scripts.keys) + Array(mediaCommands.keys)).sorted().joined(separator: "|"))")
+guard let key = keys[name] else {
+    fail("usage: mediakey \(keys.keys.sorted().joined(separator: "|"))")
+}
+
+guard AXIsProcessTrusted(), CGPreflightPostEventAccess() else {
+    fail("mediakey: the calling app needs Accessibility (System Settings → Privacy & Security → Accessibility)")
+}
+
+func post(down: Bool) {
+    let state = down ? 0xa : 0xb
+    guard let event = NSEvent.otherEvent(
+        with: .systemDefined,
+        location: .zero,
+        modifierFlags: NSEvent.ModifierFlags(rawValue: UInt(state << 8)),
+        timestamp: 0,
+        windowNumber: 0,
+        context: nil,
+        subtype: 8,
+        data1: (key << 16) | (state << 8),
+        data2: -1
+    ), let cgEvent = event.cgEvent else {
+        fail("mediakey: can't create event")
+    }
+    cgEvent.post(tap: .cghidEventTap)
+}
+
+func volumeSetting(_ field: String) -> NSAppleEventDescriptor {
+    var error: NSDictionary?
+    let result = NSAppleScript(source: "\(field) of (get volume settings)")!.executeAndReturnError(&error)
+    if let error { fail("mediakey: can't read \(field): \(error)") }
+    return result
+}
+
+func volume() -> Int {
+    volumeSetting("output muted").booleanValue ? 0 : Int(volumeSetting("output volume").int32Value)
+}
+
+post(down: true)
+post(down: false)
+usleep(100_000)
+
+if volumeKeys.contains(name) {
+    print(volume())
 }
