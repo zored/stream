@@ -8,8 +8,9 @@ ALPHABET = string.ascii_letters + string.digits + "_-"
 RAINBOW = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0x8000FF, 0xFF00FF]
 MEDIAKEY = "$HOME/.local/bin/mediakey"
 STREAMD = "http://127.0.0.1:47113"
-CUSTOM_VARIABLES = {name: "" for name in ("volume", "volume_anim", "volume_visible", "np_playing", "np_title", "np_artist")}
-VOLUME_VISIBLE = "$(custom:volume_visible) == 1"
+CUSTOM_VARIABLES = {name: "" for name in (
+    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_marquee", "np_track")}
+VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 rng = random.Random()
 
@@ -30,14 +31,14 @@ def prop(value):
     return value if isinstance(value, dict) else v(value)
 
 
-def geometry(enabled=None, y=None, height=None):
-    return {"enabled": enabled or v(True), "opacity": v(100), "x": v(0), "y": y or v(0), "width": v(100),
-            "height": height or v(100), "rotation": v(0)}
+def geometry(enabled=None, opacity=None, x=None, y=None, width=None, height=None, rotation=None):
+    return {"enabled": enabled or v(True), "opacity": opacity or v(100), "x": x or v(0), "y": y or v(0),
+            "width": width or v(100), "height": height or v(100), "rotation": rotation or v(0)}
 
 
 def canvas(decoration="none"):
     return {"id": "canvas", "name": "Canvas", "usage": "auto", "type": "canvas",
-            "decoration": v(decoration), "showStatusIcons": v("default")}
+            "decoration": v(decoration), "showStatusIcons": v("none")}
 
 
 def box(layer_id, color, **geo):
@@ -107,14 +108,19 @@ def logged(name, label, bg, fg=0xFFFFFF, rotary=False):
 def volume_cell(row):
     base = (2 - row) * 100 / 3
     fill = f"max(0, min(100, ($(custom:volume_anim) - {base:.2f}) * 3))"
-    visible = expr(VOLUME_VISIBLE)
+    visible = expr(VOLUME_ALPHA)
+    cell_w, cell_h, strip_h = 60, 90, 270
+    center_y = strip_h / 2 - cell_h * row
     style = [
         canvas(),
-        box("track", 0x202020, enabled=visible),
-        box("fill", 0x3FA9F5, enabled=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
+        text("np", "$(custom:np_track)", fontsize=28, opacity=expr(f"100 - {VOLUME_ALPHA}"), rotation=v(90),
+             x=v(round((cell_w / 2 - strip_h / 2) / cell_w * 100, 2)), width=v(round(strip_h / cell_w * 100, 2)),
+             y=v(round((center_y - cell_w / 2) / cell_h * 100, 2)), height=v(round(cell_w / cell_h * 100, 2))),
+        box("track", 0x202020, opacity=visible),
+        box("fill", 0x3FA9F5, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
     ]
     if row == 1:
-        style.append(text("level", "$(custom:volume)", enabled=visible))
+        style.append(text("level", "$(custom:volume)", fontsize=14, opacity=visible))
     return button(style)
 
 
@@ -122,8 +128,8 @@ def play_pause():
     return button([
         canvas(),
         box("box0", 0x000000),
-        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), height=v(55)),
-        text("title", "$(custom:np_title)", color=0xAAAAAA, fontsize=14, shrink=False, y=v(55), height=v(45)),
+        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), height=v(45)),
+        text("title", "$(custom:np_marquee)", fontsize=44, x=v(-4), width=v(108), y=v(45), height=v(55)),
     ], down=[mediakey("play")])
 
 
@@ -159,14 +165,21 @@ def media_page():
         (1, 0): button(labelled("TRACK"), down=[mediakey("play")], left=[mediakey("prev")], right=[mediakey("next")]),
         **{(r, 1): volume_cell(r) for r in range(3)},
         (0, 2): play_pause(),
-        (0, 5): clock(),
+        (2, 5): clock(),
         (3, 1): play_led(),
     }
 
 
+def blank():
+    return button([canvas(), box("box0", 0x000000)])
+
+
 def export(name, grid):
     controls = {}
-    for (r, c), control in grid.items():
+    for r in range(4):
+        for c in range(8):
+            grid.setdefault((r, c), blank())
+    for (r, c), control in sorted(grid.items()):
         controls.setdefault(str(r), {})[str(c)] = control
     return {
         "version": 12,

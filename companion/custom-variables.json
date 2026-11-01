@@ -1,8 +1,10 @@
 {
  "volume": "",
  "volume_anim": "",
- "volume_visible": "",
+ "volume_alpha": "",
  "np_playing": "",
  "np_title": "",
- "np_artist": ""
+ "np_artist": "",
+ "np_marquee": "",
+ "np_track": ""
 }

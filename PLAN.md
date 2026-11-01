@@ -55,9 +55,12 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
 
 - [ ] Find how to send keystrokes on macOS (candidates: VICREO Hotkey module + listener, internal shell action with `osascript`)
 - [ ] Shell / open app / open URL via internal actions
-- [x] Media page MEDIA (page 1), black tiles, no Companion top bar (`decoration: none`):
+- [x] Media page MEDIA (page 1): black tiles, no Companion top bar / status icons (`decoration`, `showStatusIcons: none`), every empty cell is an explicit black button
   - left knob 1 = volume (press = mute) → `streamd`; left knob 2 = tracks (press = play/pause) → `mediakey`
-  - play tile: ⏸/▶ from the OS playback state + track title; B2 LED bright green while playing; clock tile
+  - play tile: ⏸/▶ from the OS playback state + scrolling track name (`np_marquee`); B2 LED bright green while playing
+  - left touch strip: "artist — title" rotated 90° across all 3 cells (one 270×60 text layer, offset per 60×90 cell, clipped);
+    while the volume changes it fades into the volume bar. Swiping the strip changes the volume (needs `make patch-module`)
+  - clock tile bottom-right
 - [x] `tools/mediakey` (Swift, `make mediakey`): system media key events (play / next / prev), reaches the browser too.
   Needs Companion in Accessibility. Gotcha: sleep ~100 ms after `CGEvent.post`, otherwise events are dropped.
   Dead end: MediaRemote `MRMediaRemoteSendCommand` returns true but browsers ignore it
@@ -66,7 +69,13 @@ Known weak spots to check early: keystrokes on macOS need a helper; per-app page
   - pushes `custom:volume`, `volume_anim` (30 fps easing), `volume_visible` (any change + 1 s, keyboard too) to Companion
   - now playing every 0.5 s → `custom:np_playing`, `np_title`, `np_artist`. Since macOS 15.4 MediaRemote reads return nothing
     for third-party processes; running inside Apple-signed `/usr/bin/perl` (DynaLoader) gets around it
-- [ ] Install the LaunchAgent (`make streamd`) — needs your OK, auto mode blocked it
+- [x] LaunchAgent installed (`make streamd`; restart = `launchctl kickstart -k`, a bootout + bootstrap pair races)
+- [ ] `make patch-module` + restart Companion: patches the installed Loupedeck surface module (idempotent, fails if the code changed)
+  - haptic tap on button / tile press (driver has `vibrate()`, the module never calls it)
+  - left strip swipe → `streamd /volume/drag?dy=` (buttons mode doesn't expose continuous touch position, slider mode can't draw text)
+  - module updates wipe the patch → re-run; upstream PR to companion-surface-loupedeck is the proper fix
+- Companion's custom-variable HTTP API rejects an empty text body ("No value"); `streamd` sends JSON strings
+- `streamd` idle CPU ~1.7 %: animation timer runs only while the volume changes; marquee = one tiny update per 0.3 s
 - [ ] Display brightness
 - [ ] Knobs: volume, scroll, brightness; button LEDs reflect state (mute, recording, etc.)
 - [ ] Pages: IDE, browser, terminal, calls; check whether page switching by frontmost app is possible (module or small helper script)

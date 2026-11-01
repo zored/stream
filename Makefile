@@ -5,7 +5,7 @@ AGENT = com.zored.stream.streamd
 AGENT_PLIST = $(HOME)/Library/LaunchAgents/$(AGENT).plist
 DOMAIN = gui/$(shell id -u)
 
-.PHONY: mediakey streamd streamd-uninstall pages deploy
+.PHONY: mediakey streamd streamd-uninstall patch-module pages deploy
 
 mediakey:
 	mkdir -p $(BIN)
@@ -17,12 +17,15 @@ streamd:
 		-framework AudioToolbox -o $(LIB)/libstreamd.dylib tools/streamd/streamd.m
 	cp tools/streamd/streamd.pl $(SHARE)/streamd.pl
 	sed 's|@HOME@|$(HOME)|g' tools/streamd/$(AGENT).plist > $(AGENT_PLIST)
-	if launchctl print $(DOMAIN)/$(AGENT) >/dev/null 2>&1; then launchctl bootout $(DOMAIN)/$(AGENT); fi
-	launchctl bootstrap $(DOMAIN) $(AGENT_PLIST)
+	if launchctl print $(DOMAIN)/$(AGENT) >/dev/null 2>&1; then launchctl kickstart -k $(DOMAIN)/$(AGENT); \
+	else launchctl bootstrap $(DOMAIN) $(AGENT_PLIST); fi
 
 streamd-uninstall:
 	if launchctl print $(DOMAIN)/$(AGENT) >/dev/null 2>&1; then launchctl bootout $(DOMAIN)/$(AGENT); fi
 	rm -f $(AGENT_PLIST)
+
+patch-module:
+	python3 -I tools/patch_module.py
 
 pages:
 	python3 -I tools/gen_pages.py companion
