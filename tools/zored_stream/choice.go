@@ -15,6 +15,7 @@ const (
 	choicePollEvery = 500 * time.Millisecond
 	choicePicked    = 0x00FF00
 	choiceLive      = 0xFF0000
+	choiceKeepPolls = 3
 )
 
 type choiceOption struct {
@@ -83,6 +84,7 @@ type choice struct {
 	vars     *vars
 	read     func() (*choiceCard, choiceTarget, string, error)
 	why      string
+	failures int
 	card     *choiceCard
 	target   choiceTarget
 	consumed [choiceButtons + 1]bool
@@ -95,11 +97,20 @@ func newChoice(v *vars, read func() (*choiceCard, choiceTarget, string, error)) 
 
 func (c *choice) poll() {
 	card, target, why, err := c.read()
-	if err != nil {
-		log.Printf("choice: %v", err)
-		why = err.Error()
-	}
 	c.mu.Lock()
+	if err != nil {
+		c.why = err.Error()
+		c.failures++
+		keep := c.failures <= choiceKeepPolls
+		c.mu.Unlock()
+		log.Printf("choice: %v (keeping the previous card: %v)", err, keep)
+		if keep {
+			return
+		}
+		c.mu.Lock()
+	} else {
+		c.failures = 0
+	}
 	c.card, c.target, c.why = card, target, why
 	c.mu.Unlock()
 	c.publish(card)

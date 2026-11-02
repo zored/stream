@@ -225,6 +225,7 @@ func (a *agents) focus() error {
 	}
 	target := *next
 	a.mu.Unlock()
+	log.Printf("agents: focus %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
 	a.publish()
 	return target.open()
 }

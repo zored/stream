@@ -17,5 +17,5 @@ int ax_int_value(AXUIElementRef element, int *out);
 int ax_press(AXUIElementRef element);
 int ax_focus(AXUIElementRef element);
 char *ax_card(AXUIElementRef window);
-int ax_card_press(AXUIElementRef window, const char *text, int select);
+int ax_card_press(AXUIElementRef window, const char *text);
 void ax_release(AXUIElementRef element);

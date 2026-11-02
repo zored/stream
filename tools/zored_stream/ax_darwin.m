@@ -272,7 +272,7 @@ char *ax_card(AXUIElementRef window) {
     }
 }
 
-int ax_card_press(AXUIElementRef window, const char *text, int select) {
+int ax_card_press(AXUIElementRef window, const char *text) {
     @autoreleasepool {
         AXUIElementRef root = card_root(window);
         if (!root) return -1;
@@ -286,15 +286,7 @@ int ax_card_press(AXUIElementRef window, const char *text, int select) {
         });
         CFRelease(root);
         if (!hit) return -2;
-        AXError err = kAXErrorSuccess;
-        for (int attempt = 0; attempt < (select ? 3 : 1); attempt++) {
-            err = AXUIElementPerformAction(hit, kAXPressAction);
-            if (err != kAXErrorSuccess || !select) break;
-            usleep(150000);
-            int value = 0;
-            if (ax_int_value(hit, &value) && value == 1) break;
-            err = -3;
-        }
+        AXError err = AXUIElementPerformAction(hit, kAXPressAction);
         CFRelease(hit);
         return err;
     }

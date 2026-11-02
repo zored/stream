@@ -97,7 +97,7 @@ type desktopTarget struct {
 	forwardLabel string
 }
 
-func desktopPress(text string, selectOption bool) error {
+func desktopPress(text string) error {
 	pid := claudePid()
 	if pid == 0 {
 		return errNoClaude
@@ -105,7 +105,7 @@ func desktopPress(text string, selectOption bool) error {
 	return inClaudeWindow(pid, func(w C.AXUIElementRef) error {
 		cText := C.CString(text)
 		defer C.free(unsafe.Pointer(cText))
-		if code := C.ax_card_press(w, cText, C.int(map[bool]int{true: 1, false: 0}[selectOption])); code != 0 {
+		if code := C.ax_card_press(w, cText); code != 0 {
 			return fmt.Errorf("press %q in the question card: %d", text, code)
 		}
 		return nil
@@ -113,19 +113,24 @@ func desktopPress(text string, selectOption bool) error {
 }
 
 func (t desktopTarget) choose(card choiceCard, i int) error {
-	if err := desktopPress(t.titles[i], !card.Multi); err != nil {
-		return err
-	}
 	if card.Multi {
-		return nil
+		return desktopPress(t.titles[i])
 	}
-	time.Sleep(choiceSettle)
-	return t.forward(card)
+	for range 3 {
+		if err := desktopPress(t.titles[i]); err != nil {
+			return err
+		}
+		time.Sleep(choiceSettle)
+		if now, _, err := readDesktopCard(claudePid()); err == nil && now != nil && i < len(now.Options) && now.Options[i].Selected {
+			return t.forward(card)
+		}
+	}
+	return fmt.Errorf("option %q did not get picked", t.titles[i])
 }
 
-func (t desktopTarget) forward(choiceCard) error { return desktopPress(t.forwardLabel, false) }
-func (t desktopTarget) back(choiceCard) error    { return desktopPress("Show previous question", false) }
-func (t desktopTarget) skip(choiceCard) error    { return desktopPress("Skip", false) }
+func (t desktopTarget) forward(choiceCard) error { return desktopPress(t.forwardLabel) }
+func (t desktopTarget) back(choiceCard) error    { return desktopPress("Show previous question") }
+func (t desktopTarget) skip(choiceCard) error    { return desktopPress("Skip") }
 
 type cliTarget struct {
 	a       *agents
