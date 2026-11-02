@@ -27,13 +27,14 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 - Pages as code: `gen_pages.py` → `make deploy` over tRPC, no UI clicks
 - MEDIA page: volume knob with acceleration, track knob, play/pause tile with OS state, clock, track on the strip rotated 90°,
   animated volume bar, strip swipe volume, haptics ([companion.md](docs/companion.md), [macos.md](docs/macos.md))
-- `mediakey`, `streamd` (LaunchAgent), `patch-module` installed on the Mac
+- `mediakey`, `streamd` (LaunchAgent) installed on the Mac
 
 ## Done (2026-11-02)
 
 - VK WorkSpace calls: buttons 2/3 toggle mic/camera, push-to-talk, button 4 hangs up; LEDs + tiles from the client's real state
   via its local gRPC, `pending` while the camera starts ([vkcall.md](docs/vkcall.md))
 - Ideas backlog collected (below)
+- Track strip: `zored_stream` `np_svg` — gray artist | bold title (two lines when long), like mark inside; clock `2/5` stretched SVG + gray `DD.MM` date
 - Yandex Music like: hold play tile / knob 2, second haptic at 400 ms, ♥/💔 on the strip from the app's player bar
   via Accessibility (`ymusic`); MediaRemote, local API, deeplinks, hotkeys are dead ends ([ymusic.md](docs/ymusic.md))
 
@@ -42,12 +43,11 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 ### macOS polish
 
 - [x] Disable Loupedeck autostart: `launchctl disable gui/$(id -u)/com.logi.pluginservice.launch` (undo: `enable`)
-- [ ] Companion autostart at login, headless: "start minimized" set by hand; move it into config so a fresh install gets it
+- [x] Companion autostart at login, headless: `make companion`
 - [ ] Restore test from scratch: fresh Companion → README setup → works
-- [ ] Personal forks of the libs we patch (companion-surface-loupedeck, node-loupedeck if needed), branch `zored_stream`,
-  cloned next to this repo; Companion runs the fork, `patch-module` goes away
-- [ ] Upstream PR from the fork: haptics + strip touch position in buttons mode
-- [ ] Gentle haptic ticks while sliding along a strip
+- [x] Fork of companion-surface-loupedeck, branch `zored_stream`, cloned next to this repo; `make module` replaced `patch-module`;
+  node-loupedeck not needed; no upstream PR, changes stay in the fork
+- [x] Gentle haptic ticks while sliding along a strip: `SHORT_LOWER` every 10px
 
 ### More buttons and actions
 
@@ -73,6 +73,9 @@ Desk and display:
 Windows and apps:
 - [ ] Window switcher on a knob (Alt+Tab / Ctrl+Tab): needs keystrokes (above); hold modifier while turning, release on knob stop
 - [ ] Timers on a knob: turn sets the duration, press starts, countdown on the strip, haptic at the end
+- [ ] Keyboard layout on a tile (EN/RU), press switches: Text Input Sources (`TISCopyCurrentKeyboardInputSource`, `TISSelectInputSource`,
+  change notification) in `zored_stream`
+- [ ] Media seek on a knob (free left knob `2/0`): MediaRemote `SetElapsedTime` / seek commands via the perl Now Playing host; position on the strip
 - [ ] Frontmost app icon on a tile, press cycles its windows
 
 AI agents:
@@ -84,6 +87,9 @@ AI agents:
 Communication:
 - [ ] Calendar: next meeting countdown on the strip, LED turns orange 5 min before, press joins the call
 - [ ] Unread Telegram / VK WorkSpace: Dock badge via AX (`AXStatusLabel`), works for any app; press opens the app
+
+Helpers:
+- [x] One daemon `zored_stream` (Go): calls, volume, Now Playing, Yandex Music like; `vkcall`/`streamd`/`ymusic` removed ([daemon.md](docs/daemon.md))
 
 Network:
 - [ ] Viscosity VPN on/off with status color: Viscosity AppleScript (`connect`, `disconnect`, connection state)
@@ -102,4 +108,4 @@ Network:
 
 ### CI
 
-- [ ] GitHub Actions: `make pages` is deterministic → fail if `companion/` differs; build `mediakey`/`streamd` on `macos-latest`
+- [x] GitHub Actions: `make pages` is deterministic → fail if `companion/` differs; build `mediakey`/`streamd` on `macos-latest`
