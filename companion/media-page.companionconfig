@@ -614,61 +614,6 @@
          "value": "inside",
          "isExpression": false
         }
-       },
-       {
-        "id": "dots",
-        "name": "dots",
-        "usage": "auto",
-        "type": "image",
-        "pinnedProperties": [
-         "base64Image",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": 100,
-         "isExpression": false
-        },
-        "x": {
-         "value": 6,
-         "isExpression": false
-        },
-        "y": {
-         "value": 6,
-         "isExpression": false
-        },
-        "width": {
-         "value": 88,
-         "isExpression": false
-        },
-        "height": {
-         "value": 88,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "base64Image": {
-         "value": "$(custom:agents_svg)",
-         "isExpression": true
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fillMode": {
-         "value": "fit",
-         "isExpression": false
-        }
        }
       ]
      },
@@ -676,33 +621,7 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [
-         {
-          "type": "action",
-          "id": "X1UuxRPtxEusuggvtq2rD",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ],
+        "down": [],
         "up": []
        },
        "options": {
@@ -2892,6 +2811,61 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "dots",
+        "name": "dots",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 88,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:agents_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -2899,7 +2873,33 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
+        "down": [
+         {
+          "type": "action",
+          "id": "X1UuxRPtxEusuggvtq2rD",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
         "up": []
        },
        "options": {
@@ -5509,8 +5509,8 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:agents_led)",
-         "isExpression": true
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -5535,33 +5535,7 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [
-         {
-          "type": "action",
-          "id": "eS6Fum16PeYiojl0PTnwz",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ],
+        "down": [],
         "up": []
        },
        "options": {
@@ -6129,8 +6103,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:agents_led)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -6155,7 +6129,33 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
+        "down": [
+         {
+          "type": "action",
+          "id": "eS6Fum16PeYiojl0PTnwz",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
         "up": []
        },
        "options": {

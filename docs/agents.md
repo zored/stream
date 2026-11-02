@@ -5,8 +5,8 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 
 ## Controls
 
-- кнопка 1 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
-- тайл ряд 1, колонка 1: one dot per waiting session, amber = needs input, gray = done, input first; a number above 8.
+- кнопка 6 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
+- тайл ряд 2, колонка 4: one dot per waiting session, amber = needs input, gray = done, input first; a number above 8.
 - Press either: focus the next waiting session (needs input first, oldest first), the next press moves on and wraps.
   Focusing a "done" session drops it; "needs input" stays until the agent resumes.
 
