@@ -54,22 +54,30 @@ func readChoiceCard(a *agents) (*choiceCard, choiceTarget, string, error) {
 	return card, cliTarget{a: a, id: id, uid: uid}, "iTerm2 session " + uid, nil
 }
 
-func readDesktopCard(pid C.pid_t) (*choiceCard, choiceTarget, error) {
+func desktopDump(pid C.pid_t, kind C.int) string {
 	var dump string
 	err := inClaudeWindow(pid, func(w C.AXUIElementRef) error {
-		s := C.ax_card(w)
+		s := C.ax_card(w, kind)
 		if s != nil {
 			dump = C.GoString(s)
 			C.free(unsafe.Pointer(s))
 		}
 		return nil
 	})
-	if err != nil || dump == "" {
-		return nil, nil, nil
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(dump)
+}
+
+func readDesktopCard(pid C.pid_t) (*choiceCard, choiceTarget, error) {
+	dump := desktopDump(pid, C.AX_CARD_QUESTION)
+	if dump == "" {
+		return readDesktopBox(pid)
 	}
 	card := &choiceCard{Index: 1, Count: 1}
 	target := desktopTarget{}
-	for _, line := range strings.Split(strings.TrimSpace(dump), "\n") {
+	for _, line := range strings.Split(dump, "\n") {
 		f := strings.Split(line, "\t")
 		switch {
 		case f[0] == "opt" && len(f) == 3:
@@ -92,12 +100,40 @@ func readDesktopCard(pid C.pid_t) (*choiceCard, choiceTarget, error) {
 	return card, target, nil
 }
 
+func readDesktopBox(pid C.pid_t) (*choiceCard, choiceTarget, error) {
+	dump := desktopDump(pid, C.AX_CARD_BOX)
+	if dump == "" {
+		return nil, nil, nil
+	}
+	card := &choiceCard{Index: 1, Count: 1, NoSkip: true}
+	target := boxTarget{}
+	for _, line := range strings.Split(dump, "\n") {
+		switch f := strings.Split(line, "\t"); {
+		case f[0] == "opt" && len(f) == 3:
+			card.Options = append(card.Options, choiceOption{Label: f[1]})
+			target.titles = append(target.titles, f[1])
+		case f[0] == "btn" && f[1] == "Dismiss":
+			card.NoSkip = false
+		}
+	}
+	return card, target, nil
+}
+
+type boxTarget struct{ titles []string }
+
+func (t boxTarget) choose(_ choiceCard, i int) error {
+	return desktopPress(C.AX_CARD_BOX, t.titles[i])
+}
+func (t boxTarget) forward(choiceCard) error { return nil }
+func (t boxTarget) back(choiceCard) error    { return nil }
+func (t boxTarget) skip(choiceCard) error    { return desktopPress(C.AX_CARD_BOX, "Dismiss") }
+
 type desktopTarget struct {
 	titles       []string
 	forwardLabel string
 }
 
-func desktopPress(text string) error {
+func desktopPress(kind C.int, text string) error {
 	pid := claudePid()
 	if pid == 0 {
 		return errNoClaude
@@ -105,7 +141,7 @@ func desktopPress(text string) error {
 	return inClaudeWindow(pid, func(w C.AXUIElementRef) error {
 		cText := C.CString(text)
 		defer C.free(unsafe.Pointer(cText))
-		if code := C.ax_card_press(w, cText); code != 0 {
+		if code := C.ax_card_press(w, kind, cText); code != 0 {
 			return fmt.Errorf("press %q in the question card: %d", text, code)
 		}
 		return nil
@@ -114,10 +150,10 @@ func desktopPress(text string) error {
 
 func (t desktopTarget) choose(card choiceCard, i int) error {
 	if card.Multi {
-		return desktopPress(t.titles[i])
+		return desktopPress(C.AX_CARD_QUESTION, t.titles[i])
 	}
 	for range 3 {
-		if err := desktopPress(t.titles[i]); err != nil {
+		if err := desktopPress(C.AX_CARD_QUESTION, t.titles[i]); err != nil {
 			return err
 		}
 		time.Sleep(choiceSettle)
@@ -128,9 +164,13 @@ func (t desktopTarget) choose(card choiceCard, i int) error {
 	return fmt.Errorf("option %q did not get picked", t.titles[i])
 }
 
-func (t desktopTarget) forward(choiceCard) error { return desktopPress(t.forwardLabel) }
-func (t desktopTarget) back(choiceCard) error    { return desktopPress("Show previous question") }
-func (t desktopTarget) skip(choiceCard) error    { return desktopPress("Skip") }
+func (t desktopTarget) forward(choiceCard) error {
+	return desktopPress(C.AX_CARD_QUESTION, t.forwardLabel)
+}
+func (t desktopTarget) back(choiceCard) error {
+	return desktopPress(C.AX_CARD_QUESTION, "Show previous question")
+}
+func (t desktopTarget) skip(choiceCard) error { return desktopPress(C.AX_CARD_QUESTION, "Skip") }
 
 type cliTarget struct {
 	a       *agents

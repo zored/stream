@@ -229,9 +229,19 @@ static int is_option(AXUIElementRef element, NSString *role) {
            card_attr(element, kAXDescriptionAttribute).length == 0 && card_attr(element, kAXTitleAttribute).length > 0;
 }
 
-static AXUIElementRef card_root(AXUIElementRef window) {
+static int is_box_option(AXUIElementRef element, NSString *role) {
+    return [role isEqualToString:@"AXButton"] && card_attr(element, kAXDescriptionAttribute).length == 0 &&
+           card_attr(element, kAXTitleAttribute).length > 0;
+}
+
+static int card_option(int kind, AXUIElementRef element, NSString *role) {
+    return kind == AX_CARD_QUESTION ? is_option(element, role) : is_box_option(element, role);
+}
+
+static AXUIElementRef card_root(AXUIElementRef window, int kind) {
     int truncated = 0;
-    AXUIElementRef node = ax_find_attr(window, "AXButton", "AXTitle", "Skip", 0, 20000, &truncated);
+    AXUIElementRef node = kind == AX_CARD_QUESTION ? ax_find_attr(window, "AXButton", "AXTitle", "Skip", 0, 20000, &truncated)
+                                                   : ax_find_attr(window, "AXGroup", "AXDescription", "Suggested next", 1, 20000, &truncated);
     for (int level = 0; node && level < 6; level++) {
         CFTypeRef parent = NULL;
         AXUIElementCopyAttributeValue(node, kAXParentAttribute, &parent);
@@ -240,22 +250,22 @@ static AXUIElementRef card_root(AXUIElementRef window) {
         if (!node) break;
         __block int options = 0;
         int budget = 2000;
-        card_walk(node, 0, &budget, ^(AXUIElementRef e, NSString *role) { options += is_option(e, role); });
+        card_walk(node, 0, &budget, ^(AXUIElementRef e, NSString *role) { options += card_option(kind, e, role); });
         if (options > 0) return node;
     }
     if (node) CFRelease(node);
     return NULL;
 }
 
-char *ax_card(AXUIElementRef window) {
+char *ax_card(AXUIElementRef window, int kind) {
     @autoreleasepool {
-        AXUIElementRef root = card_root(window);
+        AXUIElementRef root = card_root(window, kind);
         if (!root) return NULL;
         NSMutableString *out = [NSMutableString string];
         int budget = 2000;
         card_walk(root, 0, &budget, ^(AXUIElementRef e, NSString *role) {
             NSString *title = card_attr(e, kAXTitleAttribute), *desc = card_attr(e, kAXDescriptionAttribute);
-            if (is_option(e, role)) {
+            if (card_option(kind, e, role)) {
                 int value = 0;
                 ax_int_value(e, &value);
                 [out appendFormat:@"opt\t%@\t%d\n", title, value];
@@ -272,9 +282,9 @@ char *ax_card(AXUIElementRef window) {
     }
 }
 
-int ax_card_press(AXUIElementRef window, const char *text) {
+int ax_card_press(AXUIElementRef window, int kind, const char *text) {
     @autoreleasepool {
-        AXUIElementRef root = card_root(window);
+        AXUIElementRef root = card_root(window, kind);
         if (!root) return -1;
         NSString *want = [NSString stringWithUTF8String:text];
         __block AXUIElementRef hit = NULL;

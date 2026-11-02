@@ -28,6 +28,7 @@ type choiceCard struct {
 	Multi   bool
 	Index   int
 	Count   int
+	NoSkip  bool
 }
 
 type choiceTarget interface {
@@ -55,6 +56,8 @@ func (c choiceCard) action(b int) (choiceAct, int) {
 	switch {
 	case b == 1 && c.Index > 1:
 		return actBack, 0
+	case b == 1 && c.NoSkip:
+		return actNone, 0
 	case b == 1:
 		return actSkip, 0
 	case b == choiceButtons && c.nav():
@@ -111,6 +114,9 @@ func (c *choice) poll() {
 	} else {
 		c.failures = 0
 	}
+	if (card == nil) != (c.card == nil) {
+		log.Printf("choice: card %v (%s)", card != nil, why)
+	}
 	c.card, c.target, c.why = card, target, why
 	c.mu.Unlock()
 	c.publish(card)
@@ -131,6 +137,7 @@ func (c *choice) down(b int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.card == nil {
+		log.Printf("choice: button %d down with no card (%s)", b, c.why)
 		return errors.New("no choice on screen")
 	}
 	select {

@@ -142,5 +142,10 @@ Picking the only choice of the last question submits the card.
   multiple choice, `Tab`/`Shift-Tab` move, `Tab` past the last question opens the review where `1` submits, `Esc` cancels.
   Verified 2026-11-03 in iTerm2 with Opus: single choice went on to the next question, multiple-choice toggles, finish submitted.
   The first use asks for Automation permission (`zored_stream` → iTerm2).
+- Claude Desktop next-step box (the recap with a question and reply buttons under the last message): кнопка 1 = `Dismiss`
+  when the box has one, кнопки 2… = its buttons in order, a press clicks it. Verified 2026-11-03: кнопка 3 clicked the second
+  reply. AX: an `AXGroup` described `Suggested next actions…` next to the question text; replies are `AXButton`s with a title and
+  no description. A box that waits on the user has no `Dismiss` button (anchoring on `Dismiss` missed it), so кнопка 1 stays
+  dark there. A question card wins over a box.
 - Permission prompts in the CLI: кнопка 2 = `1` (yes), кнопка 1 = `Esc` (not run yet). In Claude Desktop the permission card is not handled yet:
   its AX tree has not been seen (this session runs in auto mode).

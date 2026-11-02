@@ -31,6 +31,7 @@ func TestChoiceAction(t *testing.T) {
 		{"back on second question", second, 1, actBack, 0},
 		{"button 8 pages forward", second, 8, actForward, 0},
 		{"button 7 is option 6 with nav", second, 7, actChoose, 5},
+		{"no skip on a box without dismiss", choiceCard{Options: options(2), Index: 1, Count: 1, NoSkip: true}, 1, actNone, 0},
 	}
 	for _, tt := range tests {
 		act, i := tt.card.action(tt.b)
