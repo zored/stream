@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
@@ -107,26 +106,53 @@ func (n *nowPlaying) setLike(state string) {
 	}
 }
 
+type svgLine struct {
+	markup string
+	runes  int
+}
+
+func span(attr, text string) svgLine {
+	return svgLine{fmt.Sprintf(`<tspan %s>%s</tspan>`, attr, html.EscapeString(text)), utf8.RuneCountInString(text)}
+}
+
+func join(lines ...svgLine) svgLine {
+	out := svgLine{}
+	for _, l := range lines {
+		out.markup += l.markup
+		out.runes += l.runes
+	}
+	return out
+}
+
+func lineWidth(l svgLine) int {
+	return l.runes * svgFont * 62 / 100 * 112 / 100
+}
+
 func trackSVG(t track, like string) string {
 	mark := ""
 	if t.App == yandexMusic {
 		mark = map[string]string{"liked": "💖 ", "disliked": "💔 "}[like]
 	}
-	parts := []string{html.EscapeString(mark)}
-	if t.Artist != "" {
-		parts = append(parts, fmt.Sprintf(`<tspan fill="#888">%s</tspan>`, html.EscapeString(t.Artist)))
-		if t.Title != "" {
-			parts = append(parts, `<tspan fill="#888"> | </tspan>`)
+	artist := join(span(`fill="#fff"`, mark), span(`fill="#888"`, t.Artist))
+	title := span(`font-weight="bold"`, t.Title)
+	lines := []svgLine{join(artist, title)}
+	if t.Artist != "" && t.Title != "" {
+		lines = []svgLine{join(artist, span(`fill="#888"`, " | "), title)}
+		if lineWidth(lines[0]) > svgMinWidth {
+			lines = []svgLine{artist, title}
 		}
 	}
-	if t.Title != "" {
-		parts = append(parts, fmt.Sprintf(`<tspan font-weight="bold">%s</tspan>`, html.EscapeString(t.Title)))
+	width := svgMinWidth
+	for _, l := range lines {
+		width = max(width, lineWidth(l))
 	}
-	runes := utf8.RuneCountInString(mark + t.Artist + " | " + t.Title)
-	width := max(svgMinWidth, runes*svgFont*62/100*112/100)
-	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d"><text x="%d" y="%d" `+
-		`text-anchor="middle" font-family="Helvetica" font-size="%d" fill="#fff">%s</text></svg>`,
-		width, svgHeight, width/2, svgHeight/2+svgFont*35/100, svgFont, strings.Join(parts, ""))
+	texts := ""
+	for i, l := range lines {
+		center := svgHeight * (2*i + 1) / (2 * len(lines))
+		texts += fmt.Sprintf(`<text x="%d" y="%d">%s</text>`, width/2, center+svgFont*35/100, l.markup)
+	}
+	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d"><g text-anchor="middle" `+
+		`font-family="Helvetica" font-size="%d" fill="#fff">%s</g></svg>`, width, svgHeight, svgFont, texts)
 	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(svg))
 }
 
