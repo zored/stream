@@ -24,7 +24,8 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
 - Volume via CoreAudio (`kAudioHardwareServiceDeviceProperty_VirtualMainVolume`, same scale as the system slider). No native HUD:
   the strip is the HUD.
 - Pushes Companion custom variables (must exist: `make deploy` creates them from `companion/custom-variables.json`):
-  - `volume` (text, `MUTE` when muted; not shown on the strip, the white bar is the HUD), `volume_anim` (eased 30 fps), `volume_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s)
+  - `volume` (text, `MUTE` when muted; not shown on the strip, the white bar is the HUD)
+  - the left-strip bar, shared with brightness (`bar.go`): `bar_value` (eased 30 fps), `bar_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s), `bar_mode` (`volume`, `mac`, `ctl`: who moved it last)
   - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), `np_app` (bundle id of the Now Playing app),
     `np_svg` (base64 SVG data URI for the track strip: like mark (a heart as wide as the strip, 6% inset), lowercase gray artist `|` bold title, each cut to 30 characters with `…`, split into two lines when one line would be tiny; the heart is an SVG path (skia has no emoji fallback), reset on track change; an empty title is held back for 3 s; an image layer can't take raw SVG,
     Companion cuts data at the first `=`),
@@ -52,3 +53,20 @@ Auto mode blocks these; ask the user to run them:
 ## Sleep
 
 The device has no HID interface, so it can't wake a sleeping Mac (verified: presses do nothing while asleep, the status LED stays on).
+
+## zored_stream — brightness
+
+`brightness.go`, `display_darwin.go`; HTTP on `127.0.0.1:47118` (`-brightness`). Left knob, row 3:
+turn = Mac display brightness, turn while held = the controller's own brightness.
+
+- `POST /brightness/up`, `/brightness/down` (same acceleration as volume), `/brightness/hold` (press), `/brightness/release`; every reply is the controller
+  brightness as plain text.
+- Mac: `DisplayServicesGetBrightness` / `SetBrightness` (private `DisplayServices.framework`, main display, 0–1). Read back on every
+  turn, so keyboard changes are picked up. Verified: turns move the built-in display. External monitors (DDC) not done.
+- Controller: Companion's internal `set_brightness` (surface `self`) inside a sequential `action_group`, after the `exec` that
+  writes the daemon's reply into `ctl_brightness`. Companion stores it in the surface config (`db.sqlite`, `surfaces.config.brightness`),
+  so it survives restarts; the daemon reads it once at start (`/usr/bin/sqlite3 -readonly`, `-companion-db`), and a change made in
+  the Companion UI is not seen until the daemon restarts. Floor 10 %, so the device never goes dark.
+  A press via the HTTP API has no surface, so `self` resolves to nothing there: test on the device.
+- The bar shows the active target for 1 s: white = Mac, gray = controller; then back to volume. The knob press itself is the haptic;
+  no haptic at 0/100 (the module fork has press/hold/slide only).

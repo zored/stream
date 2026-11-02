@@ -1,33 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"math"
 	"strconv"
 	"sync"
-	"time"
 )
 
-const (
-	visibleFor          = time.Second
-	animationHz         = 30
-	easing              = 0.3
-	fadeIn              = 0.6
-	fadeOut             = 0.25
-	dragPercentPerPixel = 0.4
-)
+const dragPercentPerPixel = 0.4
 
 type volume struct {
 	mu            sync.Mutex
 	value         int
 	muted         bool
-	shown         float64
-	alpha         float64
-	visibleUntil  time.Time
 	dragRemainder float64
-	lastTick      time.Time
-	direction     int
-	wake          chan struct{}
+	accel         accel
+	bar           *bar
 	vars          *vars
 }
 
@@ -36,11 +22,16 @@ func newVolume(v *vars) (*volume, error) {
 	if err != nil {
 		return nil, err
 	}
-	vol := &volume{value: value, muted: muted, wake: make(chan struct{}, 1), vars: v}
-	if !muted {
-		vol.shown = float64(value)
-	}
+	vol := &volume{value: value, muted: muted, vars: v}
+	vol.bar = newBar(v, "volume", vol.levelLocked())
 	return vol, nil
+}
+
+func (v *volume) levelLocked() int {
+	if v.muted {
+		return 0
+	}
+	return v.value
 }
 
 func (v *volume) poll() error {
@@ -49,62 +40,20 @@ func (v *volume) poll() error {
 		return err
 	}
 	v.mu.Lock()
-	defer v.mu.Unlock()
-	if value == v.value && muted == v.muted {
-		return nil
+	changed := value != v.value || muted != v.muted
+	if changed {
+		v.value, v.muted = value, muted
+		v.revealLocked()
 	}
-	v.value, v.muted = value, muted
-	v.revealLocked()
+	v.mu.Unlock()
+	if changed {
+		v.publish()
+	}
 	return nil
 }
 
 func (v *volume) revealLocked() {
-	v.visibleUntil = time.Now().Add(visibleFor)
-	select {
-	case v.wake <- struct{}{}:
-	default:
-	}
-}
-
-func (v *volume) animate() {
-	for range v.wake {
-		ticker := time.NewTicker(time.Second / animationHz)
-		for range ticker.C {
-			if !v.frame() {
-				break
-			}
-		}
-		ticker.Stop()
-	}
-}
-
-func (v *volume) frame() bool {
-	v.mu.Lock()
-	target := float64(v.value)
-	if v.muted {
-		target = 0
-	}
-	v.shown += (target - v.shown) * easing
-	if math.Abs(target-v.shown) < 0.3 {
-		v.shown = target
-	}
-	visible := time.Now().Before(v.visibleUntil)
-	targetAlpha := 0.0
-	if visible {
-		targetAlpha = 100
-	}
-	rate := fadeOut
-	if targetAlpha > v.alpha {
-		rate = fadeIn
-	}
-	v.alpha += (targetAlpha - v.alpha) * rate
-	if math.Abs(targetAlpha-v.alpha) < 1 {
-		v.alpha = targetAlpha
-	}
-	active := visible || v.shown != target || v.alpha != 0
-	v.mu.Unlock()
-	v.publish()
-	return active
+	v.bar.show("volume", v.levelLocked())
 }
 
 func (v *volume) publish() {
@@ -113,21 +62,21 @@ func (v *volume) publish() {
 	if v.muted {
 		text = "MUTE"
 	}
-	shown, alpha := v.shown, v.alpha
 	v.mu.Unlock()
-	v.vars.set("volume_anim", fmt.Sprintf("%.1f", shown))
 	v.vars.set("volume", text)
-	v.vars.set("volume_alpha", fmt.Sprintf("%.0f", alpha))
 }
 
 func (v *volume) setLocked(value int) error {
 	v.value = max(0, min(100, value))
+	unmute := v.muted && value > 0
+	if unmute {
+		v.muted = false
+	}
 	v.revealLocked()
 	if err := writeVolume(v.value); err != nil {
 		return err
 	}
-	if v.muted && value > 0 {
-		v.muted = false
+	if unmute {
 		return writeMute(false)
 	}
 	return nil
@@ -136,22 +85,7 @@ func (v *volume) setLocked(value int) error {
 func (v *volume) step(direction int) error {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	now := time.Now()
-	dt := time.Second
-	if direction == v.direction {
-		dt = now.Sub(v.lastTick)
-	}
-	v.lastTick, v.direction = now, direction
-	amount := 4
-	switch {
-	case dt > 200*time.Millisecond:
-		amount = 1
-	case dt > 100*time.Millisecond:
-		amount = 2
-	case dt > 50*time.Millisecond:
-		amount = 3
-	}
-	return v.setLocked(v.value + direction*amount)
+	return v.setLocked(v.value + v.accel.step(direction))
 }
 
 func (v *volume) drag(pixels float64) error {

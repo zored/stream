@@ -1,7 +1,9 @@
 {
  "volume": "",
- "volume_anim": "",
- "volume_alpha": "",
+ "bar_value": "",
+ "bar_alpha": "",
+ "bar_mode": "",
+ "ctl_brightness": "",
  "np_playing": "",
  "np_title": "",
  "np_artist": "",

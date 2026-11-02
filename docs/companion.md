@@ -46,6 +46,8 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
   - `exec` — options `path` (shell command, `$HOME` expands), `cwd`, `timeout` 500–20000, `targetVariable` (custom var gets stdout)
   - `custom_log` — `message`, written to the log; the cheapest way to prove an input arrives
   - `custom_variable_set_value` — `name`, `create` (create if missing), `value` (may be an expression)
+  - `set_brightness` — `surfaceId` (`self`), `brightness` 0–100 (expression ok); `adjust_brightness` ± — saved in the surface config
+  - `action_group` — `execution_mode` `sequential`, `children.default` = actions; `exec` is awaited, so a following action sees its `targetVariable`
 - Internal variables: `time_hm`, `time_hms`, `time_unix` (updates every 0.5 s), `date_d`, `date_m`, `date_y`, `date_weekday`, …
 
 `tools/gen_pages.py` builds all of this; read it before hand-writing JSON.

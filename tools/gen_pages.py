@@ -12,13 +12,14 @@ STREAMD = "http://127.0.0.1:47113"
 VKCALL = "http://127.0.0.1:47114"
 YMUSIC = "http://127.0.0.1:47115"
 AI = "http://127.0.0.1:47117"
+BRIGHTNESS = "http://127.0.0.1:47118"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
+    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state")}
-VOLUME_ALPHA = "$(custom:volume_alpha)"
+BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 rng = random.Random()
 
@@ -99,6 +100,16 @@ def post(url):
     return sh(f"curl -fsS -m 1 -X POST {url}")
 
 
+def group(actions):
+    return {"type": "action", "id": nid(), "connectionId": "internal", "definitionId": "action_group",
+            "options": {"execution_mode": v("sequential")}, "children": {"default": actions}, "upgradeIndex": None}
+
+
+def brightness(path):
+    return [group([sh(f"curl -fsS -m 1 -X POST {BRIGHTNESS}{path}", "ctl_brightness"),
+                   action("set_brightness", {"surfaceId": "self", "brightness": expr("$(custom:ctl_brightness)")})])]
+
+
 def streamd(path):
     return [post(STREAMD + path)]
 
@@ -152,13 +163,14 @@ def strip_image(layer_id, var, row, rotation, opacity=None):
 
 def volume_cell(row):
     base = (2 - row) * 100 / 3
-    fill = f"max(0, min(100, ($(custom:volume_anim) - {base:.2f}) * 3))"
-    visible = expr(VOLUME_ALPHA)
+    fill = f"max(0, min(100, ($(custom:bar_value) - {base:.2f}) * 3))"
+    visible = expr(BAR_ALPHA)
+    color = expr(f'$(custom:bar_mode) == "ctl" ? {0x808080} : {0xFFFFFF}')
     return button([
         canvas(),
-        strip_image("np", "np_svg", row, 90, expr(f"100 - {VOLUME_ALPHA}")),
+        strip_image("np", "np_svg", row, 90, expr(f"100 - {BAR_ALPHA}")),
         box("track", 0x202020, opacity=visible),
-        box("fill", 0xFFFFFF, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
+        box("fill", color, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
     ])
 
 
@@ -273,6 +285,8 @@ def media_page():
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
         (1, 0): button(labelled("TRACK"), up=[mediakey("play")], held=ymusic("/like"),
                        left=[mediakey("prev")], right=[mediakey("next")]),
+        (2, 0): button(labelled("SUN"), down=brightness("/brightness/hold"), up=brightness("/brightness/release"),
+                       left=brightness("/brightness/down"), right=brightness("/brightness/up")),
         **{(r, 1): volume_cell(r) for r in range(3)},
         (1, 2): play_pause(),
         (2, 2): call_tile("call_mic", "mic"),

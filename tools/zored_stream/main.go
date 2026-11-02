@@ -73,6 +73,18 @@ func handle(mux *http.ServeMux, path string, action func() error) {
 	})
 }
 
+func handleValue(mux *http.ServeMux, path string, action func() (int, error)) {
+	mux.HandleFunc("POST "+path, func(w http.ResponseWriter, _ *http.Request) {
+		value, err := action()
+		if err != nil {
+			log.Printf("%s: %v", path, err)
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+		fmt.Fprint(w, value)
+	})
+}
+
 func every(d time.Duration, f func()) {
 	for range time.Tick(d) {
 		f()
@@ -96,6 +108,8 @@ func main() {
 	ymusicAddr := flag.String("ymusic", "127.0.0.1:47115", "Yandex Music like HTTP address")
 	usageAddr := flag.String("usage", "127.0.0.1:47116", "Claude usage HTTP address")
 	aiAddr := flag.String("ai", "127.0.0.1:47117", "Claude Desktop model + effort HTTP address")
+	brightnessAddr := flag.String("brightness", "127.0.0.1:47118", "display + controller brightness HTTP address")
+	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
 	npScript := flag.String("nowplaying-script", filepath.Join(home, ".local/share/zored-stream/nowplaying.pl"), "perl loader for the Now Playing dylib")
@@ -161,7 +175,18 @@ func main() {
 		log.Fatal(err)
 	}
 	vol.publish()
-	go vol.animate()
+	vol.bar.publish()
+	go vol.bar.animate()
+	br, err := newBrightness(vol.bar, *companionDB)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go serve(*brightnessAddr, func(mux *http.ServeMux) {
+		handleValue(mux, "/brightness/up", func() (int, error) { return br.turn(1) })
+		handleValue(mux, "/brightness/down", func() (int, error) { return br.turn(-1) })
+		handleValue(mux, "/brightness/hold", br.hold)
+		handleValue(mux, "/brightness/release", br.release)
+	})
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {
 			log.Fatal(err)
@@ -170,6 +195,7 @@ func main() {
 	go every(resendEvery, func() {
 		v.forget()
 		vol.publish()
+		vol.bar.publish()
 		np.publish()
 		us.publish()
 	})
