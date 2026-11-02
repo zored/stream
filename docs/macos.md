@@ -26,7 +26,7 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
 - Pushes Companion custom variables (must exist: `make deploy` creates them from `companion/custom-variables.json`):
   - `volume` (text, `MUTE` when muted), `volume_anim` (eased 30 fps), `volume_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s)
   - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), `np_app` (bundle id of the Now Playing app),
-    `np_svg` (base64 SVG data URI for the track strip: like mark, gray artist `|` bold title; an image layer can't take raw SVG,
+    `np_svg` (base64 SVG data URI for the track strip: like mark, gray artist `|` bold title, split into two lines when one line would be tiny; an image layer can't take raw SVG,
     Companion cuts data at the first `=`),
     polled every 0.5 s by the perl child (below), sent to the daemon as JSON lines on change
 - Idle CPU ~0 % (measured on the Go daemon): the 30 fps ticker runs only while the volume changes; audio polled every 0.25 s.
