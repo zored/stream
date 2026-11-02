@@ -77,3 +77,16 @@ only `agent-turn-complete` (assumed, from the docs); the slot is taken by Comput
 
 - Haptic on a new waiting session: the module fork has `vibrate()` but no Companion action triggers it.
 - Session titles: hooks carry no title; `GET /agents` shows the cwd basename.
+
+## Dictation
+
+кнопка 7 toggles voice input in the current Claude Desktop chat; the LED is red while recording.
+
+- The composer has an `AXCheckBox` (subrole `AXToggleButton`) described `Press and hold to record`, and `Stop dictation`
+  while recording. `AXPress` toggles it (verified 2026-11-03): idle → `Stop dictation` → idle. The very first press after
+  the app started only set `AXValue` 1 without recording (verified once, cause unknown); the next presses toggled cleanly.
+- `zored_stream` (`dictate_darwin.go`, `POST :47117/dictation/toggle`): activates Claude when it is in the background,
+  presses the checkbox in the focused window, waits up to 1.5 s for the description to flip, `409` otherwise.
+  `dictation` (`on`/`off`) is read every second, so dictation started with the mouse lights the LED too.
+- The bundle has `dictationShortcut` (`default` / `off` / an accelerator) in the app preferences, but the default key
+  lives in the claude.ai frontend, not in `app.asar` (read); AX avoids depending on it.

@@ -21,7 +21,7 @@ ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg")}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation")}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -308,6 +308,10 @@ def agents_tile():
                   down=[post(AGENTS + "/agent/focus")])
 
 
+def dictation_led():
+    return button([canvas(), box("box0", expr(f'$(custom:dictation) == "on" ? {0xFF3030} : 0'))], down=ai("/dictation/toggle"))
+
+
 def test_page():
     grid = {}
     for r in range(3):
@@ -345,6 +349,7 @@ def media_page():
                        left=[post(SCROLL + "/scroll/back")], right=[post(SCROLL + "/scroll/forward")]),
         (1, 5): agents_tile(),
         (3, 5): agents_led(),
+        (3, 6): dictation_led(),
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),
         (3, 3): hangup_led(),

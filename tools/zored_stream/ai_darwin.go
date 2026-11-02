@@ -35,6 +35,7 @@ var (
 	aiEfforts = []string{"Low", "Medium", "High"}
 
 	errNotFront   = errors.New("Claude is not frontmost")
+	errNoWindow   = errors.New("Claude has no focused window")
 	errNoNewChat  = errors.New("not on the new-chat screen")
 	errNoPicker   = errors.New("model picker not found")
 	errNoMenuItem = errors.New("menu item not found")
@@ -137,7 +138,7 @@ func (a *aiSwitch) applyPending() {
 	case err == nil:
 		a.known = index
 		a.show(want, "ok")
-	case errors.Is(err, errNoNewChat), errors.Is(err, errNotFront):
+	case errors.Is(err, errNoNewChat), errors.Is(err, errNotFront), errors.Is(err, errNoWindow):
 		a.preview = time.Now().Add(aiPreview)
 		a.show(want, "preview")
 	default:
@@ -164,7 +165,7 @@ func (a *aiSwitch) poll() {
 		return
 	}
 	if err != nil {
-		if !errors.Is(err, errNotFront) && !errors.Is(err, errNoPicker) {
+		if !errors.Is(err, errNotFront) && !errors.Is(err, errNoWindow) && !errors.Is(err, errNoPicker) {
 			log.Printf("ai: poll: %v", err)
 		}
 		a.index = a.known
@@ -212,27 +213,37 @@ func withNewChat(f func(pid C.pid_t, window C.AXUIElementRef) error) error {
 }
 
 func withClaude(newChatOnly bool, f func(pid C.pid_t, window C.AXUIElementRef) error) error {
-	bundle := C.CString(claudeBundle)
-	defer C.free(unsafe.Pointer(bundle))
-	pid := C.ax_app_pid(bundle)
+	pid := claudePid()
 	if pid == 0 || C.ax_frontmost_pid() != pid {
 		return errNotFront
 	}
+	return inClaudeWindow(pid, func(w C.AXUIElementRef) error {
+		if newChatOnly {
+			area := findAttr(w, "AXWebArea", "AXTitle", "Claude", false)
+			if area == 0 {
+				return errNoNewChat
+			}
+			C.ax_release(area)
+		}
+		return f(pid, w)
+	})
+}
+
+func claudePid() C.pid_t {
+	bundle := C.CString(claudeBundle)
+	defer C.free(unsafe.Pointer(bundle))
+	return C.ax_app_pid(bundle)
+}
+
+func inClaudeWindow(pid C.pid_t, f func(window C.AXUIElementRef) error) error {
 	app := C.ax_app(pid)
 	defer C.ax_release(app)
 	w := C.ax_focused_window(app)
 	if w == 0 {
-		return errNotFront
+		return errNoWindow
 	}
 	defer C.ax_release(w)
-	if newChatOnly {
-		area := findAttr(w, "AXWebArea", "AXTitle", "Claude", false)
-		if area == 0 {
-			return errNoNewChat
-		}
-		C.ax_release(area)
-	}
-	return f(pid, w)
+	return f(w)
 }
 
 func findAttr(root C.AXUIElementRef, role, attr, text string, prefix bool) C.AXUIElementRef {
