@@ -55,12 +55,13 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   - effort changed: `⌘⇧E` posted with `CGEventPostToPid` to Claude only (never to whatever app is in front), `AXPress` the item
     whose title starts with the level.
   - read back the popup description; mismatch → `Escape`, `ai_state = error`.
-- Every second while nothing is pending, `zored_stream` reads the popup and publishes the truth; the knob position follows it.
+- Every second while nothing is pending and Claude is frontmost, `zored_stream` reads the popup in the focused window — the new-chat
+  screen or an open session — and publishes the truth; the knob position follows it (verified 2026-11-02: an open Opus·Medium session
+  showed `ok`). Applying stays new-chat only. Claude Code CLI is not synced.
 - Turn while pressed: only the model changes, the effort stays. A press released without a turn re-applies the shown choice.
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
-- While switching, the AI limits tile highlights the bars of the selected model for 2 s (see [ai.md](ai.md)).
-- Label: `ai_label_svg` across the right strip, drawn like the track on the left strip (gray model `|` bold effort, `stripSVG`)
+- Label: `ai_label_svg` across the right strip, drawn like the track on the left strip (lowercase gray model `|` bold effort, `stripSVG`)
   but rotated 270° so it reads bottom-up; the effort is white `ok`, gray `pending`, dark gray `idle` (not on the new-chat screen),
   amber `other` (a model/effort outside the list, e.g. Haiku or Extra), red `error`.
 

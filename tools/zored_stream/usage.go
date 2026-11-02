@@ -25,9 +25,7 @@ const (
 	workdays        = 5
 	day             = 24 * time.Hour
 	sessionHours    = 5
-	highlightFor    = 2 * time.Second
 	gray            = "#808080"
-	dark            = "#404040"
 )
 
 var levelColors = map[string]string{"low": "#fff", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
@@ -71,7 +69,6 @@ type usage struct {
 	failures int
 	wake     chan struct{}
 	model    string
-	switched time.Time
 }
 
 func newUsage(v *vars, every time.Duration, proxy string) (*usage, error) {
@@ -113,17 +110,13 @@ func (u *usage) refresh() error {
 	return nil
 }
 
-func (u *usage) focus(model string, switching bool) {
+func (u *usage) focus(model string) {
 	u.mu.Lock()
-	changed := u.model != model || switching
+	changed := u.model != model
 	u.model = model
-	if switching {
-		u.switched = time.Now()
-	}
 	u.mu.Unlock()
 	if changed {
 		u.publish()
-		time.AfterFunc(highlightFor, u.publish)
 	}
 }
 
@@ -226,26 +219,17 @@ func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 func (u *usage) publish() {
 	u.mu.Lock()
 	limits, failed, model := u.limits, u.snap.Error != "", u.model
-	highlight := time.Since(u.switched) < highlightFor
 	u.mu.Unlock()
-	if limits == nil {
-		u.vars.set("ai_limits_svg", usageSVG(nil, failed))
-		return
-	}
-	now := time.Now()
-	bars, err := usageBars(limits, now)
-	if err != nil {
-		log.Printf("usage: %v", err)
-		u.vars.set("ai_limits_svg", usageSVG(nil, true))
-		return
-	}
-	scoped := scopedFor(limits, model)
-	colors := barColors(bars, highlight, scoped != nil)
-	u.vars.set("ai_limits_svg", usageSVG(bars, failed, colors...))
-	week := scoped
+	week := scopedFor(limits, model)
 	if week == nil {
 		week = findLimit(limits, "weekly_all")
 	}
+	if week == nil {
+		u.vars.set("ai_strip_top_svg", "")
+		u.vars.set("ai_strip_bottom_svg", "")
+		return
+	}
+	now := time.Now()
 	sessionLeft := "5h"
 	if s := findLimit(limits, "session"); s != nil && s.ResetsAt != nil {
 		sessionLeft = shortDuration(s.ResetsAt.Sub(now))
@@ -254,8 +238,8 @@ func (u *usage) publish() {
 	if week.ResetsAt != nil {
 		weekLeft = shortDuration(week.ResetsAt.Sub(now))
 	}
-	u.vars.set("ai_strip_top_svg", cellSVG(sessionLeft, dayPct(*week, now)))
-	u.vars.set("ai_strip_bottom_svg", cellSVG(weekLeft, week.Percent))
+	u.vars.set("ai_strip_top_svg", cellSVG(true, sessionLeft, dayPct(*week, now), failed))
+	u.vars.set("ai_strip_bottom_svg", cellSVG(false, weekLeft, week.Percent, false))
 	if s := findLimit(limits, "session"); s != nil {
 		u.vars.set("ai_session", strconv.Itoa(round(s.Percent)))
 		if s.ResetsAt != nil {
@@ -274,44 +258,11 @@ func (u *usage) publish() {
 
 func scopedFor(limits []limit, model string) *limit {
 	for i, l := range limits {
-		if l.Kind == "weekly_scoped" && model != "" && strings.HasPrefix(l.model(), model) {
+		if l.Kind == "weekly_scoped" && model != "" && strings.HasPrefix(strings.ToLower(l.model()), strings.ToLower(model)) {
 			return &limits[i]
 		}
 	}
 	return nil
-}
-
-func barColors(bars []float64, highlight, scoped bool) []string {
-	colors := []string{gray, gray, levelColors[levelOf(bars[2])], levelColors[levelOf(bars[3])], gray, gray}
-	if !highlight {
-		return colors
-	}
-	if scoped {
-		return []string{gray, gray, dark, dark, levelColors[levelOf(bars[4])], levelColors[levelOf(bars[5])]}
-	}
-	colors[4], colors[5] = dark, dark
-	return colors
-}
-
-func usageBars(limits []limit, now time.Time) ([]float64, error) {
-	week := findLimit(limits, "weekly_all")
-	if week == nil {
-		return nil, errors.New("no weekly_all")
-	}
-	left, used := 100.0, 0.0
-	if s := findLimit(limits, "session"); s != nil {
-		used = s.Percent
-		if s.ResetsAt != nil {
-			left = max(0, s.ResetsAt.Sub(now).Hours()) / sessionHours * 100
-		}
-	}
-	bars := []float64{left, used, dayPct(*week, now), week.Percent}
-	for _, l := range limits {
-		if l.Kind == "weekly_scoped" {
-			return append(bars, dayPct(l, now), l.Percent), nil
-		}
-	}
-	return append(bars, 0, 0), nil
 }
 
 func round(n float64) int { return int(math.Floor(n + 0.5)) }
@@ -364,40 +315,37 @@ func dayPct(l limit, now time.Time) float64 {
 	return workdays * l.Percent / float64(workdayIndex(start, now))
 }
 
-func usageSVG(bars []float64, failed bool, colors ...string) string {
-	const size, inset, gap = 100, 6, 1.5
-	width := float64(size-2*inset) / 6
-	var b strings.Builder
-	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`, size, size)
-	for i, pct := range bars {
-		h := float64(size-2*inset) * min(max(pct, 0), 100) / 100
-		fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" fill="%s"/>`,
-			inset+float64(i)*width+gap/2, size-inset-h, width-gap, h, colors[i])
+func cellSVG(top bool, left string, pct float64, failed bool) string {
+	timeY, pctY, backY := 84, 64, 44
+	if top {
+		timeY, pctY, backY = 18, 41, 0
 	}
+	dot := ""
 	if failed {
-		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="3" fill="#FF6666"/>`, size-inset-2, inset+2)
+		dot = `<circle cx="54" cy="6" r="3" fill="#FF6666"/>`
 	}
-	b.WriteString(`</svg>`)
-	return dataURI(b.String())
-}
-
-func cellSVG(left string, pct float64) string {
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 90">`+
-		`<rect x="0" y="18" width="60" height="54" fill="#000" opacity="0.75"/>`+
-		`<g font-family="Helvetica" text-anchor="middle"><text x="30" y="40" font-size="15" fill="%s">%s</text>`+
-		`<text x="30" y="65" font-size="21" font-weight="bold" fill="%s">%d%%</text></g></svg>`,
-		gray, left, levelColors[levelOf(pct)], round(pct)))
+		`<rect x="0" y="%d" width="60" height="46" fill="#000" opacity="0.75"/>%s`+
+		`<g font-family="Helvetica" text-anchor="middle"><text x="30" y="%d" font-size="15" fill="%s">%s</text>`+
+		`<text x="30" y="%d" font-size="21" font-weight="bold" fill="%s">%d%%</text></g></svg>`,
+		backY, dot, timeY, gray, left, pctY, levelColors[levelOf(pct)], round(pct)))
 }
 
 func shortDuration(d time.Duration) string {
 	m := int(math.Ceil(max(0, d.Minutes())))
-	switch {
-	case m >= 24*60:
-		return fmt.Sprintf("%dd %dh", m/(24*60), m%(24*60)/60)
-	case m >= 60:
-		return fmt.Sprintf("%dh %dm", m/60, m%60)
+	var parts []string
+	for _, u := range []struct {
+		minutes int
+		suffix  string
+	}{{24 * 60, "d"}, {60, "h"}, {1, "m"}} {
+		if n := m / u.minutes; n > 0 && len(parts) < 2 {
+			parts = append(parts, fmt.Sprintf("%d%s", n, u.suffix))
+		} else if len(parts) > 0 {
+			break
+		}
+		m %= u.minutes
 	}
-	return fmt.Sprintf("%dm", m)
+	return strings.Join(parts, " ")
 }
 
 func dataURI(svg string) string {

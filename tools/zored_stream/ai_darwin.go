@@ -49,10 +49,10 @@ type aiSwitch struct {
 	vars    *vars
 	held    bool
 	turned  bool
-	onShow  func(model string, switching bool)
+	onShow  func(model string)
 }
 
-func newAISwitch(v *vars, onShow func(model string, switching bool)) *aiSwitch {
+func newAISwitch(v *vars, onShow func(model string)) *aiSwitch {
 	return &aiSwitch{index: 1, vars: v, onShow: onShow}
 }
 
@@ -67,7 +67,7 @@ func (a *aiSwitch) show(c aiChoice, state string) {
 	a.vars.set("ai_model", c.model)
 	a.vars.set("ai_effort", c.effort)
 	a.vars.set("ai_state", state)
-	a.onShow(c.model, state == "pending")
+	a.onShow(c.model)
 }
 
 func (a *aiSwitch) turn(d int) {
@@ -140,7 +140,7 @@ func (a *aiSwitch) poll() {
 		return
 	}
 	var cur aiChoice
-	err := withNewChat(func(_ C.pid_t, w C.AXUIElementRef) (err error) {
+	err := withClaude(false, func(_ C.pid_t, w C.AXUIElementRef) (err error) {
 		cur, err = readChoice(w)
 		return err
 	})
@@ -150,7 +150,7 @@ func (a *aiSwitch) poll() {
 		return
 	}
 	if err != nil {
-		if !errors.Is(err, errNotFront) && !errors.Is(err, errNoNewChat) {
+		if !errors.Is(err, errNotFront) && !errors.Is(err, errNoPicker) {
 			log.Printf("ai: poll: %v", err)
 		}
 		a.show(a.target(), "idle")
@@ -192,6 +192,10 @@ func (a *aiSwitch) apply(want aiChoice) error {
 }
 
 func withNewChat(f func(pid C.pid_t, window C.AXUIElementRef) error) error {
+	return withClaude(true, f)
+}
+
+func withClaude(newChatOnly bool, f func(pid C.pid_t, window C.AXUIElementRef) error) error {
 	bundle := C.CString(claudeBundle)
 	defer C.free(unsafe.Pointer(bundle))
 	pid := C.ax_app_pid(bundle)
@@ -205,11 +209,13 @@ func withNewChat(f func(pid C.pid_t, window C.AXUIElementRef) error) error {
 		return errNotFront
 	}
 	defer C.ax_release(w)
-	area := findAttr(w, "AXWebArea", "AXTitle", "Claude", false)
-	if area == 0 {
-		return errNoNewChat
+	if newChatOnly {
+		area := findAttr(w, "AXWebArea", "AXTitle", "Claude", false)
+		if area == 0 {
+			return errNoNewChat
+		}
+		C.ax_release(area)
 	}
-	C.ax_release(area)
 	return f(pid, w)
 }
 

@@ -22,6 +22,7 @@ const (
 	svgFont           = 100
 	svgHeight         = 250
 	svgMinWidth       = svgHeight * 270 / 60
+	stripMaxRunes     = 30
 	heartPath         = "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
 )
 
@@ -160,6 +161,14 @@ func lineWidth(l svgLine) int {
 	return l.runes * svgFont * 62 / 100 * 112 / 100
 }
 
+func shorten(s string) string {
+	r := []rune(strings.TrimSpace(s))
+	if len(r) <= stripMaxRunes {
+		return string(r)
+	}
+	return strings.TrimSpace(string(r[:stripMaxRunes-1])) + "…"
+}
+
 func trackSVG(t track, like string) string {
 	heart := ""
 	if t.App == yandexMusic {
@@ -169,8 +178,8 @@ func trackSVG(t track, like string) string {
 }
 
 func stripSVG(gray, bold, fill, heart string) string {
-	artist := span(`fill="#888"`, gray)
-	title := span(`font-weight="bold"`, bold)
+	artist := span(`fill="#888"`, shorten(strings.ToLower(gray)))
+	title := span(`font-weight="bold"`, shorten(strings.ToLower(bold)))
 	lines := []svgLine{join(artist, title)}
 	if gray != "" && bold != "" {
 		lines = []svgLine{join(artist, span(`fill="#888"`, " | "), title)}
@@ -180,9 +189,11 @@ func stripSVG(gray, bold, fill, heart string) string {
 	}
 	pad := 0
 	if heart != "" {
-		pad = svgFont * 11 / 10
+		inset := svgHeight * 6 / 100
+		size := svgHeight - 2*inset
+		pad = size + 2*inset
 		heart = fmt.Sprintf(`<g transform="translate(%d %d) scale(%.2f) rotate(-90 12 12)">%s</g>`,
-			svgFont/10, svgHeight/2-svgFont*45/100, float64(svgFont)*9/10/24, heart)
+			inset, inset, float64(size)/24, heart)
 	}
 	width := svgMinWidth
 	for _, l := range lines {
