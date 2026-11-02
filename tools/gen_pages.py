@@ -11,11 +11,13 @@ MEDIAKEY = "$HOME/.local/bin/mediakey"
 STREAMD = "http://127.0.0.1:47113"
 VKCALL = "http://127.0.0.1:47114"
 YMUSIC = "http://127.0.0.1:47115"
+AI = "http://127.0.0.1:47117"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
-    "ai_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level")}
+    "ai_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
+    "ai_model", "ai_effort", "ai_state")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 rng = random.Random()
@@ -107,6 +109,10 @@ def vkcall(path):
 
 def ymusic(path):
     return [post(YMUSIC + path)]
+
+
+def ai(path):
+    return [post(f"'{AI}{path}'")]
 
 
 def button(style, down=(), up=(), left=None, right=None, held=None):
@@ -240,6 +246,17 @@ def ai_limits():
     return button([canvas(), box("box0", 0x000000), image("usage", expr("$(custom:ai_svg)"))])
 
 
+def ai_switch():
+    return button(labelled("AI"), down=ai("/ai/press"), left=ai("/ai/turn?d=-1"), right=ai("/ai/turn?d=1"))
+
+
+def ai_label():
+    color = by_state("ai_state", {"ok": 0xFFFFFF, "pending": 0x808080, "idle": 0x505050, "other": 0xFFB000, "error": 0xFF3030})
+    return button([canvas(), box("box0", 0x000000),
+                   text("model", "$(custom:ai_model)", color, fontsize=30, x=v(6), y=v(6), width=v(88), height=v(44)),
+                   text("effort", "$(custom:ai_effort)", color, fontsize=24, x=v(6), y=v(50), width=v(88), height=v(44))])
+
+
 def test_page():
     grid = {}
     for r in range(3):
@@ -268,6 +285,8 @@ def media_page():
         (2, 4): hangup_tile(),
         (1, 5): ai_limits(),
         (2, 5): clock(),
+        (1, 6): ai_label(),
+        (1, 7): ai_switch(),
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),
         (3, 3): hangup_led(),

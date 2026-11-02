@@ -17,5 +17,8 @@
  "ai_day": "",
  "ai_week": "",
  "ai_week_reset": "",
- "ai_level": ""
+ "ai_level": "",
+ "ai_model": "",
+ "ai_effort": "",
+ "ai_state": ""
 }

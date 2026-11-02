@@ -64,7 +64,9 @@ static int matches(AXUIElementRef element, int kind) {
     }
 }
 
-AXUIElementRef ax_find(AXUIElementRef root, int kind, int max_nodes, int *truncated) {
+typedef int (*ax_match)(AXUIElementRef element, const void *context);
+
+static AXUIElementRef bfs(AXUIElementRef root, ax_match match, const void *context, int max_nodes, int *truncated) {
     CFMutableArrayRef queue = CFArrayCreateMutable(NULL, 0, &kCFTypeArrayCallBacks);
     CFMutableSetRef seen = CFSetCreateMutable(NULL, 0, &kCFTypeSetCallBacks);
     CFArrayAppendValue(queue, root);
@@ -77,7 +79,7 @@ AXUIElementRef ax_find(AXUIElementRef root, int kind, int max_nodes, int *trunca
             break;
         }
         AXUIElementRef element = (AXUIElementRef)CFArrayGetValueAtIndex(queue, next);
-        if (matches(element, kind)) {
+        if (match(element, context)) {
             found = (AXUIElementRef)CFRetain(element);
             break;
         }
@@ -96,6 +98,96 @@ AXUIElementRef ax_find(AXUIElementRef root, int kind, int max_nodes, int *trunca
     CFRelease(queue);
     CFRelease(seen);
     return found;
+}
+
+static int match_kind(AXUIElementRef element, const void *context) {
+    return matches(element, *(const int *)context);
+}
+
+AXUIElementRef ax_find(AXUIElementRef root, int kind, int max_nodes, int *truncated) {
+    return bfs(root, match_kind, &kind, max_nodes, truncated);
+}
+
+typedef struct {
+    CFStringRef role, attr, text;
+    int prefix;
+} attr_query;
+
+static CFStringRef copy_string(AXUIElementRef element, CFStringRef attr) {
+    CFTypeRef value = NULL;
+    if (AXUIElementCopyAttributeValue(element, attr, &value) != kAXErrorSuccess || !value) return NULL;
+    if (CFGetTypeID(value) != CFStringGetTypeID()) {
+        CFRelease(value);
+        return NULL;
+    }
+    return value;
+}
+
+static int match_attr(AXUIElementRef element, const void *context) {
+    const attr_query *q = context;
+    CFStringRef role = copy_string(element, kAXRoleAttribute);
+    int ok = role && CFEqual(role, q->role);
+    if (role) CFRelease(role);
+    if (!ok) return 0;
+    CFStringRef value = copy_string(element, q->attr);
+    if (!value) return 0;
+    ok = q->prefix ? CFStringHasPrefix(value, q->text) : CFEqual(value, q->text);
+    CFRelease(value);
+    return ok;
+}
+
+AXUIElementRef ax_find_attr(AXUIElementRef root, const char *role, const char *attr, const char *text, int prefix,
+                            int max_nodes, int *truncated) {
+    attr_query q = {
+        CFStringCreateWithCString(NULL, role, kCFStringEncodingUTF8),
+        CFStringCreateWithCString(NULL, attr, kCFStringEncodingUTF8),
+        CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8),
+        prefix,
+    };
+    AXUIElementRef found = bfs(root, match_attr, &q, max_nodes, truncated);
+    CFRelease(q.role);
+    CFRelease(q.attr);
+    CFRelease(q.text);
+    return found;
+}
+
+char *ax_string(AXUIElementRef element, const char *attr) {
+    CFStringRef name = CFStringCreateWithCString(NULL, attr, kCFStringEncodingUTF8);
+    CFStringRef value = copy_string(element, name);
+    CFRelease(name);
+    if (!value) return NULL;
+    CFIndex size = CFStringGetMaximumSizeForEncoding(CFStringGetLength(value), kCFStringEncodingUTF8) + 1;
+    char *out = malloc(size);
+    if (!CFStringGetCString(value, out, size, kCFStringEncodingUTF8)) {
+        free(out);
+        out = NULL;
+    }
+    CFRelease(value);
+    return out;
+}
+
+AXUIElementRef ax_focused_window(AXUIElementRef app) {
+    CFTypeRef window = NULL;
+    if (AXUIElementCopyAttributeValue(app, kAXFocusedWindowAttribute, &window) != kAXErrorSuccess) return NULL;
+    return window;
+}
+
+pid_t ax_frontmost_pid(void) {
+    @autoreleasepool {
+        return NSWorkspace.sharedWorkspace.frontmostApplication.processIdentifier;
+    }
+}
+
+void ax_key(pid_t pid, int keycode, int flags) {
+    CGEventFlags mask = 0;
+    if (flags & AX_CMD) mask |= kCGEventFlagMaskCommand;
+    if (flags & AX_SHIFT) mask |= kCGEventFlagMaskShift;
+    for (int down = 1; down >= 0; down--) {
+        CGEventRef event = CGEventCreateKeyboardEvent(NULL, (CGKeyCode)keycode, down);
+        CGEventSetFlags(event, mask);
+        CGEventPostToPid(pid, event);
+        CFRelease(event);
+    }
 }
 
 int ax_int_value(AXUIElementRef element, int *out) {

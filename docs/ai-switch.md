@@ -44,29 +44,34 @@ Found on the way (verified):
 Scope (user, 2026-11-02): only the **new-chat screen** of Claude Desktop, first priority; running sessions stay untouched.
 Levels up to High, models Sonnet → Fable.
 
-Knob **`1/7`** (right middle), strip **`0–2/6`** next to it.
+Knob **`1/7`** (right middle), label on the strip cell **`1/6`** next to it. Implemented and verified 2026-11-02 through the
+Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonnet·High → Opus·Medium → back, the Desktop picker followed.
 
-- **One list, turn walks it**: `sonnet·low`, `sonnet·medium`, `sonnet·high`, `opus·low` … `fable·high` — 9 stops (Opus in the middle is
-  an assumption, the user named the range "sonnet-fable"). Short enough for one list, no press+turn mode.
-- Ends of the list: the existing end-of-range haptic; crossing to the next model: a stronger tick.
-- Apply after the knob rests 400 ms, only when the guard passes: Claude frontmost and the main web area titled `Claude`.
-  Otherwise nothing is typed and the strip shows the choice dimmed with `open a new chat`.
-  - model changed: `AXPress` the `Model:` popup, `AXPress` the `AXMenuItem` whose title starts with the model name.
-  - effort changed: `⌘⇧E`, `AXPress` the item whose title starts with the level.
-  - read back the popup description; mismatch → strip red + error haptic.
-- Strip shows the truth from the popup description (`Fable 5.1 · High`), polled while Claude is frontmost; press on the knob
-  re-applies the shown choice (e.g. after a new-chat screen opened with the app's default).
-- Press could also open the new-chat screen: `open claude://code/new` (verified; with `folder=` the app asks to trust the workspace).
+- **One list, turn walks it**: `Sonnet·Low`, `Sonnet·Medium`, `Sonnet·High`, `Opus·Low` … `Fable·High` — 9 stops (Opus in the middle is
+  an assumption, the user named the range "sonnet-fable"). Clamped at the ends. No end-of-range haptic: the module fork only has
+  press/hold/slide haptics.
+- Apply after the knob rests 400 ms, only when the guard passes: Claude frontmost, its focused window has an `AXWebArea` titled `Claude`.
+  - model changed: `AXPress` the `Model:` popup, `AXPress` the `AXMenuItem` whose title starts with `<model> `.
+  - effort changed: `⌘⇧E` posted with `CGEventPostToPid` to Claude only (never to whatever app is in front), `AXPress` the item
+    whose title starts with the level.
+  - read back the popup description; mismatch → `Escape`, `ai_state = error`.
+- Every second while nothing is pending, `zored_stream` reads the popup and publishes the truth; the knob position follows it.
+- Press re-applies the shown choice.
+- Label: model on top, effort below; white `ok`, gray `pending`, dark gray `idle` (not on the new-chat screen), amber `other`
+  (a model/effort outside the list, e.g. Haiku or Extra), red `error`.
 
-`zored_stream` module `ai` (new, `127.0.0.1:47116`): `POST /ai/turn?d=±1`, `/ai/press`; variables `ai_label`, `ai_state`
-(`ok`/`pending`/`error`), `ai_edge` for the haptic. AX in C next to `ax_darwin.m` (find by role + title prefix, press), keys via
-`CGEventPost` (`⌘⇧E` only). The daemon already holds its own Accessibility grant.
+`zored_stream` module `ai` (`ai_darwin.go`, `127.0.0.1:47117`, flag `-ai`): `POST /ai/turn?d=±1`, `POST /ai/press`; variables `ai_model`,
+`ai_effort`, `ai_state`. AX helpers in `ax_darwin.m`: one BFS with a predicate, `ax_find_attr` (role + attribute, exact or prefix),
+`ax_string`, `ax_focused_window`, `ax_frontmost_pid`, `ax_key`.
+
+Not verified: the guard while a session (not the new-chat screen) is in front — the poll path showed `idle` there, the apply path was
+not run; the look of the label on the device.
 
 Optional later: the same knob also writes CLI defaults for new sessions (`~/.claude/settings.json` `model` + `effortLevel`,
 `~/.codex/config.toml` `model` + `model_reasoning_effort`, both verified to be read at start).
 
-## Blockers
+## Risks
 
-- Keystrokes in `zored_stream`: only `⌘⇧E`, plus the AX press helpers; nothing else.
-- Fragile by nature: titles, badges and the `⌘⇧E` shortcut come from the app's UI and change with its updates; the read-back catches it.
-
+- Titles, badges and the `⌘⇧E` shortcut come from the app's UI and change with its updates; the read-back turns that into `error`.
+- An early build posted `⌘⇧E` through the HID tap: if the user switched apps between the guard and the key, the key went to that app.
+  Fixed with `CGEventPostToPid`.

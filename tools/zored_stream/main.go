@@ -95,6 +95,7 @@ func main() {
 	volumeAddr := flag.String("volume", "127.0.0.1:47113", "volume HTTP address")
 	ymusicAddr := flag.String("ymusic", "127.0.0.1:47115", "Yandex Music like HTTP address")
 	usageAddr := flag.String("usage", "127.0.0.1:47116", "Claude usage HTTP address")
+	aiAddr := flag.String("ai", "127.0.0.1:47117", "Claude Desktop model + effort HTTP address")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
 	npScript := flag.String("nowplaying-script", filepath.Join(home, ".local/share/zored-stream/nowplaying.pl"), "perl loader for the Now Playing dylib")
@@ -129,6 +130,20 @@ func main() {
 	go serve(*usageAddr, func(mux *http.ServeMux) {
 		mux.HandleFunc("GET /usage", us.serveJSON)
 		handle(mux, "/usage/refresh", us.refresh)
+	})
+	ai := newAISwitch(v)
+	go every(aiPollEvery, ai.poll)
+	go serve(*aiAddr, func(mux *http.ServeMux) {
+		mux.HandleFunc("POST /ai/turn", func(w http.ResponseWriter, r *http.Request) {
+			d, err := strconv.Atoi(r.URL.Query().Get("d"))
+			if err != nil {
+				http.Error(w, "d: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+			ai.turn(d)
+			w.WriteHeader(http.StatusNoContent)
+		})
+		handle(mux, "/ai/press", ai.press)
 	})
 	vol, err := newVolume(v)
 	if err != nil {

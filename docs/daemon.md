@@ -65,6 +65,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Now Playing | `nowplaying.go`, `nowplaying/` (ObjC dylib in `/usr/bin/perl`, JSON lines on stdout) | — (`-nowplaying-script`, `-nowplaying-lib`) | verified: `np_*` from Yandex Music, the perl child exits with the daemon |
 | Yandex Music like | `ymusic_darwin.go`, `ax_darwin.m` (AX in C, BFS with a 20 000-node cap) | `127.0.0.1:47115` (`-ymusic`) | verified: `ym_like` read, like/unlike pressed, `409` on a press within 1.5 s, grant kept after a rebuild |
 | Claude usage | `usage.go`, [ai.md](ai.md) | `127.0.0.1:47116` (`-usage`) | verified: fetch through the proxy, tile, `GET /usage` |
+| Claude Desktop model + effort | `ai_darwin.go`, `ax_darwin.m`, [ai-switch.md](ai-switch.md) | `127.0.0.1:47117` (`-ai`) | verified: knob turns switch the new-chat pickers, read-back every second |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain

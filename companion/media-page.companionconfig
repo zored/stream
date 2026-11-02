@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "M1o6Ned4hSsSEIYWcLtHa",
+  "id": "U90v7nzPSelYvCvNQDpmj",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -2312,6 +2312,170 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "model",
+        "name": "model",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 44,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "$(custom:ai_model)",
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:ai_state) == \"ok\" ? (16777215) : ($(custom:ai_state) == \"pending\" ? (8421504) : ($(custom:ai_state) == \"idle\" ? (5263440) : ($(custom:ai_state) == \"other\" ? (16756736) : ($(custom:ai_state) == \"error\" ? (16724016) : (0)))))",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 30,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       },
+       {
+        "id": "effort",
+        "name": "effort",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 50,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 44,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "$(custom:ai_effort)",
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:ai_state) == \"ok\" ? (16777215) : ($(custom:ai_state) == \"pending\" ? (8421504) : ($(custom:ai_state) == \"idle\" ? (5263440) : ($(custom:ai_state) == \"other\" ? (16756736) : ($(custom:ai_state) == \"error\" ? (16724016) : (0)))))",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 24,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
        }
       ]
      },
@@ -2334,7 +2498,7 @@
      "options": {
       "stepProgression": "auto",
       "stepExpression": "",
-      "rotaryActions": false,
+      "rotaryActions": true,
       "canModifyStyleInApis": true,
       "notes": ""
      },
@@ -2410,6 +2574,88 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "text0",
+        "name": "text0",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "AI",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 100,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
        }
       ]
      },
@@ -2417,8 +2663,88 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": []
+        "down": [
+         {
+          "type": "action",
+          "id": "brfkm_MUo4mUmwwWWq5Wt",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST 'http://127.0.0.1:47117/ai/press'",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "Qja8eYVJtNuXe6fpv6QRa",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST 'http://127.0.0.1:47117/ai/turn?d=-1'",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "2lZ9rQOque2qDf7cmoH-d",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST 'http://127.0.0.1:47117/ai/turn?d=1'",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -4196,7 +4522,7 @@
         "down": [
          {
           "type": "action",
-          "id": "brfkm_MUo4mUmwwWWq5Wt",
+          "id": "orEK-XRU3YpRVeEcc0vHh",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4223,7 +4549,7 @@
         "up": [
          {
           "type": "action",
-          "id": "Qja8eYVJtNuXe6fpv6QRa",
+          "id": "M1o6Ned4hSsSEIYWcLtHa",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4346,7 +4672,7 @@
         "down": [
          {
           "type": "action",
-          "id": "2lZ9rQOque2qDf7cmoH-d",
+          "id": "8G1QbehFwMFU_ubBAQsdP",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4470,7 +4796,7 @@
         "down": [
          {
           "type": "action",
-          "id": "orEK-XRU3YpRVeEcc0vHh",
+          "id": "qxmzuHopdhXhcsgpacI73",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
