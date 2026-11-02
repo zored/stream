@@ -315,7 +315,8 @@ def agents_tile():
 
 
 def dictation_led():
-    return button([canvas(), box("box0", expr(f'$(custom:dictation) == "on" ? {0xFF3030} : 0'))], down=ai("/dictation/down"), up=ai("/dictation/up"))
+    color = by_state("dictation", {"on": f"$(internal:time_unix) % 2 == 0 ? {0x00FF00} : 0", "off": 0xFF0000})
+    return button([canvas(), box("box0", color)], down=ai("/dictation/down"), up=ai("/dictation/up"))
 
 
 def choice_gated(b, control):

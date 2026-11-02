@@ -132,7 +132,11 @@ func (d *dictation) recording() (bool, error) {
 		on = rec
 		return nil
 	})
-	d.vars.set("dictation", map[bool]string{true: "on", false: "off"}[on])
+	state := map[bool]string{true: "on", false: "off"}[on]
+	if err != nil {
+		state = "none"
+	}
+	d.vars.set("dictation", state)
 	return on, err
 }
 

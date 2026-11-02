@@ -80,7 +80,8 @@ only `agent-turn-complete` (assumed, from the docs); the slot is taken by Comput
 
 ## Dictation
 
-кнопка 7 drives voice input in the current Claude Desktop chat; the LED is red while recording.
+кнопка 7 drives voice input in the current Claude Desktop chat. LED: red = ready, blinking green (1 Hz) = recording,
+off = no Claude window with a record button (`dictation` = `off` / `on` / `none`).
 
 | Gesture | Effect |
 |---|---|

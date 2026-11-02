@@ -6467,7 +6467,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_7) : ($(custom:dictation) == \"on\" ? 16724016 : 0)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_7) : ($(custom:dictation) == \"on\" ? ($(internal:time_unix) % 2 == 0 ? 65280 : 0) : ($(custom:dictation) == \"off\" ? (16711680) : (0)))",
          "isExpression": true
         },
         "cornerRadius": {
