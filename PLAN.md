@@ -41,12 +41,18 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 
 ### macOS polish
 
-- [ ] Disable Loupedeck autostart: `launchctl disable gui/$(id -u)/com.logi.pluginservice.launch` (undo: `enable`)
-- [ ] Companion autostart at login, headless
+- [x] Disable Loupedeck autostart: `launchctl disable gui/$(id -u)/com.logi.pluginservice.launch` (undo: `enable`)
+- [ ] Companion autostart at login, headless: "start minimized" set by hand; move it into config so a fresh install gets it
 - [ ] Restore test from scratch: fresh Companion → README setup → works
-- [ ] Upstream PR to companion-surface-loupedeck: haptics + strip touch position in buttons mode (drops `patch-module`)
+- [ ] Personal forks of the libs we patch (companion-surface-loupedeck, node-loupedeck if needed), branch `zored_stream`,
+  cloned next to this repo; Companion runs the fork, `patch-module` goes away
+- [ ] Upstream PR from the fork: haptics + strip touch position in buttons mode
+- [ ] Gentle haptic ticks while sliding along a strip
 
-### More pages and actions
+### More buttons and actions
+
+New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
+
 
 - [ ] Keystrokes on macOS (candidates: `osascript` via `exec`, or post key events like `mediakey`)
 - [ ] `vkcall`: reconnect after a VK WorkSpace restart — not verified yet
@@ -57,10 +63,12 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 ### Ideas (2026-11-02, mechanisms assumed, not checked)
 
 Desk and display:
-- [ ] Keep-awake toggle with time left on the tile: Amphetamine via AppleScript, or `caffeinate -t` owned by `streamd`; ties into wake Plan A
+- [ ] Keep-awake toggle with time left on the tile: Amphetamine via AppleScript, or `caffeinate -t` owned by `streamd`
 - [ ] Controller brightness on a knob: Companion internal surface brightness action
 - [ ] Monitor brightness, input switch (KVM), PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Sleep buttons: display off (`pmset displaysleepnow`), lock, system sleep
+- [ ] Headphones toggle: connect/disconnect Sennheiser Accentum over Bluetooth (`blueutil` or IOBluetooth in `streamd`) and move output + mic to them;
+  back: Logi + USB camera if present, else MacBook (`SwitchAudioSource` or CoreAudio in `streamd`); LED shows the active route
 
 Windows and apps:
 - [ ] Window switcher on a knob (Alt+Tab / Ctrl+Tab): needs keystrokes (above); hold modifier while turning, release on knob stop
@@ -68,7 +76,7 @@ Windows and apps:
 - [ ] Frontmost app icon on a tile, press cycles its windows
 
 AI agents:
-- [ ] AI limits on a tile: Claude Code statusline JSON `rate_limits`, Codex `token_count` events in `~/.codex/sessions`
+- [ ] AI limits on a tile: start from `~/.hammerspoon/usage_overlay.lua` (polls `api.anthropic.com/api/oauth/usage` with the Claude Code keychain token); Codex `token_count` events in `~/.codex/sessions`
 - [ ] Model + effort switch for Claude Code / Codex: settings files or app keystrokes, research first
 - [ ] Dictation into the prompt: hold a button and speak (Superwhisper or macOS dictation), text lands in the agent input
 - [ ] Agent waiting for me: Claude Code `Notification`/`Stop` hooks → Companion variable → blinking LED with the count; press focuses the session
@@ -86,16 +94,11 @@ Network:
 - [ ] Plan in [windows.md](docs/windows.md): `streamd.exe` (C#) with the same HTTP endpoints and variables, OS-aware `gen_pages.py`
 - [ ] Check whether the device wakes a sleeping Windows PC
 
-### Wake from sleep (Mac: device can't, no HID)
-
-- [ ] Plan A — keep the system awake, only the display sleeps; any press wakes the display
-- [ ] Plan B — tiny HID board (RP2040 / Pro Micro) with a wake key
-- [ ] Plan C — Wake-on-LAN from another device
-
 ### Parked
 
 - Like for other players: MediaRemote `LikeTrack` (21) works only with players implementing it (Music.app); Chrome's Media Session has no like
 - Custom firmware ([device.md](docs/device.md))
+- Wake from sleep: the Mac can't be woken by the device (no HID); not needed
 
 ### CI
 
