@@ -1,0 +1,5970 @@
+{
+ "version": 12,
+ "type": "page",
+ "page": {
+  "id": "9XMZPsgkQNjCcw-1DjY9i",
+  "name": "MEDIA",
+  "controls": {
+   "0": {
+    "0": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": true,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "text0",
+        "name": "text0",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "VOL",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 100,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "0owgOKLqCXFv8cjE-R8jH",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/volume/mute",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "qonFCmF8HKJi6o2hezx79",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/volume/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "i6pWHunOEqrL7PMfCLvAl",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/volume/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "1": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "progress",
+        "name": "progress",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "100 - $(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": "100 - max(0, min(100, ($(custom:np_progress) - 66.67) * 3))",
+         "isExpression": true
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": "max(0, min(100, ($(custom:np_progress) - 66.67) * 3))",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:np_tint)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "np",
+        "name": "np",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "100 - $(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": -175.0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 116.67,
+         "isExpression": false
+        },
+        "width": {
+         "value": 450.0,
+         "isExpression": false
+        },
+        "height": {
+         "value": 66.67,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 90,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:np_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "track",
+        "name": "track",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "fill",
+        "name": "fill",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": "100 - max(0, min(100, ($(custom:bar_value) - 66.67) * 3))",
+         "isExpression": true
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": "max(0, min(100, ($(custom:bar_value) - 66.67) * 3))",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:bar_mode) == \"ctl\" ? 8421504 : 16777215",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "2": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "3": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "4": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "5": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "6": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "strip",
+        "name": "strip",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 300,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:ai_strip_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fill",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "7": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": true,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "text0",
+        "name": "text0",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "SUN",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 100,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "mMrZcky5FM1UeeGfia7qg",
+          "connectionId": "internal",
+          "definitionId": "action_group",
+          "options": {
+           "execution_mode": {
+            "value": "sequential",
+            "isExpression": false
+           }
+          },
+          "children": {
+           "default": [
+            {
+             "type": "action",
+             "id": "8_Oz4CMoARGhR_gE0jKei",
+             "connectionId": "internal",
+             "definitionId": "exec",
+             "options": {
+              "path": {
+               "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47118/brightness/hold",
+               "isExpression": false
+              },
+              "cwd": {
+               "value": "",
+               "isExpression": false
+              },
+              "timeout": {
+               "value": 2000,
+               "isExpression": false
+              },
+              "targetVariable": {
+               "value": "ctl_brightness",
+               "isExpression": false
+              }
+             },
+             "upgradeIndex": null
+            },
+            {
+             "type": "action",
+             "id": "NEhc6wXoN3o_aiQS9jWA8",
+             "connectionId": "internal",
+             "definitionId": "set_brightness",
+             "options": {
+              "surfaceId": {
+               "value": "self",
+               "isExpression": false
+              },
+              "brightness": {
+               "value": "$(custom:ctl_brightness)",
+               "isExpression": true
+              }
+             },
+             "upgradeIndex": null
+            }
+           ]
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "2lZ9rQOque2qDf7cmoH-d",
+          "connectionId": "internal",
+          "definitionId": "action_group",
+          "options": {
+           "execution_mode": {
+            "value": "sequential",
+            "isExpression": false
+           }
+          },
+          "children": {
+           "default": [
+            {
+             "type": "action",
+             "id": "brfkm_MUo4mUmwwWWq5Wt",
+             "connectionId": "internal",
+             "definitionId": "exec",
+             "options": {
+              "path": {
+               "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47118/brightness/release",
+               "isExpression": false
+              },
+              "cwd": {
+               "value": "",
+               "isExpression": false
+              },
+              "timeout": {
+               "value": 2000,
+               "isExpression": false
+              },
+              "targetVariable": {
+               "value": "ctl_brightness",
+               "isExpression": false
+              }
+             },
+             "upgradeIndex": null
+            },
+            {
+             "type": "action",
+             "id": "Qja8eYVJtNuXe6fpv6QRa",
+             "connectionId": "internal",
+             "definitionId": "set_brightness",
+             "options": {
+              "surfaceId": {
+               "value": "self",
+               "isExpression": false
+              },
+              "brightness": {
+               "value": "$(custom:ctl_brightness)",
+               "isExpression": true
+              }
+             },
+             "upgradeIndex": null
+            }
+           ]
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "8G1QbehFwMFU_ubBAQsdP",
+          "connectionId": "internal",
+          "definitionId": "action_group",
+          "options": {
+           "execution_mode": {
+            "value": "sequential",
+            "isExpression": false
+           }
+          },
+          "children": {
+           "default": [
+            {
+             "type": "action",
+             "id": "orEK-XRU3YpRVeEcc0vHh",
+             "connectionId": "internal",
+             "definitionId": "exec",
+             "options": {
+              "path": {
+               "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47118/brightness/down",
+               "isExpression": false
+              },
+              "cwd": {
+               "value": "",
+               "isExpression": false
+              },
+              "timeout": {
+               "value": 2000,
+               "isExpression": false
+              },
+              "targetVariable": {
+               "value": "ctl_brightness",
+               "isExpression": false
+              }
+             },
+             "upgradeIndex": null
+            },
+            {
+             "type": "action",
+             "id": "M1o6Ned4hSsSEIYWcLtHa",
+             "connectionId": "internal",
+             "definitionId": "set_brightness",
+             "options": {
+              "surfaceId": {
+               "value": "self",
+               "isExpression": false
+              },
+              "brightness": {
+               "value": "$(custom:ctl_brightness)",
+               "isExpression": true
+              }
+             },
+             "upgradeIndex": null
+            }
+           ]
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "vbIh3s9XoYHXY5dPPZxYB",
+          "connectionId": "internal",
+          "definitionId": "action_group",
+          "options": {
+           "execution_mode": {
+            "value": "sequential",
+            "isExpression": false
+           }
+          },
+          "children": {
+           "default": [
+            {
+             "type": "action",
+             "id": "qxmzuHopdhXhcsgpacI73",
+             "connectionId": "internal",
+             "definitionId": "exec",
+             "options": {
+              "path": {
+               "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47118/brightness/up",
+               "isExpression": false
+              },
+              "cwd": {
+               "value": "",
+               "isExpression": false
+              },
+              "timeout": {
+               "value": 2000,
+               "isExpression": false
+              },
+              "targetVariable": {
+               "value": "ctl_brightness",
+               "isExpression": false
+              }
+             },
+             "upgradeIndex": null
+            },
+            {
+             "type": "action",
+             "id": "U90v7nzPSelYvCvNQDpmj",
+             "connectionId": "internal",
+             "definitionId": "set_brightness",
+             "options": {
+              "surfaceId": {
+               "value": "self",
+               "isExpression": false
+              },
+              "brightness": {
+               "value": "$(custom:ctl_brightness)",
+               "isExpression": true
+              }
+             },
+             "upgradeIndex": null
+            }
+           ]
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    }
+   },
+   "1": {
+    "0": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": true,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "text0",
+        "name": "text0",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "TRACK",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 100,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": [
+         {
+          "type": "action",
+          "id": "pWWe_Xp0KNq8MlQx9j2zk",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/play",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "gOLteHv5tVF5fqfRXZcXv",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/prev",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         },
+         {
+          "type": "action",
+          "id": "-ck5z3AlqQvS55zABgygQ",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/prev",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "pM0synbVbFjUZS-ES98Wl",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/next",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         },
+         {
+          "type": "action",
+          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/next",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "1": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "progress",
+        "name": "progress",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "100 - $(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": "100 - max(0, min(100, ($(custom:np_progress) - 33.33) * 3))",
+         "isExpression": true
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": "max(0, min(100, ($(custom:np_progress) - 33.33) * 3))",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:np_tint)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "np",
+        "name": "np",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "100 - $(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": -175.0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 16.67,
+         "isExpression": false
+        },
+        "width": {
+         "value": 450.0,
+         "isExpression": false
+        },
+        "height": {
+         "value": 66.67,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 90,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:np_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "track",
+        "name": "track",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "fill",
+        "name": "fill",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": "100 - max(0, min(100, ($(custom:bar_value) - 33.33) * 3))",
+         "isExpression": true
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": "max(0, min(100, ($(custom:bar_value) - 33.33) * 3))",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:bar_mode) == \"ctl\" ? 8421504 : 16777215",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "2": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "icon",
+        "name": "icon",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:np_art) == \"\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "$(custom:np_playing) == 1 ? \"\u23f8\" : \"\u25b6\"",
+         "isExpression": true
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 110,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       },
+       {
+        "id": "cover",
+        "name": "cover",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 88,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:np_art)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "crop",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "play",
+        "name": "play",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:np_art) == \"\" || ($(custom:np_playing) == 1) != false ? 0 : $(custom:np_glyph)",
+         "isExpression": true
+        },
+        "x": {
+         "value": "(100 - (80 + $(custom:np_glyph) / 5)) / 2",
+         "isExpression": true
+        },
+        "y": {
+         "value": "(100 - (80 + $(custom:np_glyph) / 5)) / 2",
+         "isExpression": true
+        },
+        "width": {
+         "value": "(80 + $(custom:np_glyph) / 5)",
+         "isExpression": true
+        },
+        "height": {
+         "value": "(80 + $(custom:np_glyph) / 5)",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii04IC04IDQwIDQwIj48ZGVmcz48ZmlsdGVyIGlkPSJnIiB4PSItMSIgeT0iLTEiIHdpZHRoPSIzIiBoZWlnaHQ9IjMiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIuNSIvPjwvZmlsdGVyPjwvZGVmcz48cGF0aCBkPSJNOCA1djE0bDExLTd6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTggNXYxNGwxMS03eiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbHRlcj0idXJsKCNnKSIvPjxwYXRoIGQ9Ik04IDV2MTRsMTEtN3oiIGZpbGw9IiNmZmYiLz48L3N2Zz4K",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fill",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "pause",
+        "name": "pause",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:np_art) == \"\" || ($(custom:np_playing) == 1) != true ? 0 : $(custom:np_glyph)",
+         "isExpression": true
+        },
+        "x": {
+         "value": "(100 - (80 + $(custom:np_glyph) / 5)) / 2",
+         "isExpression": true
+        },
+        "y": {
+         "value": "(100 - (80 + $(custom:np_glyph) / 5)) / 2",
+         "isExpression": true
+        },
+        "width": {
+         "value": "(80 + $(custom:np_glyph) / 5)",
+         "isExpression": true
+        },
+        "height": {
+         "value": "(80 + $(custom:np_glyph) / 5)",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii04IC04IDQwIDQwIj48ZGVmcz48ZmlsdGVyIGlkPSJnIiB4PSItMSIgeT0iLTEiIHdpZHRoPSIzIiBoZWlnaHQ9IjMiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIuNSIvPjwvZmlsdGVyPjwvZGVmcz48cGF0aCBkPSJNNiA1aDR2MTRINnpNMTQgNWg0djE0aC00eiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbHRlcj0idXJsKCNnKSIvPjxwYXRoIGQ9Ik02IDVoNHYxNEg2ek0xNCA1aDR2MTRoLTR6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTYgNWg0djE0SDZ6TTE0IDVoNHYxNGgtNHoiIGZpbGw9IiNmZmYiLz48L3N2Zz4K",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fill",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "BKKE1FcsLSILewn-UqyxH",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/show",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "Z45oQuBVcZ4xuutI_OyyK",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/play",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "3": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "4": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "5": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dots",
+        "name": "dots",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 88,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:agents_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "5FJuPMPcMZniNBTZVwymy",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "6": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "strip",
+        "name": "strip",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": -100,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 300,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:ai_strip_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fill",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "7": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": true,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "text0",
+        "name": "text0",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "AI",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 100,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "zaKhF6dzRoF2c3yckVPr_",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST \"http://127.0.0.1:47117/ai/down\"",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "lt3NJEPQ_B8plQW6Dtexw",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST \"http://127.0.0.1:47117/ai/up\"",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "HSzztGETWyhDRLd2QQout",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST \"http://127.0.0.1:47117/ai/turn?d=-1\"",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "BmKVMTI1k7ej2S99T5Wxr",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST \"http://127.0.0.1:47117/ai/turn?d=1\"",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    }
+   },
+   "2": {
+    "0": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": true,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "text0",
+        "name": "text0",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "SEEK",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 100,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": [],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/seek/back",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "WUftSx60QPUkjoE3kxzDy",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/seek/forward",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "1": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "progress",
+        "name": "progress",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "100 - $(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": "100 - max(0, min(100, ($(custom:np_progress) - 0.00) * 3))",
+         "isExpression": true
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": "max(0, min(100, ($(custom:np_progress) - 0.00) * 3))",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:np_tint)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "np",
+        "name": "np",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "100 - $(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": -175.0,
+         "isExpression": false
+        },
+        "y": {
+         "value": -83.33,
+         "isExpression": false
+        },
+        "width": {
+         "value": 450.0,
+         "isExpression": false
+        },
+        "height": {
+         "value": 66.67,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 90,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:np_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "track",
+        "name": "track",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "fill",
+        "name": "fill",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:bar_alpha)",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": "100 - max(0, min(100, ($(custom:bar_value) - 0.00) * 3))",
+         "isExpression": true
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": "max(0, min(100, ($(custom:bar_value) - 0.00) * 3))",
+         "isExpression": true
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:bar_mode) == \"ctl\" ? 8421504 : 16777215",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "skip-forward",
+        "name": "skip-forward",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:np_skip) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": "$(custom:np_skip_x)",
+         "isExpression": true
+        },
+        "y": {
+         "value": 44,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 50,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0yIDAgMjggMjQiPjxkZWZzPjxmaWx0ZXIgaWQ9ImciIHg9Ii0xIiB5PSItMSIgd2lkdGg9IjMiIGhlaWdodD0iMyI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMiIvPjwvZmlsdGVyPjwvZGVmcz48cGF0aCBkPSJNMyA1djE0bDktN3pNMTIgNXYxNGw5LTd6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTMgNXYxNGw5LTd6TTEyIDV2MTRsOS03eiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "skip-back",
+        "name": "skip-back",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:np_skip) == -1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": "$(custom:np_skip_x)",
+         "isExpression": true
+        },
+        "y": {
+         "value": 44,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 50,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0yIDAgMjggMjQiPjxkZWZzPjxmaWx0ZXIgaWQ9ImciIHg9Ii0xIiB5PSItMSIgd2lkdGg9IjMiIGhlaWdodD0iMyI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMiIvPjwvZmlsdGVyPjwvZGVmcz48cGF0aCBkPSJNMjEgNXYxNGwtOS03ek0xMiA1djE0bC05LTd6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTIxIDV2MTRsLTktN3pNMTIgNXYxNGwtOS03eiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "2": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:call_mic) == \"on\" ? (1793568) : ($(custom:call_mic) == \"off\" ? (11740702) : ($(custom:call_mic) == \"pending\" ? (9068800) : ($(custom:call_mic) == \"unknown\" ? (9068800) : (0))))",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "on",
+        "name": "on",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_mic) == \"on\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 20,
+         "isExpression": false
+        },
+        "y": {
+         "value": 20,
+         "isExpression": false
+        },
+        "width": {
+         "value": 60,
+         "isExpression": false
+        },
+        "height": {
+         "value": 60,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIxOCIgeT0iNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjIzIiByeD0iNiIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0xMSAyMmExMyAxMyAwIDAgMCAyNiAwTTI0IDM1djdNMTcgNDJoMTQiLz48L3N2Zz4K",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "off",
+        "name": "off",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_mic) == \"off\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 20,
+         "isExpression": false
+        },
+        "y": {
+         "value": 20,
+         "isExpression": false
+        },
+        "width": {
+         "value": 60,
+         "isExpression": false
+        },
+        "height": {
+         "value": 60,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48bWFzayBpZD0ibSI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTYgNmwzNiAzNiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjkiLz48L21hc2s+PGcgbWFzaz0idXJsKCNtKSI+PHJlY3QgeD0iMTgiIHk9IjUiIHdpZHRoPSIxMiIgaGVpZ2h0PSIyMyIgcng9IjYiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMTEgMjJhMTMgMTMgMCAwIDAgMjYgME0yNCAzNXY3TTE3IDQyaDE0Ii8+PC9nPjxwYXRoIGQ9Ik02IDZsMzYgMzYiLz48L3N2Zz4K",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "unknown",
+        "name": "unknown",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:call_mic) == \"unknown\" || $(custom:call_mic) == \"pending\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "$(custom:call_mic) == \"pending\" ? \"\u2026\" : \"?\"",
+         "isExpression": true
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 60,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "ltkz_dYFyZeEI9yCDckMr",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "6uH4VZl66JZ_VpGmsKcNu",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "3": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "4": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "5": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "time",
+        "name": "time",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 58,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "concat(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjYgLTc0IDI4OSA3NSI+PHRleHQgZm9udC1mYW1pbHk9IkpldEJyYWlucyBNb25vIiBmb250LXNpemU9IjEwMCIgZmlsbD0iI2ZmZiI+\", substr(\"MDA6MDE6MDI6MDM6MDQ6MDU6MDY6MDc6MDg6MDk6MTA6MTE6MTI6MTM6MTQ6MTU6MTY6MTc6MTg6MTk6MjA6MjE6MjI6MjM6\", $(internal:time_h) * 4, $(internal:time_h) * 4 + 4), substr(\"MDA8MDE8MDI8MDM8MDQ8MDU8MDY8MDc8MDg8MDk8MTA8MTE8MTI8MTM8MTQ8MTU8MTY8MTc8MTg8MTk8MjA8MjE8MjI8MjM8MjQ8MjU8MjY8Mjc8Mjg8Mjk8MzA8MzE8MzI8MzM8MzQ8MzU8MzY8Mzc8Mzg8Mzk8NDA8NDE8NDI8NDM8NDQ8NDU8NDY8NDc8NDg8NDk8NTA8NTE8NTI8NTM8NTQ8NTU8NTY8NTc8NTg8NTk8\", $(internal:time_m) * 4, $(internal:time_m) * 4 + 4), \"L3RleHQ+PC9zdmc+\")",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "date",
+        "name": "date",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 74,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 17,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "concat(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjYgLTc0IDI4OSA3NSI+PHRleHQgZm9udC1mYW1pbHk9IkpldEJyYWlucyBNb25vIiBmb250LXNpemU9IjEwMCIgZmlsbD0iIzgwODA4MCI+\", substr(\"MDAuMDEuMDIuMDMuMDQuMDUuMDYuMDcuMDguMDkuMTAuMTEuMTIuMTMuMTQuMTUuMTYuMTcuMTguMTkuMjAuMjEuMjIuMjMuMjQuMjUuMjYuMjcuMjguMjkuMzAuMzEu\", $(internal:date_d) * 4, $(internal:date_d) * 4 + 4), substr(\"MDA8MDE8MDI8MDM8MDQ8MDU8MDY8MDc8MDg8MDk8MTA8MTE8MTI8\", $(internal:date_m) * 4, $(internal:date_m) * 4 + 4), \"L3RleHQ+PC9zdmc+\")",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "6": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "strip",
+        "name": "strip",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": -200,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 300,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:ai_strip_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fill",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "7": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": true,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "text0",
+        "name": "text0",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "SCROLL",
+         "isExpression": false
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 100,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "eS5oJpyGVKTurplzq_yfA",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47121/scroll/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "c2zWJ3eJKUa06XnNNaWPd",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47121/scroll/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "R3n-qcRIty8D4JiI8KM8D",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47121/scroll/back",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "YNA8kUk_Mt79yNBm7b1z2",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47121/scroll/forward",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    }
+   },
+   "3": {
+    "0": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "1": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_mic) == \"off\" ? (4194304) : ($(custom:call_mic) == \"pending\" ? (16756736) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0))))",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "70QJio7ZU4gUmPVkoWjtL",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "gVJ02FKOioexkUL1trMIr",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "2": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "3": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "4": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "5": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:agents_led)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [
+         {
+          "type": "action",
+          "id": "GsUaCH6Cq9_adVXbrHSYH",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "6": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    },
+    "7": {
+     "type": "button-layered",
+     "options": {
+      "stepProgression": "auto",
+      "stepExpression": "",
+      "rotaryActions": false,
+      "canModifyStyleInApis": true,
+      "notes": ""
+     },
+     "style": {
+      "layers": [
+       {
+        "id": "canvas",
+        "name": "Canvas",
+        "usage": "auto",
+        "type": "canvas",
+        "decoration": {
+         "value": "none",
+         "isExpression": false
+        },
+        "showStatusIcons": {
+         "value": "none",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "box0",
+        "name": "box0",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       }
+      ]
+     },
+     "feedbacks": [],
+     "steps": {
+      "0": {
+       "action_sets": {
+        "down": [],
+        "up": []
+       },
+       "options": {
+        "runWhileHeld": []
+       }
+      }
+     },
+     "localVariables": []
+    }
+   }
+  },
+  "gridSize": {
+   "minColumn": 0,
+   "maxColumn": 7,
+   "minRow": 0,
+   "maxRow": 3
+  },
+  "pageVariables": []
+ },
+ "instances": {},
+ "connectionCollections": [],
+ "oldPageNumber": 1,
+ "imageLibrary": [],
+ "imageLibraryCollections": []
+}

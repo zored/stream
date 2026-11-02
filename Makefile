@@ -84,6 +84,7 @@ agent-hooks:
 
 pages:
 	python3 -I tools/gen_pages.py companion
+	python3 -I tools/gen_pages.py companion/windows windows
 
 deploy: pages
 	node tools/deploy.mjs --vars companion/custom-variables.json companion/media-page.companionconfig:1 companion/test-page.companionconfig:2

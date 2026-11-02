@@ -5,6 +5,10 @@ import random
 import string
 import sys
 
+PROFILE = sys.argv[2] if len(sys.argv) > 2 else "mac"
+if PROFILE not in ("mac", "windows"):
+    sys.exit(f"unknown profile {PROFILE!r}, want mac or windows")
+WINDOWS = PROFILE == "windows"
 ALPHABET = string.ascii_letters + string.digits + "_-"
 RAINBOW = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0x8000FF, 0xFF00FF]
 MEDIAKEY = "$HOME/.local/bin/mediakey"
@@ -21,7 +25,8 @@ ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation")}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation")
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -97,7 +102,7 @@ def sh(command, target=None):
 
 
 def mediakey(key):
-    return sh(f"{MEDIAKEY} {key}")
+    return post(f"{STREAMD}/key/{key}") if WINDOWS else sh(f"{MEDIAKEY} {key}")
 
 
 def post(url):
@@ -123,11 +128,11 @@ def vkcall(path):
 
 
 def ymusic(path):
-    return [post(YMUSIC + path)]
+    return None if WINDOWS else [post(YMUSIC + path)]
 
 
 def ai(path):
-    return [post(f"'{AI}{path}'")]
+    return [post(f'"{AI}{path}"' if WINDOWS else f"'{AI}{path}'")]
 
 
 def button(style, down=(), up=(), left=None, right=None, held=None):
@@ -328,7 +333,7 @@ def test_page():
 
 
 def media_page():
-    return "MEDIA", {
+    grid = {
         (0, 0): button(labelled("VOL"), down=streamd("/volume/mute"),
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
         (1, 0): button(labelled("TRACK"), up=[mediakey("play")], held=ymusic("/like"),
@@ -354,6 +359,10 @@ def media_page():
         (3, 2): call_led("call_cam"),
         (3, 3): hangup_led(),
     }
+    if WINDOWS:
+        for cell in ((2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
+            del grid[cell]
+    return "MEDIA", grid
 
 
 def blank():

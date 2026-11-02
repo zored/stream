@@ -2,7 +2,8 @@ import json
 import os
 import sys
 
-PATH = os.path.expanduser("~/Library/Application Support/companion/config.json")
+PATH = (os.path.join(os.environ["APPDATA"], "companion", "config.json") if sys.platform == "win32"
+        else os.path.expanduser("~/Library/Application Support/companion/config.json"))
 
 config = json.load(open(PATH, encoding="utf-8"))
 for pair in sys.argv[1:]:
