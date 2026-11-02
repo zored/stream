@@ -16,7 +16,7 @@ HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
-    "ai_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
+    "ai_limits_svg", "ai_label_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
@@ -142,23 +142,24 @@ def logged(name, label, bg, fg=0xFFFFFF, rotary=False):
     return button(labelled(label, bg, fg), **events)
 
 
+def strip_image(layer_id, var, row, rotation, opacity=None):
+    cell_w, cell_h, strip_h = 60, 90, 270
+    center_y = strip_h / 2 - cell_h * row
+    return image(layer_id, expr(f"$(custom:{var})"), opacity=opacity, rotation=v(rotation),
+                 x=v(round((cell_w / 2 - strip_h / 2) / cell_w * 100, 2)), width=v(round(strip_h / cell_w * 100, 2)),
+                 y=v(round((center_y - cell_w / 2) / cell_h * 100, 2)), height=v(round(cell_w / cell_h * 100, 2)))
+
+
 def volume_cell(row):
     base = (2 - row) * 100 / 3
     fill = f"max(0, min(100, ($(custom:volume_anim) - {base:.2f}) * 3))"
     visible = expr(VOLUME_ALPHA)
-    cell_w, cell_h, strip_h = 60, 90, 270
-    center_y = strip_h / 2 - cell_h * row
-    style = [
+    return button([
         canvas(),
-        image("np", expr("$(custom:np_svg)"), opacity=expr(f"100 - {VOLUME_ALPHA}"), rotation=v(90),
-             x=v(round((cell_w / 2 - strip_h / 2) / cell_w * 100, 2)), width=v(round(strip_h / cell_w * 100, 2)),
-             y=v(round((center_y - cell_w / 2) / cell_h * 100, 2)), height=v(round(cell_w / cell_h * 100, 2))),
+        strip_image("np", "np_svg", row, 90, expr(f"100 - {VOLUME_ALPHA}")),
         box("track", 0x202020, opacity=visible),
-        box("fill", 0x3FA9F5, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
-    ]
-    if row == 1:
-        style.append(text("level", "$(custom:volume)", fontsize=14, opacity=visible))
-    return button(style)
+        box("fill", 0xFFFFFF, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
+    ])
 
 
 def play_pause():
@@ -243,18 +244,15 @@ def clock():
 
 
 def ai_limits():
-    return button([canvas(), box("box0", 0x000000), image("usage", expr("$(custom:ai_svg)"))])
+    return button([canvas(), box("box0", 0x000000), image("usage", expr("$(custom:ai_limits_svg)"))])
 
 
 def ai_switch():
     return button(labelled("AI"), down=ai("/ai/press"), left=ai("/ai/turn?d=-1"), right=ai("/ai/turn?d=1"))
 
 
-def ai_label():
-    color = by_state("ai_state", {"ok": 0xFFFFFF, "pending": 0x808080, "idle": 0x505050, "other": 0xFFB000, "error": 0xFF3030})
-    return button([canvas(), box("box0", 0x000000),
-                   text("model", "$(custom:ai_model)", color, fontsize=30, x=v(6), y=v(6), width=v(88), height=v(44)),
-                   text("effort", "$(custom:ai_effort)", color, fontsize=24, x=v(6), y=v(50), width=v(88), height=v(44))])
+def ai_label(row):
+    return button([canvas(), box("box0", 0x000000), strip_image("label", "ai_label_svg", row, 270)])
 
 
 def test_page():
@@ -285,7 +283,7 @@ def media_page():
         (2, 4): hangup_tile(),
         (1, 5): ai_limits(),
         (2, 5): clock(),
-        (1, 6): ai_label(),
+        **{(r, 6): ai_label(r) for r in range(3)},
         (1, 7): ai_switch(),
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),

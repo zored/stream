@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
 	"io"
 	"log"
 	"math"
@@ -25,9 +24,10 @@ const (
 	usageMaxBackoff = time.Hour
 	workdays        = 5
 	day             = 24 * time.Hour
+	sessionHours    = 5
 )
 
-var levelColors = map[string]string{"low": "#99F299", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
+var levelColors = map[string]string{"low": "#fff", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
 
 type limit struct {
 	Kind     string      `json:"kind"`
@@ -209,16 +209,15 @@ func (u *usage) publish() {
 	limits, failed := u.limits, u.snap.Error != ""
 	u.mu.Unlock()
 	if limits == nil {
-		u.vars.set("ai_svg", usageSVG([]usageLine{{cells: []usageCell{{"…", "normal"}}}}, failed))
+		u.vars.set("ai_limits_svg", usageSVG(nil, failed))
 		return
 	}
 	now := time.Now()
-	lines, err := usageLines(limits, now)
+	bars, err := usageBars(limits, now)
 	if err != nil {
 		log.Printf("usage: %v", err)
-		lines = []usageLine{{cells: []usageCell{{"?", "critical"}}}}
 	}
-	u.vars.set("ai_svg", usageSVG(lines, failed))
+	u.vars.set("ai_limits_svg", usageSVG(bars, failed || err != nil))
 	if s := findLimit(limits, "session"); s != nil {
 		u.vars.set("ai_session", strconv.Itoa(round(s.Percent)))
 		if s.ResetsAt != nil {
@@ -235,39 +234,25 @@ func (u *usage) publish() {
 	}
 }
 
-type usageCell struct{ text, level string }
-
-type usageLine struct {
-	cells []usageCell
-	dim   bool
-}
-
-func usageLines(limits []limit, now time.Time) ([]usageLine, error) {
+func usageBars(limits []limit, now time.Time) ([]float64, error) {
 	week := findLimit(limits, "weekly_all")
 	if week == nil {
 		return nil, errors.New("no weekly_all")
 	}
-	var lines []usageLine
+	left, used := 100.0, 0.0
 	if s := findLimit(limits, "session"); s != nil {
-		left := "5h"
+		used = s.Percent
 		if s.ResetsAt != nil {
-			left = durationLeft(s.ResetsAt.Sub(now))
+			left = max(0, s.ResetsAt.Sub(now).Hours()) / sessionHours * 100
 		}
-		lines = append(lines, usageLine{cells: []usageCell{{left, levelOf(s.Percent)}}, dim: true})
 	}
-	lines = append(lines, weekLine(*week, now, false))
+	bars := []float64{left, used, dayPct(*week, now), week.Percent}
 	for _, l := range limits {
 		if l.Kind == "weekly_scoped" {
-			lines = append(lines, weekLine(l, now, true))
-			break
+			return append(bars, dayPct(l, now), l.Percent), nil
 		}
 	}
-	return lines, nil
-}
-
-func weekLine(l limit, now time.Time, dim bool) usageLine {
-	d := dayPct(l, now)
-	return usageLine{cells: []usageCell{{strconv.Itoa(round(d)), levelOf(d)}, {strconv.Itoa(round(l.Percent)), levelOf(l.Percent)}}, dim: dim}
+	return append(bars, 0, 0), nil
 }
 
 func round(n float64) int { return int(math.Floor(n + 0.5)) }
@@ -320,46 +305,21 @@ func dayPct(l limit, now time.Time) float64 {
 	return workdays * l.Percent / float64(workdayIndex(start, now))
 }
 
-func durationLeft(d time.Duration) string {
-	total := int(math.Ceil(max(0, d.Minutes())))
-	h, m := total/60, total%60
-	switch {
-	case h == 0:
-		return fmt.Sprintf("%dm", m)
-	case m == 0:
-		return fmt.Sprintf("%dh", h)
-	}
-	return fmt.Sprintf("%dh %dm", h, m)
-}
-
-func usageSVG(lines []usageLine, failed bool) string {
-	const size, inset, small, big, stretch = 100, 6, 19, 24, 1.7
-	columns := []int{inset, size/2 + 2}
+func usageSVG(bars []float64, failed bool) string {
+	const size, inset, gap = 100, 6, 1.5
+	width := float64(size-2*inset) / 6
 	var b strings.Builder
-	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
-		`<g font-family="Helvetica" font-weight="bold">`, size, size)
-	main := false
-	for _, line := range lines {
-		y, attrs := float64(inset+small*75/100), fmt.Sprintf(`font-size="%d" opacity="0.7"`, small)
-		switch {
-		case !line.dim:
-			main = true
-			y, attrs = size/2+big*stretch*36/100, fmt.Sprintf(`font-size="%d" transform="scale(1 %.1f)"`, big, stretch)
-		case main:
-			y = size - inset
-		}
-		for j, c := range line.cells {
-			ty := y
-			if !line.dim {
-				ty /= stretch
-			}
-			fmt.Fprintf(&b, `<text x="%d" y="%.1f" %s fill="%s">%s</text>`,
-				columns[j], ty, attrs, levelColors[c.level], html.EscapeString(c.text))
-		}
+	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`, size, size)
+	for i, pct := range bars {
+		x := inset + float64(i)*width + gap/2
+		h := float64(size-2*inset) * min(max(pct, 0), 100) / 100
+		fmt.Fprintf(&b, `<rect x="%.1f" y="%d" width="%.1f" height="%d" fill="#1e1e1e"/>`, x, inset, width-gap, size-2*inset)
+		fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" fill="%s"/>`,
+			x, size-inset-h, width-gap, h, levelColors[levelOf(pct)])
 	}
 	if failed {
-		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="3" fill="#FF6666"/>`, size-inset-2, inset)
+		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="3" fill="#FF6666"/>`, size-inset-2, inset+2)
 	}
-	b.WriteString(`</g></svg>`)
+	b.WriteString(`</svg>`)
 	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(b.String()))
 }

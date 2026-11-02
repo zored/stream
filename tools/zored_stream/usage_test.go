@@ -1,7 +1,7 @@
 package main
 
 import (
-	"strings"
+	"slices"
 	"testing"
 	"time"
 )
@@ -17,26 +17,6 @@ func lim(kind string, p float64, model string, reset *time.Time) limit {
 }
 
 func ptr(t time.Time) *time.Time { return &t }
-
-func linesText(t *testing.T, limits []limit, now time.Time) string {
-	lines, err := usageLines(limits, now)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out []string
-	for _, l := range lines {
-		var cells []string
-		for _, c := range l.cells {
-			cells = append(cells, c.text+":"+c.level)
-		}
-		text := strings.Join(cells, " ")
-		if l.dim {
-			text = "(" + text + ")"
-		}
-		out = append(out, text)
-	}
-	return strings.Join(out, " / ")
-}
 
 func TestDayPct(t *testing.T) {
 	monday := ptr(at(26, 0))
@@ -61,36 +41,32 @@ func TestDayPct(t *testing.T) {
 	}
 }
 
-func TestLines(t *testing.T) {
+func TestBars(t *testing.T) {
 	monday := ptr(at(26, 0))
 	now := at(19, 12)
 	limits := []limit{
-		lim("session", 3, "", ptr(now.Add(170*time.Minute+24*time.Second))),
+		lim("session", 10, "", ptr(now.Add(150*time.Minute))),
 		lim("weekly_all", 23, "", monday),
 		lim("weekly_scoped", 12, "Fable", monday),
 	}
 	for name, c := range map[string]struct {
 		limits []limit
-		want   string
+		want   []float64
 	}{
-		"all":              {limits, "(2h 51m:low) / 115:critical 23:low / (60:normal 12:low)"},
-		"inactive session": {[]limit{lim("session", 0, "", nil), limits[1]}, "(5h:low) / 115:critical 23:low"},
-		"no session":       {limits[1:2], "115:critical 23:low"},
+		"all":              {limits, []float64{50, 10, 115, 23, 60, 12}},
+		"inactive session": {[]limit{lim("session", 0, "", nil), limits[1]}, []float64{100, 0, 115, 23, 0, 0}},
+		"no session":       {limits[1:], []float64{100, 0, 115, 23, 60, 12}},
 	} {
-		if got := linesText(t, c.limits, now); got != c.want {
-			t.Errorf("%s: got %q want %q", name, got, c.want)
+		got, err := usageBars(c.limits, now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !slices.Equal(got, c.want) {
+			t.Errorf("%s: got %v want %v", name, got, c.want)
 		}
 	}
-	if _, err := usageLines(limits[:1], now); err == nil {
+	if _, err := usageBars(limits[:1], now); err == nil {
 		t.Error("no weekly: want error")
-	}
-}
-
-func TestDurationLeft(t *testing.T) {
-	for d, want := range map[time.Duration]string{65 * time.Minute: "1h 5m", 2 * time.Hour: "2h", 59 * time.Minute: "59m", -time.Minute: "0m"} {
-		if got := durationLeft(d); got != want {
-			t.Errorf("%v: got %s want %s", d, got, want)
-		}
 	}
 }
 

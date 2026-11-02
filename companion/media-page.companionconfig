@@ -440,7 +440,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 4172277,
+         "value": 16777215,
          "isExpression": false
         },
         "cornerRadius": {
@@ -947,6 +947,61 @@
         },
         "borderPosition": {
          "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "label",
+        "name": "label",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": -175.0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 116.67,
+         "isExpression": false
+        },
+        "width": {
+         "value": 450.0,
+         "isExpression": false
+        },
+        "height": {
+         "value": 66.67,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 270,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:ai_label_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -1529,7 +1584,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 4172277,
+         "value": 16777215,
          "isExpression": false
         },
         "cornerRadius": {
@@ -1546,88 +1601,6 @@
         },
         "borderPosition": {
          "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "level",
-        "name": "level",
-        "usage": "auto",
-        "type": "text",
-        "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:volume_alpha)",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "text": {
-         "value": "$(custom:volume)",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
-         "isExpression": false
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fontsize": {
-         "value": 14,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
          "isExpression": false
         }
        }
@@ -2199,7 +2172,7 @@
          "isExpression": false
         },
         "base64Image": {
-         "value": "$(custom:ai_svg)",
+         "value": "$(custom:ai_limits_svg)",
          "isExpression": true
         },
         "halign": {
@@ -2314,15 +2287,12 @@
         }
        },
        {
-        "id": "model",
-        "name": "model",
+        "id": "label",
+        "name": "label",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -2335,31 +2305,27 @@
          "isExpression": false
         },
         "x": {
-         "value": 6,
+         "value": -175.0,
          "isExpression": false
         },
         "y": {
-         "value": 6,
+         "value": 16.67,
          "isExpression": false
         },
         "width": {
-         "value": 88,
+         "value": 450.0,
          "isExpression": false
         },
         "height": {
-         "value": 44,
+         "value": 66.67,
          "isExpression": false
         },
         "rotation": {
-         "value": 0,
+         "value": 270,
          "isExpression": false
         },
-        "text": {
-         "value": "$(custom:ai_model)",
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:ai_state) == \"ok\" ? (16777215) : ($(custom:ai_state) == \"pending\" ? (8421504) : ($(custom:ai_state) == \"idle\" ? (5263440) : ($(custom:ai_state) == \"other\" ? (16756736) : ($(custom:ai_state) == \"error\" ? (16724016) : (0)))))",
+        "base64Image": {
+         "value": "$(custom:ai_label_svg)",
          "isExpression": true
         },
         "halign": {
@@ -2370,110 +2336,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 30,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
-         "isExpression": false
-        }
-       },
-       {
-        "id": "effort",
-        "name": "effort",
-        "usage": "auto",
-        "type": "text",
-        "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": 100,
-         "isExpression": false
-        },
-        "x": {
-         "value": 6,
-         "isExpression": false
-        },
-        "y": {
-         "value": 50,
-         "isExpression": false
-        },
-        "width": {
-         "value": 88,
-         "isExpression": false
-        },
-        "height": {
-         "value": 44,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "text": {
-         "value": "$(custom:ai_effort)",
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:ai_state) == \"ok\" ? (16777215) : ($(custom:ai_state) == \"pending\" ? (8421504) : ($(custom:ai_state) == \"idle\" ? (5263440) : ($(custom:ai_state) == \"other\" ? (16756736) : ($(custom:ai_state) == \"error\" ? (16724016) : (0)))))",
-         "isExpression": true
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fontsize": {
-         "value": 24,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -3027,7 +2891,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 4172277,
+         "value": 16777215,
          "isExpression": false
         },
         "cornerRadius": {
@@ -4214,6 +4078,61 @@
         },
         "borderPosition": {
          "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "label",
+        "name": "label",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": -175.0,
+         "isExpression": false
+        },
+        "y": {
+         "value": -83.33,
+         "isExpression": false
+        },
+        "width": {
+         "value": 450.0,
+         "isExpression": false
+        },
+        "height": {
+         "value": 66.67,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 270,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:ai_label_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }

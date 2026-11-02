@@ -57,7 +57,10 @@ func (a *aiSwitch) target() aiChoice {
 	return aiChoice{aiModels[a.index/len(aiEfforts)], aiEfforts[a.index%len(aiEfforts)]}
 }
 
+var aiStateColors = map[string]string{"ok": "#fff", "pending": "#808080", "idle": "#505050", "other": "#FFB000", "error": "#FF3030"}
+
 func (a *aiSwitch) show(c aiChoice, state string) {
+	a.vars.set("ai_label_svg", stripSVG(c.model, c.effort, aiStateColors[state], ""))
 	a.vars.set("ai_model", c.model)
 	a.vars.set("ai_effort", c.effort)
 	a.vars.set("ai_state", state)
@@ -274,4 +277,3 @@ func waitFor(ok func() bool) error {
 	}
 	return errors.New("timeout")
 }
-

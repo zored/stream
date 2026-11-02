@@ -28,23 +28,23 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 - Fetch on start, then every `-usage-every`. Errors back off: interval × 2ⁿ, at most 1 h, at least `Retry-After`.
 - `GET /usage`: `{"limits": [...as upstream...], "fetched_at", "error", "next_at"}` from the cache, never fetches.
 - `POST /usage/refresh`: fetch now, ignored within a minute of the last fetch.
-- Variables: `ai_svg` (tile picture), `ai_session`, `ai_session_reset`, `ai_day`, `ai_week`, `ai_week_reset`, `ai_level`
-  (`low` < 50, `normal`, `high` > 80, `critical` > 90, from `ai_day`). `ai_svg` is re-rendered with the 10 s resend, so time left stays current.
+- Variables: `ai_limits_svg` (tile picture), `ai_session`, `ai_session_reset`, `ai_day`, `ai_week`, `ai_week_reset`, `ai_level`
+  (`low` < 50, `normal`, `high` > 80, `critical` > 90, from `ai_day`). `ai_limits_svg` is re-rendered with the 10 s resend, so time left stays current.
 - `d` is the weekly percent scaled to the workday: `5 × percent / workdays since the window start` (Mon–Fri, 1…5), as in the overlay.
 
 ## Tile
 
-Above the clock (`1/5`), no actions. Two left-aligned columns, 6% inset:
+Above the clock (`1/5`), no actions, no text: six vertical bars filled bottom-up, side by side inside the 6% inset, left to right:
 
-```
-2h 40m       time left in the 5h session, colored by the session %
-115  23      d and w for all models, stretched 1.7× vertically like the clock
-60   12      d and w for the scoped limit (Fable)
-```
+1. time left in the 5h session (full while the session is inactive)
+2. session usage
+3. `d`, all models
+4. `w`, all models
+5. `d`, the scoped limit (Fable)
+6. `w`, the scoped limit
 
-The top and bottom lines are smaller (19 vs 24) at 70% opacity.
-Colors as in the overlay: light green < 50, white, yellow > 80, red > 90. A red dot means the last fetch failed and the numbers are old.
-The session line says `5h` while the session is inactive (no `resets_at`).
+Bars are white, yellow > 80, red > 90 (over 100 % stays a full red bar); no green. A red dot in the corner means the last
+fetch failed and the bars are old.
 
 ## Hammerspoon overlay
 

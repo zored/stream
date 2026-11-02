@@ -165,10 +165,14 @@ func trackSVG(t track, like string) string {
 	if t.App == yandexMusic {
 		heart = hearts[like]
 	}
-	artist := span(`fill="#888"`, t.Artist)
-	title := span(`font-weight="bold"`, t.Title)
+	return stripSVG(t.Artist, t.Title, "#fff", heart)
+}
+
+func stripSVG(gray, bold, fill, heart string) string {
+	artist := span(`fill="#888"`, gray)
+	title := span(`font-weight="bold"`, bold)
 	lines := []svgLine{join(artist, title)}
-	if t.Artist != "" && t.Title != "" {
+	if gray != "" && bold != "" {
 		lines = []svgLine{join(artist, span(`fill="#888"`, " | "), title)}
 		if lineWidth(lines[0]) > svgMinWidth {
 			lines = []svgLine{artist, title}
@@ -190,7 +194,7 @@ func trackSVG(t track, like string) string {
 		texts += fmt.Sprintf(`<text x="%d" y="%d">%s</text>`, pad+(width-pad)/2, center+svgFont*35/100, l.markup)
 	}
 	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">%s<g text-anchor="middle" `+
-		`font-family="Helvetica" font-size="%d" fill="#fff">%s</g></svg>`, width, svgHeight, heart, svgFont, texts)
+		`font-family="Helvetica" font-size="%d" fill="%s">%s</g></svg>`, width, svgHeight, heart, svgFont, fill, texts)
 	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(svg))
 }
 

@@ -24,7 +24,7 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
 - Volume via CoreAudio (`kAudioHardwareServiceDeviceProperty_VirtualMainVolume`, same scale as the system slider). No native HUD:
   the strip is the HUD.
 - Pushes Companion custom variables (must exist: `make deploy` creates them from `companion/custom-variables.json`):
-  - `volume` (text, `MUTE` when muted), `volume_anim` (eased 30 fps), `volume_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s)
+  - `volume` (text, `MUTE` when muted; not shown on the strip, the white bar is the HUD), `volume_anim` (eased 30 fps), `volume_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s)
   - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), `np_app` (bundle id of the Now Playing app),
     `np_svg` (base64 SVG data URI for the track strip: like mark, gray artist `|` bold title, split into two lines when one line would be tiny; the heart is an SVG path (skia has no emoji fallback), reset on track change; an empty title is held back for 3 s; an image layer can't take raw SVG,
     Companion cuts data at the first `=`),

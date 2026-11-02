@@ -44,7 +44,7 @@ Found on the way (verified):
 Scope (user, 2026-11-02): only the **new-chat screen** of Claude Desktop, first priority; running sessions stay untouched.
 Levels up to High, models Sonnet → Fable.
 
-Knob **`1/7`** (right middle), label on the strip cell **`1/6`** next to it. Implemented and verified 2026-11-02 through the
+Knob **`1/7`** (right middle), label on the right strip (`0–2/6`) next to it. Implemented and verified 2026-11-02 through the
 Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonnet·High → Opus·Medium → back, the Desktop picker followed.
 
 - **One list, turn walks it**: `Sonnet·Low`, `Sonnet·Medium`, `Sonnet·High`, `Opus·Low` … `Fable·High` — 9 stops (Opus in the middle is
@@ -57,8 +57,9 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   - read back the popup description; mismatch → `Escape`, `ai_state = error`.
 - Every second while nothing is pending, `zored_stream` reads the popup and publishes the truth; the knob position follows it.
 - Press re-applies the shown choice.
-- Label: model on top, effort below; white `ok`, gray `pending`, dark gray `idle` (not on the new-chat screen), amber `other`
-  (a model/effort outside the list, e.g. Haiku or Extra), red `error`.
+- Label: `ai_label_svg` across the right strip, drawn like the track on the left strip (gray model `|` bold effort, `stripSVG`)
+  but rotated 270° so it reads bottom-up; the effort is white `ok`, gray `pending`, dark gray `idle` (not on the new-chat screen),
+  amber `other` (a model/effort outside the list, e.g. Haiku or Extra), red `error`.
 
 `zored_stream` module `ai` (`ai_darwin.go`, `127.0.0.1:47117`, flag `-ai`): `POST /ai/turn?d=±1`, `POST /ai/press`; variables `ai_model`,
 `ai_effort`, `ai_state`. AX helpers in `ax_darwin.m`: one BFS with a predicate, `ax_find_attr` (role + attribute, exact or prefix),
