@@ -190,7 +190,7 @@ func (a *agents) focus() error {
 	if len(list) == 0 {
 		a.cursor = nil
 		a.mu.Unlock()
-		return errors.New("no agent is waiting")
+		return run(exec.Command("/usr/bin/open", "claude://code/new"))
 	}
 	next := list[0]
 	if a.cursor != nil {
@@ -220,8 +220,15 @@ func (s agentSession) open() error {
 	default:
 		return fmt.Errorf("agent %s: nothing to focus", s.ID)
 	}
+	if err := run(cmd); err != nil {
+		return fmt.Errorf("focus %s: %w", s.ID, err)
+	}
+	return nil
+}
+
+func run(cmd *exec.Cmd) error {
 	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("focus %s: %v: %s", s.ID, err, out)
+		return fmt.Errorf("%s: %v: %s", cmd.Args, err, out)
 	}
 	return nil
 }
@@ -295,6 +302,7 @@ func agentsSVG(input, done int) string {
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
 	switch n := input + done; {
 	case n == 0:
+		fmt.Fprintf(&b, `<circle cx="50" cy="50" r="7" fill="none" stroke="%s" stroke-width="2.5"/>`, gray)
 	case n > agentMaxDots:
 		fill := "#fff"
 		if input > 0 {
