@@ -25,7 +25,8 @@ installs the LaunchAgent `com.zored.stream.streamd` and (re)starts it with `laun
   the strip is the HUD.
 - Pushes Companion custom variables (must exist: `make deploy` creates them from `companion/custom-variables.json`):
   - `volume` (text, `MUTE` when muted), `volume_anim` (eased 30 fps), `volume_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s)
-  - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), polled every 0.5 s
+  - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), `np_app` (bundle id of the Now Playing app),
+    polled every 0.5 s
 - Idle CPU ~1.7 %: the 30 fps timer runs only while the volume changes; audio polled every 0.25 s.
 - Every 10 s it re-sends all variables, so a Companion restart heals itself.
 

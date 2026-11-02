@@ -38,6 +38,8 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
   `box`, `text`. Geometry is % of the cell and may go outside 0–100: content is clipped, which lets one layer span several cells.
 - `options.canModifyStyleInApis: true` is required for the legacy HTTP style API to touch the button.
 - `steps["0"].action_sets`: `down`, `up`, `rotate_left`, `rotate_right`. Actions in a set run in parallel.
+- Long press: a numeric set (`"400"`) listed in `steps["0"].options.runWhileHeld` fires once the control is held that long;
+  `up` then runs only on a shorter press. `gen_pages.py`: `button(..., up=..., held=...)`.
 - Action entity: `{type: "action", id, connectionId: "internal", definitionId, options, upgradeIndex: null}`. Useful internal ones:
   - `exec` — options `path` (shell command, `$HOME` expands), `cwd`, `timeout` 500–20000, `targetVariable` (custom var gets stdout)
   - `custom_log` — `message`, written to the log; the cheapest way to prove an input arrives
@@ -79,6 +81,8 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
 
 - haptic on button/tile press: the driver has `vibrate(pattern)`, the module never calls it. `HAPTIC=0x33` default (`SHORT_LOWER`);
   patterns in foxxyz/loupedeck `constants.js`. Re-running updates the pattern.
+- second haptic when a button, knob press or tile is held 400 ms (`HOLD_MS`, matches the long-press set in `gen_pages.py`).
+  Patches carry their own markers, so re-running adds new ones to an already patched module.
 - left strip swipe → `POST streamd /volume/drag?dy=<px>`: buttons mode exposes no continuous touch position, slider mode can't draw text.
 
 Idempotent, exits loudly if the minified code no longer matches. Module updates drop the patch; restart Companion after patching.

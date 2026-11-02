@@ -17,7 +17,7 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: mediakey streamd streamd-uninstall vkcall vkcall-uninstall patch-module pages deploy
+.PHONY: mediakey streamd streamd-uninstall vkcall vkcall-uninstall ymusic ymusic-uninstall patch-module pages deploy
 
 mediakey:
 	mkdir -p $(BIN)
@@ -40,6 +40,14 @@ vkcall:
 
 vkcall-uninstall:
 	$(call uninstall-agent,vkcall)
+
+ymusic:
+	mkdir -p $(BIN)
+	swiftc -O tools/ymusic/main.swift -o $(BIN)/ymusic
+	$(call install-agent,ymusic)
+
+ymusic-uninstall:
+	$(call uninstall-agent,ymusic)
 
 patch-module:
 	HAPTIC=$(HAPTIC) python3 -I tools/patch_module.py

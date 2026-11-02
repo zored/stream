@@ -15,8 +15,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 
 | Used | Free |
 |---|---|
-| left knobs `0/0` volume, `1/0` track; left strip `0–2/1` volume | left knob `2/0` |
-| tiles `0/2` play, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/3–0/5`, `1/2–1/5` |
+| left knobs `0/0` volume, `1/0` track (hold press = like); left strip `0–2/1` volume | left knob `2/0` |
+| tiles `0/2` play (hold = like), `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/3–0/5`, `1/2–1/5` |
 | buttons `3/1` mic, `3/2` camera, `3/3` hang up | buttons `3/0`, `3/4–3/7` |
 | | right knobs `0–2/7`, right strip `0–2/6` |
 
@@ -34,6 +34,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 - VK WorkSpace calls: buttons 2/3 toggle mic/camera, push-to-talk, button 4 hangs up; LEDs + tiles from the client's real state
   via its local gRPC, `pending` while the camera starts ([vkcall.md](docs/vkcall.md))
 - Ideas backlog collected (below)
+- Yandex Music like: hold play tile / knob 2, second haptic at 400 ms, ♥/💔 on the strip from the app's player bar
+  via Accessibility (`ymusic`); MediaRemote, local API, deeplinks, hotkeys are dead ends ([ymusic.md](docs/ymusic.md))
 
 ## Next
 
@@ -92,7 +94,7 @@ Network:
 
 ### Parked
 
-- Like on long press: MediaRemote `LikeTrack` (21) works only with players implementing it (Music.app); Chrome's Media Session has no like
+- Like for other players: MediaRemote `LikeTrack` (21) works only with players implementing it (Music.app); Chrome's Media Session has no like
 - Custom firmware ([device.md](docs/device.md))
 
 ### CI

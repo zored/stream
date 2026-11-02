@@ -17,11 +17,15 @@ static const double DragPercentPerPixel = 0.4;
 
 typedef void (*GetNowPlayingInfo)(dispatch_queue_t, void (^)(CFDictionaryRef));
 typedef void (*GetIsPlaying)(dispatch_queue_t, void (^)(Boolean));
+typedef void (*GetNowPlayingClient)(dispatch_queue_t, void (^)(id));
+typedef CFStringRef (*GetClientBundleIdentifier)(id);
 
 static NSURLSession *session;
 static NSMutableDictionary<NSString *, NSString *> *sent;
 static GetNowPlayingInfo getNowPlayingInfo;
 static GetIsPlaying getIsPlaying;
+static GetNowPlayingClient getNowPlayingClient;
+static GetClientBundleIdentifier getClientBundleIdentifier;
 
 static int volume = -1;
 static bool muted;
@@ -198,6 +202,10 @@ static void pollNowPlaying(void) {
     getIsPlaying(dispatch_get_main_queue(), ^(Boolean playing) {
         setVariable(@"np_playing", playing ? @"1" : @"0");
     });
+    getNowPlayingClient(dispatch_get_main_queue(), ^(id client) {
+        NSString *bundle = client ? (__bridge NSString *)getClientBundleIdentifier(client) : nil;
+        setVariable(@"np_app", bundle ?: @"");
+    });
 }
 
 static void respond(int client, NSString *status) {
@@ -257,7 +265,9 @@ void streamd_main(void *perl, void *cv) {
     if (!mediaRemote) die(@"MediaRemote unavailable");
     getNowPlayingInfo = (GetNowPlayingInfo)dlsym(mediaRemote, "MRMediaRemoteGetNowPlayingInfo");
     getIsPlaying = (GetIsPlaying)dlsym(mediaRemote, "MRMediaRemoteGetNowPlayingApplicationIsPlaying");
-    if (!getNowPlayingInfo || !getIsPlaying) die(@"MediaRemote symbols missing");
+    getNowPlayingClient = (GetNowPlayingClient)dlsym(mediaRemote, "MRMediaRemoteGetNowPlayingClient");
+    getClientBundleIdentifier = (GetClientBundleIdentifier)dlsym(mediaRemote, "MRNowPlayingClientGetBundleIdentifier");
+    if (!getNowPlayingInfo || !getIsPlaying || !getNowPlayingClient || !getClientBundleIdentifier) die(@"MediaRemote symbols missing");
 
     NSURLSessionConfiguration *config = NSURLSessionConfiguration.ephemeralSessionConfiguration;
     config.HTTPMaximumConnectionsPerHost = 1;

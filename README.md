@@ -10,17 +10,19 @@ What the MEDIA page does today (macOS):
 - play tile — big ⏸/▶ from the OS playback state
 - VK WorkSpace calls — bottom button 2 toggles the microphone (hold = push-to-talk), button 3 the camera, button 4 hangs up;
   LEDs and tiles show the real state from the client, mouse clicks included ([vkcall.md](docs/vkcall.md))
-- clock tile, haptic tap on presses, black tiles without Companion decorations
+- Yandex Music — hold the play tile or knob 2 to like/unlike the track; ♥/💔 before the track on the strip
+  ([ymusic.md](docs/ymusic.md))
+- clock tile, haptic tap on presses (and a second one at 400 ms hold), black tiles without Companion decorations
 
 ## Setup (macOS)
 
 1. Close the Loupedeck app. Install Companion: `brew install --cask companion`, open `http://127.0.0.1:8000`.
 2. Surfaces → Add Surface Integration → Loupedeck. Settings → Protocols: enable shell command support.
-3. System Settings → Privacy & Security → Accessibility → add Companion.
+3. System Settings → Privacy & Security → Accessibility → add Companion (and `~/.local/bin/ymusic` after step 4).
 4. Run:
 
 ```bash
-make mediakey streamd vkcall deploy
+make mediakey streamd vkcall ymusic deploy
 make patch-module
 ```
 
@@ -37,10 +39,11 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+, Python
 | `tools/mediakey/` | Media key helper (Swift) |
 | `tools/streamd/` | Volume + Now Playing daemon (Objective-C, hosted by `/usr/bin/perl`) |
 | `tools/vkcall/` | VK WorkSpace call mic/camera daemon (Go, the client's local gRPC) |
+| `tools/ymusic/` | Yandex Music like/dislike daemon (Swift, Accessibility) |
 | `tools/icons/` | SVG icons embedded into pages |
 | `tools/patch_module.py` | Adds haptics and strip swipe to the Companion Loupedeck module |
 | `tools/sniff.py` | Raw device event sniffer |
-| `docs/` | [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Windows port](docs/windows.md), [device](docs/device.md) |
+| `docs/` | [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Yandex Music](docs/ymusic.md), [Windows port](docs/windows.md), [device](docs/device.md) |
 
 ## Other ways to drive the device
 

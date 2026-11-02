@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "2lZ9rQOque2qDf7cmoH-d",
+  "id": "M1o6Ned4hSsSEIYWcLtHa",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -333,8 +333,8 @@
          "isExpression": false
         },
         "text": {
-         "value": "$(custom:np_track)",
-         "isExpression": false
+         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\u2665 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+         "isExpression": true
         },
         "color": {
          "value": 16777215,
@@ -673,10 +673,11 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [
+        "down": [],
+        "up": [
          {
           "type": "action",
-          "id": "pM0synbVbFjUZS-ES98Wl",
+          "id": "XPvqhIi00a3KY_wdHYBO7",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -700,10 +701,38 @@
           "upgradeIndex": null
          }
         ],
-        "up": []
+        "400": [
+         {
+          "type": "action",
+          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47115/like",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
-        "runWhileHeld": []
+        "runWhileHeld": [
+         400
+        ]
        }
       }
      },
@@ -1371,7 +1400,8 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [
+        "down": [],
+        "up": [
          {
           "type": "action",
           "id": "pWWe_Xp0KNq8MlQx9j2zk",
@@ -1398,11 +1428,37 @@
           "upgradeIndex": null
          }
         ],
-        "up": [],
-        "rotate_left": [
+        "400": [
          {
           "type": "action",
           "id": "gOLteHv5tVF5fqfRXZcXv",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47115/like",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "-ck5z3AlqQvS55zABgygQ",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1429,7 +1485,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "-ck5z3AlqQvS55zABgygQ",
+          "id": "pM0synbVbFjUZS-ES98Wl",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1455,7 +1511,9 @@
         ]
        },
        "options": {
-        "runWhileHeld": []
+        "runWhileHeld": [
+         400
+        ]
        }
       }
      },
@@ -1528,8 +1586,8 @@
          "isExpression": false
         },
         "text": {
-         "value": "$(custom:np_track)",
-         "isExpression": false
+         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\u2665 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+         "isExpression": true
         },
         "color": {
          "value": 16777215,
@@ -2535,8 +2593,8 @@
          "isExpression": false
         },
         "text": {
-         "value": "$(custom:np_track)",
-         "isExpression": false
+         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\u2665 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+         "isExpression": true
         },
         "color": {
          "value": 16777215,
@@ -2988,7 +3046,7 @@
         "down": [
          {
           "type": "action",
-          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "id": "WUftSx60QPUkjoE3kxzDy",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3015,7 +3073,7 @@
         "up": [
          {
           "type": "action",
-          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "id": "8_Oz4CMoARGhR_gE0jKei",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3330,7 +3388,7 @@
         "down": [
          {
           "type": "action",
-          "id": "WUftSx60QPUkjoE3kxzDy",
+          "id": "NEhc6wXoN3o_aiQS9jWA8",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3509,7 +3567,7 @@
         "down": [
          {
           "type": "action",
-          "id": "8_Oz4CMoARGhR_gE0jKei",
+          "id": "mMrZcky5FM1UeeGfia7qg",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4109,7 +4167,7 @@
         "down": [
          {
           "type": "action",
-          "id": "NEhc6wXoN3o_aiQS9jWA8",
+          "id": "brfkm_MUo4mUmwwWWq5Wt",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4136,7 +4194,7 @@
         "up": [
          {
           "type": "action",
-          "id": "mMrZcky5FM1UeeGfia7qg",
+          "id": "Qja8eYVJtNuXe6fpv6QRa",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4259,7 +4317,7 @@
         "down": [
          {
           "type": "action",
-          "id": "brfkm_MUo4mUmwwWWq5Wt",
+          "id": "2lZ9rQOque2qDf7cmoH-d",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4383,7 +4441,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Qja8eYVJtNuXe6fpv6QRa",
+          "id": "orEK-XRU3YpRVeEcc0vHh",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

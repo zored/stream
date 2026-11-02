@@ -10,11 +10,15 @@ RAINBOW = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0x8000FF,
 MEDIAKEY = "$HOME/.local/bin/mediakey"
 STREAMD = "http://127.0.0.1:47113"
 VKCALL = "http://127.0.0.1:47114"
+YMUSIC = "http://127.0.0.1:47115"
+HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "call_mic", "call_cam")}
+    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_app", "ym_like", "call_mic", "call_cam")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
+YANDEX = '$(custom:np_app) == "ru.yandex.desktop.music"'
+LIKE_MARK = f'{YANDEX} ? ($(custom:ym_like) == "liked" ? "♥ " : ($(custom:ym_like) == "disliked" ? "💔 " : "")) : ""'
 rng = random.Random()
 
 
@@ -102,8 +106,14 @@ def vkcall(path):
     return [post(VKCALL + path)]
 
 
-def button(style, down=(), up=(), left=None, right=None):
+def ymusic(path):
+    return [post(YMUSIC + path)]
+
+
+def button(style, down=(), up=(), left=None, right=None, held=None):
     sets = {"down": list(down), "up": list(up)}
+    if held:
+        sets[str(HOLD_MS)] = list(held)
     rotary = left is not None or right is not None
     if rotary:
         sets["rotate_left"] = list(left or [])
@@ -114,7 +124,7 @@ def button(style, down=(), up=(), left=None, right=None):
                     "canModifyStyleInApis": True, "notes": ""},
         "style": {"layers": style},
         "feedbacks": [],
-        "steps": {"0": {"action_sets": sets, "options": {"runWhileHeld": []}}},
+        "steps": {"0": {"action_sets": sets, "options": {"runWhileHeld": [HOLD_MS] if held else []}}},
         "localVariables": [],
     }
 
@@ -135,7 +145,7 @@ def volume_cell(row):
     center_y = strip_h / 2 - cell_h * row
     style = [
         canvas(),
-        text("np", "$(custom:np_track)", fontsize=28, opacity=expr(f"100 - {VOLUME_ALPHA}"), rotation=v(90),
+        text("np", expr(f"concat({LIKE_MARK}, $(custom:np_track))"), fontsize=28, opacity=expr(f"100 - {VOLUME_ALPHA}"), rotation=v(90),
              x=v(round((cell_w / 2 - strip_h / 2) / cell_w * 100, 2)), width=v(round(strip_h / cell_w * 100, 2)),
              y=v(round((center_y - cell_w / 2) / cell_h * 100, 2)), height=v(round(cell_w / cell_h * 100, 2))),
         box("track", 0x202020, opacity=visible),
@@ -151,7 +161,7 @@ def play_pause():
         canvas(),
         box("box0", 0x000000),
         text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), fontsize=110),
-    ], down=[mediakey("play")])
+    ], up=[mediakey("play")], held=ymusic("/like"))
 
 
 def by_state(var, colors):
@@ -225,7 +235,8 @@ def media_page():
     return "MEDIA", {
         (0, 0): button(labelled("VOL"), down=streamd("/volume/mute"),
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
-        (1, 0): button(labelled("TRACK"), down=[mediakey("play")], left=[mediakey("prev")], right=[mediakey("next")]),
+        (1, 0): button(labelled("TRACK"), up=[mediakey("play")], held=ymusic("/like"),
+                       left=[mediakey("prev")], right=[mediakey("next")]),
         **{(r, 1): volume_cell(r) for r in range(3)},
         (0, 2): play_pause(),
         (2, 2): call_tile("call_mic", "mic"),
