@@ -123,7 +123,8 @@ Picking the only choice of the last question submits the card.
 
 - Gate: every row-3 button runs `curl -f :47120/choice/{down,up}?b=N || <its own action>`. The daemon answers `204` while a card is
   on screen (and for the matching release), `409` otherwise, so with the daemon down the buttons work as before.
-  LEDs come from `choice_on` and `choice_1`…`choice_8`, an overlay layer on each button.
+  LEDs come from `choice_on` and `choice_1`…`choice_8` through the `box0` colour of each button: the LED follows the
+  background layer only, an extra overlay layer did not light it (verified on the device).
 - Detection every 500 ms, only while Claude Desktop or iTerm2 is frontmost (`choice.go`, `choice_darwin.go`);
   `GET :47120/choice` shows what the daemon sees and why choice mode is off.
 - Frontmost app: `lsappinfo front` + `lsappinfo info -only pid` (~13 ms). Verified 2026-11-03 that the alternatives fail in the

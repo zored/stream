@@ -5538,64 +5538,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_1)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_1) : (0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -5745,64 +5688,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_mic) == \"off\" ? (4194304) : ($(custom:call_mic) == \"pending\" ? (16756736) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0))))",
-         "isExpression": true
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_2)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_2) : ($(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_mic) == \"off\" ? (4194304) : ($(custom:call_mic) == \"pending\" ? (16756736) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0)))))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -5952,64 +5838,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_cam) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_cam) == \"off\" ? (4194304) : ($(custom:call_cam) == \"pending\" ? (16756736) : ($(custom:call_cam) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0))))",
-         "isExpression": true
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_3)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_3) : ($(custom:call_cam) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 13056 : 65280) : ($(custom:call_cam) == \"off\" ? (4194304) : ($(custom:call_cam) == \"pending\" ? (16756736) : ($(custom:call_cam) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16756736 : 0) : (0)))))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -6159,64 +5988,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_mic) != \"none\" ? 16777215 : 0",
-         "isExpression": true
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_4)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_4) : ($(custom:call_mic) != \"none\" ? 16777215 : 0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -6366,64 +6138,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_5)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_5) : (0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -6573,64 +6288,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:agents_led)",
-         "isExpression": true
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_6)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_6) : ($(custom:agents_led))",
          "isExpression": true
         },
         "cornerRadius": {
@@ -6780,64 +6438,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:dictation) == \"on\" ? 16724016 : 0",
-         "isExpression": true
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_7)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_7) : ($(custom:dictation) == \"on\" ? 16724016 : 0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -6987,64 +6588,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
-        },
-        "cornerRadius": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderWidth": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderColor": {
-         "value": 0,
-         "isExpression": false
-        },
-        "borderPosition": {
-         "value": "inside",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "choice",
-        "name": "choice",
-        "usage": "auto",
-        "type": "box",
-        "pinnedProperties": [
-         "color"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:choice_on) == 1 ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "color": {
-         "value": "$(custom:choice_8)",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_8) : (0)",
          "isExpression": true
         },
         "cornerRadius": {

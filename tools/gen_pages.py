@@ -323,8 +323,10 @@ def choice_gated(b, control):
         assert all(a["definitionId"] == "exec" for a in sets[edge]), (b, edge)
         fallback = " ; ".join(a["options"]["path"]["value"] for a in sets[edge]) or "true"
         sets[edge] = [sh(f"curl -fs -m 1 -X POST '{AGENTS}/choice/{edge}?b={b}' >/dev/null || {{ {fallback} ; }}")]
-    control["style"]["layers"].append(box("choice", expr(f"$(custom:choice_{b})"),
-                                          opacity=expr("$(custom:choice_on) == 1 ? 100 : 0")))
+    background = next(layer for layer in control["style"]["layers"] if layer["id"] == "box0")
+    color = background["color"]
+    own = color["value"] if color["isExpression"] else str(color["value"])
+    background["color"] = expr(f"$(custom:choice_on) == 1 ? $(custom:choice_{b}) : ({own})")
     return control
 
 
