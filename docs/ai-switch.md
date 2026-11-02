@@ -67,9 +67,9 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
 - Label: part of `ai_strip_svg` (see [ai.md](ai.md)), drawn across the right strip like the track on the left strip but rotated 270° so it reads bottom-up:
-  lowercase white model ending at the strip's center (fixed, so it never moves) and the effort as white dots after it (`labelMarkup`:
+  lowercase white model ending at the strip's center (fixed, so it never moves) and the effort as gray dots after it, fading in and out (`labelMarkup`:
   low 1, medium 2, high 3, extra 4, max 5; an unknown effort falls back to text). Only warnings are colored: amber `other` (outside
-  the knob's list), red `error`; in `preview` the model and the dots are gray (#808080, like the clock's date); italic was tried and Companion's renderer showed no slant.
+  the knob's list), red `error`; in `preview` the model is gray too (#808080, like the clock's date); italic was tried and Companion's renderer showed no slant.
 
 `zored_stream` module `ai` (`ai_darwin.go`, `127.0.0.1:47117`, flag `-ai`): `POST /ai/turn?d=±1`, `POST /ai/slide?y=`, `POST /ai/down`, `POST /ai/up`; variables `ai_model`,
 `ai_effort`, `ai_state`. AX helpers in `ax_darwin.m`: one BFS with a predicate, `ax_find_attr` (role + attribute, exact or prefix),

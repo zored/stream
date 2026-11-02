@@ -127,6 +127,7 @@ func main() {
 		log.Fatal(err)
 	}
 	go us.run()
+	go us.animateStrip()
 	go serve(*usageAddr, func(mux *http.ServeMux) {
 		mux.HandleFunc("GET /usage", us.serveJSON)
 		handle(mux, "/usage/refresh", us.refresh)

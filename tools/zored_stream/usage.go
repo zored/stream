@@ -28,14 +28,17 @@ const (
 	day             = 24 * time.Hour
 	sessionHours    = 5
 	gray            = "#808080"
-	weekShowFor     = 4 * time.Second
+	weekShowFor     = 5 * time.Second
+	weekHoldMax     = 15 * time.Second
+	stripHz         = 30
+	stripEasing     = 0.5
 	stripDrawW      = 48
 	stripDrawH      = 258
 	stripTextY      = stripDrawH - 6
 )
 
 var (
-	aiStateColors = map[string]string{"ok": "#fff", "pending": "#fff", "preview": gray, "idle": "#fff", "other": "#FFB000", "error": "#FF3030"}
+	aiStateColors = map[string]string{"ok": gray, "pending": gray, "preview": gray, "idle": gray, "other": "#FFB000", "error": "#FF3030"}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
 )
 
@@ -81,6 +84,17 @@ type usage struct {
 	wake     chan struct{}
 	label    stripLabel
 	stripMode
+	target  stripFrame
+	shown   stripFrame
+	animate chan struct{}
+}
+
+type stripFrame struct {
+	label  stripLabel
+	text   string
+	failed bool
+	pct    float64
+	dots   [5]float64
 }
 
 type stripLabel struct{ model, effort, state string }
@@ -99,7 +113,7 @@ func newUsage(v *vars, every time.Duration, proxy string) (*usage, error) {
 		}
 		transport.Proxy = http.ProxyURL(u)
 	}
-	return &usage{every: every, vars: v, wake: make(chan struct{}, 1),
+	return &usage{every: every, vars: v, wake: make(chan struct{}, 1), animate: make(chan struct{}, 1),
 		http: &http.Client{Timeout: 20 * time.Second, Transport: transport}}, nil
 }
 
@@ -133,8 +147,14 @@ func (u *usage) focus(label stripLabel) {
 	switching := label.state == "pending"
 	u.mu.Lock()
 	changed := u.label != label
-	if u.switching && !switching {
-		u.weekUntil = time.Now().Add(weekShowFor)
+	now := time.Now()
+	switch {
+	case label.state == "preview" && u.label.state != "preview":
+		u.weekUntil = now.Add(weekHoldMax)
+	case u.label.state == "preview" && label.state != "preview" && !switching:
+		u.weekUntil = now
+	case u.switching && !switching:
+		u.weekUntil = now.Add(weekShowFor)
 		time.AfterFunc(weekShowFor, u.publish)
 	}
 	u.label, u.switching = label, switching
@@ -142,6 +162,37 @@ func (u *usage) focus(label stripLabel) {
 	if changed {
 		u.publish()
 	}
+}
+
+func (u *usage) animateStrip() {
+	for range u.animate {
+		ticker := time.NewTicker(time.Second / stripHz)
+		for u.stripStep() {
+			<-ticker.C
+		}
+		ticker.Stop()
+	}
+}
+
+func (u *usage) stripStep() bool {
+	u.mu.Lock()
+	moving := ease(&u.shown.pct, u.target.pct, 0.3)
+	for i := range u.shown.dots {
+		moving = ease(&u.shown.dots[i], u.target.dots[i], 0.02) || moving
+	}
+	t := u.target
+	t.pct, t.dots = u.shown.pct, u.shown.dots
+	u.mu.Unlock()
+	u.vars.set("ai_strip_svg", aiStripSVG(t))
+	return moving
+}
+
+func ease(shown *float64, target, snap float64) bool {
+	*shown += (target - *shown) * stripEasing
+	if math.Abs(target-*shown) < snap {
+		*shown = target
+	}
+	return *shown != target
 }
 
 func (u *usage) fetch() {
@@ -249,12 +300,21 @@ func (u *usage) publish() {
 	if week == nil {
 		week = findLimit(limits, "weekly_all")
 	}
+	frame := stripFrame{label: label, failed: true, dots: dotTargets(label.effort)}
+	if week != nil {
+		frame.text, frame.pct = stripValue(limits, *week, mode, now)
+		frame.failed = failed
+	}
+	u.mu.Lock()
+	u.target = frame
+	u.mu.Unlock()
+	select {
+	case u.animate <- struct{}{}:
+	default:
+	}
 	if week == nil {
-		u.vars.set("ai_strip_svg", aiStripSVG(label, "", 0, true))
 		return
 	}
-	text, pct := stripValue(limits, *week, mode, now)
-	u.vars.set("ai_strip_svg", aiStripSVG(label, text, pct, failed))
 	if s := findLimit(limits, "session"); s != nil {
 		u.vars.set("ai_session", strconv.Itoa(round(s.Percent)))
 		if s.ResetsAt != nil {
@@ -351,9 +411,18 @@ func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (stri
 	return text, pct
 }
 
-func aiStripSVG(label stripLabel, text string, pct float64, failed bool) string {
+func dotTargets(effort string) [5]float64 {
+	var dots [5]float64
+	n := slices.Index(aiEffortDots, strings.ToLower(effort)) + 1
+	for i := range n {
+		dots[i] = 1
+	}
+	return dots
+}
+
+func aiStripSVG(f stripFrame) string {
 	const w, h = stripDrawW, stripDrawH
-	barH := h * min(max(pct, 0), 100) / 100
+	barH := h * min(max(f.pct, 0), 100) / 100
 	bar := fmt.Sprintf(`x="0" y="%.1f" width="%d" height="%.1f"`, h-barH, w, barH)
 	k := min(float64(h)/svgMinWidth, float64(w)/svgHeight)
 	content := func(ink string) string {
@@ -363,10 +432,10 @@ func aiStripSVG(label stripLabel, text string, pct float64, failed bool) string 
 		}
 		return fmt.Sprintf(`<g transform="translate(0 %.1f) rotate(-90) scale(%.4f)">%s</g>`+
 			`<text x="%d" y="%d" text-anchor="middle" font-family="Helvetica" font-size="17" fill="%s">%s</text>`,
-			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(label, ink), w/2, stripTextY, fill, html.EscapeString(text))
+			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.dots, ink), w/2, stripTextY, fill, html.EscapeString(f.text))
 	}
 	dot := ""
-	if failed {
+	if f.failed {
 		dot = fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="#FF6666"/>`, w-4)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
@@ -375,7 +444,7 @@ func aiStripSVG(label stripLabel, text string, pct float64, failed bool) string 
 		w, h, bar, w, h, content(""), bar, content("#000"), dot))
 }
 
-func labelMarkup(l stripLabel, ink string) string {
+func labelMarkup(l stripLabel, dots [5]float64, ink string) string {
 	if l.model == "" {
 		return ""
 	}
@@ -392,14 +461,15 @@ func labelMarkup(l stripLabel, ink string) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
 		anchor, y, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
-	dots := slices.Index(aiEffortDots, strings.ToLower(l.effort)) + 1
-	if dots == 0 {
+	if !slices.Contains(aiEffortDots, strings.ToLower(l.effort)) {
 		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="Helvetica" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
 			anchor+2*gap, y, svgFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
-		return b.String()
 	}
-	for i := range dots {
-		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s"/>`, anchor+2*gap+r+i*(2*r+gap), svgHeight/2, r, dotColor)
+	for i, alpha := range dots {
+		if alpha > 0 {
+			fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s" opacity="%.2f"/>`,
+				anchor+2*gap+r+i*(2*r+gap), svgHeight/2, r, dotColor, alpha)
+		}
 	}
 	return b.String()
 }

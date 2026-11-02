@@ -43,10 +43,11 @@ text inverts where the bar is under it (verified in the web preview: full bar â†
 |---|---|---|
 | default | time left in the 5h session, `1:42` | session usage |
 | while the model is switching (knob or strip) | the word `day` | `d` of the selected model |
-| 4 s after the switch settles | whole days left in the week, `3d` (`h:mm` under a day) | `w` of the selected model |
+| after the switch: while the label is in `preview`, or 5 s after an applied switch | whole days left in the week, `3d` (`h:mm` under a day) | `w` of the selected model |
 
 The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
-Bars over 100 % stay full. A red dot in the corner means the last fetch failed.
+Bars over 100 % stay full. The bar and the effort dots ease to new values at 30 fps (`animateStrip`, step 0.5 â€”
+faster than the volume bar's 0.3), so a change takes ~0.2 s. A red dot in the corner means the last fetch failed.
 
 ## Hammerspoon overlay
 
