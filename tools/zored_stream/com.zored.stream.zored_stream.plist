@@ -7,6 +7,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>@HOME@/.local/bin/zored_stream</string>
+		<string>-usage-proxy=@USAGE_PROXY@</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

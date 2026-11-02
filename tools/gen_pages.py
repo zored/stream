@@ -14,7 +14,8 @@ YMUSIC = "http://127.0.0.1:47115"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam")}
+    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
+    "ai_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 rng = random.Random()
@@ -235,6 +236,10 @@ def clock():
                    text("date", "$(internal:date_d).$(internal:date_m)", 0x808080, fontsize=80, y=v(66), height=v(32))])
 
 
+def ai_limits():
+    return button([canvas(), box("box0", 0x000000), image("usage", expr("$(custom:ai_svg)"))])
+
+
 def test_page():
     grid = {}
     for r in range(3):
@@ -257,10 +262,11 @@ def media_page():
         (1, 0): button(labelled("TRACK"), up=[mediakey("play")], held=ymusic("/like"),
                        left=[mediakey("prev")], right=[mediakey("next")]),
         **{(r, 1): volume_cell(r) for r in range(3)},
-        (0, 2): play_pause(),
+        (1, 2): play_pause(),
         (2, 2): call_tile("call_mic", "mic"),
         (2, 3): call_tile("call_cam", "cam"),
         (2, 4): hangup_tile(),
+        (1, 5): ai_limits(),
         (2, 5): clock(),
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),

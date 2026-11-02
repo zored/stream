@@ -10,5 +10,12 @@
  "np_app": "",
  "ym_like": "",
  "call_mic": "",
- "call_cam": ""
+ "call_cam": "",
+ "ai_svg": "",
+ "ai_session": "",
+ "ai_session_reset": "",
+ "ai_day": "",
+ "ai_week": "",
+ "ai_week_reset": "",
+ "ai_level": ""
 }

@@ -94,6 +94,9 @@ func main() {
 	callAddr := flag.String("call", "127.0.0.1:47114", "VK WorkSpace call HTTP address")
 	volumeAddr := flag.String("volume", "127.0.0.1:47113", "volume HTTP address")
 	ymusicAddr := flag.String("ymusic", "127.0.0.1:47115", "Yandex Music like HTTP address")
+	usageAddr := flag.String("usage", "127.0.0.1:47116", "Claude usage HTTP address")
+	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
+	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
 	npScript := flag.String("nowplaying-script", filepath.Join(home, ".local/share/zored-stream/nowplaying.pl"), "perl loader for the Now Playing dylib")
 	npLib := flag.String("nowplaying-lib", filepath.Join(home, ".local/lib/libnowplaying.dylib"), "Now Playing dylib")
 	flag.Parse()
@@ -118,6 +121,15 @@ func main() {
 		handle(mux, "/like", ym.pressAndPoll(true))
 		handle(mux, "/dislike", ym.pressAndPoll(false))
 	})
+	us, err := newUsage(v, *usageEvery, *usageProxy)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go us.run()
+	go serve(*usageAddr, func(mux *http.ServeMux) {
+		mux.HandleFunc("GET /usage", us.serveJSON)
+		handle(mux, "/usage/refresh", us.refresh)
+	})
 	vol, err := newVolume(v)
 	if err != nil {
 		log.Fatal(err)
@@ -133,6 +145,7 @@ func main() {
 		v.forget()
 		vol.publish()
 		np.publish()
+		us.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })

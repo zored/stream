@@ -8,6 +8,7 @@ Status and next steps: `PLAN.md`.
 - `docs/companion.md` — grid, button JSON, expressions, internal actions, HTTP/tRPC APIs, debugging, the module fork
 - `docs/macos.md` — `mediakey` and `zored_stream` volume + Now Playing (perl child), permissions, LaunchAgent
 - `docs/vkcall.md` — VK WorkSpace call mic/camera: the client's gRPC API, call module of `zored_stream`, buttons
+- `docs/ai.md` — Claude usage limits: `usage` module of `zored_stream`, tile, Hammerspoon overlay
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `zored_stream` module, dead ends
 - `docs/windows.md` — port plan: what carries over, what needs a Windows build
 - `docs/device.md` — USB, raw protocol events, `tools/sniff.py`, firmware

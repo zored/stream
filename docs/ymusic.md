@@ -8,7 +8,7 @@ Only while the Now Playing app is Yandex Music (`np_app`); otherwise the hold do
 
 | Control | Tap | Hold ≥ 400 ms |
 |---|---|---|
-| play tile `0/2` | play/pause (on release) | like / remove like |
+| play tile `1/2` | play/pause (on release) | like / remove like |
 | left knob 2 `1/0` press | play/pause (on release) | like / remove like |
 
 - The hold vibrates a second time at 400 ms (module fork, any control).

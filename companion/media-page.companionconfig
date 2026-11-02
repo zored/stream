@@ -557,88 +557,6 @@
          "value": "inside",
          "isExpression": false
         }
-       },
-       {
-        "id": "icon",
-        "name": "icon",
-        "usage": "auto",
-        "type": "text",
-        "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": 100,
-         "isExpression": false
-        },
-        "x": {
-         "value": 0,
-         "isExpression": false
-        },
-        "y": {
-         "value": 0,
-         "isExpression": false
-        },
-        "width": {
-         "value": 100,
-         "isExpression": false
-        },
-        "height": {
-         "value": 100,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "text": {
-         "value": "$(custom:np_playing) == 1 ? \"\u23f8\" : \"\u25b6\"",
-         "isExpression": true
-        },
-        "color": {
-         "value": 16777215,
-         "isExpression": false
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fontsize": {
-         "value": 110,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
-         "isExpression": false
-        }
        }
       ]
      },
@@ -647,65 +565,10 @@
       "0": {
        "action_sets": {
         "down": [],
-        "up": [
-         {
-          "type": "action",
-          "id": "XPvqhIi00a3KY_wdHYBO7",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "$HOME/.local/bin/mediakey play",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ],
-        "400": [
-         {
-          "type": "action",
-          "id": "ZUFP98x9D3Dav21qpmNt5",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47115/like",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ]
+        "up": []
        },
        "options": {
-        "runWhileHeld": [
-         400
-        ]
+        "runWhileHeld": []
        }
       }
      },
@@ -1865,6 +1728,88 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "icon",
+        "name": "icon",
+        "usage": "auto",
+        "type": "text",
+        "pinnedProperties": [
+         "text",
+         "fontsize",
+         "fontsizeAllowShrink",
+         "color",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "text": {
+         "value": "$(custom:np_playing) == 1 ? \"\u23f8\" : \"\u25b6\"",
+         "isExpression": true
+        },
+        "color": {
+         "value": 16777215,
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fontsize": {
+         "value": 110,
+         "isExpression": false
+        },
+        "fontsizeAllowShrink": {
+         "value": true,
+         "isExpression": false
+        },
+        "font": {
+         "value": "companion-sans",
+         "isExpression": false
+        },
+        "weight": {
+         "value": "normal",
+         "isExpression": false
+        },
+        "styles": {
+         "value": [],
+         "isExpression": false
+        },
+        "outlineColor": {
+         "value": 4278190080,
+         "isExpression": false
+        }
        }
       ]
      },
@@ -1873,10 +1818,65 @@
       "0": {
        "action_sets": {
         "down": [],
-        "up": []
+        "up": [
+         {
+          "type": "action",
+          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "$HOME/.local/bin/mediakey play",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "400": [
+         {
+          "type": "action",
+          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47115/like",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
-        "runWhileHeld": []
+        "runWhileHeld": [
+         400
+        ]
        }
       }
      },
@@ -2157,6 +2157,61 @@
         },
         "borderPosition": {
          "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "usage",
+        "name": "usage",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:ai_svg)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
