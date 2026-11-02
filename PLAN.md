@@ -16,9 +16,9 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold press = like), `2/0` seek; left strip `0–2/1` volume | — |
-| tiles `1/2` play (hold = like), `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/2–0/5`, `1/3–1/5` |
-| buttons `3/1` mic, `3/2` camera, `3/3` hang up | buttons `3/0`, `3/4–3/7` |
-| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model | right knob `2/7` |
+| tiles `1/2` play (hold = like), `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock, `1/3` agents waiting | tiles `0/2–0/5`, `1/4–1/5` |
+| buttons `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents LED, `3/6` dictation | buttons `3/0`, `3/4`, `3/7` |
+| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll (press+turn = horizontal) | — |
 
 Idea: mic, camera and hang-up tiles do something else outside a call.
 
@@ -42,6 +42,13 @@ Idea: mic, camera and hang-up tiles do something else outside a call.
 - Brightness: right knob row 1 turns Mac brightness, press+turn the controller's; level on the left-strip bar
 - Play tile: track cover with ▶/⏸ glyph in a black glow, fades in on change; fonts: JetBrains Mono on the strips, clock fitted
 - Seek on left knob row 3: live, bright animated bar; dim progress bar behind the track every 3 s, tinted by the cover
+
+## Done (2026-11-03)
+
+- Agents waiting: Claude Code hooks → `zored_stream`; button 6 LED breathes amber on input needed, gray when done; dots on tile row 2 col 4; press focuses the session ([agents.md](docs/agents.md))
+- Dictation into Claude Desktop on button 7, red LED while recording
+- Mouse wheel on right knob row 3, press+turn scrolls horizontally
+- CI: concurrency + timeout, GitHub's macOS runner queue was the failure, not the code
 - Animations at 60 fps (the ceiling through Companion variables, [companion.md](docs/companion.md))
 - Yandex Music like: hold play tile / knob 2, second haptic at 400 ms, ♥/💔 on the strip from the app's player bar
   via Accessibility (`ymusic`); MediaRemote, local API, deeplinks, hotkeys are dead ends ([ymusic.md](docs/ymusic.md))
@@ -87,8 +94,6 @@ Windows and apps:
 - [ ] Frontmost app icon on a tile, press cycles its windows
 
 AI agents:
-- [ ] Dictation into the prompt: hold a button and speak (Superwhisper or macOS dictation), text lands in the agent input
-- [ ] Agent waiting for me: Claude Code `Notification`/`Stop` hooks → Companion variable → blinking LED with the count; press focuses the session
 
 Communication:
 - [ ] Calendar: next meeting countdown on the strip, LED turns orange 5 min before, press joins the call
@@ -103,7 +108,10 @@ Network:
 
 ### Windows
 
-- [ ] Plan in [windows.md](docs/windows.md): `streamd.exe` (C#) with the same HTTP endpoints and variables, OS-aware `gen_pages.py`
+Windows PC has only Codex (no Claude Code/Desktop), its own media players, no VK WorkSpace. Plan the move carefully, mac setup stays.
+
+- [ ] Plan in [windows.md](docs/windows.md): `zored_stream` `*_windows.go` with the same endpoints and variables, OS-aware `gen_pages.py`
+  (per-OS feature set: no calls, AI = Codex only), install/autostart without `make`, what's dropped vs replaced per control
 - [ ] Check whether the device wakes a sleeping Windows PC
 
 ### Parked
