@@ -31,7 +31,7 @@ const (
 	weekShowFor     = 4 * time.Second
 	stripDrawW      = 48
 	stripDrawH      = 258
-	stripTextY      = 238
+	stripTextY      = stripDrawH - 4
 )
 
 var (
