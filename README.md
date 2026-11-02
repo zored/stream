@@ -27,12 +27,14 @@ make zored_stream-cert
 make mediakey zored_stream deploy
 make module
 make companion
+make agent-hooks
 ```
 
 `make module` clones and builds the [Loupedeck module fork](https://github.com/zored/companion-surface-loupedeck/tree/zored_stream)
 next to this repo, points Companion's developer modules path at it, restarts Companion, switches the Loupedeck integration
 to the `dev` version and sets the haptics (`HAPTIC`, `HAPTIC_HOLD_MS`, `HAPTIC_SLIDE`, `HAPTIC_STEP`).
 `make companion` starts Companion at login with no window (`start_minimised` + a login item).
+`make agent-hooks` adds the Claude Code hooks for [agents waiting for me](docs/agents.md) to `~/.claude/settings.json`; rerunning replaces them.
 
 Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `corepack`, Python 3.
 

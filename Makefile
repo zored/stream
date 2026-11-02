@@ -25,7 +25,7 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages deploy
+.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages deploy agent-hooks
 
 build:
 	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey zored_stream-bin
@@ -78,6 +78,9 @@ companion-restart:
 	while pgrep -xq Companion; do sleep 0.5; done
 	open -g -a Companion
 	until curl -sfo /dev/null http://127.0.0.1:8000; do sleep 1; done
+
+agent-hooks:
+	python3 -I tools/agent_hooks.py
 
 pages:
 	python3 -I tools/gen_pages.py companion
