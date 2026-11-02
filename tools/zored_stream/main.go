@@ -131,7 +131,7 @@ func main() {
 		mux.HandleFunc("GET /usage", us.serveJSON)
 		handle(mux, "/usage/refresh", us.refresh)
 	})
-	ai := newAISwitch(v)
+	ai := newAISwitch(v, us.focus)
 	go every(aiPollEvery, ai.poll)
 	go serve(*aiAddr, func(mux *http.ServeMux) {
 		mux.HandleFunc("POST /ai/turn", func(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +143,8 @@ func main() {
 			ai.turn(d)
 			w.WriteHeader(http.StatusNoContent)
 		})
-		handle(mux, "/ai/press", ai.press)
+		handle(mux, "/ai/down", ai.down)
+		handle(mux, "/ai/up", ai.up)
 	})
 	vol, err := newVolume(v)
 	if err != nil {

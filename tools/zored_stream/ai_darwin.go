@@ -47,10 +47,13 @@ type aiSwitch struct {
 	timer   *time.Timer
 	applyMu sync.Mutex
 	vars    *vars
+	held    bool
+	turned  bool
+	onShow  func(model string, switching bool)
 }
 
-func newAISwitch(v *vars) *aiSwitch {
-	return &aiSwitch{index: 1, vars: v}
+func newAISwitch(v *vars, onShow func(model string, switching bool)) *aiSwitch {
+	return &aiSwitch{index: 1, vars: v, onShow: onShow}
 }
 
 func (a *aiSwitch) target() aiChoice {
@@ -64,19 +67,36 @@ func (a *aiSwitch) show(c aiChoice, state string) {
 	a.vars.set("ai_model", c.model)
 	a.vars.set("ai_effort", c.effort)
 	a.vars.set("ai_state", state)
+	a.onShow(c.model, state == "pending")
 }
 
 func (a *aiSwitch) turn(d int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.index = min(max(a.index+d, 0), len(aiModels)*len(aiEfforts)-1)
+	if a.held {
+		a.turned = true
+		n := len(aiEfforts)
+		a.index = min(max(a.index/n+d, 0), len(aiModels)-1)*n + a.index%n
+	} else {
+		a.index = min(max(a.index+d, 0), len(aiModels)*len(aiEfforts)-1)
+	}
 	a.schedule()
 }
 
-func (a *aiSwitch) press() error {
+func (a *aiSwitch) down() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.schedule()
+	a.held, a.turned = true, false
+	return nil
+}
+
+func (a *aiSwitch) up() error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.held = false
+	if !a.turned {
+		a.schedule()
+	}
 	return nil
 }
 

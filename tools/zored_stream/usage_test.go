@@ -77,3 +77,37 @@ func TestLevel(t *testing.T) {
 		}
 	}
 }
+
+func TestShortDuration(t *testing.T) {
+	for d, want := range map[time.Duration]string{26 * time.Hour: "1d 2h", 130 * time.Minute: "2h 10m", 59 * time.Minute: "59m", -time.Minute: "0m"} {
+		if got := shortDuration(d); got != want {
+			t.Errorf("%v: got %s want %s", d, got, want)
+		}
+	}
+}
+
+func TestBarColors(t *testing.T) {
+	bars := []float64{50, 10, 115, 23, 85, 12}
+	for name, c := range map[string]struct {
+		highlight, scoped bool
+		want              []string
+	}{
+		"idle":             {false, true, []string{gray, gray, "#FF6666", "#fff", gray, gray}},
+		"switch to all":    {true, false, []string{gray, gray, "#FF6666", "#fff", dark, dark}},
+		"switch to scoped": {true, true, []string{gray, gray, dark, dark, "#FFD94D", "#fff"}},
+	} {
+		if got := barColors(bars, c.highlight, c.scoped); !slices.Equal(got, c.want) {
+			t.Errorf("%s: got %v want %v", name, got, c.want)
+		}
+	}
+}
+
+func TestScopedFor(t *testing.T) {
+	limits := []limit{lim("weekly_all", 1, "", nil), lim("weekly_scoped", 2, "Fable", nil)}
+	if l := scopedFor(limits, "Fable"); l == nil || l.Percent != 2 {
+		t.Errorf("Fable: got %v", l)
+	}
+	if l := scopedFor(limits, "Sonnet"); l != nil {
+		t.Errorf("Sonnet: got %v", l)
+	}
+}

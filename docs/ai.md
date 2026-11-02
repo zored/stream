@@ -34,7 +34,7 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 
 ## Tile
 
-Above the clock (`1/5`), no actions, no text: six vertical bars filled bottom-up, side by side inside the 6% inset, left to right:
+Above the clock (`1/5`), no actions, no text: six vertical bars on black, filled bottom-up inside the 6% inset, left to right:
 
 1. time left in the 5h session (full while the session is inactive)
 2. session usage
@@ -43,8 +43,19 @@ Above the clock (`1/5`), no actions, no text: six vertical bars filled bottom-up
 5. `d`, the scoped limit (Fable)
 6. `w`, the scoped limit
 
-Bars are white, yellow > 80, red > 90 (over 100 % stays a full red bar); no green. A red dot in the corner means the last
-fetch failed and the bars are old.
+Bars 1, 2, 5, 6 are gray like the clock's date; 3 and 4 are white, yellow > 80, red > 90 (over 100 % is a full bar).
+While the AI knob switches (and 2 s after), the selected model's pair is colored and the other pair dark: Fable → 5, 6, others → 3, 4.
+A red dot in the corner means the last fetch failed and the bars are old.
+
+## Right strip
+
+Over the rotated model | effort label ([ai-switch.md](ai-switch.md)), values of the selected model, horizontal on a dimmed backing:
+
+- top cell: time left in the 5h session (`2h 10m`), `d` % — `ai_strip_top_svg`
+- bottom cell: time left in the week (`4d 0h`), `w` % — `ai_strip_bottom_svg`
+
+The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
+Times are gray, percents colored by level.
 
 ## Hammerspoon overlay
 
