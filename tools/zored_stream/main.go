@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -85,8 +87,14 @@ func serve(addr string, register func(*http.ServeMux)) {
 }
 
 func main() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
 	callAddr := flag.String("call", "127.0.0.1:47114", "VK WorkSpace call HTTP address")
-	volumeAddr := flag.String("volume", "127.0.0.1:47120", "volume HTTP address")
+	volumeAddr := flag.String("volume", "127.0.0.1:47113", "volume HTTP address")
+	npScript := flag.String("nowplaying-script", filepath.Join(home, ".local/share/zored-stream/nowplaying.pl"), "perl loader for the Now Playing dylib")
+	npLib := flag.String("nowplaying-lib", filepath.Join(home, ".local/lib/libnowplaying.dylib"), "Now Playing dylib")
 	flag.Parse()
 	log.SetPrefix("zored_stream: ")
 
@@ -101,10 +109,14 @@ func main() {
 	})
 
 	v := &vars{sent: map[string]string{}}
-	vol := &volume{vars: v}
-	if err := vol.poll(); err != nil {
+	np := &nowPlaying{script: *npScript, lib: *npLib, vars: v}
+	go np.run()
+	vol, err := newVolume(v)
+	if err != nil {
 		log.Fatal(err)
 	}
+	vol.publish()
+	go vol.animate()
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {
 			log.Fatal(err)
@@ -113,10 +125,24 @@ func main() {
 	go every(resendEvery, func() {
 		v.forget()
 		vol.publish()
+		np.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })
 		handle(mux, "/volume/down", func() error { return vol.step(-1) })
 		handle(mux, "/volume/mute", vol.toggleMute)
+		mux.HandleFunc("POST /volume/drag", func(w http.ResponseWriter, r *http.Request) {
+			dy, err := strconv.ParseFloat(r.URL.Query().Get("dy"), 64)
+			if err != nil {
+				http.Error(w, "dy: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+			if err := vol.drag(dy); err != nil {
+				log.Printf("/volume/drag: %v", err)
+				http.Error(w, err.Error(), http.StatusConflict)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		})
 	})
 }

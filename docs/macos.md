@@ -1,6 +1,6 @@
 # macOS helpers
 
-Two helpers back the Companion pages. Companion calls them with `exec` actions.
+`mediakey` (Companion `exec`) and the `zored_stream` daemon (HTTP) back the Companion pages.
 
 ## mediakey — play / next / prev
 
@@ -13,11 +13,11 @@ Two helpers back the Companion pages. Companion calls them with `exec` actions.
 - Gotcha: the process must sleep ~100 ms after posting. Exiting right away drops the events silently, even with every permission check passing.
 - Dead end: private `MRMediaRemoteSendCommand` returns true but browsers ignore it.
 
-## streamd — volume and Now Playing
+## zored_stream — volume and Now Playing
 
-`tools/streamd/streamd.m`, an Objective-C dylib run by `/usr/bin/perl tools/streamd/streamd.pl`. `make streamd` builds it,
-installs the LaunchAgent `com.zored.stream.streamd` and (re)starts it with `launchctl kickstart -k`
-(a `bootout` + `bootstrap` pair races). Log: `~/Library/Logs/zored-stream/streamd.log`. `make streamd-uninstall` removes it.
+Modules of the [one daemon](daemon.md) (`tools/zored_stream/`, was the separate `streamd`). `make zored_stream` builds it,
+installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with `launchctl kickstart -k`
+(a `bootout` + `bootstrap` pair races). Log: `~/Library/Logs/zored-stream/zored_stream.log`.
 
 - HTTP on `127.0.0.1:47113`: `POST /volume/up`, `/volume/down` (acceleration 1 → 4 % per detent by tick interval),
   `/volume/mute`, `/volume/drag?dy=<px>` (0.4 %/px). Companion knobs call it with `curl -fsS -m 1 -X POST …`.
@@ -26,22 +26,24 @@ installs the LaunchAgent `com.zored.stream.streamd` and (re)starts it with `laun
 - Pushes Companion custom variables (must exist: `make deploy` creates them from `companion/custom-variables.json`):
   - `volume` (text, `MUTE` when muted), `volume_anim` (eased 30 fps), `volume_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s)
   - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), `np_app` (bundle id of the Now Playing app),
-    polled every 0.5 s
-- Idle CPU ~1.7 %: the 30 fps timer runs only while the volume changes; audio polled every 0.25 s.
+    polled every 0.5 s by the perl child (below), sent to the daemon as JSON lines on change
+- Idle CPU ~0 % (measured on the Go daemon): the 30 fps ticker runs only while the volume changes; audio polled every 0.25 s.
 - Every 10 s it re-sends all variables, so a Companion restart heals itself.
 
 ### Why perl
 
 Since macOS 15.4 MediaRemote returns nothing (`MRMediaRemoteGetNowPlayingInfo` → nil) to third-party processes.
 `/usr/bin/perl` is Apple-signed with the right entitlement; loading our dylib into it with `DynaLoader` and calling an XSUB
-entry point (`streamd_main`) gets the data. Build the dylib for `arm64` and `arm64e` (perl is arm64e).
+entry point (`nowplaying_main`) gets the data. Build the dylib for `arm64` and `arm64e` (perl is arm64e).
+`zored_stream` runs `/usr/bin/perl ~/.local/share/zored-stream/nowplaying.pl ~/.local/lib/libnowplaying.dylib` as a child
+(`tools/zored_stream/nowplaying/`), restarts it 1 s after it exits; the child exits when its parent does.
 Same trick as [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote-adapter).
 
 ## Things that need the user
 
 Auto mode blocks these; ask the user to run them:
 
-- `make streamd` (installs a LaunchAgent)
+- `make zored_stream-cert` (keychain password)
 - `make companion` (adds a login item)
 - granting Accessibility to Companion
 

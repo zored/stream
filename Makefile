@@ -23,33 +23,23 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey streamd-bin streamd streamd-uninstall zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall ymusic-bin ymusic ymusic-uninstall module companion companion-restart pages deploy
+.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall ymusic-bin ymusic ymusic-uninstall module companion companion-restart pages deploy
 
 build:
-	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SIGN=- mediakey streamd-bin ymusic-bin zored_stream-bin
+	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey ymusic-bin zored_stream-bin
 
 mediakey:
 	mkdir -p $(BIN)
 	swiftc -O tools/mediakey/main.swift -o $(BIN)/mediakey
 
-streamd-bin:
-	mkdir -p $(LIB)
-	clang -dynamiclib -arch arm64 -arch arm64e -fobjc-arc -framework Foundation -framework CoreAudio \
-		-framework AudioToolbox -o $(LIB)/libstreamd.dylib tools/streamd/streamd.m
-
-streamd: streamd-bin
-	mkdir -p $(SHARE)
-	cp tools/streamd/streamd.pl $(SHARE)/streamd.pl
-	$(call install-agent,streamd)
-
-streamd-uninstall:
-	$(call uninstall-agent,streamd)
-
 zored_stream-cert:
 	tools/zored_stream/cert.sh
 
 zored_stream-bin:
-	mkdir -p $(BIN)
+	mkdir -p $(BIN) $(LIB) $(SHARE)
+	clang -dynamiclib -arch arm64 -arch arm64e -fobjc-arc -framework Foundation \
+		-o $(LIB)/libnowplaying.dylib tools/zored_stream/nowplaying/nowplaying.m
+	cp tools/zored_stream/nowplaying/nowplaying.pl $(SHARE)/nowplaying.pl
 	cd tools/zored_stream && GOWORK=off go build -o $(BIN)/zored_stream .
 	codesign -f -s $(SIGN) -i com.zored.stream.zored_stream $(BIN)/zored_stream
 

@@ -61,7 +61,8 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Module | File | Address (flag) | Status |
 |---|---|---|---|
 | VK WorkSpace calls | `call.go`, from `vkcall` (removed) | `127.0.0.1:47114` (`-call`) | verified in a call: mic tap/hold, camera, hang-up; `409` without a call |
-| Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47120` (`-volume`), moves to `:47113` when `streamd` goes | verified: up/down move the system volume and `volume`; no animation, drag, Now Playing |
+| Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47113` (`-volume`) | verified: up/down/drag/mute move the system volume, `volume_alpha` fades to 0, idle CPU 0 % |
+| Now Playing | `nowplaying.go`, `nowplaying/` (ObjC dylib in `/usr/bin/perl`, JSON lines on stdout) | — (`-nowplaying-script`, `-nowplaying-lib`) | verified: `np_*` from Yandex Music, the perl child exits with the daemon |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain
@@ -81,9 +82,8 @@ Each step keeps the old helper until the new path is verified on the device. Mod
 2. Skeleton: done (`make zored_stream`, LaunchAgent, CI).
 3. `vkcall` → `call.go`: done, verified in a call (mic tap/hold, camera, hang-up), `tools/vkcall/` removed. Fixed on the way:
    the first status snapshot without a call was skipped, so the state stayed `unknown` and the 10 s resend blinked the LEDs yellow.
-4. `streamd` volume: animation (`volume_anim`, `volume_alpha`, 30 fps ticker only while changing), drag; switch knobs, keep `streamd` for Now Playing.
-5. Now Playing: `zored_stream` starts `/usr/bin/perl streamd.pl libnowplaying.dylib`, the dylib prints JSON lines on change, the daemon
-   restarts it on exit and pushes `np_*`. Uninstall `streamd`.
+4. `streamd` volume: done (animation, drag, mute, acceleration), on `:47113`.
+5. Now Playing: done, perl child with `libnowplaying.dylib`. `streamd` uninstalled, `tools/streamd/` removed.
 6. `ymusic` → AX in C via cgo, with an iterative, depth-limited walk (fixes the crash); `np_app` from memory. Uninstall `ymusic`.
 7. Optional: `mediakey` as `POST /key/<name>`; drops the `exec` and Companion's Accessibility.
 8. New features land as packages: keep-awake (`IOPMAssertion`), headphones (IOBluetooth ObjC + CoreAudio), AI limits, Claude hooks

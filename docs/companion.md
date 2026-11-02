@@ -97,6 +97,6 @@ Fork commits (surface settings, `plugin_cfg_*`):
   matches the long-press in `gen_pages.py`). The driver has `vibrate(pattern)`, upstream never calls it. Patterns: `LoupedeckVibratePattern` in `@loupedeck/core`.
 - touch position in buttons mode: sliding a strip updates the fader value variables, upstream only did that in slider mode.
 - `hapticSlidePattern`, `hapticSlideStep`: a tick each time a touch crosses a `step`-px line on a strip (270 px tall), at most one per 30 ms.
-- left strip swipe → `POST streamd /volume/drag?dy=<px>`.
+- left strip swipe → `POST zored_stream /volume/drag?dy=<px>` (`:47113`).
 
 The changes stay in the fork: no upstream PR (bitfocus/companion-surface-loupedeck#36 was opened and closed).

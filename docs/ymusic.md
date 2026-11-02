@@ -45,7 +45,7 @@ Log: `~/Library/Logs/zored-stream/ymusic.log`. `make ymusic-uninstall` removes i
   the button isn't in the bar, or the previous press was < 1.5 s ago. Reads `np_app` from Companion before pressing.
 - Pushes `ym_like` every 0.25 s on change, re-sent every 10 s: `liked`, `disliked`, `none`, `off` (app not running),
   `unknown` (no Accessibility, no player bar or button).
-- `np_app` comes from `streamd` (`MRMediaRemoteGetNowPlayingClient` + `MRNowPlayingClientGetBundleIdentifier`).
+- `np_app` comes from `zored_stream` (`MRMediaRemoteGetNowPlayingClient` + `MRNowPlayingClientGetBundleIdentifier`).
 
 ## Dead ends (verified)
 

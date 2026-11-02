@@ -24,7 +24,7 @@ What the MEDIA page does today (macOS):
 
 ```bash
 make zored_stream-cert
-make mediakey streamd zored_stream ymusic deploy
+make mediakey zored_stream ymusic deploy
 make module
 make companion
 ```
@@ -43,8 +43,7 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `c
 | `tools/gen_pages.py` | Page definitions → `companion/*.companionconfig` |
 | `tools/deploy.mjs` | Imports pages into a running Companion over its internal tRPC API |
 | `tools/mediakey/` | Media key helper (Swift) |
-| `tools/streamd/` | Volume + Now Playing daemon (Objective-C, hosted by `/usr/bin/perl`) |
-| `tools/zored_stream/` | one daemon replacing the helpers ([daemon.md](docs/daemon.md)); now VK WorkSpace call mic/camera via the client's local gRPC, volume spike |
+| `tools/zored_stream/` | one daemon replacing the helpers ([daemon.md](docs/daemon.md)); VK WorkSpace call mic/camera, volume, Now Playing (perl child) |
 | `tools/ymusic/` | Yandex Music like/dislike daemon (Swift, Accessibility) |
 | `tools/icons/` | SVG icons embedded into pages |
 | `tools/surface.mjs` | Switches the Loupedeck integration to a module version and sets surface config over tRPC |
