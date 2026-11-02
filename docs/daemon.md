@@ -66,7 +66,8 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 - `make zstreamd-cert` runs `tools/zstreamd/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain
   and shows as `CSSMERR_TP_NOT_TRUSTED` until trusted; `codesign` refuses an untrusted one; `-r trustAsRoot` is rejected for a
-  self-signed cert (`SecTrustSettingsSetTrustSettings: One or more parameters … not valid`), `trustRoot` is what it needs (assumed).
+  self-signed cert (`SecTrustSettingsSetTrustSettings: One or more parameters … not valid`), `trustRoot` works. A signed build's
+  designated requirement is `identifier "com.zored.stream.zstreamd" and certificate leaf = H"…"`, no cdhash (verified).
 - `make zstreamd-bin` builds and signs with `SIGN` (default `zored-stream`, `make build`/CI use `SIGN=-`), identifier
   `com.zored.stream.zstreamd`. `make zstreamd` also installs the LaunchAgent, log `~/Library/Logs/zored-stream/zstreamd.log`.
 - `CGO_LDFLAGS=` in front of `make` while the stale environment is around.
