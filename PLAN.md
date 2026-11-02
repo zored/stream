@@ -15,10 +15,12 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 
 | Used | Free |
 |---|---|
-| left knobs `0/0` volume, `1/0` track (hold press = like); left strip `0–2/1` volume | left knob `2/0` |
-| tiles `0/2` play (hold = like), `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/3–0/5`, `1/2–1/5` |
+| left knobs `0/0` volume, `1/0` track (hold press = like), `2/0` brightness (claimed); left strip `0–2/1` volume | — |
+| tiles `1/2` play (hold = like), `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/2–0/5`, `1/3–1/5` |
 | buttons `3/1` mic, `3/2` camera, `3/3` hang up | buttons `3/0`, `3/4–3/7` |
-| | right knobs `0–2/7`, right strip `0–2/6` |
+| right strip `0–2/6` AI limits + model, right knob `1/7` AI model | right knobs `0/7`, `2/7` |
+
+Idea: mic, camera and hang-up tiles do something else outside a call.
 
 ## Done (2026-11-01)
 
@@ -35,6 +37,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
   via its local gRPC, `pending` while the camera starts ([vkcall.md](docs/vkcall.md))
 - Ideas backlog collected (below)
 - Track strip: `zored_stream` `np_svg` — gray artist | bold title (two lines when long), like mark inside; clock `2/5` stretched SVG + gray `DD.MM` date
+- AI: Claude limits in `zored_stream` (`usage`, every 15 min, no CLI), right strip = limits + model/effort, right knob row 2 switches the model;
+  Hammerspoon overlay reads the daemon ([ai.md](docs/ai.md), [ai-switch.md](docs/ai-switch.md))
+- Brightness: left knob row 3 turns Mac brightness, press+turn the controller's; level on the left-strip bar
+- Animations at 60 fps (the ceiling through Companion variables, [companion.md](docs/companion.md))
 - Yandex Music like: hold play tile / knob 2, second haptic at 400 ms, ♥/💔 on the strip from the app's player bar
   via Accessibility (`ymusic`); MediaRemote, local API, deeplinks, hotkeys are dead ends ([ymusic.md](docs/ymusic.md))
 
@@ -56,31 +62,30 @@ New features go on the MEDIA page as buttons; separate pages only once it runs o
 
 - [ ] Keystrokes on macOS (candidates: `osascript` via `exec`, or post key events like `mediakey`)
 - [ ] `vkcall`: reconnect after a VK WorkSpace restart — not verified yet
-- [ ] IDE / terminal pages; page switching by frontmost app (`streamd` can watch `NSWorkspace` and push a variable)
-- [ ] Right knobs and right strip: free now
+- [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` can watch `NSWorkspace` and push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
 
 ### Ideas (2026-11-02, mechanisms assumed, not checked)
 
 Desk and display:
-- [ ] Keep-awake toggle with time left on the tile: Amphetamine via AppleScript, or `caffeinate -t` owned by `streamd`
-- [ ] Controller brightness on a knob: Companion internal surface brightness action
+- [ ] Keep-awake toggle with time left on the tile: Amphetamine via AppleScript, or `caffeinate -t` owned by `zored_stream`
 - [ ] Monitor brightness, input switch (KVM), PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Sleep buttons: display off (`pmset displaysleepnow`), lock, system sleep
-- [ ] Headphones toggle: connect/disconnect Sennheiser Accentum over Bluetooth (`blueutil` or IOBluetooth in `streamd`) and move output + mic to them;
-  back: Logi + USB camera if present, else MacBook (`SwitchAudioSource` or CoreAudio in `streamd`); LED shows the active route
+- [ ] Headphones toggle: connect/disconnect Sennheiser Accentum over Bluetooth (`blueutil` or IOBluetooth in `zored_stream`) and move output + mic to them;
+  back: Logi + USB camera if present, else MacBook (`SwitchAudioSource` or CoreAudio in `zored_stream`); LED shows the active route
 
 Windows and apps:
 - [ ] Window switcher on a knob (Alt+Tab / Ctrl+Tab): needs keystrokes (above); hold modifier while turning, release on knob stop
-- [ ] Timers on a knob: turn sets the duration, press starts, countdown on the strip, haptic at the end
+- [ ] Timers and alarm on one knob: turn sets a duration or a wall-clock time (press+turn toggles), press starts;
+  countdown / alarm time on the strip, gray dot on the clock tile while armed, haptic + sound at the end; owned by `zored_stream`
 - [ ] Keyboard layout on a tile (EN/RU), press switches: Text Input Sources (`TISCopyCurrentKeyboardInputSource`, `TISSelectInputSource`,
   change notification) in `zored_stream`
-- [ ] Media seek on a knob (free left knob `2/0`): MediaRemote `SetElapsedTime` / seek commands via the perl Now Playing host; position on the strip
+- [ ] Emoji picker: knob scrolls a short favorites list on the strip, press types the emoji into the focused field
+  (`CGEventKeyboardSetUnicodeString` in `zored_stream`, no clipboard)
+- [ ] Media seek on a knob (free right knob, row 1 or 3): MediaRemote `SetElapsedTime` / seek commands via the perl Now Playing host; position on the strip
 - [ ] Frontmost app icon on a tile, press cycles its windows
 
 AI agents:
-- [ ] AI limits on a tile: start from `~/.hammerspoon/usage_overlay.lua` (polls `api.anthropic.com/api/oauth/usage` with the Claude Code keychain token); Codex `token_count` events in `~/.codex/sessions`
-- [ ] Model + effort switch for Claude Code / Codex: settings files or app keystrokes, research first
 - [ ] Dictation into the prompt: hold a button and speak (Superwhisper or macOS dictation), text lands in the agent input
 - [ ] Agent waiting for me: Claude Code `Notification`/`Stop` hooks → Companion variable → blinking LED with the count; press focuses the session
 
@@ -93,7 +98,7 @@ Helpers:
 
 Network:
 - [ ] Viscosity VPN on/off with status color: Viscosity AppleScript (`connect`, `disconnect`, connection state)
-- [ ] Current Wi-Fi network on a tile: SSID needs Location permission on recent macOS, `streamd` via CoreWLAN
+- [ ] Current Wi-Fi network on a tile: SSID needs Location permission on recent macOS, `zored_stream` via CoreWLAN
 
 ### Windows
 
