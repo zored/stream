@@ -61,7 +61,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Module | File | Address (flag) | Status |
 |---|---|---|---|
 | VK WorkSpace calls | `call.go`, from `vkcall` (removed) | `127.0.0.1:47114` (`-call`) | verified in a call: mic tap/hold, camera, hang-up; `409` without a call |
-| Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47113` (`-volume`) | verified: up/down/drag/mute move the system volume, `volume_alpha` fades to 0, idle CPU 0 % |
+| Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47113` (`-volume`) | verified: up/down/drag/mute move the system volume, `volume_alpha` fades to 0, idle CPU 0 %; the strip on the device looks as before (user) |
 | Now Playing | `nowplaying.go`, `nowplaying/` (ObjC dylib in `/usr/bin/perl`, JSON lines on stdout) | — (`-nowplaying-script`, `-nowplaying-lib`) | verified: `np_*` from Yandex Music, the perl child exits with the daemon |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
