@@ -57,8 +57,9 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   - read back the popup description; mismatch → `Escape`, `ai_state = error`.
 - Every second while nothing is pending and Claude is frontmost, `zored_stream` reads the popup in the focused window — the new-chat
   screen or an open session — and publishes the truth; the knob position follows it (verified 2026-11-02: an open Opus·Medium session
-  showed `ok`). Applying stays new-chat only: a turn in an open session previews the choice for 5 s (gray label, the strip shows that
-  model's limits, state `preview`), then the poll brings back the session's real model. Claude Code CLI is not synced (user: not needed).
+  showed `ok`). Applying stays new-chat only: a turn in an open session, or while Claude is not frontmost, previews the choice for 5 s (gray label, the strip shows that
+  model's limits, state `preview`), then the poll brings back the real model: read from the focused window, or the last one read or applied (`known`) while Claude
+  is in the background. Claude Code CLI is not synced (user: not needed).
 - Sliding along the right strip picks the same list by position, bottom `Sonnet·Low` to top `Fable·High`: the module fork posts
   `POST /ai/slide?y=<px>` (0 = top of the 270 px strip) on every touch move, the daemon maps it to one of the 9 stops and schedules
   the switch like a turn (verified with curl: y=10 → Fable·High, y=260 → Sonnet·Low; on the device: not confirmed yet).
@@ -68,7 +69,7 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
 - Label: part of `ai_strip_svg` (see [ai.md](ai.md)), drawn across the right strip like the track on the left strip but rotated 270° so it reads bottom-up:
   lowercase white model ending at the strip's center (fixed, so it never moves) and the effort as white dots after it (`labelMarkup`:
   low 1, medium 2, high 3, extra 4, max 5; an unknown effort falls back to text). Only warnings are colored: amber `other` (outside
-  the knob's list), red `error`; in `preview` the model is italic.
+  the knob's list), red `error`; in `preview` the model and the dots are gray (#808080, like the clock's date); italic was tried and Companion's renderer showed no slant.
 
 `zored_stream` module `ai` (`ai_darwin.go`, `127.0.0.1:47117`, flag `-ai`): `POST /ai/turn?d=±1`, `POST /ai/slide?y=`, `POST /ai/down`, `POST /ai/up`; variables `ai_model`,
 `ai_effort`, `ai_state`. AX helpers in `ax_darwin.m`: one BFS with a predicate, `ax_find_attr` (role + attribute, exact or prefix),

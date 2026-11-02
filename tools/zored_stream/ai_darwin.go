@@ -52,11 +52,12 @@ type aiSwitch struct {
 	held    bool
 	turned  bool
 	preview time.Time
+	known   int
 	onShow  func(stripLabel)
 }
 
 func newAISwitch(v *vars, onShow func(stripLabel)) *aiSwitch {
-	return &aiSwitch{index: 1, vars: v, onShow: onShow}
+	return &aiSwitch{index: 1, known: 1, vars: v, onShow: onShow}
 }
 
 func (a *aiSwitch) target() aiChoice {
@@ -134,13 +135,11 @@ func (a *aiSwitch) applyPending() {
 	a.pending = false
 	switch {
 	case err == nil:
+		a.known = index
 		a.show(want, "ok")
-	case errors.Is(err, errNoNewChat):
+	case errors.Is(err, errNoNewChat), errors.Is(err, errNotFront):
 		a.preview = time.Now().Add(aiPreview)
 		a.show(want, "preview")
-	case errors.Is(err, errNotFront):
-		log.Printf("ai: %v", err)
-		a.show(want, "idle")
 	default:
 		log.Printf("ai: apply %s %s: %v", want.model, want.effort, err)
 		a.show(want, "error")
@@ -168,6 +167,7 @@ func (a *aiSwitch) poll() {
 		if !errors.Is(err, errNotFront) && !errors.Is(err, errNoPicker) {
 			log.Printf("ai: poll: %v", err)
 		}
+		a.index = a.known
 		a.show(a.target(), "idle")
 		return
 	}
@@ -177,6 +177,7 @@ func (a *aiSwitch) poll() {
 		return
 	}
 	a.index = m*len(aiEfforts) + e
+	a.known = a.index
 	a.show(cur, "ok")
 }
 

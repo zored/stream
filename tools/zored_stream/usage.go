@@ -31,11 +31,11 @@ const (
 	weekShowFor     = 4 * time.Second
 	stripDrawW      = 48
 	stripDrawH      = 258
-	stripTextY      = stripDrawH - 4
+	stripTextY      = stripDrawH - 6
 )
 
 var (
-	aiStateColors = map[string]string{"ok": "#fff", "pending": "#fff", "preview": "#fff", "idle": "#fff", "other": "#FFB000", "error": "#FF3030"}
+	aiStateColors = map[string]string{"ok": "#fff", "pending": "#fff", "preview": gray, "idle": "#fff", "other": "#FFB000", "error": "#FF3030"}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
 )
 
@@ -380,9 +380,8 @@ func labelMarkup(l stripLabel, ink string) string {
 		return ""
 	}
 	modelColor, dotColor := "#fff", aiStateColors[l.state]
-	style := ""
 	if l.state == "preview" {
-		style = ` font-style="italic"`
+		modelColor = gray
 	}
 	if ink != "" {
 		modelColor, dotColor = ink, ink
@@ -391,8 +390,8 @@ func labelMarkup(l stripLabel, ink string) string {
 	anchor := svgMinWidth / 2
 	y := svgHeight/2 + svgFont*35/100
 	var b strings.Builder
-	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s"%s>%s</text>`,
-		anchor, y, svgFont, modelColor, style, html.EscapeString(strings.ToLower(l.model)))
+	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
+		anchor, y, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
 	dots := slices.Index(aiEffortDots, strings.ToLower(l.effort)) + 1
 	if dots == 0 {
 		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="Helvetica" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
