@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <ImageIO/ImageIO.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -8,6 +9,8 @@ typedef void (*GetNowPlayingClient)(dispatch_queue_t, void (^)(id));
 typedef CFStringRef (*GetClientBundleIdentifier)(id);
 
 static const double PollSeconds = 0.5;
+static const int ArtworkPixels = 160;
+static const double ArtworkQuality = 0.85;
 
 static GetNowPlayingInfo getNowPlayingInfo;
 static GetIsPlaying getIsPlaying;
@@ -15,6 +18,8 @@ static GetNowPlayingClient getNowPlayingClient;
 static GetClientBundleIdentifier getClientBundleIdentifier;
 static NSMutableDictionary *state;
 static NSData *last;
+static NSData *artworkSource;
+static NSString *artwork;
 static dispatch_source_t pollTimer;
 static dispatch_source_t parentExit;
 
@@ -26,6 +31,36 @@ static void die(const char *message) {
 static NSString *stringValue(CFDictionaryRef info, NSString *key) {
     id value = info ? ((__bridge NSDictionary *)info)[key] : nil;
     return [value isKindOfClass:NSString.class] ? value : @"";
+}
+
+static NSString *thumbnail(NSData *data) {
+    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+    if (!source) die("artwork: unreadable image");
+    NSDictionary *options = @{(id)kCGImageSourceCreateThumbnailFromImageAlways: @YES,
+                              (id)kCGImageSourceCreateThumbnailWithTransform: @YES,
+                              (id)kCGImageSourceThumbnailMaxPixelSize: @(ArtworkPixels)};
+    CGImageRef image = CGImageSourceCreateThumbnailAtIndex(source, 0, (__bridge CFDictionaryRef)options);
+    CFRelease(source);
+    if (!image) die("artwork: thumbnail failed");
+    NSMutableData *jpeg = [NSMutableData data];
+    CGImageDestinationRef destination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)jpeg, CFSTR("public.jpeg"), 1, NULL);
+    CGImageDestinationAddImage(destination, image, (__bridge CFDictionaryRef)@{(id)kCGImageDestinationLossyCompressionQuality: @(ArtworkQuality)});
+    BOOL ok = CGImageDestinationFinalize(destination);
+    CFRelease(destination);
+    CGImageRelease(image);
+    if (!ok) die("artwork: jpeg encoding failed");
+    return [jpeg base64EncodedStringWithOptions:0];
+}
+
+static NSString *artworkValue(CFDictionaryRef info) {
+    id value = info ? ((__bridge NSDictionary *)info)[@"kMRMediaRemoteNowPlayingInfoArtworkData"] : nil;
+    NSData *data = [value isKindOfClass:NSData.class] && [value length] > 0 ? value : nil;
+    if (!data) return @"";
+    if (![data isEqualToData:artworkSource]) {
+        artworkSource = data;
+        artwork = thumbnail(data);
+    }
+    return artwork;
 }
 
 static void emit(void) {
@@ -46,6 +81,7 @@ static void poll(void) {
     getNowPlayingInfo(main, ^(CFDictionaryRef info) {
         state[@"title"] = stringValue(info, @"kMRMediaRemoteNowPlayingInfoTitle");
         state[@"artist"] = stringValue(info, @"kMRMediaRemoteNowPlayingInfoArtist");
+        state[@"artwork"] = artworkValue(info);
         dispatch_group_leave(group);
     });
     dispatch_group_enter(group);
@@ -71,7 +107,7 @@ void nowplaying_main(void *perl, void *cv) {
     getClientBundleIdentifier = (GetClientBundleIdentifier)dlsym(mediaRemote, "MRNowPlayingClientGetBundleIdentifier");
     if (!getNowPlayingInfo || !getIsPlaying || !getNowPlayingClient || !getClientBundleIdentifier) die("MediaRemote symbols missing");
 
-    state = [NSMutableDictionary dictionaryWithDictionary:@{@"title": @"", @"artist": @"", @"playing": @NO, @"app": @""}];
+    state = [NSMutableDictionary dictionaryWithDictionary:@{@"title": @"", @"artist": @"", @"playing": @NO, @"app": @"", @"artwork": @""}];
     dispatch_queue_t main = dispatch_get_main_queue();
     parentExit = dispatch_source_create(DISPATCH_SOURCE_TYPE_PROC, getppid(), DISPATCH_PROC_EXIT, main);
     dispatch_source_set_event_handler(parentExit, ^{ exit(0); });

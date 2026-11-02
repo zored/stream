@@ -16,11 +16,12 @@ BRIGHTNESS = "http://127.0.0.1:47118"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
+    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state")}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
+NO_ART = '$(custom:np_art) == ""'
 rng = random.Random()
 
 
@@ -175,11 +176,17 @@ def volume_cell(row):
 
 
 def play_pause():
+    size = "(80 + $(custom:np_glyph) / 5)"
     return button([
         canvas(),
         box("box0", 0x000000),
-        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), fontsize=110),
-    ], up=[mediakey("play")], held=ymusic("/like"))
+        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), fontsize=110, opacity=expr(f"{NO_ART} ? 100 : 0")),
+        image("cover", expr("$(custom:np_art)"), "crop", x=v(6), y=v(6), width=v(88), height=v(88)),
+        *(image(name, icon(f"{name}-glow"), "fill",
+                opacity=expr(f"{NO_ART} || ({PLAYING}) != {shown} ? 0 : $(custom:np_glyph)"),
+                x=expr(f"(100 - {size}) / 2"), y=expr(f"(100 - {size}) / 2"), width=expr(size), height=expr(size))
+          for name, shown in (("play", "false"), ("pause", "true"))),
+    ], down=streamd("/nowplaying/show"), up=[mediakey("play")], held=ymusic("/like"))
 
 
 def by_state(var, colors):

@@ -36,6 +36,7 @@ type track struct {
 	Artist  string `json:"artist"`
 	Playing bool   `json:"playing"`
 	App     string `json:"app"`
+	Artwork string `json:"artwork"`
 }
 
 type nowPlaying struct {
@@ -47,6 +48,7 @@ type nowPlaying struct {
 	like        string
 	likeTitle   string
 	vars        *vars
+	glyph       *glyph
 }
 
 func (n *nowPlaying) run() {
@@ -123,6 +125,8 @@ func (n *nowPlaying) publish() {
 	n.vars.set("np_svg", trackSVG(t, like))
 	n.vars.set("np_playing", playing)
 	n.vars.set("np_app", t.App)
+	n.vars.set("np_art", coverURI(t))
+	n.glyph.setPlaying(t.Playing)
 }
 
 func sameTitle(a, b string) bool {

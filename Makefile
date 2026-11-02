@@ -39,7 +39,7 @@ zored_stream-cert:
 
 zored_stream-bin:
 	mkdir -p $(BIN) $(LIB) $(SHARE)
-	clang -dynamiclib -arch arm64 -arch arm64e -fobjc-arc -framework Foundation \
+	clang -dynamiclib -arch arm64 -arch arm64e -fobjc-arc -framework Foundation -framework ImageIO -framework CoreGraphics \
 		-o $(LIB)/libnowplaying.dylib tools/zored_stream/nowplaying/nowplaying.m
 	cp tools/zored_stream/nowplaying/nowplaying.pl $(SHARE)/nowplaying.pl
 	cd tools/zored_stream && GOWORK=off go build -o $(BIN)/zored_stream .

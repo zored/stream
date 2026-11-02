@@ -128,7 +128,8 @@ func main() {
 	})
 
 	v := &vars{sent: map[string]string{}}
-	np := &nowPlaying{script: *npScript, lib: *npLib, vars: v}
+	np := &nowPlaying{script: *npScript, lib: *npLib, vars: v, glyph: newGlyph(v)}
+	go np.glyph.animate()
 	go np.run()
 	ym := newYmusic(np, v)
 	go every(pollEvery, ym.poll)
@@ -197,12 +198,14 @@ func main() {
 		vol.publish()
 		vol.bar.publish()
 		np.publish()
+		np.glyph.publish()
 		us.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })
 		handle(mux, "/volume/down", func() error { return vol.step(-1) })
 		handle(mux, "/volume/mute", vol.toggleMute)
+		handle(mux, "/nowplaying/show", func() error { np.glyph.show(); return nil })
 		mux.HandleFunc("POST /volume/drag", func(w http.ResponseWriter, r *http.Request) {
 			dy, err := strconv.ParseFloat(r.URL.Query().Get("dy"), 64)
 			if err != nil {
