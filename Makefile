@@ -7,8 +7,8 @@ MODULE ?= $(abspath ../companion-surface-loupedeck)
 MODULES = $(SHARE)/companion-modules
 HAPTIC ?= SHORT_LOWER
 HAPTIC_HOLD_MS ?= 400
-HAPTIC_SLIDE ?= SHORT_LOW
-HAPTIC_STEP ?= 20
+HAPTIC_SLIDE ?= SHORT_LOWER
+HAPTIC_STEP ?= 10
 
 define install-agent
 	mkdir -p $(HOME)/Library/Logs/zored-stream
