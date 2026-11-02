@@ -295,12 +295,9 @@
         "id": "np",
         "name": "np",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -332,13 +329,9 @@
          "value": 90,
          "isExpression": false
         },
-        "text": {
-         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\ud83d\udc96 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+        "base64Image": {
+         "value": "$(custom:np_svg)",
          "isExpression": true
-        },
-        "color": {
-         "value": 16777215,
-         "isExpression": false
         },
         "halign": {
          "value": "center",
@@ -348,28 +341,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 28,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        },
@@ -1548,12 +1521,9 @@
         "id": "np",
         "name": "np",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -1585,13 +1555,9 @@
          "value": 90,
          "isExpression": false
         },
-        "text": {
-         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\ud83d\udc96 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+        "base64Image": {
+         "value": "$(custom:np_svg)",
          "isExpression": true
-        },
-        "color": {
-         "value": 16777215,
-         "isExpression": false
         },
         "halign": {
          "value": "center",
@@ -1601,28 +1567,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 28,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        },
@@ -2555,12 +2501,9 @@
         "id": "np",
         "name": "np",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -2592,13 +2535,9 @@
          "value": 90,
          "isExpression": false
         },
-        "text": {
-         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\ud83d\udc96 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+        "base64Image": {
+         "value": "$(custom:np_svg)",
          "isExpression": true
-        },
-        "color": {
-         "value": 16777215,
-         "isExpression": false
         },
         "halign": {
          "value": "center",
@@ -2608,28 +2547,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 28,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        },

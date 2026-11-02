@@ -14,11 +14,9 @@ YMUSIC = "http://127.0.0.1:47115"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_app", "ym_like", "call_mic", "call_cam")}
+    "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
-YANDEX = '$(custom:np_app) == "ru.yandex.desktop.music"'
-LIKE_MARK = f'{YANDEX} ? ($(custom:ym_like) == "liked" ? "💖 " : ($(custom:ym_like) == "disliked" ? "💔 " : "")) : ""'
 rng = random.Random()
 
 
@@ -145,7 +143,7 @@ def volume_cell(row):
     center_y = strip_h / 2 - cell_h * row
     style = [
         canvas(),
-        text("np", expr(f"concat({LIKE_MARK}, $(custom:np_track))"), fontsize=28, opacity=expr(f"100 - {VOLUME_ALPHA}"), rotation=v(90),
+        image("np", expr("$(custom:np_svg)"), opacity=expr(f"100 - {VOLUME_ALPHA}"), rotation=v(90),
              x=v(round((cell_w / 2 - strip_h / 2) / cell_w * 100, 2)), width=v(round(strip_h / cell_w * 100, 2)),
              y=v(round((center_y - cell_w / 2) / cell_h * 100, 2)), height=v(round(cell_w / cell_h * 100, 2))),
         box("track", 0x202020, opacity=visible),

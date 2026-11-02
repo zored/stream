@@ -148,6 +148,7 @@ func (y *ymusic) poll() {
 	state := y.stateLocked()
 	y.mu.Unlock()
 	y.vars.set("ym_like", state)
+	y.np.setLike(state)
 }
 
 func (y *ymusic) press(like bool) error {
