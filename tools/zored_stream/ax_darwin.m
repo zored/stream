@@ -202,6 +202,10 @@ int ax_press(AXUIElementRef element) {
     return AXUIElementPerformAction(element, kAXPressAction);
 }
 
+int ax_focus(AXUIElementRef element) {
+    return AXUIElementSetAttributeValue(element, kAXFocusedAttribute, kCFBooleanTrue);
+}
+
 void ax_release(AXUIElementRef element) {
     CFRelease(element);
 }

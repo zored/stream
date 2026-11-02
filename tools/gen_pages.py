@@ -309,7 +309,7 @@ def agents_tile():
 
 
 def dictation_led():
-    return button([canvas(), box("box0", expr(f'$(custom:dictation) == "on" ? {0xFF3030} : 0'))], down=ai("/dictation/toggle"))
+    return button([canvas(), box("box0", expr(f'$(custom:dictation) == "on" ? {0xFF3030} : 0'))], down=ai("/dictation/down"), up=ai("/dictation/up"))
 
 
 def test_page():

@@ -16,4 +16,5 @@ pid_t ax_frontmost_pid(void);
 void ax_key(pid_t pid, int keycode, int flags);
 int ax_int_value(AXUIElementRef element, int *out);
 int ax_press(AXUIElementRef element);
+int ax_focus(AXUIElementRef element);
 void ax_release(AXUIElementRef element);

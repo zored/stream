@@ -80,13 +80,27 @@ only `agent-turn-complete` (assumed, from the docs); the slot is taken by Comput
 
 ## Dictation
 
-кнопка 7 toggles voice input in the current Claude Desktop chat; the LED is red while recording.
+кнопка 7 drives voice input in the current Claude Desktop chat; the LED is red while recording.
+
+| Gesture | Effect |
+|---|---|
+| hold, speak, release | push-to-talk: records while held, sends on release |
+| tap | starts recording and keeps it on |
+| tap while recording | stops and sends |
+| hold while recording (≥ 400 ms) | stops, keeps the text in the composer, does not send |
+
+Verified 2026-11-03 with `say` into the mic: all four, the sent ones arrived as messages in this session.
 
 - The composer has an `AXCheckBox` (subrole `AXToggleButton`) described `Press and hold to record`, and `Stop dictation`
-  while recording. `AXPress` toggles it (verified 2026-11-03): idle → `Stop dictation` → idle. The very first press after
-  the app started only set `AXValue` 1 without recording (verified once, cause unknown); the next presses toggled cleanly.
-- `zored_stream` (`dictate_darwin.go`, `POST :47117/dictation/toggle`): activates Claude when it is in the background,
-  presses the checkbox in the focused window, waits up to 1.5 s for the description to flip, `409` otherwise.
-  `dictation` (`on`/`off`) is read every second, so dictation started with the mouse lights the LED too.
+  while recording; `AXPress` toggles it. The transcript streams into the `AXTextArea` `Prompt` while recording and the
+  last words land within ~0.5 s after the stop (verified). The first press after the app started once only set `AXValue` 1
+  without recording (cause unknown); presses after that toggled cleanly.
+- `zored_stream` (`dictate_darwin.go`, `POST :47117/dictation/down`, `/dictation/up`): the handlers only queue the event
+  with its timestamp and return `204`; one worker applies them in order, so Companion's 1–2 s `curl`/exec timeouts never cut
+  a send. Hold time is measured between the event timestamps. Send = wait until the prompt text is unchanged for 700 ms
+  (4 s cap), focus the prompt (`AXFocused`), post Return to Claude, check the prompt emptied. An empty transcript is not sent.
+  Errors go to the log.
+- Claude is activated first when it is in the background. `dictation` (`on`/`off`) is read every second, so dictation
+  started with the mouse lights the LED too.
 - The bundle has `dictationShortcut` (`default` / `off` / an accelerator) in the app preferences, but the default key
   lives in the claude.ai frontend, not in `app.asar` (read); AX avoids depending on it.

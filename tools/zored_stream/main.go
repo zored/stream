@@ -158,10 +158,12 @@ func main() {
 	})
 	ai := newAISwitch(v, us.focus)
 	go every(aiPollEvery, ai.poll)
-	dict := &dictation{vars: v}
+	dict := newDictation(v)
+	go dict.run()
 	go every(dictatePollEvery, dict.poll)
 	go serve(*aiAddr, func(mux *http.ServeMux) {
-		handle(mux, "/dictation/toggle", dict.toggle)
+		handle(mux, "/dictation/down", func() error { return dict.push(true) })
+		handle(mux, "/dictation/up", func() error { return dict.push(false) })
 		mux.HandleFunc("POST /ai/turn", func(w http.ResponseWriter, r *http.Request) {
 			d, err := strconv.Atoi(r.URL.Query().Get("d"))
 			if err != nil {
