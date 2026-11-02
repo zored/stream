@@ -12,7 +12,8 @@ Only while the Now Playing app is Yandex Music (`np_app`); otherwise the hold do
 | left knob 2 `1/0` press | play/pause (on release) | like / remove like |
 
 - The hold vibrates a second time at 400 ms (module patch, any control).
-- The left strip shows `♥ ` before the track when liked, `💔 ` when disliked, from `ym_like`.
+- The left strip shows `💖 ` before the track when liked, `💔 ` when disliked, from `ym_like`.
+  Only emoji missing from the text fonts render in colour: `❤️`/`♥` come out white, `🩷` is missing (verified in the web preview).
 
 ## How it works
 

@@ -18,7 +18,7 @@ CUSTOM_VARIABLES = {name: "" for name in (
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 YANDEX = '$(custom:np_app) == "ru.yandex.desktop.music"'
-LIKE_MARK = f'{YANDEX} ? ($(custom:ym_like) == "liked" ? "♥ " : ($(custom:ym_like) == "disliked" ? "💔 " : "")) : ""'
+LIKE_MARK = f'{YANDEX} ? ($(custom:ym_like) == "liked" ? "💖 " : ($(custom:ym_like) == "disliked" ? "💔 " : "")) : ""'
 rng = random.Random()
 
 

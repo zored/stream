@@ -10,7 +10,7 @@ What the MEDIA page does today (macOS):
 - play tile — big ⏸/▶ from the OS playback state
 - VK WorkSpace calls — bottom button 2 toggles the microphone (hold = push-to-talk), button 3 the camera, button 4 hangs up;
   LEDs and tiles show the real state from the client, mouse clicks included ([vkcall.md](docs/vkcall.md))
-- Yandex Music — hold the play tile or knob 2 to like/unlike the track; ♥/💔 before the track on the strip
+- Yandex Music — hold the play tile or knob 2 to like/unlike the track; 💖/💔 before the track on the strip
   ([ymusic.md](docs/ymusic.md))
 - clock tile, haptic tap on presses (and a second one at 400 ms hold), black tiles without Companion decorations
 

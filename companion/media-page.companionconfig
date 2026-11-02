@@ -333,7 +333,7 @@
          "isExpression": false
         },
         "text": {
-         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\u2665 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\ud83d\udc96 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
          "isExpression": true
         },
         "color": {
@@ -1586,7 +1586,7 @@
          "isExpression": false
         },
         "text": {
-         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\u2665 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\ud83d\udc96 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
          "isExpression": true
         },
         "color": {
@@ -2593,7 +2593,7 @@
          "isExpression": false
         },
         "text": {
-         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\u2665 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
+         "value": "concat($(custom:np_app) == \"ru.yandex.desktop.music\" ? ($(custom:ym_like) == \"liked\" ? \"\ud83d\udc96 \" : ($(custom:ym_like) == \"disliked\" ? \"\ud83d\udc94 \" : \"\")) : \"\", $(custom:np_track))",
          "isExpression": true
         },
         "color": {
