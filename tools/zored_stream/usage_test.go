@@ -80,7 +80,7 @@ func TestStripValue(t *testing.T) {
 		pct  float64
 	}{
 		"session":   {stripMode{}, "1:42", 30},
-		"switching": {stripMode{switching: true}, "", 115},
+		"switching": {stripMode{switching: true}, "115", 115},
 		"week":      {stripMode{weekUntil: now.Add(time.Second)}, "4d", 23},
 	} {
 		if text, pct := stripValue(limits, limits[1], c.mode, now); text != c.text || pct != c.pct {

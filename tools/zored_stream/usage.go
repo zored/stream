@@ -29,6 +29,8 @@ const (
 	sessionHours    = 5
 	gray            = "#808080"
 	weekShowFor     = 4 * time.Second
+	stripDrawW      = 48
+	stripDrawH      = 258
 )
 
 var (
@@ -330,7 +332,8 @@ func dayPct(l limit, now time.Time) float64 {
 func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (string, float64) {
 	switch {
 	case mode.switching:
-		return "", dayPct(week, now)
+		d := dayPct(week, now)
+		return strconv.Itoa(round(d)), d
 	case now.Before(mode.weekUntil):
 		left := ""
 		if week.ResetsAt != nil {
@@ -349,21 +352,22 @@ func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (stri
 }
 
 func aiStripSVG(label stripLabel, text string, pct float64, failed bool) string {
-	const w, h = 60, 270
+	const w, h = stripDrawW, stripDrawH
 	barH := h * min(max(pct, 0), 100) / 100
 	bar := fmt.Sprintf(`x="0" y="%.1f" width="%d" height="%.1f"`, h-barH, w, barH)
+	k := min(float64(h)/svgMinWidth, float64(w)/svgHeight)
 	content := func(ink string) string {
-		fill := "#fff"
+		fill := gray
 		if ink != "" {
 			fill = ink
 		}
-		return fmt.Sprintf(`<g transform="translate(0 %d) rotate(-90) scale(%.4f)">%s</g>`+
-			`<text x="%d" y="24" text-anchor="middle" font-family="Helvetica" font-size="21" font-weight="bold" fill="%s">%s</text>`,
-			h, float64(h)/svgMinWidth, labelMarkup(label, ink), w/2, fill, html.EscapeString(text))
+		return fmt.Sprintf(`<g transform="translate(0 %.1f) rotate(-90) scale(%.4f)">%s</g>`+
+			`<text x="%d" y="%d" text-anchor="middle" font-family="Helvetica" font-size="17" fill="%s">%s</text>`,
+			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(label, ink), w/2, h-5, fill, html.EscapeString(text))
 	}
 	dot := ""
 	if failed {
-		dot = fmt.Sprintf(`<circle cx="%d" cy="6" r="3" fill="#FF6666"/>`, w-6)
+		dot = fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="#FF6666"/>`, w-4)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+

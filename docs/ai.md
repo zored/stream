@@ -34,15 +34,15 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 
 ## Right strip
 
-No tile (removed 2026-11-02). The whole right strip is one 60×270 SVG from the daemon (`ai_strip_svg`, `aiStripSVG`); each
+No tile (removed 2026-11-02). The whole right strip is one 48×258 SVG (the drawable area, see [companion.md](companion.md)) from the daemon (`ai_strip_svg`, `aiStripSVG`); each
 cell shows its third (`gen_pages.py` `ai_strip`). A white bar fills the strip bottom-up like the volume bar; on top of it the
-rotated model + effort dots and a value at the top. Everything is drawn twice — normal, and black clipped to the bar — so the
+rotated model + effort dots and a value at the bottom, gray like the clock's date. Everything is drawn twice — normal, and black clipped to the bar — so the
 text inverts where the bar is under it (verified in the web preview: full bar → black `opus ●`).
 
 | When | Text | Bar |
 |---|---|---|
 | default | time left in the 5h session, `1:42` | session usage |
-| while the model is switching (knob or strip) | none | `d` of the selected model |
+| while the model is switching (knob or strip) | `d` of the selected model, `120` | `d` of the selected model |
 | 4 s after the switch settles | whole days left in the week, `3d` (`h:mm` under a day) | `w` of the selected model |
 
 The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
