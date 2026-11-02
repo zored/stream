@@ -7,6 +7,7 @@ let pollEvery = 0.25
 let resendEvery = 10.0
 let rescanEvery = 2.0
 let pressGap = 1.5
+let maxNodes = 20000
 
 func log(_ message: String) {
     FileHandle.standardError.write("ymusic: \(message)\n".data(using: .utf8)!)
@@ -30,11 +31,19 @@ func hasClass(_ element: AXUIElement, _ prefix: String) -> Bool {
     (attr(element, "AXDOMClassList") as? [String] ?? []).contains { $0.hasPrefix(prefix) }
 }
 
-func find(_ element: AXUIElement, _ match: (AXUIElement) -> Bool) -> AXUIElement? {
-    if match(element) { return element }
-    for child in children(element) {
-        if let found = find(child, match) { return found }
+func find(_ root: AXUIElement, _ match: (AXUIElement) -> Bool) -> AXUIElement? {
+    var queue = [root]
+    var seen: Set<AXUIElement> = [root]
+    var next = 0
+    while next < queue.count, next < maxNodes {
+        let element = queue[next]
+        next += 1
+        if match(element) { return element }
+        for child in children(element) where seen.insert(child).inserted {
+            queue.append(child)
+        }
     }
+    if next >= maxNodes { log("AX walk stopped at \(maxNodes) nodes") }
     return nil
 }
 

@@ -28,6 +28,8 @@ The like lives only in the app UI, so `ymusic` drives the player bar through Acc
 - Two presses within ~1 s race inside the app: the UI may show the wrong state for seconds. `ymusic` ignores presses
   within 1.5 s of the previous one.
 - Finding the bar walks ~1100 AX nodes (~60 ms); the bar element is cached and re-found when it dies.
+  The walk is breadth-first with a visited set and a 20 000-node cap: the recursive version crashed with a stack overflow
+  ~11 s after start, 30 times on 2026-11-02 (verified in crash reports); a cycle or a runaway subtree in the AX tree is assumed.
 
 ## ymusic
 
