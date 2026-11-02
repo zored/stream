@@ -36,7 +36,7 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 
 No tile (removed 2026-11-02). The whole right strip is one 48×258 SVG (the drawable area, see [companion.md](companion.md)) from the daemon (`ai_strip_svg`, `aiStripSVG`); each
 cell shows its third (`gen_pages.py` `ai_strip`). A white bar fills the strip bottom-up like the volume bar; on top of it the
-rotated model + effort dots and a value near the bottom (baseline 6 px above the bottom, `stripTextY`), gray like the date. Everything is drawn twice — normal, and black clipped to the bar — so the
+rotated model + effort dots and a value near the bottom (baseline 8 px above the bottom, `stripTextY`), gray like the date. Everything is drawn twice — normal, and black clipped to the bar — so the
 text inverts where the bar is under it (verified in the web preview: full bar → black `opus ●`).
 
 | When | Text | Bar |

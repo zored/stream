@@ -34,7 +34,7 @@ const (
 	stripEasing     = 0.5
 	stripDrawW      = 48
 	stripDrawH      = 258
-	stripTextY      = stripDrawH - 6
+	stripTextY      = stripDrawH - 8
 )
 
 var (
