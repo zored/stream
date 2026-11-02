@@ -86,16 +86,13 @@ func aiLabelSVG(model, effort, state string) string {
 		modelColor = aiStateColors[state]
 	}
 	const r, gap = 30, 30
-	name := strings.ToLower(model)
-	textW := lineWidth(span("", name))
-	dotsW := dots*2*r + (dots-1)*gap
-	x := (svgMinWidth - textW - 2*gap - dotsW) / 2
+	anchor := svgMinWidth / 2
 	var b strings.Builder
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
-		`<text x="%d" y="%d" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
-		svgMinWidth, svgHeight, x, svgHeight/2+svgFont*35/100, svgFont, modelColor, html.EscapeString(name))
+		`<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
+		svgMinWidth, svgHeight, anchor, svgHeight/2+svgFont*35/100, svgFont, modelColor, html.EscapeString(strings.ToLower(model)))
 	for i := range dots {
-		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s"/>`, x+textW+2*gap+r+i*(2*r+gap), svgHeight/2, r, aiStateColors[state])
+		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s"/>`, anchor+2*gap+r+i*(2*r+gap), svgHeight/2, r, aiStateColors[state])
 	}
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
