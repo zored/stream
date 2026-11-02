@@ -83,6 +83,44 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
 - Web previews of strip cells are square; the editor can't show the real 60×90 aspect. Check strips on the device.
 - Raw device traffic without Companion: quit Companion, run `tools/sniff.py` (see [device.md](device.md)).
 
+## Animation frame rate
+
+Measured 2026-11-02 with temporary counters in the module fork (draw calls, bytes, time from `DrawFramebuffer` to its ack)
+and a script posting custom variables over keep-alive HTTP (≈1.5 ms per POST). Verified unless marked.
+
+Pipeline: daemon → `POST /api/custom-variable` → Companion re-renders every button that references the variable
+(debounce `wait 10 ms, maxWait 20 ms` per button, worker-thread render, LRU cache keyed by the style JSON, identical
+images are not re-sent) → module `draw()` → `@loupedeck/core` draw queue (one `p-queue`, concurrency 1, for the
+whole device; each draw waits for the device ack) → serial.
+
+| Input rate | Right strip, one SVG over 3 cells | Tile 1/2 |
+|---|---|---|
+| 30 Hz | 28 fps per cell, 84 draws/s | 30 fps |
+| 60 Hz | **60 fps** per cell, 180 draws/s | 60 fps |
+| 90 Hz | 42–52 fps | 25 fps¹ |
+| 120 Hz | 40 fps | 38 fps¹ |
+
+¹ The tile test toggles between two images; above ~50 Hz two toggles inside one debounce window cancel out,
+so tile numbers above 60 Hz undercount. The strip test changes every frame and is the reliable one.
+
+- Device: 1.3–2 ms per draw for a 48×86 strip cell (8 KB RGB565) or an 80×80 tile (12.8 KB), ack included,
+  flat across all rates. At 60 fps on a full strip the serial queue is busy ~33 % of the time.
+  Ceiling ≈ 500 draws/s ≈ 180 fps for a full strip (assumed, extrapolated; the ack may come before the panel shows it).
+- Companion is the limit: past ~60 Hz input its trailing debounce keeps restarting and fewer frames come out.
+  60 Hz (a frame every 16.7 ms, longer than the 10 ms wait) is the sweet spot; also +10 ms latency per frame.
+- The daemon is not: `vars.set` skips unchanged values, so an easing tail sends fewer posts (seen: 14/s at `stripHz` 30).
+- A strip picture spans 3 buttons, so it costs 3 renders and 3 draws per frame; a per-cell layout redraws only cells that change.
+
+Options, cheapest first:
+
+1. Done: `animationHz`/`stripHz` 30 → 60 in the daemon, easing factors rescaled per frame (`k60 = 1 − √(1 − k30)`) so
+   durations stay the same. On the device 60 Hz looks smoother than 30 (user, left strip); posts arrive every 16.7 ms. Short bursts only
+   (the tickers already stop when the animation settles), so idle cost stays zero.
+2. Redraw only what moves: keep static parts in separate layers/cells so fewer buttons re-render per frame.
+3. Bypass variables: draw animations in the module fork itself (endpoint or IPC with a target value, the fork eases
+   and calls `drawBuffer` on a dirty rectangle). Skips Companion's debounce and render, could reach 100+ fps (assumed),
+   but moves drawing code into the fork.
+
 ## Loupedeck surface module fork
 
 Companion runs [zored/companion-surface-loupedeck](https://github.com/zored/companion-surface-loupedeck/tree/zored_stream),

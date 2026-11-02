@@ -9,10 +9,10 @@ import (
 
 const (
 	visibleFor  = time.Second
-	animationHz = 30
-	easing      = 0.3
-	fadeIn      = 0.6
-	fadeOut     = 0.25
+	animationHz = 60
+	easing      = 0.163
+	fadeIn      = 0.368
+	fadeOut     = 0.134
 )
 
 type bar struct {

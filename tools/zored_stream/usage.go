@@ -30,8 +30,8 @@ const (
 	gray            = "#808080"
 	weekShowFor     = 5 * time.Second
 	weekHoldMax     = 15 * time.Second
-	stripHz         = 30
-	stripEasing     = 0.5
+	stripHz         = 60
+	stripEasing     = 0.293
 	stripDrawW      = 48
 	stripDrawH      = 258
 	stripTextY      = stripDrawH - 8
