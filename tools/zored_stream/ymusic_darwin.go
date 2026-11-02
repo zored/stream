@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -20,6 +21,7 @@ const (
 	ymBundle      = "ru.yandex.desktop.music"
 	ymRescanEvery = 2 * time.Second
 	ymPressGap    = 1500 * time.Millisecond
+	ymTrackPrefix = "Трек "
 	axMaxNodes    = 20000
 )
 
@@ -105,50 +107,55 @@ func value(element C.AXUIElementRef) (int, bool) {
 	return int(v), true
 }
 
-func (y *ymusic) stateLocked() string {
+func (y *ymusic) stateLocked() (string, string) {
 	if C.ax_trusted(0) == 0 {
 		if y.trusted {
 			log.Print("ymusic: no Accessibility permission: System Settings → Privacy & Security → Accessibility → zored_stream")
 			C.ax_trusted(1)
 		}
 		y.trusted = false
-		return "unknown"
+		return "unknown", ""
 	}
 	y.trusted = true
 	if !y.connect() {
-		return "off"
+		return "off", ""
 	}
 	bar := y.playerBar()
 	if bar == 0 {
-		return "unknown"
+		return "unknown", ""
+	}
+	title := ""
+	if link := findAttr(bar, "AXLink", "AXDescription", ymTrackPrefix, true); link != 0 {
+		title = strings.TrimSpace(strings.TrimPrefix(axString(link, "AXDescription"), ymTrackPrefix))
+		C.ax_release(link)
 	}
 	like := find(bar, C.AX_LIKE)
 	if like == 0 {
-		return "unknown"
+		return "unknown", ""
 	}
 	defer C.ax_release(like)
 	liked, ok := value(like)
 	if !ok {
-		return "unknown"
+		return "unknown", ""
 	}
 	if liked == 1 {
-		return "liked"
+		return "liked", title
 	}
 	if dislike := find(bar, C.AX_DISLIKE); dislike != 0 {
 		defer C.ax_release(dislike)
 		if v, ok := value(dislike); ok && v == 1 {
-			return "disliked"
+			return "disliked", title
 		}
 	}
-	return "none"
+	return "none", title
 }
 
 func (y *ymusic) poll() {
 	y.mu.Lock()
-	state := y.stateLocked()
+	state, title := y.stateLocked()
 	y.mu.Unlock()
 	y.vars.set("ym_like", state)
-	y.np.setLike(state)
+	y.np.setLike(title, state)
 }
 
 func (y *ymusic) press(like bool) error {

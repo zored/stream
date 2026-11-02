@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
@@ -43,6 +44,7 @@ type nowPlaying struct {
 	last        track
 	heldUntil   time.Time
 	like        string
+	likeTitle   string
 	vars        *vars
 }
 
@@ -88,8 +90,8 @@ func (n *nowPlaying) update(t track) {
 		n.heldUntil = time.Now().Add(titleHold)
 		time.AfterFunc(titleHold, n.publish)
 	}
-	if t.Title != "" && (t.Title != n.last.Title || t.Artist != n.last.Artist) {
-		n.last, n.like = t, ""
+	if t.Title != "" {
+		n.last = t
 	}
 	n.current = t
 	n.mu.Unlock()
@@ -101,6 +103,9 @@ func (n *nowPlaying) publish() {
 	t, like := n.current, n.like
 	if t.Title == "" && time.Now().Before(n.heldUntil) {
 		t.Title, t.Artist = n.last.Title, n.last.Artist
+	}
+	if !sameTitle(t.Title, n.likeTitle) {
+		like = ""
 	}
 	n.mu.Unlock()
 	playing := "0"
@@ -119,10 +124,14 @@ func (n *nowPlaying) publish() {
 	n.vars.set("np_app", t.App)
 }
 
-func (n *nowPlaying) setLike(state string) {
+func sameTitle(a, b string) bool {
+	return a != "" && b != "" && (strings.HasPrefix(a, b) || strings.HasPrefix(b, a))
+}
+
+func (n *nowPlaying) setLike(title, state string) {
 	n.mu.Lock()
-	changed := n.like != state
-	n.like = state
+	changed := n.like != state || n.likeTitle != title
+	n.like, n.likeTitle = state, title
 	n.mu.Unlock()
 	if changed {
 		n.publish()
@@ -168,7 +177,7 @@ func trackSVG(t track, like string) string {
 	pad := 0
 	if heart != "" {
 		pad = svgFont * 11 / 10
-		heart = fmt.Sprintf(`<g transform="translate(%d %d) scale(%.2f)">%s</g>`,
+		heart = fmt.Sprintf(`<g transform="translate(%d %d) scale(%.2f) rotate(-90 12 12)">%s</g>`,
 			svgFont/10, svgHeight/2-svgFont*45/100, float64(svgFont)*9/10/24, heart)
 	}
 	width := svgMinWidth

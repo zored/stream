@@ -24,6 +24,13 @@ The like lives only in the app UI, so `zored_stream` drives the player bar throu
   `PlayerBarDesktop_likeButton__…`, `AXDescription` «Нравится», `AXValue` 0/1. Dislike: `AXCheckBox` «Не нравится»;
   the bar shows it only in some contexts (not in an album/radio context like «PH Electro Mix Radio»). No control sends
   `/dislike` now: holding the knob for dislike did nothing in such contexts, so it toggles the like too.
+- Track title: `AXLink` `Meta_albumLink__…` with `AXDescription` «Трек <title> ». The like is published together with it;
+  the strip shows the heart only when that title matches `np_title` (prefix match either way).
+- The AX tree freezes while the window is occluded or hidden: on 2026-11-02 the bar still said «Still Waiting», like = 1,
+  two tracks later (verified). That is the «AX lies» bug: a stale like moved onto new tracks. Toggling
+  `AXManualAccessibility` off and on in that state drops the web content from the tree (136 nodes instead of ~1100) until
+  the window is shown again (verified); `AXEnhancedUserInterface` is not supported (-25208). Not tried: launching the app with
+  `--disable-backgrounding-occluded-windows --disable-renderer-backgrounding`.
 - `AXPress` toggles it; works with the app hidden. The UI updates optimistically within ~70 ms, the server call follows.
 - Two presses within ~1 s race inside the app: the UI may show the wrong state for seconds. The daemon ignores presses
   within 1.5 s of the previous one. Seen again on 2026-11-02: like, then unlike 2 s later → still `liked`; a third press 5 s later → `none`.
