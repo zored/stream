@@ -23,10 +23,10 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey streamd-bin streamd streamd-uninstall vkcall-bin vkcall vkcall-uninstall zstreamd-cert zstreamd-bin zstreamd zstreamd-uninstall ymusic-bin ymusic ymusic-uninstall module companion companion-restart pages deploy
+.PHONY: build mediakey streamd-bin streamd streamd-uninstall zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall ymusic-bin ymusic ymusic-uninstall module companion companion-restart pages deploy
 
 build:
-	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SIGN=- mediakey streamd-bin vkcall-bin ymusic-bin zstreamd-bin
+	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SIGN=- mediakey streamd-bin ymusic-bin zored_stream-bin
 
 mediakey:
 	mkdir -p $(BIN)
@@ -45,29 +45,19 @@ streamd: streamd-bin
 streamd-uninstall:
 	$(call uninstall-agent,streamd)
 
-vkcall-bin:
+zored_stream-cert:
+	tools/zored_stream/cert.sh
+
+zored_stream-bin:
 	mkdir -p $(BIN)
-	cd tools/vkcall && GOWORK=off go build -o $(BIN)/vkcall .
+	cd tools/zored_stream && GOWORK=off go build -o $(BIN)/zored_stream .
+	codesign -f -s $(SIGN) -i com.zored.stream.zored_stream $(BIN)/zored_stream
 
-vkcall: vkcall-bin
-	$(call install-agent,vkcall)
+zored_stream: zored_stream-bin
+	$(call install-agent,zored_stream)
 
-vkcall-uninstall:
-	$(call uninstall-agent,vkcall)
-
-zstreamd-cert:
-	tools/zstreamd/cert.sh
-
-zstreamd-bin:
-	mkdir -p $(BIN)
-	cd tools/zstreamd && GOWORK=off go build -o $(BIN)/zstreamd .
-	codesign -f -s $(SIGN) -i com.zored.stream.zstreamd $(BIN)/zstreamd
-
-zstreamd: zstreamd-bin
-	$(call install-agent,zstreamd)
-
-zstreamd-uninstall:
-	$(call uninstall-agent,zstreamd)
+zored_stream-uninstall:
+	$(call uninstall-agent,zored_stream)
 
 ymusic-bin:
 	mkdir -p $(BIN)

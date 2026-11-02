@@ -25,11 +25,11 @@ Colours come from Companion custom variables `call_mic` and `call_cam`, never fr
 
 The call window is a separate Qt process, `vkws-call-service`, started with the client (before any call) as
 `--rpc-port <port> --rpc-plaintext`. The port changes on every start. It is a QtGrpc server (h2c, no TLS, no auth, no reflection)
-that the main app talks to; `vkcall` is just another client.
+that the main app talks to; `zored_stream` is just another client.
 
 - Service `com.vk.calls.sdk.v1.CallAgent`, protobuf-lite: no descriptors in the binaries. Message and field names come from the
   QtProtobuf metadata strings in `VK WorkSpace` (`strings … | grep -A12 com.vk.calls.sdk.v1.<Message>`); field numbers follow the
-  name order (checked on the fields `vkcall` uses, except `allCallsEnded` and `ended`: assumed).
+  name order (checked on the fields `zored_stream` uses, except `allCallsEnded` and `ended`: assumed).
 - `Header` = `{1 timestamp (µs), 2 reqId (string), 3 callId}`, field 1 of every request. Without `reqId` requests fail with `errorCode 400`.
 - `GetStatus(StatusRequest{hdr})` → `StatusReport`, `5 callIds` = active calls.
 - `SubscribeToStatusNotifications(StatusRequest)` → stream of `StatusReport`: first message is a snapshot, then **deltas**
@@ -51,10 +51,10 @@ Dead ends (verified):
 - CoreAudio: the mic device keeps running while muted in the client. CoreMediaIO `DeviceIsRunningSomewhere` does follow the camera.
 - `logs/call-service.log` has `MICROPHONE is ON/OFF`, `CAMERA is ON/OFF`, call start/end lines — usable for debugging, not as an API.
 
-## vkcall
+## zored_stream call module
 
-`tools/vkcall/main.go`, `make vkcall` → `~/.local/bin/vkcall` + LaunchAgent `com.zored.stream.vkcall`.
-Log: `~/Library/Logs/zored-stream/vkcall.log`. `make vkcall-uninstall` removes it.
+`tools/zored_stream/call.go` in the [one daemon](daemon.md) (was the separate `vkcall`), `make zored_stream`.
+Log: `~/Library/Logs/zored-stream/zored_stream.log`.
 
 - HTTP on `127.0.0.1:47114`: `POST /mic/down`, `/mic/up`, `/cam/down`, `/call/end`; `409` when there is no call with a known state.
   Push-to-talk timing lives in the daemon (down/up arrival times).

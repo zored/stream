@@ -1,11 +1,11 @@
-# One daemon: `zstreamd`
+# One daemon: `zored_stream`
 
 Decision record for merging `streamd`, `vkcall`, `ymusic` (and later `mediakey`) into one binary.
 **Verified** = observed on this Mac on 2026-11-02, **assumed** = read or recalled, not checked.
 
 ## Decision
 
-Go. Grow the spike `tools/zstreamd/` into the daemon: copy `vkcall` in as-is, call macOS C APIs through cgo,
+Go. Grow the spike `tools/zored_stream/` into the daemon: copy `vkcall` in as-is, call macOS C APIs through cgo,
 keep MediaRemote in a `/usr/bin/perl` child. Rust is the runner-up and only wins on the Windows port.
 
 ## Today
@@ -54,35 +54,35 @@ signature: TCC keeps the designated requirement, which for ad-hoc signing is the
 signing with a certificate (Apple Development or a self-signed code-signing cert in the login keychain) makes it identifier + cert
 (assumed, standard TCC behaviour). That holds for any language.
 
-## zstreamd today
+## zored_stream today
 
-`tools/zstreamd/`, one Go binary, one HTTP server per module on the module's old port, so pages need no change:
+`tools/zored_stream/`, one Go binary, one HTTP server per module on the module's old port, so pages need no change:
 
 | Module | File | Address (flag) | Status |
 |---|---|---|---|
-| VK WorkSpace calls | `call.go`, `vkcall/main.go` copied, only `setVariable` → `post` | `127.0.0.1:47114` (`-call`) | verified on spare ports next to `vkcall`: finds the call service, `409` without a call; in-call toggles not checked yet |
+| VK WorkSpace calls | `call.go`, from `vkcall` (removed) | `127.0.0.1:47114` (`-call`) | verified in a call: mic tap/hold, camera, hang-up; `409` without a call |
 | Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47120` (`-volume`), moves to `:47113` when `streamd` goes | verified: up/down move the system volume and `volume`; no animation, drag, Now Playing |
 
-- `make zstreamd-cert` runs `tools/zstreamd/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
+- `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain
   and shows as `CSSMERR_TP_NOT_TRUSTED` until trusted; `codesign` refuses an untrusted one; `-r trustAsRoot` is rejected for a
   self-signed cert (`SecTrustSettingsSetTrustSettings: One or more parameters … not valid`), `trustRoot` works. A signed build's
-  designated requirement is `identifier "com.zored.stream.zstreamd" and certificate leaf = H"…"`, no cdhash (verified).
-- `make zstreamd-bin` builds and signs with `SIGN` (default `zored-stream`, `make build`/CI use `SIGN=-`), identifier
-  `com.zored.stream.zstreamd`. `make zstreamd` also installs the LaunchAgent, log `~/Library/Logs/zored-stream/zstreamd.log`.
+  designated requirement is `identifier "com.zored.stream.zored_stream" and certificate leaf = H"…"`, no cdhash (verified).
+- `make zored_stream-bin` builds and signs with `SIGN` (default `zored-stream`, `make build`/CI use `SIGN=-`), identifier
+  `com.zored.stream.zored_stream`. `make zored_stream` also installs the LaunchAgent, log `~/Library/Logs/zored-stream/zored_stream.log`.
 - `CGO_LDFLAGS=` in front of `make` while the stale environment is around.
 
 ## Migration
 
 Each step keeps the old helper until the new path is verified on the device. Modules keep their old ports, so a switch is
-"uninstall the helper, restart `zstreamd`", no `gen_pages.py` change.
+"uninstall the helper, restart `zored_stream`", no `gen_pages.py` change.
 
-1. Signing (user): `make zstreamd-cert`; after the first AX module, check that a rebuild keeps the Accessibility grant.
-2. Skeleton: done (`make zstreamd`, LaunchAgent, CI).
-3. `vkcall` → `call.go`: done in code. Switch: `make vkcall-uninstall`, then `make zstreamd`; verify mic/cam/hang-up in a call;
-   then delete `tools/vkcall/`.
+1. Signing (user): `make zored_stream-cert`; after the first AX module, check that a rebuild keeps the Accessibility grant.
+2. Skeleton: done (`make zored_stream`, LaunchAgent, CI).
+3. `vkcall` → `call.go`: done, verified in a call (mic tap/hold, camera, hang-up), `tools/vkcall/` removed. Fixed on the way:
+   the first status snapshot without a call was skipped, so the state stayed `unknown` and the 10 s resend blinked the LEDs yellow.
 4. `streamd` volume: animation (`volume_anim`, `volume_alpha`, 30 fps ticker only while changing), drag; switch knobs, keep `streamd` for Now Playing.
-5. Now Playing: `zstreamd` starts `/usr/bin/perl streamd.pl libnowplaying.dylib`, the dylib prints JSON lines on change, the daemon
+5. Now Playing: `zored_stream` starts `/usr/bin/perl streamd.pl libnowplaying.dylib`, the dylib prints JSON lines on change, the daemon
    restarts it on exit and pushes `np_*`. Uninstall `streamd`.
 6. `ymusic` → AX in C via cgo, with an iterative, depth-limited walk (fixes the crash); `np_app` from memory. Uninstall `ymusic`.
 7. Optional: `mediakey` as `POST /key/<name>`; drops the `exec` and Companion's Accessibility.
@@ -95,4 +95,4 @@ Each step keeps the old helper until the new path is verified on the device. Mod
 
 - Go, Windows included: the Windows side is written in Go too.
 - Signing: a self-signed code-signing certificate in the login keychain.
-- The user runs `make zstreamd`, the LaunchAgent install and every helper uninstall (auto mode blocks them); sessions ask when a step needs it.
+- The user runs `make zored_stream`, the LaunchAgent install and every helper uninstall (auto mode blocks them); sessions ask when a step needs it.

@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.zored.stream.vkcall</string>
+	<string>com.zored.stream.zored_stream</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>@HOME@/.local/bin/vkcall</string>
+		<string>@HOME@/.local/bin/zored_stream</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
@@ -15,6 +15,6 @@
 	<key>ThrottleInterval</key>
 	<integer>5</integer>
 	<key>StandardErrorPath</key>
-	<string>@HOME@/Library/Logs/zored-stream/vkcall.log</string>
+	<string>@HOME@/Library/Logs/zored-stream/zored_stream.log</string>
 </dict>
 </plist>

@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,14 +18,11 @@ import (
 )
 
 const (
-	companionVars = "http://127.0.0.1:8000/api/custom-variable/"
-	listenAddr    = "127.0.0.1:47114"
 	callAgent     = "/com.vk.calls.sdk.v1.CallAgent/"
 	processPrefix = "vkws-call-serv"
 	holdMin       = 300 * time.Millisecond
 	confirmIn     = 5 * time.Second
 	rescanEvery   = 2 * time.Second
-	resendEvery   = 10 * time.Second
 )
 
 const (
@@ -172,7 +167,7 @@ func findPort() (int, error) {
 	return 0, nil
 }
 
-type daemon struct {
+type call struct {
 	mu       sync.Mutex
 	conn     *grpc.ClientConn
 	callID   string
@@ -185,14 +180,14 @@ type daemon struct {
 	changed  chan struct{}
 }
 
-func (d *daemon) notify() {
+func (d *call) notify() {
 	select {
 	case d.changed <- struct{}{}:
 	default:
 	}
 }
 
-func (d *daemon) setLocked(mic, cam string) {
+func (d *call) setLocked(mic, cam string) {
 	if d.mic != mic || d.cam != cam {
 		log.Printf("call %q: mic %s, cam %s", d.callID, mic, cam)
 	}
@@ -200,7 +195,7 @@ func (d *daemon) setLocked(mic, cam string) {
 	d.notify()
 }
 
-func (d *daemon) set(callID, state string) {
+func (d *call) set(callID, state string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	d.callID = callID
@@ -208,7 +203,7 @@ func (d *daemon) set(callID, state string) {
 	d.setLocked(state, state)
 }
 
-func (d *daemon) setMedia(callID string, mic, cam bool) {
+func (d *call) setMedia(callID string, mic, cam bool) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.callID != callID {
@@ -228,12 +223,12 @@ func (d *daemon) setMedia(callID string, mic, cam bool) {
 	d.setLocked(states[0], states[1])
 }
 
-func (d *daemon) isOn(i int) bool {
+func (d *call) isOn(i int) bool {
 	state := [2]string{d.mic, d.cam}[i]
 	return state == on || state == pending && d.want[i]
 }
 
-func (d *daemon) stopConfirmLocked() {
+func (d *call) stopConfirmLocked() {
 	if d.confirm != nil {
 		d.confirm.Stop()
 		d.confirm = nil
@@ -247,7 +242,7 @@ func onOff(v bool) string {
 	return off
 }
 
-func (d *daemon) run() {
+func (d *call) run() {
 	for {
 		port, err := findPort()
 		switch {
@@ -267,7 +262,7 @@ func (d *daemon) run() {
 	}
 }
 
-func (d *daemon) session(port int) error {
+func (d *call) session(port int) error {
 	conn, err := grpc.NewClient(fmt.Sprintf("127.0.0.1:%d", port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(rawCodec{})))
@@ -311,7 +306,7 @@ func (d *daemon) session(port int) error {
 		}
 		isNew := !snapshot
 		snapshot = false
-		if id == watching {
+		if id == watching && isNew {
 			continue
 		}
 		stopWatch()
@@ -325,13 +320,13 @@ func (d *daemon) session(port int) error {
 	}
 }
 
-func (d *daemon) startWatch(parent context.Context, conn *grpc.ClientConn, id string, mute bool) context.CancelFunc {
+func (d *call) startWatch(parent context.Context, conn *grpc.ClientConn, id string, mute bool) context.CancelFunc {
 	ctx, cancel := context.WithCancel(parent)
 	go d.watch(ctx, conn, id, mute)
 	return cancel
 }
 
-func (d *daemon) watch(ctx context.Context, conn *grpc.ClientConn, id string, mute bool) {
+func (d *call) watch(ctx context.Context, conn *grpc.ClientConn, id string, mute bool) {
 	for ctx.Err() == nil {
 		err := d.watchOnce(ctx, conn, id, &mute)
 		if ctx.Err() != nil {
@@ -350,7 +345,7 @@ func (d *daemon) watch(ctx context.Context, conn *grpc.ClientConn, id string, mu
 	}
 }
 
-func (d *daemon) watchOnce(ctx context.Context, conn *grpc.ClientConn, id string, mute *bool) error {
+func (d *call) watchOnce(ctx context.Context, conn *grpc.ClientConn, id string, mute *bool) error {
 	streamCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	d.mu.Lock()
@@ -394,13 +389,13 @@ func (d *daemon) watchOnce(ctx context.Context, conn *grpc.ClientConn, id string
 	}
 }
 
-func (d *daemon) change(next func(mic, cam bool) (bool, bool)) error {
+func (d *call) change(next func(mic, cam bool) (bool, bool)) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.changeLocked(next)
 }
 
-func (d *daemon) changeLocked(next func(mic, cam bool) (bool, bool)) error {
+func (d *call) changeLocked(next func(mic, cam bool) (bool, bool)) error {
 	if d.conn == nil || d.callID == "" || !known(d.mic) || !known(d.cam) {
 		return errNoCall
 	}
@@ -435,7 +430,7 @@ func (d *daemon) changeLocked(next func(mic, cam bool) (bool, bool)) error {
 
 func known(s string) bool { return s == on || s == off || s == pending }
 
-func (d *daemon) hangUp() error {
+func (d *call) hangUp() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.conn == nil || d.callID == "" {
@@ -455,7 +450,7 @@ func (d *daemon) hangUp() error {
 	return nil
 }
 
-func (d *daemon) confirmTimeout() {
+func (d *call) confirmTimeout() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.confirm == nil {
@@ -469,7 +464,7 @@ func (d *daemon) confirmTimeout() {
 	}
 }
 
-func (d *daemon) micDown() error {
+func (d *call) micDown() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if !known(d.mic) {
@@ -479,7 +474,7 @@ func (d *daemon) micDown() error {
 	return d.changeLocked(func(mic, cam bool) (bool, bool) { return !d.micWas, cam })
 }
 
-func (d *daemon) micUp() error {
+func (d *call) micUp() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.pressed.IsZero() {
@@ -493,11 +488,11 @@ func (d *daemon) micUp() error {
 	return d.changeLocked(func(mic, cam bool) (bool, bool) { return d.micWas, cam })
 }
 
-func (d *daemon) camDown() error {
+func (d *call) camDown() error {
 	return d.change(func(mic, cam bool) (bool, bool) { return mic, !cam })
 }
 
-func (d *daemon) publish() {
+func (d *call) publish() {
 	sent := map[string]string{}
 	resend := time.NewTicker(resendEvery)
 	for {
@@ -513,7 +508,7 @@ func (d *daemon) publish() {
 			if sent[name] == value {
 				continue
 			}
-			if err := setVariable(name, value); err != nil {
+			if err := post(name, value); err != nil {
 				log.Printf("companion %s=%s: %v", name, value, err)
 				delete(sent, name)
 				continue
@@ -521,40 +516,4 @@ func (d *daemon) publish() {
 			sent[name] = value
 		}
 	}
-}
-
-var client = &http.Client{Timeout: time.Second}
-
-func setVariable(name, value string) error {
-	resp, err := client.Post(companionVars+name+"/value", "application/json", strings.NewReader(strconv.Quote(value)))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("%s: %s", resp.Status, body)
-	}
-	return nil
-}
-
-func handle(mux *http.ServeMux, path string, action func() error) {
-	mux.HandleFunc("POST "+path, func(w http.ResponseWriter, _ *http.Request) {
-		if err := action(); err != nil {
-			log.Printf("%s: %v", path, err)
-			http.Error(w, err.Error(), http.StatusConflict)
-		}
-	})
-}
-
-func main() {
-	d := &daemon{mic: unknown, cam: unknown, changed: make(chan struct{}, 1)}
-	go d.publish()
-	go d.run()
-	mux := http.NewServeMux()
-	handle(mux, "/mic/down", d.micDown)
-	handle(mux, "/mic/up", d.micUp)
-	handle(mux, "/cam/down", d.camDown)
-	handle(mux, "/call/end", d.hangUp)
-	log.Fatal(http.ListenAndServe(listenAddr, mux))
 }

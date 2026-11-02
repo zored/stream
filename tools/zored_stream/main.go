@@ -88,7 +88,7 @@ func main() {
 	callAddr := flag.String("call", "127.0.0.1:47114", "VK WorkSpace call HTTP address")
 	volumeAddr := flag.String("volume", "127.0.0.1:47120", "volume HTTP address")
 	flag.Parse()
-	log.SetPrefix("zstreamd: ")
+	log.SetPrefix("zored_stream: ")
 
 	c := &call{mic: unknown, cam: unknown, changed: make(chan struct{}, 1)}
 	go c.publish()

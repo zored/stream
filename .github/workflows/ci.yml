@@ -21,8 +21,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: tools/vkcall/go.mod
-          cache-dependency-path: |
-            tools/vkcall/go.sum
-            tools/zstreamd/go.sum
+          go-version-file: tools/zored_stream/go.mod
+          cache-dependency-path: tools/zored_stream/go.sum
       - run: make build

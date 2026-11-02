@@ -1,4 +1,4 @@
-module github.com/zored/stream/tools/vkcall
+module github.com/zored/stream/tools/zored_stream
 
 go 1.26.0
 
