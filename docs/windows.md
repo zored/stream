@@ -7,7 +7,7 @@ Not started. What carries over and what has to be rebuilt, based on the macOS se
 - Companion itself, the Loupedeck surface module, the grid ([companion.md](companion.md)).
 - Page files `companion/*.companionconfig` and `companion/custom-variables.json`: layout, expressions, variables, clock, volume strip.
 - `tools/deploy.mjs` (Node 22+, built-in `WebSocket`) and `tools/gen_pages.py`.
-- `tools/patch_module.py`, but the module path differs: Companion's data dir on Windows is under `%APPDATA%`; add it to `MODULES`.
+- The module fork and `tools/surface.mjs`; `tools/companion_config.py` and `make companion-restart` need the Windows paths (`%APPDATA%`) and a Windows restart.
 
 ## Needs a Windows build
 

@@ -3,7 +3,12 @@ LIB ?= $(HOME)/.local/lib
 SHARE ?= $(HOME)/.local/share/zored-stream
 AGENTS = $(HOME)/Library/LaunchAgents
 DOMAIN = gui/$(shell id -u)
-HAPTIC ?= 0x33
+MODULE ?= $(abspath ../companion-surface-loupedeck)
+MODULES = $(SHARE)/companion-modules
+HAPTIC ?= SHORT_LOWER
+HAPTIC_HOLD_MS ?= 400
+HAPTIC_SLIDE ?= SHORT_LOW
+HAPTIC_STEP ?= 20
 
 define install-agent
 	mkdir -p $(HOME)/Library/Logs/zored-stream
@@ -17,7 +22,7 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey streamd-bin streamd streamd-uninstall vkcall-bin vkcall vkcall-uninstall ymusic-bin ymusic ymusic-uninstall patch-module pages deploy
+.PHONY: build mediakey streamd-bin streamd streamd-uninstall vkcall-bin vkcall vkcall-uninstall ymusic-bin ymusic ymusic-uninstall module companion companion-restart pages deploy
 
 build:
 	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build mediakey streamd-bin vkcall-bin ymusic-bin
@@ -59,8 +64,25 @@ ymusic: ymusic-bin
 ymusic-uninstall:
 	$(call uninstall-agent,ymusic)
 
-patch-module:
-	HAPTIC=$(HAPTIC) python3 -I tools/patch_module.py
+module:
+	test -d $(MODULE) || git clone -b zored_stream git@github.com:zored/companion-surface-loupedeck.git $(MODULE)
+	cd $(MODULE) && corepack yarn install && corepack yarn build
+	mkdir -p $(MODULES)
+	ln -sfn $(MODULE) $(MODULES)/loupedeck
+	python3 -I tools/companion_config.py enable_developer=true dev_modules_path=$(MODULES)
+	$(MAKE) companion-restart
+	node tools/surface.mjs dev hapticPressPattern=$(HAPTIC) hapticHoldMs=$(HAPTIC_HOLD_MS) \
+		hapticSlidePattern=$(HAPTIC_SLIDE) hapticSlideStep=$(HAPTIC_STEP)
+
+companion:
+	python3 -I tools/companion_config.py start_minimised=true
+	osascript -e 'tell application "System Events" to if not (exists login item "Companion") then make login item at end with properties {path:"/Applications/Companion.app", hidden:true}'
+
+companion-restart:
+	osascript -e 'quit app "Companion"'
+	while pgrep -xq Companion; do sleep 0.5; done
+	open -g -a Companion
+	until curl -sfo /dev/null http://127.0.0.1:8000; do sleep 1; done
 
 pages:
 	python3 -I tools/gen_pages.py companion

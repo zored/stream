@@ -66,6 +66,10 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
   `complete {sessionId, expectedChecksum: sha1hex, userData: null}` → `importExport.importSinglePage {targetPage, sourcePage: 1, connectionIdRemapping: {}}` → `importExport.abort`.
   `customVariables.create {name, defaultVal}` returns the string `Variable "<name>" already exists` instead of throwing.
   `tools/deploy.mjs` implements both.
+- Surfaces: `instances.surfaces.setModuleAndVersion {instanceId, moduleId, versionId: "dev"}`;
+  `surfaces.surfaceSetConfigKey {surfaceId, key: "plugin_cfg_<field>", value}` (only while the surface is open).
+  Ids come from the subscriptions `instances.surfaces.watch` and `surfaces.watchSurfaces` (first message `{type: "init", info}`).
+  `tools/surface.mjs` implements it.
 - The router lives in Companion's `main.js` (`Resources/main.js` in the app bundle); grep it for procedure names when something new is needed.
 
 ## Debugging
@@ -75,15 +79,24 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
 - Web previews of strip cells are square; the editor can't show the real 60×90 aspect. Check strips on the device.
 - Raw device traffic without Companion: quit Companion, run `tools/sniff.py` (see [device.md](device.md)).
 
-## Loupedeck surface module patch
+## Loupedeck surface module fork
 
-`make patch-module` (`tools/patch_module.py`) edits the installed module (`surfaces/loupedeck-*/main.js` in Companion's data dir):
+Companion runs [zored/companion-surface-loupedeck](https://github.com/zored/companion-surface-loupedeck/tree/zored_stream),
+branch `zored_stream`, cloned next to this repo. `make module` builds it and loads it as a developer module (verified on 5.1.1):
 
-- haptic on button/tile press: the driver has `vibrate(pattern)`, the module never calls it. `HAPTIC=0x33` default (`SHORT_LOWER`);
-  patterns in foxxyz/loupedeck `constants.js`. Re-running updates the pattern.
-- second haptic when a button, knob press or tile is held 400 ms (`HOLD_MS`, matches the long-press set in `gen_pages.py`).
-  Patches carry their own markers, so re-running adds new ones to an already patched module.
-- left strip swipe → `POST streamd /volume/drag?dy=<px>`: buttons mode exposes no continuous touch position, slider mode can't draw text.
+- The launcher's `config.json` (`~/Library/Application Support/companion/`) has `enable_developer` and `dev_modules_path`;
+  with both set it starts the core with `--extra-module-path`. Read at launch, so Companion restarts after a change.
+- Every subdirectory with `companion/manifest.json` is a module, version `dev`; `$(SHARE)/companion-modules/loupedeck` is a symlink to the fork.
+  Not packaged (has `@companion-surface/base` in `package.json`), so the entrypoint is `dist/main.js` and the API version comes from `node_modules`.
+- The Loupedeck integration must be switched to `dev` (`tools/surface.mjs`); the log then shows `Surface: loupedeck: Loupedeck (Dev)`.
+- Companion watches the dev path: `yarn build` in the fork reloads the module without a restart (assumed, from the launcher code).
 
-Idempotent, exits loudly if the minified code no longer matches. Module updates drop the patch; restart Companion after patching.
-The proper fix is an upstream PR to [companion-surface-loupedeck](https://github.com/bitfocus/companion-surface-loupedeck).
+Fork commits (surface settings, `plugin_cfg_*`):
+
+- `hapticPressPattern`, `hapticHoldMs`: haptic on button/knob/tile press and a second one after the hold time (400 ms here,
+  matches the long-press in `gen_pages.py`). The driver has `vibrate(pattern)`, upstream never calls it. Patterns: `LoupedeckVibratePattern` in `@loupedeck/core`.
+- touch position in buttons mode: sliding a strip updates the fader value variables, upstream only did that in slider mode.
+- `hapticSlidePattern`, `hapticSlideStep`: a tick each time a touch crosses a `step`-px line on a strip (270 px tall), at most one per 30 ms.
+- personal, not for upstream: left strip swipe → `POST streamd /volume/drag?dy=<px>`.
+
+The first three are the upstream PR to [companion-surface-loupedeck](https://github.com/bitfocus/companion-surface-loupedeck).

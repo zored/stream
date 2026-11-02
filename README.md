@@ -12,7 +12,8 @@ What the MEDIA page does today (macOS):
   LEDs and tiles show the real state from the client, mouse clicks included ([vkcall.md](docs/vkcall.md))
 - Yandex Music — hold the play tile or knob 2 to like/unlike the track; 💖/💔 before the track on the strip
   ([ymusic.md](docs/ymusic.md))
-- clock tile, haptic tap on presses (and a second one at 400 ms hold), black tiles without Companion decorations
+- clock tile, haptic tap on presses (and a second one at 400 ms hold), soft haptic ticks while sliding along a strip,
+  black tiles without Companion decorations
 
 ## Setup (macOS)
 
@@ -23,12 +24,16 @@ What the MEDIA page does today (macOS):
 
 ```bash
 make mediakey streamd vkcall ymusic deploy
-make patch-module
+make module
+make companion
 ```
 
-5. Restart Companion.
+`make module` clones and builds the [Loupedeck module fork](https://github.com/zored/companion-surface-loupedeck/tree/zored_stream)
+next to this repo, points Companion's developer modules path at it, restarts Companion, switches the Loupedeck integration
+to the `dev` version and sets the haptics (`HAPTIC`, `HAPTIC_HOLD_MS`, `HAPTIC_SLIDE`, `HAPTIC_STEP`).
+`make companion` starts Companion at login with no window (`start_minimised` + a login item).
 
-Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+, Python 3.
+Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `corepack`, Python 3.
 
 ## Layout
 
@@ -41,7 +46,8 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+, Python
 | `tools/vkcall/` | VK WorkSpace call mic/camera daemon (Go, the client's local gRPC) |
 | `tools/ymusic/` | Yandex Music like/dislike daemon (Swift, Accessibility) |
 | `tools/icons/` | SVG icons embedded into pages |
-| `tools/patch_module.py` | Adds haptics and strip swipe to the Companion Loupedeck module |
+| `tools/surface.mjs` | Switches the Loupedeck integration to a module version and sets surface config over tRPC |
+| `tools/companion_config.py` | Edits the Companion launcher's `config.json` |
 | `tools/sniff.py` | Raw device event sniffer |
 | `docs/` | [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Yandex Music](docs/ymusic.md), [Windows port](docs/windows.md), [device](docs/device.md) |
 

@@ -5,7 +5,7 @@ Status and next steps: `PLAN.md`.
 
 ## Docs — read before touching the area
 
-- `docs/companion.md` — grid, button JSON, expressions, internal actions, HTTP/tRPC APIs, debugging, the module patch
+- `docs/companion.md` — grid, button JSON, expressions, internal actions, HTTP/tRPC APIs, debugging, the module fork
 - `docs/macos.md` — `mediakey` and `streamd` (volume, Now Playing via perl), permissions, LaunchAgent
 - `docs/vkcall.md` — VK WorkSpace call mic/camera: the client's gRPC API, `vkcall` daemon, buttons
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `ymusic` daemon, dead ends
@@ -21,7 +21,7 @@ Status and next steps: `PLAN.md`.
    - state: `GET /api/custom-variable/<name>/value`, `POST /api/location/<p>/<r>/<c>/press`
    - looks: web preview at `http://127.0.0.1:8000/buttons/1`; strips and haptics only on the device — ask the user
 
-Helpers: `make mediakey`, `make streamd`, `make vkcall`, `make ymusic` (LaunchAgents), `make patch-module` (+ Companion restart). Auto mode blocks all but `mediakey`: hand them to the user.
+Helpers: `make mediakey`, `make streamd`, `make vkcall`, `make ymusic` (LaunchAgents), `make module` (builds the module fork, restarts Companion), `make companion` (autostart). Auto mode blocks all but `mediakey`: hand them to the user.
 
 ## Rules
 

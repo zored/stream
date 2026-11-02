@@ -42,7 +42,7 @@ Same trick as [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote
 Auto mode blocks these; ask the user to run them:
 
 - `make streamd` (installs a LaunchAgent)
-- `make patch-module` (edits the installed Companion module) + restarting Companion
+- `make companion` (adds a login item)
 - granting Accessibility to Companion
 
 ## Sleep
