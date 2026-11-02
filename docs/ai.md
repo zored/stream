@@ -34,9 +34,10 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 
 ## Right strip
 
-No tile (removed 2026-11-02). Over the rotated model | effort label ([ai-switch.md](ai-switch.md)), the top cell shows one
-value with a white bar filling bottom-up behind it; the text is drawn white and again black clipped to the bar, so it inverts
-where the bar covers it (`ai_strip_svg`, `stripCell`). The bottom cells show only the label.
+No tile (removed 2026-11-02). The whole right strip is one 60×270 SVG from the daemon (`ai_strip_svg`, `aiStripSVG`); each
+cell shows its third (`gen_pages.py` `ai_strip`). A white bar fills the strip bottom-up like the volume bar; on top of it the
+rotated model + effort dots and a value at the top. Everything is drawn twice — normal, and black clipped to the bar — so the
+text inverts where the bar is under it (verified in the web preview: full bar → black `opus ●`).
 
 | When | Text | Bar |
 |---|---|---|

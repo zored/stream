@@ -16,7 +16,7 @@ HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
-    "ai_label_svg", "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
+    "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
@@ -247,11 +247,9 @@ def ai_switch():
     return button(labelled("AI"), down=ai("/ai/down"), up=ai("/ai/up"), left=ai("/ai/turn?d=-1"), right=ai("/ai/turn?d=1"))
 
 
-def ai_label(row):
-    style = [canvas(), box("box0", 0x000000), strip_image("label", "ai_label_svg", row, 270)]
-    if row == 0:
-        style.append(image("values", expr("$(custom:ai_strip_svg)")))
-    return button(style)
+def ai_strip(row):
+    return button([canvas(), box("box0", 0x000000),
+                   image("strip", expr("$(custom:ai_strip_svg)"), "fill", y=v(-100 * row), height=v(300))])
 
 
 def test_page():
@@ -281,7 +279,7 @@ def media_page():
         (2, 3): call_tile("call_cam", "cam"),
         (2, 4): hangup_tile(),
         (2, 5): clock(),
-        **{(r, 6): ai_label(r) for r in range(3)},
+        **{(r, 6): ai_strip(r) for r in range(3)},
         (1, 7): ai_switch(),
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),

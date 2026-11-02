@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +29,11 @@ const (
 	sessionHours    = 5
 	gray            = "#808080"
 	weekShowFor     = 4 * time.Second
+)
+
+var (
+	aiStateColors = map[string]string{"ok": "#fff", "pending": "#808080", "preview": "#FFD94D", "idle": "#505050", "other": "#FFB000", "error": "#FF3030"}
+	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
 )
 
 var levelColors = map[string]string{"low": "#fff", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
@@ -70,9 +76,11 @@ type usage struct {
 	limits   []limit
 	failures int
 	wake     chan struct{}
-	model    string
+	label    stripLabel
 	stripMode
 }
+
+type stripLabel struct{ model, effort, state string }
 
 type stripMode struct {
 	switching bool
@@ -118,14 +126,15 @@ func (u *usage) refresh() error {
 	return nil
 }
 
-func (u *usage) focus(model string, switching bool) {
+func (u *usage) focus(label stripLabel) {
+	switching := label.state == "pending"
 	u.mu.Lock()
-	changed := u.model != model || u.switching != switching
+	changed := u.label != label
 	if u.switching && !switching {
 		u.weekUntil = time.Now().Add(weekShowFor)
 		time.AfterFunc(weekShowFor, u.publish)
 	}
-	u.model, u.switching = model, switching
+	u.label, u.switching = label, switching
 	u.mu.Unlock()
 	if changed {
 		u.publish()
@@ -230,18 +239,19 @@ func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 
 func (u *usage) publish() {
 	u.mu.Lock()
-	limits, failed, model, mode := u.limits, u.snap.Error != "", u.model, u.stripMode
+	limits, failed, label, mode := u.limits, u.snap.Error != "", u.label, u.stripMode
 	u.mu.Unlock()
-	week := scopedFor(limits, model)
+	now := time.Now()
+	week := scopedFor(limits, label.model)
 	if week == nil {
 		week = findLimit(limits, "weekly_all")
 	}
 	if week == nil {
-		u.vars.set("ai_strip_svg", "")
+		u.vars.set("ai_strip_svg", aiStripSVG(label, "", 0, true))
 		return
 	}
-	now := time.Now()
-	u.vars.set("ai_strip_svg", stripCell(limits, *week, mode, now, failed))
+	text, pct := stripValue(limits, *week, mode, now)
+	u.vars.set("ai_strip_svg", aiStripSVG(label, text, pct, failed))
 	if s := findLimit(limits, "session"); s != nil {
 		u.vars.set("ai_session", strconv.Itoa(round(s.Percent)))
 		if s.ResetsAt != nil {
@@ -317,16 +327,16 @@ func dayPct(l limit, now time.Time) float64 {
 	return workdays * l.Percent / float64(workdayIndex(start, now))
 }
 
-func stripCell(limits []limit, week limit, mode stripMode, now time.Time, failed bool) string {
+func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (string, float64) {
 	switch {
 	case mode.switching:
-		return cellSVG("", dayPct(week, now), failed)
+		return "", dayPct(week, now)
 	case now.Before(mode.weekUntil):
 		left := ""
 		if week.ResetsAt != nil {
 			left = daysLeft(week.ResetsAt.Sub(now))
 		}
-		return cellSVG(left, week.Percent, failed)
+		return left, week.Percent
 	}
 	text, pct := clockLeft(sessionHours*time.Hour), 0.0
 	if s := findLimit(limits, "session"); s != nil {
@@ -335,23 +345,59 @@ func stripCell(limits []limit, week limit, mode stripMode, now time.Time, failed
 			text = clockLeft(s.ResetsAt.Sub(now))
 		}
 	}
-	return cellSVG(text, pct, failed)
+	return text, pct
 }
 
-func cellSVG(text string, pct float64, failed bool) string {
-	const w, h, inset = 60, 90, 4
-	barH := float64(h-2*inset) * min(max(pct, 0), 100) / 100
-	bar := fmt.Sprintf(`x="%d" y="%.1f" width="%d" height="%.1f"`, inset, h-inset-barH, w-2*inset, barH)
-	label := fmt.Sprintf(`<text x="%d" y="%d" text-anchor="middle" font-family="Helvetica" font-size="21" font-weight="bold" fill="%%s"%%s>%s</text>`,
-		w/2, h/2+8, html.EscapeString(text))
+func aiStripSVG(label stripLabel, text string, pct float64, failed bool) string {
+	const w, h = 60, 270
+	barH := h * min(max(pct, 0), 100) / 100
+	bar := fmt.Sprintf(`x="0" y="%.1f" width="%d" height="%.1f"`, h-barH, w, barH)
+	content := func(ink string) string {
+		fill := "#fff"
+		if ink != "" {
+			fill = ink
+		}
+		return fmt.Sprintf(`<g transform="translate(0 %d) rotate(-90) scale(%.4f)">%s</g>`+
+			`<text x="%d" y="24" text-anchor="middle" font-family="Helvetica" font-size="21" font-weight="bold" fill="%s">%s</text>`,
+			h, float64(h)/svgMinWidth, labelMarkup(label, ink), w/2, fill, html.EscapeString(text))
+	}
 	dot := ""
 	if failed {
-		dot = fmt.Sprintf(`<circle cx="%d" cy="%d" r="3" fill="#FF6666"/>`, w-inset-3, inset+3)
+		dot = fmt.Sprintf(`<circle cx="%d" cy="6" r="3" fill="#FF6666"/>`, w-6)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
-		`%s<rect %s fill="#fff"/>%s%s</svg>`,
-		w, h, bar, w, h, fmt.Sprintf(label, "#fff", ""), bar, fmt.Sprintf(label, "#000", ` clip-path="url(#bar)"`), dot))
+		`%s<rect %s fill="#fff"/><g clip-path="url(#bar)">%s</g>%s</svg>`,
+		w, h, bar, w, h, content(""), bar, content("#000"), dot))
+}
+
+func labelMarkup(l stripLabel, ink string) string {
+	if l.model == "" {
+		return ""
+	}
+	modelColor, dotColor := "#888", aiStateColors[l.state]
+	if l.state == "preview" {
+		modelColor = dotColor
+	}
+	if ink != "" {
+		modelColor, dotColor = ink, ink
+	}
+	const r, gap = 30, 30
+	anchor := svgMinWidth / 2
+	y := svgHeight/2 + svgFont*35/100
+	var b strings.Builder
+	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
+		anchor, y, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
+	dots := slices.Index(aiEffortDots, strings.ToLower(l.effort)) + 1
+	if dots == 0 {
+		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="Helvetica" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
+			anchor+2*gap, y, svgFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
+		return b.String()
+	}
+	for i := range dots {
+		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s"/>`, anchor+2*gap+r+i*(2*r+gap), svgHeight/2, r, dotColor)
+	}
+	return b.String()
 }
 
 func clockLeft(d time.Duration) string {

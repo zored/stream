@@ -65,7 +65,7 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
 - Turn while pressed: only the model changes, the effort stays. A press released without a turn re-applies the shown choice.
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
-- Label: `ai_label_svg` across the right strip, drawn like the track on the left strip but rotated 270° so it reads bottom-up:
+- Label: part of `ai_strip_svg` (see [ai.md](ai.md)), drawn across the right strip like the track on the left strip but rotated 270° so it reads bottom-up:
   lowercase gray model ending at the strip's center (fixed, so it never moves) and the effort as dots after it (`aiLabelSVG`: low 1, medium 2, high 3, extra 4, max 5; an unknown effort falls back to text).
   Dots are white `ok`, gray `pending`, dark gray `idle` (Claude not frontmost), amber `other` (outside the knob's list), red `error`;
   in `preview` the model and the dots are yellow.
