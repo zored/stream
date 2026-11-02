@@ -62,10 +62,10 @@ def text(layer_id, value, color=0xFFFFFF, fontsize=100, shrink=True, **geo):
             "styles": v([]), "outlineColor": v(4278190080)}
 
 
-def image(layer_id, data, **geo):
+def image(layer_id, data, fill="fit", **geo):
     return {"id": layer_id, "name": layer_id, "usage": "auto", "type": "image",
-            "pinnedProperties": ["base64Image", "halign", "valign"], **geometry(**geo), "base64Image": v(data),
-            "halign": v("center"), "valign": v("center"), "fillMode": v("fit")}
+            "pinnedProperties": ["base64Image", "halign", "valign"], **geometry(**geo), "base64Image": prop(data),
+            "halign": v("center"), "valign": v("center"), "fillMode": v(fill)}
 
 
 def icon(name):
@@ -211,9 +211,30 @@ def hangup_tile():
     ], down=vkcall("/call/end"))
 
 
+TIME_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -74 256 77"><text font-family="Helvetica" '
+            'font-size="100" fill="#fff"', "/text></svg>")
+
+
+def b64(value):
+    return base64.b64encode(value.encode()).decode()
+
+
+def lookup(table, var):
+    return f'substr("{"".join(map(b64, table))}", {var} * 4, {var} * 4 + 4)'
+
+
+def time_image():
+    head, tail = TIME_SVG
+    head += " " * (-(len(head) + 1) % 3) + ">"
+    hours = lookup([f"{h:02d}:" for h in range(24)], "$(internal:time_h)")
+    minutes = lookup([f"{m:02d}<" for m in range(60)], "$(internal:time_m)")
+    return expr(f'concat("data:image/svg+xml;base64,{b64(head)}", {hours}, {minutes}, "{b64(tail)}")')
+
+
 def clock():
     return button([canvas(), box("box0", 0x000000),
-                   text("text0", "$(internal:time_hm)\n$(internal:date_d).$(internal:date_m)")])
+                   image("time", time_image(), "fill", x=v(6), y=v(6), width=v(88), height=v(58)),
+                   text("date", "$(internal:date_d).$(internal:date_m)", 0x808080, fontsize=80, y=v(66), height=v(32))])
 
 
 def test_page():
