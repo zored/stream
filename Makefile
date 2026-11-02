@@ -24,7 +24,7 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart pages deploy
+.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages deploy
 
 build:
 	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey zored_stream-bin
@@ -59,6 +59,14 @@ module:
 	$(MAKE) companion-restart
 	node tools/surface.mjs dev hapticPressPattern=$(HAPTIC) hapticHoldMs=$(HAPTIC_HOLD_MS) \
 		hapticSlidePattern=$(HAPTIC_SLIDE) hapticSlideStep=$(HAPTIC_STEP)
+
+YMUSIC_APP = /Applications/Яндекс Музыка.app
+YMUSIC_FLAGS = --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling
+
+ymusic-launcher:
+	mkdir -p $(HOME)/Applications
+	osacompile -o "$(HOME)/Applications/Яндекс Музыка (stream).app" \
+		-e 'do shell script "open -a \"$(YMUSIC_APP)\" --args $(YMUSIC_FLAGS)"'
 
 companion:
 	python3 -I tools/companion_config.py start_minimised=true

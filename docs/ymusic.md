@@ -29,8 +29,12 @@ The like lives only in the app UI, so `zored_stream` drives the player bar throu
 - The AX tree freezes while the window is occluded or hidden: on 2026-11-02 the bar still said «Still Waiting», like = 1,
   two tracks later (verified). That is the «AX lies» bug: a stale like moved onto new tracks. Toggling
   `AXManualAccessibility` off and on in that state drops the web content from the tree (136 nodes instead of ~1100) until
-  the window is shown again (verified); `AXEnhancedUserInterface` is not supported (-25208). Not tried: launching the app with
-  `--disable-backgrounding-occluded-windows --disable-renderer-backgrounding`.
+  the window is shown again (verified); `AXEnhancedUserInterface` is not supported (-25208).
+- Fix: launch the app with `--disable-backgrounding-occluded-windows --disable-renderer-backgrounding
+  --disable-background-timer-throttling`. With the window hidden (Cmd+H) the AX title then follows every track and a like
+  shows up and goes away with its track (verified 2026-11-02). `make ymusic-launcher` builds
+  `~/Applications/Яндекс Музыка (stream).app` that does this; put it in the Dock instead of the app. `open --args` is ignored
+  when the app is already running: quit it first.
 - `AXPress` toggles it; works with the app hidden. The UI updates optimistically within ~70 ms, the server call follows.
 - Two presses within ~1 s race inside the app: the UI may show the wrong state for seconds. The daemon ignores presses
   within 1.5 s of the previous one. Seen again on 2026-11-02: like, then unlike 2 s later → still `liked`; a third press 5 s later → `none`.
