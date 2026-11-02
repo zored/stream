@@ -62,9 +62,10 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
 - Turn while pressed: only the model changes, the effort stays. A press released without a turn re-applies the shown choice.
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
-- Label: `ai_label_svg` across the right strip, drawn like the track on the left strip (lowercase gray model `|` bold effort, `stripSVG`)
-  but rotated 270° so it reads bottom-up; the effort is white `ok`, gray `pending`, dark gray `idle` (not on the new-chat screen),
-  amber `other` (a model/effort outside the list, e.g. Haiku or Extra), red `error`.
+- Label: `ai_label_svg` across the right strip, drawn like the track on the left strip but rotated 270° so it reads bottom-up:
+  lowercase gray model and the effort as dots (`aiLabelSVG`: low 1, medium 2, high 3, extra 4, max 5; an unknown effort falls back to text).
+  Dots are white `ok`, gray `pending`, dark gray `idle` (Claude not frontmost), amber `other` (outside the knob's list), red `error`;
+  in `preview` the model and the dots are yellow.
 
 `zored_stream` module `ai` (`ai_darwin.go`, `127.0.0.1:47117`, flag `-ai`): `POST /ai/turn?d=±1`, `POST /ai/down`, `POST /ai/up`; variables `ai_model`,
 `ai_effort`, `ai_state`. AX helpers in `ax_darwin.m`: one BFS with a predicate, `ax_find_attr` (role + attribute, exact or prefix),

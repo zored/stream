@@ -37,11 +37,11 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 No tile (removed 2026-11-02, the strip carries it). Over the rotated model | effort label ([ai-switch.md](ai-switch.md)),
 values of the selected model, horizontal on a dimmed backing, pushed to the strip's ends:
 
-- top cell, from the top: time left in the 5h session (`1h 52m`), `d` % — `ai_strip_top_svg`; a red dot when the last fetch failed
-- bottom cell, to the bottom: `w` %, time left in the week (`4d`) — `ai_strip_bottom_svg`
+- top cell, from the top: time left in the 5h session as a white clock (`1:42`), `d` — `ai_strip_top_svg`; a red dot when the last fetch failed
+- bottom cell, to the bottom: `w`, time left in the week in gray whole days (`3d`), a white clock under a day — `ai_strip_bottom_svg`
 
 The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
-Times are gray and drop zero parts (`4d`, `2h`, `2h 10m`, `1d 2h`); percents are white, yellow > 80, red > 90.
+Percents have no `%` sign and are white, yellow > 80, red > 90.
 
 ## Hammerspoon overlay
 

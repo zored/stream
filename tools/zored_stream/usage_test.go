@@ -48,12 +48,15 @@ func TestLevel(t *testing.T) {
 	}
 }
 
-func TestShortDuration(t *testing.T) {
-	for d, want := range map[time.Duration]string{
-		26 * time.Hour: "1d 2h", 96 * time.Hour: "4d", 130 * time.Minute: "2h 10m", 2 * time.Hour: "2h", 59 * time.Minute: "59m", -time.Minute: "",
-	} {
-		if got := shortDuration(d); got != want {
-			t.Errorf("%v: got %s want %s", d, got, want)
+func TestTimeLeft(t *testing.T) {
+	for d, want := range map[time.Duration]string{102 * time.Minute: "1:42", 2 * time.Hour: "2:00", 59 * time.Minute: "0:59", -time.Minute: "0:00"} {
+		if got := clockLeft(d); got != want {
+			t.Errorf("clock %v: got %s want %s", d, got, want)
+		}
+	}
+	for d, want := range map[time.Duration]string{95 * time.Hour: "3d", 24 * time.Hour: "1d", 5*time.Hour + 20*time.Minute: "5:20"} {
+		if got, _ := daysLeft(d); got != want {
+			t.Errorf("days %v: got %s want %s", d, got, want)
 		}
 	}
 }

@@ -10,6 +10,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"html"
 	"log"
 	"slices"
 	"strings"
@@ -62,14 +63,42 @@ func (a *aiSwitch) target() aiChoice {
 	return aiChoice{aiModels[a.index/len(aiEfforts)], aiEfforts[a.index%len(aiEfforts)]}
 }
 
-var aiStateColors = map[string]string{"ok": "#fff", "pending": "#808080", "preview": "#808080", "idle": "#505050", "other": "#FFB000", "error": "#FF3030"}
+var (
+	aiStateColors = map[string]string{"ok": "#fff", "pending": "#808080", "preview": "#FFD94D", "idle": "#505050", "other": "#FFB000", "error": "#FF3030"}
+	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
+)
 
 func (a *aiSwitch) show(c aiChoice, state string) {
-	a.vars.set("ai_label_svg", stripSVG(c.model, c.effort, aiStateColors[state], ""))
+	a.vars.set("ai_label_svg", aiLabelSVG(c.model, c.effort, state))
 	a.vars.set("ai_model", c.model)
 	a.vars.set("ai_effort", c.effort)
 	a.vars.set("ai_state", state)
 	a.onShow(c.model)
+}
+
+func aiLabelSVG(model, effort, state string) string {
+	dots := slices.Index(aiEffortDots, strings.ToLower(effort)) + 1
+	if dots == 0 {
+		return stripSVG(model, effort, aiStateColors[state], "")
+	}
+	modelColor := "#888"
+	if state == "preview" {
+		modelColor = aiStateColors[state]
+	}
+	const r, gap = 30, 30
+	name := strings.ToLower(model)
+	textW := lineWidth(span("", name))
+	dotsW := dots*2*r + (dots-1)*gap
+	x := (svgMinWidth - textW - 2*gap - dotsW) / 2
+	var b strings.Builder
+	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
+		`<text x="%d" y="%d" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
+		svgMinWidth, svgHeight, x, svgHeight/2+svgFont*35/100, svgFont, modelColor, html.EscapeString(name))
+	for i := range dots {
+		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s"/>`, x+textW+2*gap+r+i*(2*r+gap), svgHeight/2, r, aiStateColors[state])
+	}
+	b.WriteString(`</svg>`)
+	return dataURI(b.String())
 }
 
 func (a *aiSwitch) turn(d int) {

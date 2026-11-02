@@ -230,16 +230,16 @@ func (u *usage) publish() {
 		return
 	}
 	now := time.Now()
-	sessionLeft := "5h"
+	sessionLeft := clockLeft(sessionHours * time.Hour)
 	if s := findLimit(limits, "session"); s != nil && s.ResetsAt != nil {
-		sessionLeft = shortDuration(s.ResetsAt.Sub(now))
+		sessionLeft = clockLeft(s.ResetsAt.Sub(now))
 	}
-	weekLeft := ""
+	weekLeft, weekColor := "", gray
 	if week.ResetsAt != nil {
-		weekLeft = shortDuration(week.ResetsAt.Sub(now))
+		weekLeft, weekColor = daysLeft(week.ResetsAt.Sub(now))
 	}
-	u.vars.set("ai_strip_top_svg", cellSVG(true, sessionLeft, dayPct(*week, now), failed))
-	u.vars.set("ai_strip_bottom_svg", cellSVG(false, weekLeft, week.Percent, false))
+	u.vars.set("ai_strip_top_svg", cellSVG(true, sessionLeft, "#fff", dayPct(*week, now), failed))
+	u.vars.set("ai_strip_bottom_svg", cellSVG(false, weekLeft, weekColor, week.Percent, false))
 	if s := findLimit(limits, "session"); s != nil {
 		u.vars.set("ai_session", strconv.Itoa(round(s.Percent)))
 		if s.ResetsAt != nil {
@@ -315,7 +315,7 @@ func dayPct(l limit, now time.Time) float64 {
 	return workdays * l.Percent / float64(workdayIndex(start, now))
 }
 
-func cellSVG(top bool, left string, pct float64, failed bool) string {
+func cellSVG(top bool, left, leftColor string, pct float64, failed bool) string {
 	timeY, pctY, backY := 84, 64, 44
 	if top {
 		timeY, pctY, backY = 18, 41, 0
@@ -327,25 +327,20 @@ func cellSVG(top bool, left string, pct float64, failed bool) string {
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 90">`+
 		`<rect x="0" y="%d" width="60" height="46" fill="#000" opacity="0.75"/>%s`+
 		`<g font-family="Helvetica" text-anchor="middle"><text x="30" y="%d" font-size="15" fill="%s">%s</text>`+
-		`<text x="30" y="%d" font-size="21" font-weight="bold" fill="%s">%d%%</text></g></svg>`,
-		backY, dot, timeY, gray, left, pctY, levelColors[levelOf(pct)], round(pct)))
+		`<text x="30" y="%d" font-size="21" font-weight="bold" fill="%s">%d</text></g></svg>`,
+		backY, dot, timeY, leftColor, left, pctY, levelColors[levelOf(pct)], round(pct)))
 }
 
-func shortDuration(d time.Duration) string {
+func clockLeft(d time.Duration) string {
 	m := int(math.Ceil(max(0, d.Minutes())))
-	var parts []string
-	for _, u := range []struct {
-		minutes int
-		suffix  string
-	}{{24 * 60, "d"}, {60, "h"}, {1, "m"}} {
-		if n := m / u.minutes; n > 0 && len(parts) < 2 {
-			parts = append(parts, fmt.Sprintf("%d%s", n, u.suffix))
-		} else if len(parts) > 0 {
-			break
-		}
-		m %= u.minutes
+	return fmt.Sprintf("%d:%02d", m/60, m%60)
+}
+
+func daysLeft(d time.Duration) (string, string) {
+	if d >= day {
+		return fmt.Sprintf("%dd", int(d/day)), gray
 	}
-	return strings.Join(parts, " ")
+	return clockLeft(d), "#fff"
 }
 
 func dataURI(svg string) string {
