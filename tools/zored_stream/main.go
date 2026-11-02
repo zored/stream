@@ -130,8 +130,12 @@ func main() {
 	})
 
 	v := &vars{sent: map[string]string{}}
-	np := &nowPlaying{script: *npScript, lib: *npLib, vars: v, glyph: newGlyph(v)}
+	np := &nowPlaying{script: *npScript, lib: *npLib, vars: v, glyph: newGlyph(v), tint: newTint(v)}
 	go np.glyph.animate()
+	np.tint.publish()
+	go np.tint.animate()
+	sk := newSkip(v)
+	go sk.animate()
 	go np.run()
 	ym := newYmusic(np, v)
 	go every(pollEvery, ym.poll)
@@ -190,11 +194,11 @@ func main() {
 		handleValue(mux, "/brightness/hold", br.hold)
 		handleValue(mux, "/brightness/release", br.release)
 	})
-	sk := &seeker{np: np, bar: vol.bar}
+	seek := &seeker{np: np, bar: vol.bar}
 	go every(progressEvery, np.publishProgress)
 	go serve(*seekAddr, func(mux *http.ServeMux) {
-		handle(mux, "/seek/forward", func() error { return sk.turn(1) })
-		handle(mux, "/seek/back", func() error { return sk.turn(-1) })
+		handle(mux, "/seek/forward", func() error { return seek.turn(1) })
+		handle(mux, "/seek/back", func() error { return seek.turn(-1) })
 	})
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {
@@ -207,6 +211,7 @@ func main() {
 		vol.bar.publish()
 		np.publish()
 		np.glyph.publish()
+		np.tint.publish()
 		us.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
@@ -214,6 +219,8 @@ func main() {
 		handle(mux, "/volume/down", func() error { return vol.step(-1) })
 		handle(mux, "/volume/mute", vol.toggleMute)
 		handle(mux, "/nowplaying/show", func() error { np.glyph.show(); return nil })
+		handle(mux, "/nowplaying/next", func() error { sk.show(1); return nil })
+		handle(mux, "/nowplaying/prev", func() error { sk.show(-1); return nil })
 		mux.HandleFunc("POST /volume/drag", func(w http.ResponseWriter, r *http.Request) {
 			dy, err := strconv.ParseFloat(r.URL.Query().Get("dy"), 64)
 			if err != nil {

@@ -65,6 +65,7 @@ type nowPlaying struct {
 	likeTitle   string
 	vars        *vars
 	glyph       *glyph
+	tint        *tint
 	commands    io.Writer
 }
 
@@ -156,6 +157,9 @@ func (n *nowPlaying) publish() {
 	n.vars.set("np_playing", playing)
 	n.vars.set("np_app", t.App)
 	n.vars.set("np_art", coverURI(t))
+	if err := n.tint.setArtwork(t.Artwork); err != nil {
+		log.Printf("tint: %v", err)
+	}
 	n.glyph.setPlaying(t.Playing)
 	n.publishProgress()
 }

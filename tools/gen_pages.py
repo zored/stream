@@ -17,7 +17,7 @@ SEEK = "http://127.0.0.1:47119"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "ym_like", "call_mic", "call_cam",
+    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state")}
 BAR_ALPHA = "$(custom:bar_alpha)"
@@ -176,11 +176,19 @@ def volume_cell(row):
     color = expr(f'$(custom:bar_mode) == "ctl" ? {0x808080} : {0xFFFFFF}')
     return button([
         canvas(),
-        box("progress", 0x383838, opacity=hidden, y=expr(f"100 - {progress}"), height=expr(progress)),
+        box("progress", expr("$(custom:np_tint)"), opacity=hidden, y=expr(f"100 - {progress}"), height=expr(progress)),
         strip_image("np", "np_svg", row, 90, hidden),
-        box("track", 0x202020, opacity=visible),
+        box("track", 0x000000, opacity=visible),
         box("fill", color, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
+        *(skip_arrows() if row == 2 else ()),
     ])
+
+
+def skip_arrows():
+    return [image(f"skip-{name}", icon(f"skip-{name}"), "fit",
+                  opacity=expr(f"$(custom:np_skip) == {direction} ? 100 : 0"),
+                  x=expr("$(custom:np_skip_x)"), y=v(44), width=v(88), height=v(50))
+            for name, direction in (("forward", 1), ("back", -1))]
 
 
 def play_pause():
@@ -308,7 +316,8 @@ def media_page():
         (0, 0): button(labelled("VOL"), down=streamd("/volume/mute"),
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
         (1, 0): button(labelled("TRACK"), up=[mediakey("play")], held=ymusic("/like"),
-                       left=[mediakey("prev")], right=[mediakey("next")]),
+                       left=[mediakey("prev"), *streamd("/nowplaying/prev")],
+                       right=[mediakey("next"), *streamd("/nowplaying/next")]),
         (2, 0): button(labelled("SEEK"), left=[post(SEEK + "/seek/back")], right=[post(SEEK + "/seek/forward")]),
         (0, 7): button(labelled("SUN"), down=brightness("/brightness/hold"), up=brightness("/brightness/release"),
                        left=brightness("/brightness/down"), right=brightness("/brightness/up")),

@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "5FJuPMPcMZniNBTZVwymy",
+  "id": "X1UuxRPtxEusuggvtq2rD",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -328,8 +328,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 3684408,
-         "isExpression": false
+         "value": "$(custom:np_tint)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -440,7 +440,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 2105376,
+         "value": 0,
          "isExpression": false
         },
         "cornerRadius": {
@@ -1251,7 +1251,7 @@
         "down": [
          {
           "type": "action",
-          "id": "NEhc6wXoN3o_aiQS9jWA8",
+          "id": "brfkm_MUo4mUmwwWWq5Wt",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -1264,7 +1264,7 @@
            "default": [
             {
              "type": "action",
-             "id": "WUftSx60QPUkjoE3kxzDy",
+             "id": "NEhc6wXoN3o_aiQS9jWA8",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -1289,7 +1289,7 @@
             },
             {
              "type": "action",
-             "id": "8_Oz4CMoARGhR_gE0jKei",
+             "id": "mMrZcky5FM1UeeGfia7qg",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -1312,7 +1312,7 @@
         "up": [
          {
           "type": "action",
-          "id": "Qja8eYVJtNuXe6fpv6QRa",
+          "id": "orEK-XRU3YpRVeEcc0vHh",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -1325,7 +1325,7 @@
            "default": [
             {
              "type": "action",
-             "id": "mMrZcky5FM1UeeGfia7qg",
+             "id": "Qja8eYVJtNuXe6fpv6QRa",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -1350,7 +1350,7 @@
             },
             {
              "type": "action",
-             "id": "brfkm_MUo4mUmwwWWq5Wt",
+             "id": "2lZ9rQOque2qDf7cmoH-d",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -1373,7 +1373,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "M1o6Ned4hSsSEIYWcLtHa",
+          "id": "qxmzuHopdhXhcsgpacI73",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -1386,7 +1386,7 @@
            "default": [
             {
              "type": "action",
-             "id": "2lZ9rQOque2qDf7cmoH-d",
+             "id": "M1o6Ned4hSsSEIYWcLtHa",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -1411,7 +1411,7 @@
             },
             {
              "type": "action",
-             "id": "orEK-XRU3YpRVeEcc0vHh",
+             "id": "8G1QbehFwMFU_ubBAQsdP",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -1434,7 +1434,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "U90v7nzPSelYvCvNQDpmj",
+          "id": "BKKE1FcsLSILewn-UqyxH",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -1447,7 +1447,7 @@
            "default": [
             {
              "type": "action",
-             "id": "8G1QbehFwMFU_ubBAQsdP",
+             "id": "U90v7nzPSelYvCvNQDpmj",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -1472,7 +1472,7 @@
             },
             {
              "type": "action",
-             "id": "qxmzuHopdhXhcsgpacI73",
+             "id": "vbIh3s9XoYHXY5dPPZxYB",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -1752,9 +1752,7 @@
            }
           },
           "upgradeIndex": null
-         }
-        ],
-        "rotate_right": [
+         },
          {
           "type": "action",
           "id": "pM0synbVbFjUZS-ES98Wl",
@@ -1762,7 +1760,59 @@
           "definitionId": "exec",
           "options": {
            "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/prev",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_right": [
+         {
+          "type": "action",
+          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
             "value": "$HOME/.local/bin/mediakey next",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         },
+         {
+          "type": "action",
+          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/next",
             "isExpression": false
            },
            "cwd": {
@@ -1853,8 +1903,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 3684408,
-         "isExpression": false
+         "value": "$(custom:np_tint)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -1965,7 +2015,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 2105376,
+         "value": 0,
          "isExpression": false
         },
         "cornerRadius": {
@@ -2396,7 +2446,7 @@
         "down": [
          {
           "type": "action",
-          "id": "vbIh3s9XoYHXY5dPPZxYB",
+          "id": "Z45oQuBVcZ4xuutI_OyyK",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -2423,7 +2473,7 @@
         "up": [
          {
           "type": "action",
-          "id": "BKKE1FcsLSILewn-UqyxH",
+          "id": "ltkz_dYFyZeEI9yCDckMr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -2450,7 +2500,7 @@
         "400": [
          {
           "type": "action",
-          "id": "Z45oQuBVcZ4xuutI_OyyK",
+          "id": "6uH4VZl66JZ_VpGmsKcNu",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3104,7 +3154,7 @@
         "down": [
          {
           "type": "action",
-          "id": "zaKhF6dzRoF2c3yckVPr_",
+          "id": "HSzztGETWyhDRLd2QQout",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3131,7 +3181,7 @@
         "up": [
          {
           "type": "action",
-          "id": "lt3NJEPQ_B8plQW6Dtexw",
+          "id": "BmKVMTI1k7ej2S99T5Wxr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3158,7 +3208,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "HSzztGETWyhDRLd2QQout",
+          "id": "eS5oJpyGVKTurplzq_yfA",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3185,7 +3235,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "BmKVMTI1k7ej2S99T5Wxr",
+          "id": "c2zWJ3eJKUa06XnNNaWPd",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3394,7 +3444,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "id": "WUftSx60QPUkjoE3kxzDy",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3421,7 +3471,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "id": "8_Oz4CMoARGhR_gE0jKei",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3515,8 +3565,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 3684408,
-         "isExpression": false
+         "value": "$(custom:np_tint)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -3627,7 +3677,7 @@
          "isExpression": false
         },
         "color": {
-         "value": 2105376,
+         "value": 0,
          "isExpression": false
         },
         "cornerRadius": {
@@ -3701,6 +3751,116 @@
         },
         "borderPosition": {
          "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "skip-forward",
+        "name": "skip-forward",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:np_skip) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": "$(custom:np_skip_x)",
+         "isExpression": true
+        },
+        "y": {
+         "value": 44,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 50,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0yIDAgMjggMjQiPjxkZWZzPjxmaWx0ZXIgaWQ9ImciIHg9Ii0xIiB5PSItMSIgd2lkdGg9IjMiIGhlaWdodD0iMyI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMiIvPjwvZmlsdGVyPjwvZGVmcz48cGF0aCBkPSJNMyA1djE0bDktN3pNMTIgNXYxNGw5LTd6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTMgNXYxNGw5LTd6TTEyIDV2MTRsOS03eiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "skip-back",
+        "name": "skip-back",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:np_skip) == -1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": "$(custom:np_skip_x)",
+         "isExpression": true
+        },
+        "y": {
+         "value": 44,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 50,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0yIDAgMjggMjQiPjxkZWZzPjxmaWx0ZXIgaWQ9ImciIHg9Ii0xIiB5PSItMSIgd2lkdGg9IjMiIGhlaWdodD0iMyI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMiIvPjwvZmlsdGVyPjwvZGVmcz48cGF0aCBkPSJNMjEgNXYxNGwtOS03ek0xMiA1djE0bC05LTd6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsdGVyPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTIxIDV2MTRsLTktN3pNMTIgNXYxNGwtOS03eiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -4003,7 +4163,7 @@
         "down": [
          {
           "type": "action",
-          "id": "ltkz_dYFyZeEI9yCDckMr",
+          "id": "bfw71wmNoS7XBmX6UndQD",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4030,7 +4190,7 @@
         "up": [
          {
           "type": "action",
-          "id": "6uH4VZl66JZ_VpGmsKcNu",
+          "id": "TA9r-cCCjME82zOSAALce",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4345,7 +4505,7 @@
         "down": [
          {
           "type": "action",
-          "id": "bfw71wmNoS7XBmX6UndQD",
+          "id": "zaKhF6dzRoF2c3yckVPr_",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4524,7 +4684,7 @@
         "down": [
          {
           "type": "action",
-          "id": "TA9r-cCCjME82zOSAALce",
+          "id": "lt3NJEPQ_B8plQW6Dtexw",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5207,7 +5367,7 @@
         "down": [
          {
           "type": "action",
-          "id": "eS5oJpyGVKTurplzq_yfA",
+          "id": "R3n-qcRIty8D4JiI8KM8D",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5234,7 +5394,7 @@
         "up": [
          {
           "type": "action",
-          "id": "c2zWJ3eJKUa06XnNNaWPd",
+          "id": "YNA8kUk_Mt79yNBm7b1z2",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5357,7 +5517,7 @@
         "down": [
          {
           "type": "action",
-          "id": "R3n-qcRIty8D4JiI8KM8D",
+          "id": "5FJuPMPcMZniNBTZVwymy",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5481,7 +5641,7 @@
         "down": [
          {
           "type": "action",
-          "id": "YNA8kUk_Mt79yNBm7b1z2",
+          "id": "GsUaCH6Cq9_adVXbrHSYH",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

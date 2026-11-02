@@ -30,9 +30,15 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
     `np_svg` (base64 SVG data URI for the track strip: like mark (a heart as wide as the strip, 6% inset), lowercase gray artist `|` bold title, each cut to 30 characters with `…`, split into two lines when one line would be tiny; the heart is an SVG path (skia has no emoji fallback), reset on track change; an empty title is held back for 3 s; an image layer can't take raw SVG,
     Companion cuts data at the first `=`),
     polled every 0.5 s by the perl child (below), sent to the daemon as JSON lines on change
-  - `np_progress` (0–100) — playback position, drawn dim gray (`#383838`) bottom-up behind the track text on the left strip.
+  - `np_progress` (0–100) — playback position, drawn bottom-up in `np_tint` behind the track text on the left strip.
     The perl child sends `duration`, `elapsed`, `rate`, `at` (unix time of `elapsed`) from MediaRemote; the daemon extrapolates
     `elapsed + (now − at) × rate` every 3 s, so no extra polling; paused or no duration → the value doesn't change, nothing is sent.
+  - `np_tint` (`tint.go`) — color of the progress bar: the cover's accent, darkened. Hue buckets (12) over pixels with saturation ≥ 0.25,
+    weighted by saturation × value; the heaviest bucket's mean color → HSV with saturation ≤ 0.55, value 0.28. Gray `#383838`
+    without a cover or for a gray one; eases to the new color at 60 Hz (~1 s) on a cover change.
+  - `np_skip` (`1`/`-1`/`0`), `np_skip_x` (`skip.go`) — a ⏩/⏪ that flies across the bottom cell of the left strip in 800 ms (88 % wide)
+    (left → right for next, right → left for prev); the TRACK knob posts `/nowplaying/next`, `/nowplaying/prev` on `:47113` with the media key.
+    Icons `tools/icons/skip-{forward,back}.svg`.
   - `np_art` — cover of the current track as a JPEG data URI (empty = no cover): the perl child takes
     `kMRMediaRemoteNowPlayingInfoArtworkData`, thumbnails it to ≤160 px JPEG with ImageIO once per new image. Yandex Music gives 150×150 JPEG (verified);
     Chrome/YouTube and Music.app not checked yet.
