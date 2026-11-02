@@ -24,6 +24,9 @@ Helpers: `make mediakey`, `make streamd`, `make vkcall` (LaunchAgents), `make pa
 
 ## Rules
 
+- Parallel sessions: only one at a time edits `tools/gen_pages.py` or runs `make deploy`; claim controls from the free map in `PLAN.md`.
+- Commit only your files: `git -C <repo> commit -m main -- <paths>`.
+
 - One process owns the serial port: Companion, Loupedeck or `sniff.py`.
 - Firmware: flash or send update commands only after explicit confirmation in chat (bricking risk). Vendor binaries stay out of git.
 - Mark findings verified (observed) or assumed (read).

@@ -8,8 +8,8 @@ What the MEDIA page does today (macOS):
 - left knob 1 — volume with acceleration, press = mute; left knob 2 — previous/next track, press = play/pause
 - left touch strip — current track rotated 90°, turns into an animated volume bar while the volume changes; swipe it to change the volume
 - play tile — big ⏸/▶ from the OS playback state
-- VK WorkSpace calls — bottom button 2 toggles the microphone, button 3 the camera (tap = toggle, hold = push-to-talk);
-  LEDs and two tiles show the real state from the client, mouse clicks included ([vkcall.md](docs/vkcall.md))
+- VK WorkSpace calls — bottom button 2 toggles the microphone (hold = push-to-talk), button 3 the camera, button 4 hangs up;
+  LEDs and tiles show the real state from the client, mouse clicks included ([vkcall.md](docs/vkcall.md))
 - clock tile, haptic tap on presses, black tiles without Companion decorations
 
 ## Setup (macOS)

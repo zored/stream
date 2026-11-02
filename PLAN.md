@@ -2,6 +2,24 @@
 
 Facts live in `docs/`; this file tracks status.
 
+## How work runs
+
+A master session keeps this file; each feature goes to its own child session.
+
+- Parallel-safe: anything that doesn't touch `tools/gen_pages.py` or run `make deploy` (CI, upstream PR, docs, daemons until wiring).
+- One at a time: sessions that edit `gen_pages.py` or deploy. `make deploy` overwrites pages 1–2 in the one running Companion,
+  so two deploying sessions wipe each other's buttons.
+- Take free controls from the map below and update it in the same commit.
+
+MEDIA page, `row/col` ([grid](docs/companion.md)):
+
+| Used | Free |
+|---|---|
+| left knobs `0/0` volume, `1/0` track; left strip `0–2/1` volume | left knob `2/0` |
+| tiles `0/2` play, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/3–0/5`, `1/2–1/5` |
+| buttons `3/1` mic, `3/2` camera, `3/3` hang up | buttons `3/0`, `3/4–3/7` |
+| | right knobs `0–2/7`, right strip `0–2/6` |
+
 ## Done (2026-11-01)
 
 - Device, firmware 0.2.14, protocol events verified; custom firmware researched and parked ([device.md](docs/device.md))
@@ -13,7 +31,9 @@ Facts live in `docs/`; this file tracks status.
 
 ## Done (2026-11-02)
 
-- VK WorkSpace calls: buttons 2/3 toggle mic/camera, push-to-talk, LEDs + tiles from the client's real state via its local gRPC ([vkcall.md](docs/vkcall.md))
+- VK WorkSpace calls: buttons 2/3 toggle mic/camera, push-to-talk, button 4 hangs up; LEDs + tiles from the client's real state
+  via its local gRPC, `pending` while the camera starts ([vkcall.md](docs/vkcall.md))
+- Ideas backlog collected (below)
 
 ## Next
 
@@ -27,7 +47,8 @@ Facts live in `docs/`; this file tracks status.
 ### More pages and actions
 
 - [ ] Keystrokes on macOS (candidates: `osascript` via `exec`, or post key events like `mediakey`)
-- [ ] IDE / terminal / calls pages; page switching by frontmost app (`streamd` can watch `NSWorkspace` and push a variable)
+- [ ] `vkcall`: reconnect after a VK WorkSpace restart — not verified yet
+- [ ] IDE / terminal pages; page switching by frontmost app (`streamd` can watch `NSWorkspace` and push a variable)
 - [ ] Right knobs and right strip: free now
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
 
