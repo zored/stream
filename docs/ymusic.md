@@ -17,7 +17,7 @@ Only while the Now Playing app is Yandex Music (`np_app`); otherwise the hold do
 
 ## How it works
 
-The like lives only in the app UI, so `ymusic` drives the player bar through Accessibility.
+The like lives only in the app UI, so `zored_stream` drives the player bar through Accessibility.
 
 - The window is a Chromium web view: setting `AXManualAccessibility` on the app element exposes the DOM.
 - Player bar: `AXGroup` with DOM class `PlayerBar_root__…`. Like: `AXCheckBox` (`AXToggleButton`) with class
@@ -25,27 +25,28 @@ The like lives only in the app UI, so `ymusic` drives the player bar through Acc
   the bar shows it only in some contexts (not in an album/radio context like «PH Electro Mix Radio»). No control sends
   `/dislike` now: holding the knob for dislike did nothing in such contexts, so it toggles the like too.
 - `AXPress` toggles it; works with the app hidden. The UI updates optimistically within ~70 ms, the server call follows.
-- Two presses within ~1 s race inside the app: the UI may show the wrong state for seconds. `ymusic` ignores presses
-  within 1.5 s of the previous one.
+- Two presses within ~1 s race inside the app: the UI may show the wrong state for seconds. The daemon ignores presses
+  within 1.5 s of the previous one. Seen again on 2026-11-02: like, then unlike 2 s later → still `liked`; a third press 5 s later → `none`.
 - Finding the bar walks ~1100 AX nodes (~60 ms); the bar element is cached and re-found when it dies.
   The walk is breadth-first with a visited set and a 20 000-node cap: the recursive version crashed with a stack overflow
   ~11 s after start, 30 times on 2026-11-02 (verified in crash reports); a cycle or a runaway subtree in the AX tree is assumed.
 
-## ymusic
+## zored_stream module
 
-`tools/ymusic/main.swift`, `make ymusic` → `~/.local/bin/ymusic` + LaunchAgent `com.zored.stream.ymusic`.
-Log: `~/Library/Logs/zored-stream/ymusic.log`. `make ymusic-uninstall` removes it.
+`tools/zored_stream/ymusic_darwin.go` + `ax_darwin.m` (AX walk in C) in the [one daemon](daemon.md), was the Swift `ymusic`.
+Log: `~/Library/Logs/zored-stream/zored_stream.log`, lines prefixed `ymusic:`.
 
-- Needs **ymusic** itself in System Settings → Privacy & Security → Accessibility (a LaunchAgent inherits nothing).
-  Without it the daemon calls `AXIsProcessTrustedWithOptions` with a prompt: macOS adds `ymusic` to the list and shows a dialog;
-  enable it there, then `launchctl kickstart -k gui/$(id -u)/com.zored.stream.ymusic`. Adding the binary by hand with `+`
-  did not work (verified once). The grant is tied to the cdhash of the ad-hoc signed binary: after `make ymusic` remove the entry
-  with `−` and enable it again from the prompt (verified: `tccd` logs `Failed to match existing code requirement` with both cdhashes).
+- Needs **zored_stream** in System Settings → Privacy & Security → Accessibility (a LaunchAgent inherits nothing).
+  Without it the daemon calls `AXIsProcessTrustedWithOptions` with a prompt: macOS adds it to the list and shows a dialog;
+  enable it there, then `launchctl kickstart -k gui/$(id -u)/com.zored.stream.zored_stream` (the trust answer is cached per process, verified).
+- The grant survives rebuilds: the binary is signed with the `zored-stream` certificate, so TCC matches identifier + certificate
+  (verified 2026-11-02: cdhash changed, `ym_like` stayed readable). The old ad-hoc `ymusic` lost it on every rebuild
+  (`tccd`: `Failed to match existing code requirement`).
 - HTTP on `127.0.0.1:47115`: `POST /like`, `/dislike` → `204`; `409` (reason in the log) when Now Playing is another app,
-  the button isn't in the bar, or the previous press was < 1.5 s ago. Reads `np_app` from Companion before pressing.
+  the button isn't in the bar, or the previous press was < 1.5 s ago. Checks `np_app` in memory before pressing.
 - Pushes `ym_like` every 0.25 s on change, re-sent every 10 s: `liked`, `disliked`, `none`, `off` (app not running),
   `unknown` (no Accessibility, no player bar or button).
-- `np_app` comes from `zored_stream` (`MRMediaRemoteGetNowPlayingClient` + `MRNowPlayingClientGetBundleIdentifier`).
+- `np_app` comes from the Now Playing module (`MRMediaRemoteGetNowPlayingClient` + `MRNowPlayingClientGetBundleIdentifier`).
 
 ## Dead ends (verified)
 

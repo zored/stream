@@ -83,3 +83,9 @@ func (n *nowPlaying) publish() {
 	n.vars.set("np_playing", playing)
 	n.vars.set("np_app", t.App)
 }
+
+func (n *nowPlaying) app() string {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	return n.current.App
+}

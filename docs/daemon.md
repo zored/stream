@@ -63,6 +63,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | VK WorkSpace calls | `call.go`, from `vkcall` (removed) | `127.0.0.1:47114` (`-call`) | verified in a call: mic tap/hold, camera, hang-up; `409` without a call |
 | Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47113` (`-volume`) | verified: up/down/drag/mute move the system volume, `volume_alpha` fades to 0, idle CPU 0 %; the strip on the device looks as before (user) |
 | Now Playing | `nowplaying.go`, `nowplaying/` (ObjC dylib in `/usr/bin/perl`, JSON lines on stdout) | — (`-nowplaying-script`, `-nowplaying-lib`) | verified: `np_*` from Yandex Music, the perl child exits with the daemon |
+| Yandex Music like | `ymusic_darwin.go`, `ax_darwin.m` (AX in C, BFS with a 20 000-node cap) | `127.0.0.1:47115` (`-ymusic`) | verified: `ym_like` read, like/unlike pressed, `409` on a press within 1.5 s, grant kept after a rebuild |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain
@@ -78,13 +79,14 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 Each step keeps the old helper until the new path is verified on the device. Modules keep their old ports, so a switch is
 "uninstall the helper, restart `zored_stream`", no `gen_pages.py` change.
 
-1. Signing (user): `make zored_stream-cert`; after the first AX module, check that a rebuild keeps the Accessibility grant.
+1. Signing: done, `make zored_stream-cert`.
 2. Skeleton: done (`make zored_stream`, LaunchAgent, CI).
 3. `vkcall` → `call.go`: done, verified in a call (mic tap/hold, camera, hang-up), `tools/vkcall/` removed. Fixed on the way:
    the first status snapshot without a call was skipped, so the state stayed `unknown` and the 10 s resend blinked the LEDs yellow.
 4. `streamd` volume: done (animation, drag, mute, acceleration), on `:47113`.
 5. Now Playing: done, perl child with `libnowplaying.dylib`. `streamd` uninstalled, `tools/streamd/` removed.
-6. `ymusic` → AX in C via cgo, with an iterative, depth-limited walk (fixes the crash); `np_app` from memory. Uninstall `ymusic`.
+6. `ymusic`: done, AX walk in C (`ax_darwin.m`), `np_app` from memory, on `:47115`. The Accessibility grant survived a rebuild
+   with a new cdhash (verified). `tools/ymusic/` removed.
 7. Optional: `mediakey` as `POST /key/<name>`; drops the `exec` and Companion's Accessibility.
 8. New features land as packages: keep-awake (`IOPMAssertion`), headphones (IOBluetooth ObjC + CoreAudio), AI limits, Claude hooks
    (`POST /agent/...`), Dock badges (AX), calendar (EventKit ObjC).

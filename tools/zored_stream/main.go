@@ -93,6 +93,7 @@ func main() {
 	}
 	callAddr := flag.String("call", "127.0.0.1:47114", "VK WorkSpace call HTTP address")
 	volumeAddr := flag.String("volume", "127.0.0.1:47113", "volume HTTP address")
+	ymusicAddr := flag.String("ymusic", "127.0.0.1:47115", "Yandex Music like HTTP address")
 	npScript := flag.String("nowplaying-script", filepath.Join(home, ".local/share/zored-stream/nowplaying.pl"), "perl loader for the Now Playing dylib")
 	npLib := flag.String("nowplaying-lib", filepath.Join(home, ".local/lib/libnowplaying.dylib"), "Now Playing dylib")
 	flag.Parse()
@@ -111,6 +112,12 @@ func main() {
 	v := &vars{sent: map[string]string{}}
 	np := &nowPlaying{script: *npScript, lib: *npLib, vars: v}
 	go np.run()
+	ym := newYmusic(np, v)
+	go every(pollEvery, ym.poll)
+	go serve(*ymusicAddr, func(mux *http.ServeMux) {
+		handle(mux, "/like", ym.pressAndPoll(true))
+		handle(mux, "/dislike", ym.pressAndPoll(false))
+	})
 	vol, err := newVolume(v)
 	if err != nil {
 		log.Fatal(err)

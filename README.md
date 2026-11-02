@@ -19,12 +19,12 @@ What the MEDIA page does today (macOS):
 
 1. Close the Loupedeck app. Install Companion: `brew install --cask companion`, open `http://127.0.0.1:8000`.
 2. Surfaces → Add Surface Integration → Loupedeck. Settings → Protocols: enable shell command support.
-3. System Settings → Privacy & Security → Accessibility → add Companion (and `~/.local/bin/ymusic` after step 4).
+3. System Settings → Privacy & Security → Accessibility → add Companion (and enable `zored_stream` when it asks after step 4).
 4. Run:
 
 ```bash
 make zored_stream-cert
-make mediakey zored_stream ymusic deploy
+make mediakey zored_stream deploy
 make module
 make companion
 ```
@@ -43,8 +43,7 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `c
 | `tools/gen_pages.py` | Page definitions → `companion/*.companionconfig` |
 | `tools/deploy.mjs` | Imports pages into a running Companion over its internal tRPC API |
 | `tools/mediakey/` | Media key helper (Swift) |
-| `tools/zored_stream/` | one daemon replacing the helpers ([daemon.md](docs/daemon.md)); VK WorkSpace call mic/camera, volume, Now Playing (perl child) |
-| `tools/ymusic/` | Yandex Music like/dislike daemon (Swift, Accessibility) |
+| `tools/zored_stream/` | one daemon replacing the helpers ([daemon.md](docs/daemon.md)); VK WorkSpace call mic/camera, volume, Now Playing (perl child), Yandex Music like (Accessibility) |
 | `tools/icons/` | SVG icons embedded into pages |
 | `tools/surface.mjs` | Switches the Loupedeck integration to a module version and sets surface config over tRPC |
 | `tools/companion_config.py` | Edits the Companion launcher's `config.json` |

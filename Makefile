@@ -23,10 +23,10 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall ymusic-bin ymusic ymusic-uninstall module companion companion-restart pages deploy
+.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart pages deploy
 
 build:
-	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey ymusic-bin zored_stream-bin
+	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey zored_stream-bin
 
 mediakey:
 	mkdir -p $(BIN)
@@ -48,16 +48,6 @@ zored_stream: zored_stream-bin
 
 zored_stream-uninstall:
 	$(call uninstall-agent,zored_stream)
-
-ymusic-bin:
-	mkdir -p $(BIN)
-	swiftc -O tools/ymusic/main.swift -o $(BIN)/ymusic
-
-ymusic: ymusic-bin
-	$(call install-agent,ymusic)
-
-ymusic-uninstall:
-	$(call uninstall-agent,ymusic)
 
 module:
 	test -d $(MODULE) || git clone -b zored_stream git@github.com:zored/companion-surface-loupedeck.git $(MODULE)
