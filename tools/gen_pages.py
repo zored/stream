@@ -16,7 +16,7 @@ HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "volume_anim", "volume_alpha", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "ym_like", "call_mic", "call_cam",
-    "ai_label_svg", "ai_strip_top_svg", "ai_strip_bottom_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
+    "ai_label_svg", "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state")}
 VOLUME_ALPHA = "$(custom:volume_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
@@ -249,8 +249,8 @@ def ai_switch():
 
 def ai_label(row):
     style = [canvas(), box("box0", 0x000000), strip_image("label", "ai_label_svg", row, 270)]
-    if row != 1:
-        style.append(image("values", expr(f'$(custom:ai_strip_{"top" if row == 0 else "bottom"}_svg)')))
+    if row == 0:
+        style.append(image("values", expr("$(custom:ai_strip_svg)")))
     return button(style)
 
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+	"strings"
 	"testing"
 	"time"
 )
@@ -55,7 +57,7 @@ func TestTimeLeft(t *testing.T) {
 		}
 	}
 	for d, want := range map[time.Duration]string{95 * time.Hour: "3d", 24 * time.Hour: "1d", 5*time.Hour + 20*time.Minute: "5:20"} {
-		if got, _ := daysLeft(d); got != want {
+		if got := daysLeft(d); got != want {
 			t.Errorf("days %v: got %s want %s", d, got, want)
 		}
 	}
@@ -68,5 +70,34 @@ func TestScopedFor(t *testing.T) {
 	}
 	if l := scopedFor(limits, "Sonnet"); l != nil {
 		t.Errorf("Sonnet: got %v", l)
+	}
+}
+
+func TestStripCell(t *testing.T) {
+	now := at(19, 12)
+	limits := []limit{lim("session", 30, "", ptr(now.Add(102*time.Minute))), lim("weekly_all", 23, "", ptr(at(23, 18)))}
+	text := func(uri string) string {
+		b, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(uri, "data:image/svg+xml;base64,"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		svg := string(b)
+		i := strings.Index(svg, `</text>`)
+		if i < 0 {
+			t.Fatalf("no text in %s", svg)
+		}
+		return svg[strings.LastIndex(svg[:i], ">")+1 : i]
+	}
+	for name, c := range map[string]struct {
+		mode stripMode
+		want string
+	}{
+		"session":   {stripMode{}, "1:42"},
+		"switching": {stripMode{switching: true}, ""},
+		"week":      {stripMode{weekUntil: now.Add(time.Second)}, "4d"},
+	} {
+		if got := text(stripCell(limits, limits[1], c.mode, now, false)); got != c.want {
+			t.Errorf("%s: got %q want %q", name, got, c.want)
+		}
 	}
 }

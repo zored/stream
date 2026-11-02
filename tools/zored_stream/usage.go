@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"log"
 	"math"
@@ -26,6 +27,7 @@ const (
 	day             = 24 * time.Hour
 	sessionHours    = 5
 	gray            = "#808080"
+	weekShowFor     = 4 * time.Second
 )
 
 var levelColors = map[string]string{"low": "#fff", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
@@ -69,6 +71,12 @@ type usage struct {
 	failures int
 	wake     chan struct{}
 	model    string
+	stripMode
+}
+
+type stripMode struct {
+	switching bool
+	weekUntil time.Time
 }
 
 func newUsage(v *vars, every time.Duration, proxy string) (*usage, error) {
@@ -110,10 +118,14 @@ func (u *usage) refresh() error {
 	return nil
 }
 
-func (u *usage) focus(model string) {
+func (u *usage) focus(model string, switching bool) {
 	u.mu.Lock()
-	changed := u.model != model
-	u.model = model
+	changed := u.model != model || u.switching != switching
+	if u.switching && !switching {
+		u.weekUntil = time.Now().Add(weekShowFor)
+		time.AfterFunc(weekShowFor, u.publish)
+	}
+	u.model, u.switching = model, switching
 	u.mu.Unlock()
 	if changed {
 		u.publish()
@@ -218,28 +230,18 @@ func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 
 func (u *usage) publish() {
 	u.mu.Lock()
-	limits, failed, model := u.limits, u.snap.Error != "", u.model
+	limits, failed, model, mode := u.limits, u.snap.Error != "", u.model, u.stripMode
 	u.mu.Unlock()
 	week := scopedFor(limits, model)
 	if week == nil {
 		week = findLimit(limits, "weekly_all")
 	}
 	if week == nil {
-		u.vars.set("ai_strip_top_svg", "")
-		u.vars.set("ai_strip_bottom_svg", "")
+		u.vars.set("ai_strip_svg", "")
 		return
 	}
 	now := time.Now()
-	sessionLeft := clockLeft(sessionHours * time.Hour)
-	if s := findLimit(limits, "session"); s != nil && s.ResetsAt != nil {
-		sessionLeft = clockLeft(s.ResetsAt.Sub(now))
-	}
-	weekLeft, weekColor := "", gray
-	if week.ResetsAt != nil {
-		weekLeft, weekColor = daysLeft(week.ResetsAt.Sub(now))
-	}
-	u.vars.set("ai_strip_top_svg", cellSVG(true, sessionLeft, "#fff", dayPct(*week, now), failed))
-	u.vars.set("ai_strip_bottom_svg", cellSVG(false, weekLeft, weekColor, week.Percent, false))
+	u.vars.set("ai_strip_svg", stripCell(limits, *week, mode, now, failed))
 	if s := findLimit(limits, "session"); s != nil {
 		u.vars.set("ai_session", strconv.Itoa(round(s.Percent)))
 		if s.ResetsAt != nil {
@@ -315,20 +317,41 @@ func dayPct(l limit, now time.Time) float64 {
 	return workdays * l.Percent / float64(workdayIndex(start, now))
 }
 
-func cellSVG(top bool, left, leftColor string, pct float64, failed bool) string {
-	timeY, pctY, backY := 84, 64, 44
-	if top {
-		timeY, pctY, backY = 18, 41, 0
+func stripCell(limits []limit, week limit, mode stripMode, now time.Time, failed bool) string {
+	switch {
+	case mode.switching:
+		return cellSVG("", dayPct(week, now), failed)
+	case now.Before(mode.weekUntil):
+		left := ""
+		if week.ResetsAt != nil {
+			left = daysLeft(week.ResetsAt.Sub(now))
+		}
+		return cellSVG(left, week.Percent, failed)
 	}
+	text, pct := clockLeft(sessionHours*time.Hour), 0.0
+	if s := findLimit(limits, "session"); s != nil {
+		pct = s.Percent
+		if s.ResetsAt != nil {
+			text = clockLeft(s.ResetsAt.Sub(now))
+		}
+	}
+	return cellSVG(text, pct, failed)
+}
+
+func cellSVG(text string, pct float64, failed bool) string {
+	const w, h, inset = 60, 90, 4
+	barH := float64(h-2*inset) * min(max(pct, 0), 100) / 100
+	bar := fmt.Sprintf(`x="%d" y="%.1f" width="%d" height="%.1f"`, inset, h-inset-barH, w-2*inset, barH)
+	label := fmt.Sprintf(`<text x="%d" y="%d" text-anchor="middle" font-family="Helvetica" font-size="21" font-weight="bold" fill="%%s"%%s>%s</text>`,
+		w/2, h/2+8, html.EscapeString(text))
 	dot := ""
 	if failed {
-		dot = `<circle cx="54" cy="6" r="3" fill="#FF6666"/>`
+		dot = fmt.Sprintf(`<circle cx="%d" cy="%d" r="3" fill="#FF6666"/>`, w-inset-3, inset+3)
 	}
-	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 90">`+
-		`<rect x="0" y="%d" width="60" height="46" fill="#000" opacity="0.75"/>%s`+
-		`<g font-family="Helvetica" text-anchor="middle"><text x="30" y="%d" font-size="15" fill="%s">%s</text>`+
-		`<text x="30" y="%d" font-size="21" font-weight="bold" fill="%s">%d</text></g></svg>`,
-		backY, dot, timeY, leftColor, left, pctY, levelColors[levelOf(pct)], round(pct)))
+	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
+		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
+		`%s<rect %s fill="#fff"/>%s%s</svg>`,
+		w, h, bar, w, h, fmt.Sprintf(label, "#fff", ""), bar, fmt.Sprintf(label, "#000", ` clip-path="url(#bar)"`), dot))
 }
 
 func clockLeft(d time.Duration) string {
@@ -336,11 +359,11 @@ func clockLeft(d time.Duration) string {
 	return fmt.Sprintf("%d:%02d", m/60, m%60)
 }
 
-func daysLeft(d time.Duration) (string, string) {
+func daysLeft(d time.Duration) string {
 	if d >= day {
-		return fmt.Sprintf("%dd", int(d/day)), gray
+		return fmt.Sprintf("%dd", int(d/day))
 	}
-	return clockLeft(d), "#fff"
+	return clockLeft(d)
 }
 
 func dataURI(svg string) string {

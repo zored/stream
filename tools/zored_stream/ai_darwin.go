@@ -26,6 +26,7 @@ const (
 	aiStep       = 100 * time.Millisecond
 	aiPollEvery  = time.Second
 	aiPreview    = 5 * time.Second
+	stripHeight  = 270.0
 	keyE         = 14
 	keyEscape    = 53
 )
@@ -52,10 +53,10 @@ type aiSwitch struct {
 	held    bool
 	turned  bool
 	preview time.Time
-	onShow  func(model string)
+	onShow  func(model string, switching bool)
 }
 
-func newAISwitch(v *vars, onShow func(model string)) *aiSwitch {
+func newAISwitch(v *vars, onShow func(model string, switching bool)) *aiSwitch {
 	return &aiSwitch{index: 1, vars: v, onShow: onShow}
 }
 
@@ -73,7 +74,7 @@ func (a *aiSwitch) show(c aiChoice, state string) {
 	a.vars.set("ai_model", c.model)
 	a.vars.set("ai_effort", c.effort)
 	a.vars.set("ai_state", state)
-	a.onShow(c.model)
+	a.onShow(c.model, state == "pending")
 }
 
 func aiLabelSVG(model, effort, state string) string {
@@ -108,6 +109,18 @@ func (a *aiSwitch) turn(d int) {
 	} else {
 		a.index = min(max(a.index+d, 0), len(aiModels)*len(aiEfforts)-1)
 	}
+	a.schedule()
+}
+
+func (a *aiSwitch) slide(y float64) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	steps := len(aiModels) * len(aiEfforts)
+	index := min(max(int((stripHeight-y)/stripHeight*float64(steps)), 0), steps-1)
+	if index == a.index && a.pending {
+		return
+	}
+	a.index = index
 	a.schedule()
 }
 

@@ -143,6 +143,15 @@ func main() {
 			ai.turn(d)
 			w.WriteHeader(http.StatusNoContent)
 		})
+		mux.HandleFunc("POST /ai/slide", func(w http.ResponseWriter, r *http.Request) {
+			y, err := strconv.ParseFloat(r.URL.Query().Get("y"), 64)
+			if err != nil {
+				http.Error(w, "y: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+			ai.slide(y)
+			w.WriteHeader(http.StatusNoContent)
+		})
 		handle(mux, "/ai/down", ai.down)
 		handle(mux, "/ai/up", ai.up)
 	})

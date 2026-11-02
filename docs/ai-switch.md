@@ -59,6 +59,9 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   screen or an open session — and publishes the truth; the knob position follows it (verified 2026-11-02: an open Opus·Medium session
   showed `ok`). Applying stays new-chat only: a turn in an open session previews the choice for 5 s (gray label, the strip shows that
   model's limits, state `preview`), then the poll brings back the session's real model. Claude Code CLI is not synced (user: not needed).
+- Sliding along the right strip picks the same list by position, bottom `Sonnet·Low` to top `Fable·High`: the module fork posts
+  `POST /ai/slide?y=<px>` (0 = top of the 270 px strip) on every touch move, the daemon maps it to one of the 9 stops and schedules
+  the switch like a turn (verified with curl: y=10 → Fable·High, y=260 → Sonnet·Low; on the device: not confirmed yet).
 - Turn while pressed: only the model changes, the effort stays. A press released without a turn re-applies the shown choice.
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
@@ -67,7 +70,7 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   Dots are white `ok`, gray `pending`, dark gray `idle` (Claude not frontmost), amber `other` (outside the knob's list), red `error`;
   in `preview` the model and the dots are yellow.
 
-`zored_stream` module `ai` (`ai_darwin.go`, `127.0.0.1:47117`, flag `-ai`): `POST /ai/turn?d=±1`, `POST /ai/down`, `POST /ai/up`; variables `ai_model`,
+`zored_stream` module `ai` (`ai_darwin.go`, `127.0.0.1:47117`, flag `-ai`): `POST /ai/turn?d=±1`, `POST /ai/slide?y=`, `POST /ai/down`, `POST /ai/up`; variables `ai_model`,
 `ai_effort`, `ai_state`. AX helpers in `ax_darwin.m`: one BFS with a predicate, `ax_find_attr` (role + attribute, exact or prefix),
 `ax_string`, `ax_focused_window`, `ax_frontmost_pid`, `ax_key`.
 

@@ -28,20 +28,24 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 - Fetch on start, then every `-usage-every`. Errors back off: interval × 2ⁿ, at most 1 h, at least `Retry-After`.
 - `GET /usage`: `{"limits": [...as upstream...], "fetched_at", "error", "next_at"}` from the cache, never fetches.
 - `POST /usage/refresh`: fetch now, ignored within a minute of the last fetch.
-- Variables: `ai_strip_top_svg`, `ai_strip_bottom_svg` (right strip), `ai_session`, `ai_session_reset`, `ai_day`, `ai_week`, `ai_week_reset`, `ai_level`
+- Variables: `ai_strip_svg` (right strip top cell), `ai_session`, `ai_session_reset`, `ai_day`, `ai_week`, `ai_week_reset`, `ai_level`
   (`low` < 50, `normal`, `high` > 80, `critical` > 90, from `ai_day`). The strip pictures are re-rendered with the 10 s resend, so time left stays current.
 - `d` is the weekly percent scaled to the workday: `5 × percent / workdays since the window start` (Mon–Fri, 1…5), as in the overlay.
 
 ## Right strip
 
-No tile (removed 2026-11-02, the strip carries it). Over the rotated model | effort label ([ai-switch.md](ai-switch.md)),
-values of the selected model, horizontal on a dimmed backing, pushed to the strip's ends:
+No tile (removed 2026-11-02). Over the rotated model | effort label ([ai-switch.md](ai-switch.md)), the top cell shows one
+value with a white bar filling bottom-up behind it; the text is drawn white and again black clipped to the bar, so it inverts
+where the bar covers it (`ai_strip_svg`, `stripCell`). The bottom cells show only the label.
 
-- top cell, from the top: time left in the 5h session as a white clock (`1:42`), `d` — `ai_strip_top_svg`; a red dot when the last fetch failed
-- bottom cell, to the bottom: `w`, time left in the week in gray whole days (`3d`), a white clock under a day — `ai_strip_bottom_svg`
+| When | Text | Bar |
+|---|---|---|
+| default | time left in the 5h session, `1:42` | session usage |
+| while the model is switching (knob or strip) | none | `d` of the selected model |
+| 4 s after the switch settles | whole days left in the week, `3d` (`h:mm` under a day) | `w` of the selected model |
 
 The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
-Percents have no `%` sign and are white, yellow > 80, red > 90.
+Bars over 100 % stay full. A red dot in the corner means the last fetch failed.
 
 ## Hammerspoon overlay
 
