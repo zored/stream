@@ -190,7 +190,7 @@ func (a *agents) focus() error {
 	if len(list) == 0 {
 		a.cursor = nil
 		a.mu.Unlock()
-		return run(exec.Command("/usr/bin/open", "claude://code/new"))
+		return newChat()
 	}
 	next := list[0]
 	if a.cursor != nil {
@@ -224,6 +224,10 @@ func (s agentSession) open() error {
 		return fmt.Errorf("focus %s: %w", s.ID, err)
 	}
 	return nil
+}
+
+func newChat() error {
+	return run(exec.Command("/usr/bin/open", "claude://code/new"))
 }
 
 func run(cmd *exec.Cmd) error {

@@ -310,7 +310,7 @@ def agents_led():
 def agents_tile():
     return button([canvas(), box("box0", 0x000000),
                    image("dots", expr("$(custom:agents_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
-                  down=[post(AGENTS + "/agent/focus")])
+                  up=[post(AGENTS + "/agent/focus")], held=[post(AGENTS + "/agent/new")])
 
 
 def dictation_led():

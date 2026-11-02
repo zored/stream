@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "9XMZPsgkQNjCcw-1DjY9i",
+  "id": "n2FEXX9BQGpzKJEh1PLkZ",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -2815,7 +2815,8 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [
+        "down": [],
+        "up": [
          {
           "type": "action",
           "id": "5FJuPMPcMZniNBTZVwymy",
@@ -2842,10 +2843,38 @@
           "upgradeIndex": null
          }
         ],
-        "up": []
+        "400": [
+         {
+          "type": "action",
+          "id": "GsUaCH6Cq9_adVXbrHSYH",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/new",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
-        "runWhileHeld": []
+        "runWhileHeld": [
+         400
+        ]
        }
       }
      },
@@ -5279,7 +5308,7 @@
         "down": [
          {
           "type": "action",
-          "id": "70QJio7ZU4gUmPVkoWjtL",
+          "id": "gVJ02FKOioexkUL1trMIr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5306,7 +5335,7 @@
         "up": [
          {
           "type": "action",
-          "id": "gVJ02FKOioexkUL1trMIr",
+          "id": "loUSyX7da2SaAIlfUShy1",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5723,7 +5752,7 @@
         "down": [
          {
           "type": "action",
-          "id": "GsUaCH6Cq9_adVXbrHSYH",
+          "id": "X1UuxRPtxEusuggvtq2rD",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

@@ -193,6 +193,7 @@ func main() {
 		mux.HandleFunc("POST /agent/event", ag.serveEvent)
 		mux.HandleFunc("GET /agents", ag.serveJSON)
 		handle(mux, "/agent/focus", ag.focus)
+		handle(mux, "/agent/new", newChat)
 	})
 	vol, err := newVolume(v)
 	if err != nil {
