@@ -21,6 +21,7 @@ import (
 const (
 	agentInput     = "input"
 	agentDone      = "done"
+	agentWorking   = "working"
 	agentLedHz     = 20
 	agentBreathe   = 2 * time.Second
 	agentMaxDots   = 8
@@ -46,14 +47,31 @@ type agentSession struct {
 	ITerm string    `json:"iterm,omitempty"`
 	App   string    `json:"app,omitempty"`
 	Pid   int       `json:"pid,omitempty"`
+	choicePayload
+}
+
+type choicePayload struct {
+	Questions  []choiceQuestion `json:"questions,omitempty"`
+	Permission string           `json:"permission,omitempty"`
+	Step       int              `json:"step,omitempty"`
+	Picked     []map[int]bool   `json:"-"`
+}
+
+type choiceQuestion struct {
+	Question    string `json:"question"`
+	MultiSelect bool   `json:"multiSelect"`
+	Options     []struct {
+		Label string `json:"label"`
+	} `json:"options"`
 }
 
 type hookEvent struct {
-	SessionID        string `json:"session_id"`
-	Event            string `json:"hook_event_name"`
-	Cwd              string `json:"cwd"`
-	ToolName         string `json:"tool_name"`
-	NotificationType string `json:"notification_type"`
+	SessionID        string          `json:"session_id"`
+	Event            string          `json:"hook_event_name"`
+	Cwd              string          `json:"cwd"`
+	ToolName         string          `json:"tool_name"`
+	NotificationType string          `json:"notification_type"`
+	ToolInput        json.RawMessage `json:"tool_input"`
 }
 
 type agents struct {
@@ -83,12 +101,23 @@ func (a *agents) serveEvent(w http.ResponseWriter, r *http.Request) {
 	s := agentSession{ID: e.SessionID, Cwd: e.Cwd, Host: r.Header.Get("Agent-Host"), ITerm: r.Header.Get("Agent-Iterm"),
 		App: r.Header.Get("Agent-App"), Pid: pid}
 	switch e.Event {
-	case "PermissionRequest":
-		a.mark(s, agentInput)
-	case "PreToolUse":
-		if e.ToolName == "AskUserQuestion" {
-			a.mark(s, agentInput)
+	case "PermissionRequest", "PreToolUse":
+		if e.ToolName != "AskUserQuestion" {
+			if e.Event == "PermissionRequest" {
+				s.Permission = e.ToolName
+				a.mark(s, agentInput)
+			}
+			break
 		}
+		var in struct {
+			Questions []choiceQuestion `json:"questions"`
+		}
+		if err := json.Unmarshal(e.ToolInput, &in); err != nil {
+			http.Error(w, "AskUserQuestion tool_input: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		s.Questions = in.Questions
+		a.mark(s, agentInput)
 	case "Notification":
 		switch e.NotificationType {
 		case "permission_prompt", "elicitation_dialog":
@@ -98,9 +127,9 @@ func (a *agents) serveEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	case "Stop", "StopFailure":
 		a.mark(s, agentDone)
-	case "PostToolUse":
-		a.resume(e.SessionID)
-	case "UserPromptSubmit", "SessionStart", "SessionEnd":
+	case "PostToolUse", "UserPromptSubmit":
+		a.mark(s, agentWorking)
+	case "SessionStart", "SessionEnd":
 		a.remove(e.SessionID)
 	default:
 		log.Printf("agents: unexpected hook %s", e.Event)
@@ -112,28 +141,21 @@ func (a *agents) mark(s agentSession, kind string) {
 	a.mu.Lock()
 	old := a.sessions[s.ID]
 	if old != nil && old.Kind == kind {
+		if old.Questions == nil && old.Permission == "" {
+			old.choicePayload = s.choicePayload
+		}
 		a.mu.Unlock()
 		return
 	}
 	s.Kind, s.Since = kind, time.Now()
+	s.Picked = make([]map[int]bool, len(s.Questions))
+	for i := range s.Picked {
+		s.Picked[i] = map[int]bool{}
+	}
 	a.sessions[s.ID] = &s
 	a.mu.Unlock()
 	log.Printf("agents: %s %s %s", s.ID, kind, filepath.Base(s.Cwd))
 	a.publish()
-}
-
-func (a *agents) resume(id string) {
-	a.mu.Lock()
-	s := a.sessions[id]
-	waiting := s != nil && s.Kind == agentInput
-	if waiting {
-		delete(a.sessions, id)
-	}
-	a.mu.Unlock()
-	if waiting {
-		log.Printf("agents: %s resumed", id)
-		a.publish()
-	}
 }
 
 func (a *agents) remove(id string) {
@@ -162,12 +184,11 @@ func (a *agents) expire() {
 	}
 }
 
+var agentRank = map[string]int{agentInput: 0, agentDone: 1, agentWorking: 2}
+
 func agentLess(x, y *agentSession) int {
-	if x.Kind != y.Kind {
-		if x.Kind == agentInput {
-			return -1
-		}
-		return 1
+	if c := agentRank[x.Kind] - agentRank[y.Kind]; c != 0 {
+		return c
 	}
 	if c := x.Since.Compare(y.Since); c != 0 {
 		return c
@@ -256,9 +277,10 @@ end tell`
 
 func (a *agents) counts() (input, done int) {
 	for _, s := range a.sessions {
-		if s.Kind == agentInput {
+		switch s.Kind {
+		case agentInput:
 			input++
-		} else {
+		case agentDone:
 			done++
 		}
 	}
@@ -268,8 +290,17 @@ func (a *agents) counts() (input, done int) {
 func (a *agents) publish() {
 	a.mu.Lock()
 	input, done := a.counts()
+	list := a.sorted()
+	kinds := make([]string, len(list))
+	current := -1
+	for i, s := range list {
+		kinds[i] = s.Kind
+		if a.cursor != nil && s.ID == a.cursor.ID {
+			current = i
+		}
+	}
 	a.mu.Unlock()
-	a.vars.set("agents_svg", agentsSVG(input, done))
+	a.vars.set("agents_svg", agentsSVG(kinds, current))
 	if input > 0 {
 		select {
 		case a.breathe <- struct{}{}:
@@ -301,29 +332,35 @@ func (a *agents) animate() {
 	}
 }
 
-func agentsSVG(input, done int) string {
+func agentsSVG(kinds []string, current int) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
-	switch n := input + done; {
+	switch n := len(kinds); {
 	case n == 0:
 		fmt.Fprintf(&b, `<circle cx="50" cy="50" r="7" fill="none" stroke="%s" stroke-width="2.5"/>`, gray)
 	case n > agentMaxDots:
 		fill := "#fff"
-		if input > 0 {
+		if kinds[0] == agentInput {
 			fill = "#FFB000"
 		}
 		fmt.Fprintf(&b, `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="56" fill="%s">%d</text>`, fill, n)
 	default:
 		rows := (n + 3) / 4
-		for i := range n {
+		for i, kind := range kinds {
 			row, col := i/4, i%4
 			inRow := min(4, n-row*4)
-			fill := gray
-			if i < input {
-				fill = "#FFB000"
+			x, y := 50+(float64(col)-float64(inRow-1)/2)*22, 50+(float64(row)-float64(rows-1)/2)*22
+			switch kind {
+			case agentInput:
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="#FFB000"/>`, x, y)
+			case agentDone:
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="%s"/>`, x, y, gray)
+			default:
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="6.5" fill="none" stroke="%s" stroke-width="2.5"/>`, x, y, gray)
 			}
-			fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="%s"/>`,
-				50+(float64(col)-float64(inRow-1)/2)*22, 50+(float64(row)-float64(rows-1)/2)*22, fill)
+			if i == current {
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="10.5" fill="none" stroke="#fff" stroke-width="1.5"/>`, x, y)
+			}
 		}
 	}
 	b.WriteString(`</svg>`)
@@ -342,5 +379,57 @@ func (a *agents) serveJSON(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(out); err != nil {
 		log.Printf("agents json: %v", err)
+	}
+}
+
+func (a *agents) hasCLIChoice() bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, s := range a.sessions {
+		if s.Kind == agentInput && s.ITerm != "" && (s.Questions != nil || s.Permission != "") {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *agents) cliCard(uid string) (*choiceCard, string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, s := range a.sessions {
+		m := itermSession.FindStringSubmatch(s.ITerm)
+		if s.Kind != agentInput || m == nil || m[1] != uid {
+			continue
+		}
+		if s.Questions == nil {
+			if s.Permission == "" {
+				return nil, ""
+			}
+			return &choiceCard{Options: []choiceOption{{Label: "yes"}}, Index: 1, Count: 1}, s.ID
+		}
+		step := min(max(s.Step, 0), len(s.Questions)-1)
+		q := s.Questions[step]
+		card := &choiceCard{Multi: q.MultiSelect, Index: step + 1, Count: len(s.Questions)}
+		for i, o := range q.Options {
+			card.Options = append(card.Options, choiceOption{Label: o.Label, Selected: s.Picked[step][i]})
+		}
+		return card, s.ID
+	}
+	return nil, ""
+}
+
+func (a *agents) cliStep(id string, d int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if s := a.sessions[id]; s != nil {
+		s.Step = min(max(s.Step+d, 0), len(s.Questions)-1)
+	}
+}
+
+func (a *agents) cliToggle(id string, i int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if s := a.sessions[id]; s != nil && s.Step < len(s.Picked) {
+		s.Picked[s.Step][i] = !s.Picked[s.Step][i]
 	}
 }

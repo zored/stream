@@ -6,8 +6,8 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 ## Controls
 
 - кнопка 6 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
-- тайл ряд 2, колонка 4: one dot per waiting session, amber = needs input, gray = done, input first; a number above 8; a hollow gray circle when none.
-- Press either: focus the next waiting session (needs input first, oldest first), the next press moves on and wraps.
+- тайл ряд 2, колонка 4: one dot per session: amber = needs input, gray = done, gray ring = working, in that order; the last focused one has a white ring; a number above 8; a hollow gray circle when none.
+- Press either: focus the next session (needs input, then done, then working, oldest first), the next press moves on and wraps.
   Focusing a "done" session drops it; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile (400 ms) always opens a new Code session; the tile focuses on release.
 
 ## Flow
@@ -27,8 +27,8 @@ and without it the post went to the corporate proxy and was lost (verified).
 |---|---|
 | `PermissionRequest`, `Notification` `permission_prompt` / `elicitation_dialog`, `PreToolUse` `AskUserQuestion` | needs input |
 | `Stop`, `StopFailure`, `Notification` `idle_prompt` | done |
-| `PostToolUse` | needs input → removed (approved and running) |
-| `UserPromptSubmit`, `SessionStart`, `SessionEnd` | removed |
+| `UserPromptSubmit`, `PostToolUse` | working |
+| `SessionStart`, `SessionEnd` | removed |
 
 Expiry every 10 s: the hook's `$PPID` is the `claude` process (verified), a dead pid drops the session; `-agents-ttl` (4 h) is the backstop.
 
@@ -104,3 +104,32 @@ Verified 2026-11-03 with `say` into the mic: all four, the sent ones arrived as 
   started with the mouse lights the LED too.
 - The bundle has `dictationShortcut` (`default` / `off` / an accelerator) in the app preferences, but the default key
   lives in the claude.ai frontend, not in `app.asar` (read); AX avoids depending on it.
+
+## Choice mode
+
+When the session on screen asks a question, кнопки 1–8 answer it; their own actions (mic, camera, hang-up, agents,
+dictation) are suspended until the card is gone.
+
+| Button | Single question, single choice | Several questions or multiple choice |
+|---|---|---|
+| кнопка 1 (gray) | skip | previous question; skip on the first |
+| кнопки 2–7 | options 1–6, white: pick and go on | single choice: white, pick and go on; multiple: green = picked, red = not, press toggles |
+| кнопка 8 | option 7 | next question (gray); finish on the last one (white) |
+
+Picking the only choice of the last question submits the card.
+
+- Gate: every row-3 button runs `curl -f :47120/choice/{down,up}?b=N || <its own action>`. The daemon answers `204` while a card is
+  on screen (and for the matching release), `409` otherwise, so with the daemon down the buttons work as before.
+  LEDs come from `choice_on` and `choice_1`…`choice_8`, an overlay layer on each button.
+- Detection every 500 ms, only while Claude Desktop or iTerm2 is frontmost (`choice.go`, `choice_darwin.go`).
+- Claude Desktop (verified 2026-11-03 on live cards, pressed through Companion): `ax_card` finds the `Skip` button, walks up to the
+  card and reads options (`AXCheckBox`/`AXToggleButton` with a title and no description, `AXValue` 1 = picked), `N of M`,
+  `N selected` (only on multiple choice), `Next`/`Submit`, `Show previous question`. An option of a single-choice question
+  ignores the first `AXPress` (it only takes focus); the daemon presses until `AXValue` is 1, at most 3 times, and fails loudly otherwise.
+- CLI in iTerm2: options from the `PreToolUse`/`PermissionRequest` hook JSON (`tool_input.questions`); the daemon tracks the
+  question and the picks itself and types into the session whose `unique id` is current (`write text … newline NO`).
+  Keys verified in `tmux` 2026-11-03: a digit picks a single choice and goes on (submits a lone question), a digit toggles a
+  multiple choice, `Tab`/`Shift-Tab` move, `Tab` past the last question opens the review where `1` submits, `Esc` cancels.
+  The iTerm2 path itself is assumed: not run yet, and the first use asks for Automation permission (`zored_stream` → iTerm2).
+- Permission prompts in the CLI: кнопка 2 = `1` (yes), кнопка 1 = `Esc`. In Claude Desktop the permission card is not handled yet:
+  its AX tree has not been seen (this session runs in auto mode).

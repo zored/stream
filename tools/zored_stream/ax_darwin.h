@@ -17,4 +17,6 @@ void ax_key(pid_t pid, int keycode, int flags);
 int ax_int_value(AXUIElementRef element, int *out);
 int ax_press(AXUIElementRef element);
 int ax_focus(AXUIElementRef element);
+char *ax_card(AXUIElementRef window);
+int ax_card_press(AXUIElementRef window, const char *text, int select);
 void ax_release(AXUIElementRef element);

@@ -25,7 +25,7 @@ ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation")
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", *(f"choice_{b}" for b in range(1, 9)))
     if not (WINDOWS and name in ("call_cam", "ym_like", "dictation"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
@@ -317,6 +317,17 @@ def dictation_led():
     return button([canvas(), box("box0", expr(f'$(custom:dictation) == "on" ? {0xFF3030} : 0'))], down=ai("/dictation/down"), up=ai("/dictation/up"))
 
 
+def choice_gated(b, control):
+    sets = control["steps"]["0"]["action_sets"]
+    for edge in ("down", "up"):
+        assert all(a["definitionId"] == "exec" for a in sets[edge]), (b, edge)
+        fallback = " ; ".join(a["options"]["path"]["value"] for a in sets[edge]) or "true"
+        sets[edge] = [sh(f"curl -fs -m 1 -X POST '{AGENTS}/choice/{edge}?b={b}' >/dev/null || {{ {fallback} ; }}")]
+    control["style"]["layers"].append(box("choice", expr(f"$(custom:choice_{b})"),
+                                          opacity=expr("$(custom:choice_on) == 1 ? 100 : 0")))
+    return control
+
+
 def test_page():
     grid = {}
     for r in range(3):
@@ -362,6 +373,9 @@ def media_page():
     if WINDOWS:
         for cell in ((2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
             del grid[cell]
+    else:
+        for c in range(8):
+            grid[(3, c)] = choice_gated(c + 1, grid.get((3, c)) or blank())
     return "MEDIA", grid
 
 

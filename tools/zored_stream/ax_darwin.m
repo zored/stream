@@ -1,5 +1,6 @@
 #import <AppKit/AppKit.h>
 #include "ax_darwin.h"
+#include <unistd.h>
 
 pid_t ax_app_pid(const char *bundle) {
     @autoreleasepool {
@@ -208,4 +209,99 @@ int ax_focus(AXUIElementRef element) {
 
 void ax_release(AXUIElementRef element) {
     CFRelease(element);
+}
+
+static void card_walk(AXUIElementRef element, int depth, int *budget, void (^visit)(AXUIElementRef, NSString *)) {
+    if (depth > 40 || --*budget < 0) return;
+    CFStringRef role = copy_string(element, kAXRoleAttribute);
+    visit(element, role ? (__bridge NSString *)role : @"");
+    if (role) CFRelease(role);
+    CFTypeRef children = NULL;
+    if (AXUIElementCopyAttributeValue(element, kAXChildrenAttribute, &children) != kAXErrorSuccess || !children) return;
+    if (CFGetTypeID(children) == CFArrayGetTypeID()) {
+        for (CFIndex i = 0; i < CFArrayGetCount(children); i++)
+            card_walk((AXUIElementRef)CFArrayGetValueAtIndex(children, i), depth + 1, budget, visit);
+    }
+    CFRelease(children);
+}
+
+static NSString *card_attr(AXUIElementRef element, CFStringRef attr) {
+    CFStringRef value = copy_string(element, attr);
+    return value ? (__bridge NSString *)CFAutorelease(value) : @"";
+}
+
+static int is_option(AXUIElementRef element, NSString *role) {
+    return [role isEqualToString:@"AXCheckBox"] && [card_attr(element, kAXSubroleAttribute) isEqualToString:@"AXToggleButton"] &&
+           card_attr(element, kAXDescriptionAttribute).length == 0 && card_attr(element, kAXTitleAttribute).length > 0;
+}
+
+static AXUIElementRef card_root(AXUIElementRef window) {
+    int truncated = 0;
+    AXUIElementRef node = ax_find_attr(window, "AXButton", "AXTitle", "Skip", 0, 20000, &truncated);
+    for (int level = 0; node && level < 6; level++) {
+        CFTypeRef parent = NULL;
+        AXUIElementCopyAttributeValue(node, kAXParentAttribute, &parent);
+        CFRelease(node);
+        node = parent;
+        if (!node) break;
+        __block int options = 0;
+        int budget = 2000;
+        card_walk(node, 0, &budget, ^(AXUIElementRef e, NSString *role) { options += is_option(e, role); });
+        if (options > 0) return node;
+    }
+    if (node) CFRelease(node);
+    return NULL;
+}
+
+char *ax_card(AXUIElementRef window) {
+    @autoreleasepool {
+        AXUIElementRef root = card_root(window);
+        if (!root) return NULL;
+        NSMutableString *out = [NSMutableString string];
+        int budget = 2000;
+        card_walk(root, 0, &budget, ^(AXUIElementRef e, NSString *role) {
+            NSString *title = card_attr(e, kAXTitleAttribute), *desc = card_attr(e, kAXDescriptionAttribute);
+            if (is_option(e, role)) {
+                int value = 0;
+                ax_int_value(e, &value);
+                [out appendFormat:@"opt\t%@\t%d\n", title, value];
+            } else if ([role isEqualToString:@"AXButton"]) {
+                [out appendFormat:@"btn\t%@\n", title.length ? title : desc];
+            } else if ([role isEqualToString:@"AXStaticText"]) {
+                NSString *value = card_attr(e, kAXValueAttribute);
+                if ([value hasSuffix:@" selected"] || [value rangeOfString:@"^[0-9]+ of [0-9]+$" options:NSRegularExpressionSearch].location != NSNotFound)
+                    [out appendFormat:@"txt\t%@\n", value];
+            }
+        });
+        CFRelease(root);
+        return strdup(out.UTF8String);
+    }
+}
+
+int ax_card_press(AXUIElementRef window, const char *text, int select) {
+    @autoreleasepool {
+        AXUIElementRef root = card_root(window);
+        if (!root) return -1;
+        NSString *want = [NSString stringWithUTF8String:text];
+        __block AXUIElementRef hit = NULL;
+        int budget = 2000;
+        card_walk(root, 0, &budget, ^(AXUIElementRef e, NSString *role) {
+            if (hit || !([role isEqualToString:@"AXButton"] || [role isEqualToString:@"AXCheckBox"])) return;
+            if ([card_attr(e, kAXTitleAttribute) isEqualToString:want] || [card_attr(e, kAXDescriptionAttribute) isEqualToString:want])
+                hit = (AXUIElementRef)CFRetain(e);
+        });
+        CFRelease(root);
+        if (!hit) return -2;
+        AXError err = kAXErrorSuccess;
+        for (int attempt = 0; attempt < (select ? 3 : 1); attempt++) {
+            err = AXUIElementPerformAction(hit, kAXPressAction);
+            if (err != kAXErrorSuccess || !select) break;
+            usleep(150000);
+            int value = 0;
+            if (ax_int_value(hit, &value) && value == 1) break;
+            err = -3;
+        }
+        CFRelease(hit);
+        return err;
+    }
 }

@@ -186,6 +186,9 @@ func main() {
 		handle(mux, "/ai/up", ai.up)
 	})
 	ag := newAgents(v, *agentsTTL)
+	ch := newChoice(v, func() (*choiceCard, choiceTarget, error) { return readChoiceCard(ag) })
+	go ch.run()
+	go every(choicePollEvery, ch.poll)
 	ag.publish()
 	go ag.animate()
 	go every(agentCheckFreq, ag.expire)
@@ -194,6 +197,23 @@ func main() {
 		mux.HandleFunc("GET /agents", ag.serveJSON)
 		handle(mux, "/agent/focus", ag.focus)
 		handle(mux, "/agent/new", newChat)
+		mux.HandleFunc("POST /choice/{edge}", func(w http.ResponseWriter, r *http.Request) {
+			b, err := strconv.Atoi(r.URL.Query().Get("b"))
+			if err != nil || b < 1 || b > choiceButtons {
+				http.Error(w, "b: button 1-8", http.StatusBadRequest)
+				return
+			}
+			press := map[string]func(int) error{"down": ch.down, "up": ch.up}[r.PathValue("edge")]
+			if press == nil {
+				http.Error(w, "edge: down or up", http.StatusNotFound)
+				return
+			}
+			if err := press(b); err != nil {
+				http.Error(w, err.Error(), http.StatusConflict)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		})
 	})
 	vol, err := newVolume(v)
 	if err != nil {

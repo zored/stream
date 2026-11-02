@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "eF5P9PJ9V8j0XtY--hKpe",
+  "id": "8jmrkllUzNPJY6CS8ZsyP",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -5557,6 +5557,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_1)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -5564,8 +5621,60 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": []
+        "down": [
+         {
+          "type": "action",
+          "id": "eF5P9PJ9V8j0XtY--hKpe",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=1' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "Xt1tCZjj-h_-NVOAg_rJt",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=1' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -5655,6 +5764,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_2)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -5665,12 +5831,12 @@
         "down": [
          {
           "type": "action",
-          "id": "suZT4K48nLo9xH_aWsX1n",
+          "id": "UQzGzTBQQRpPvhT6NZntI",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/down",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=2' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/down ; }",
             "isExpression": false
            },
            "cwd": {
@@ -5692,12 +5858,12 @@
         "up": [
          {
           "type": "action",
-          "id": "9XMZPsgkQNjCcw-1DjY9i",
+          "id": "p7tPRLhAAiH2GRmhC0EeE",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/up",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=2' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/up ; }",
             "isExpression": false
            },
            "cwd": {
@@ -5805,6 +5971,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_3)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -5815,12 +6038,12 @@
         "down": [
          {
           "type": "action",
-          "id": "n2FEXX9BQGpzKJEh1PLkZ",
+          "id": "8zzxhcugey0pICBLd8xFu",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/cam/down",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=3' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47114/cam/down ; }",
             "isExpression": false
            },
            "cwd": {
@@ -5839,7 +6062,33 @@
           "upgradeIndex": null
          }
         ],
-        "up": []
+        "up": [
+         {
+          "type": "action",
+          "id": "Nf0DcLFWsgyZA9Nw5X72Q",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=3' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -5929,6 +6178,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_4)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -5939,12 +6245,12 @@
         "down": [
          {
           "type": "action",
-          "id": "-9Ctfutp7uupreH1p3yL6",
+          "id": "FteBe65k3gRJx5wTKagZH",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/call/end",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=4' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47114/call/end ; }",
             "isExpression": false
            },
            "cwd": {
@@ -5963,7 +6269,33 @@
           "upgradeIndex": null
          }
         ],
-        "up": []
+        "up": [
+         {
+          "type": "action",
+          "id": "fgtYKjY2dKocGBnIUhREX",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=4' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -6053,6 +6385,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_5)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -6060,8 +6449,60 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": []
+        "down": [
+         {
+          "type": "action",
+          "id": "zWJ9etlHd7DIR87cjEYAL",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=5' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "THHDtRXTLqrLLqy3503At",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=5' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -6151,6 +6592,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_6)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -6161,12 +6659,12 @@
         "down": [
          {
           "type": "action",
-          "id": "70QJio7ZU4gUmPVkoWjtL",
+          "id": "ESuVqKMtiIJ0obGKB2_QC",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=6' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus ; }",
             "isExpression": false
            },
            "cwd": {
@@ -6185,7 +6683,33 @@
           "upgradeIndex": null
          }
         ],
-        "up": []
+        "up": [
+         {
+          "type": "action",
+          "id": "6QY0HC0aFZLhiO6LA6ecA",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=6' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -6275,6 +6799,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_7)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -6285,12 +6866,12 @@
         "down": [
          {
           "type": "action",
-          "id": "gVJ02FKOioexkUL1trMIr",
+          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST 'http://127.0.0.1:47117/dictation/down'",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=7' >/dev/null || { curl -fsS -m 1 -X POST 'http://127.0.0.1:47117/dictation/down' ; }",
             "isExpression": false
            },
            "cwd": {
@@ -6312,12 +6893,12 @@
         "up": [
          {
           "type": "action",
-          "id": "loUSyX7da2SaAIlfUShy1",
+          "id": "UUuaZkswN9ud5PAPapMpW",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST 'http://127.0.0.1:47117/dictation/up'",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=7' >/dev/null || { curl -fsS -m 1 -X POST 'http://127.0.0.1:47117/dictation/up' ; }",
             "isExpression": false
            },
            "cwd": {
@@ -6425,6 +7006,63 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "choice",
+        "name": "choice",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:choice_on) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": "$(custom:choice_8)",
+         "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -6432,8 +7070,60 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": []
+        "down": [
+         {
+          "type": "action",
+          "id": "mw6Aoeumb4cqbejYVNQd0",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=8' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "4bjSxODAm1Fnx1nEN90-6",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=8' >/dev/null || { true ; }",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
