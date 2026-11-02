@@ -16,11 +16,18 @@ import (
 
 const (
 	nowPlayingRestart = time.Second
+	titleHold         = 3 * time.Second
 	yandexMusic       = "ru.yandex.desktop.music"
 	svgFont           = 100
 	svgHeight         = 250
 	svgMinWidth       = svgHeight * 270 / 60
+	heartPath         = "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
 )
+
+var hearts = map[string]string{
+	"liked":    `<path fill="#ff3b6b" d="` + heartPath + `"/>`,
+	"disliked": `<path fill="#888" d="` + heartPath + `"/><path fill="none" stroke="#000" stroke-width="1.5" d="M12 5l-2 5 4 3-3 8"/>`,
+}
 
 type track struct {
 	Title   string `json:"title"`
@@ -33,6 +40,8 @@ type nowPlaying struct {
 	script, lib string
 	mu          sync.Mutex
 	current     track
+	last        track
+	heldUntil   time.Time
 	like        string
 	vars        *vars
 }
@@ -63,10 +72,7 @@ func (n *nowPlaying) session() error {
 			log.Printf("now playing: %v: %s", err, lines.Bytes())
 			continue
 		}
-		n.mu.Lock()
-		n.current = t
-		n.mu.Unlock()
-		n.publish()
+		n.update(t)
 	}
 	if err := lines.Err(); err != nil {
 		_ = cmd.Process.Kill()
@@ -76,9 +82,26 @@ func (n *nowPlaying) session() error {
 	return cmd.Wait()
 }
 
+func (n *nowPlaying) update(t track) {
+	n.mu.Lock()
+	if t.Title == "" && n.current.Title != "" {
+		n.heldUntil = time.Now().Add(titleHold)
+		time.AfterFunc(titleHold, n.publish)
+	}
+	if t.Title != "" && (t.Title != n.last.Title || t.Artist != n.last.Artist) {
+		n.last, n.like = t, ""
+	}
+	n.current = t
+	n.mu.Unlock()
+	n.publish()
+}
+
 func (n *nowPlaying) publish() {
 	n.mu.Lock()
 	t, like := n.current, n.like
+	if t.Title == "" && time.Now().Before(n.heldUntil) {
+		t.Title, t.Artist = n.last.Title, n.last.Artist
+	}
 	n.mu.Unlock()
 	playing := "0"
 	if t.Playing {
@@ -129,11 +152,11 @@ func lineWidth(l svgLine) int {
 }
 
 func trackSVG(t track, like string) string {
-	mark := ""
+	heart := ""
 	if t.App == yandexMusic {
-		mark = map[string]string{"liked": "💖 ", "disliked": "💔 "}[like]
+		heart = hearts[like]
 	}
-	artist := join(span(`fill="#fff"`, mark), span(`fill="#888"`, t.Artist))
+	artist := span(`fill="#888"`, t.Artist)
 	title := span(`font-weight="bold"`, t.Title)
 	lines := []svgLine{join(artist, title)}
 	if t.Artist != "" && t.Title != "" {
@@ -142,17 +165,23 @@ func trackSVG(t track, like string) string {
 			lines = []svgLine{artist, title}
 		}
 	}
+	pad := 0
+	if heart != "" {
+		pad = svgFont * 11 / 10
+		heart = fmt.Sprintf(`<g transform="translate(%d %d) scale(%.2f)">%s</g>`,
+			svgFont/10, svgHeight/2-svgFont*45/100, float64(svgFont)*9/10/24, heart)
+	}
 	width := svgMinWidth
 	for _, l := range lines {
-		width = max(width, lineWidth(l))
+		width = max(width, lineWidth(l)+pad)
 	}
 	texts := ""
 	for i, l := range lines {
 		center := svgHeight * (2*i + 1) / (2 * len(lines))
-		texts += fmt.Sprintf(`<text x="%d" y="%d">%s</text>`, width/2, center+svgFont*35/100, l.markup)
+		texts += fmt.Sprintf(`<text x="%d" y="%d">%s</text>`, pad+(width-pad)/2, center+svgFont*35/100, l.markup)
 	}
-	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d"><g text-anchor="middle" `+
-		`font-family="Helvetica" font-size="%d" fill="#fff">%s</g></svg>`, width, svgHeight, svgFont, texts)
+	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">%s<g text-anchor="middle" `+
+		`font-family="Helvetica" font-size="%d" fill="#fff">%s</g></svg>`, width, svgHeight, heart, svgFont, texts)
 	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(svg))
 }
 
