@@ -304,7 +304,8 @@ def ai_strip(row):
 
 
 def agents_led():
-    return button([canvas(), box("box0", expr("$(custom:agents_led)"))], down=[post(AGENTS + "/agent/focus")])
+    return button([canvas(), box("box0", expr("$(custom:agents_led)"))],
+                  up=[post(AGENTS + "/agent/focus")], held=[post(AGENTS + "/agent/new")])
 
 
 def agents_tile():
@@ -319,10 +320,12 @@ def dictation_led():
 
 def choice_gated(b, control):
     sets = control["steps"]["0"]["action_sets"]
-    for edge in ("down", "up"):
-        assert all(a["definitionId"] == "exec" for a in sets[edge]), (b, edge)
-        fallback = " ; ".join(a["options"]["path"]["value"] for a in sets[edge]) or "true"
-        sets[edge] = [sh(f"curl -fs -m 1 -X POST '{AGENTS}/choice/{edge}?b={b}' >/dev/null || {{ {fallback} ; }}")]
+    for key, edge in (("down", "down"), ("up", "up"), (str(HOLD_MS), "up")):
+        if key not in sets:
+            continue
+        assert all(a["definitionId"] == "exec" for a in sets[key]), (b, key)
+        fallback = " ; ".join(a["options"]["path"]["value"] for a in sets[key]) or "true"
+        sets[key] = [sh(f"curl -fs -m 1 -X POST '{AGENTS}/choice/{edge}?b={b}' >/dev/null || {{ {fallback} ; }}")]
     background = next(layer for layer in control["style"]["layers"] if layer["id"] == "box0")
     color = background["color"]
     own = color["value"] if color["isExpression"] else str(color["value"])

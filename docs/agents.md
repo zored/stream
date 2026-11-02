@@ -8,7 +8,7 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 - кнопка 6 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
 - тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working, in that order; the last focused one has a white ring; a number above 8; a hollow gray circle when none.
 - Press either: focus the next session (needs input, then done, then working, oldest first), the next press moves on and wraps.
-  Focusing a "done" session drops it; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile (400 ms) always opens a new Code session; the tile focuses on release.
+  Focusing a "done" session drops it; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile or кнопка 6 (400 ms) always opens a new Code session; both focus on release.
 
 ## Flow
 
