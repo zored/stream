@@ -64,8 +64,9 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47120` (`-volume`), moves to `:47113` when `streamd` goes | verified: up/down move the system volume and `volume`; no animation, drag, Now Playing |
 
 - `make zstreamd-cert` runs `tools/zstreamd/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
-  (asks for the password). Verified on a throwaway keychain: the identity imports; `codesign` refuses it while untrusted and
-  outside the keychain search list, so the trusted login-keychain path is assumed until the user runs it.
+  (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain
+  and shows as `CSSMERR_TP_NOT_TRUSTED` until trusted; `codesign` refuses an untrusted one; `-r trustAsRoot` is rejected for a
+  self-signed cert (`SecTrustSettingsSetTrustSettings: One or more parameters … not valid`), `trustRoot` is what it needs (assumed).
 - `make zstreamd-bin` builds and signs with `SIGN` (default `zored-stream`, `make build`/CI use `SIGN=-`), identifier
   `com.zored.stream.zstreamd`. `make zstreamd` also installs the LaunchAgent, log `~/Library/Logs/zored-stream/zstreamd.log`.
 - `CGO_LDFLAGS=` in front of `make` while the stale environment is around.
