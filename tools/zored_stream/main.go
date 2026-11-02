@@ -18,6 +18,7 @@ const (
 	companionVars = "http://127.0.0.1:8000/api/custom-variable/"
 	pollEvery     = 250 * time.Millisecond
 	resendEvery   = 10 * time.Second
+	progressEvery = 3 * time.Second
 )
 
 var client = &http.Client{Timeout: time.Second}
@@ -108,6 +109,7 @@ func main() {
 	ymusicAddr := flag.String("ymusic", "127.0.0.1:47115", "Yandex Music like HTTP address")
 	usageAddr := flag.String("usage", "127.0.0.1:47116", "Claude usage HTTP address")
 	aiAddr := flag.String("ai", "127.0.0.1:47117", "Claude Desktop model + effort HTTP address")
+	seekAddr := flag.String("seek", "127.0.0.1:47119", "Now Playing seek HTTP address")
 	brightnessAddr := flag.String("brightness", "127.0.0.1:47118", "display + controller brightness HTTP address")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
@@ -187,6 +189,12 @@ func main() {
 		handleValue(mux, "/brightness/down", func() (int, error) { return br.turn(-1) })
 		handleValue(mux, "/brightness/hold", br.hold)
 		handleValue(mux, "/brightness/release", br.release)
+	})
+	sk := &seeker{np: np, bar: vol.bar}
+	go every(progressEvery, np.publishProgress)
+	go serve(*seekAddr, func(mux *http.ServeMux) {
+		handle(mux, "/seek/forward", func() error { return sk.turn(1) })
+		handle(mux, "/seek/back", func() error { return sk.turn(-1) })
 	})
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {

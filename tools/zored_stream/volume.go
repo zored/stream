@@ -23,7 +23,7 @@ func newVolume(v *vars) (*volume, error) {
 		return nil, err
 	}
 	vol := &volume{value: value, muted: muted, vars: v}
-	vol.bar = newBar(v, "volume", vol.levelLocked())
+	vol.bar = newBar(v, "volume", float64(vol.levelLocked()))
 	return vol, nil
 }
 
@@ -53,7 +53,7 @@ func (v *volume) poll() error {
 }
 
 func (v *volume) revealLocked() {
-	v.bar.show("volume", v.levelLocked())
+	v.bar.show("volume", float64(v.levelLocked()))
 }
 
 func (v *volume) publish() {

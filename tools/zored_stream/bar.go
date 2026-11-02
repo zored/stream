@@ -26,13 +26,16 @@ type bar struct {
 	vars         *vars
 }
 
-func newBar(v *vars, mode string, value int) *bar {
-	return &bar{mode: mode, target: float64(value), shown: float64(value), wake: make(chan struct{}, 1), vars: v}
+func newBar(v *vars, mode string, value float64) *bar {
+	return &bar{mode: mode, target: value, shown: value, wake: make(chan struct{}, 1), vars: v}
 }
 
-func (b *bar) show(mode string, value int) {
+func (b *bar) show(mode string, value float64) {
 	b.mu.Lock()
-	b.mode, b.target = mode, float64(value)
+	if b.alpha == 0 && b.mode != mode {
+		b.shown = value
+	}
+	b.mode, b.target = mode, value
 	b.visibleUntil = time.Now().Add(visibleFor)
 	b.mu.Unlock()
 	select {

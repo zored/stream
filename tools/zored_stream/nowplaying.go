@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -34,11 +36,23 @@ var hearts = map[string]string{
 }
 
 type track struct {
-	Title   string `json:"title"`
-	Artist  string `json:"artist"`
-	Playing bool   `json:"playing"`
-	App     string `json:"app"`
-	Artwork string `json:"artwork"`
+	Title    string  `json:"title"`
+	Artist   string  `json:"artist"`
+	Playing  bool    `json:"playing"`
+	App      string  `json:"app"`
+	Artwork  string  `json:"artwork"`
+	Duration float64 `json:"duration"`
+	Elapsed  float64 `json:"elapsed"`
+	Rate     float64 `json:"rate"`
+	At       float64 `json:"at"`
+}
+
+func (t track) position(now time.Time) float64 {
+	elapsed := t.Elapsed
+	if t.Playing && t.At > 0 {
+		elapsed += (float64(now.UnixNano())/1e9 - t.At) * t.Rate
+	}
+	return max(0, min(t.Duration, elapsed))
 }
 
 type nowPlaying struct {
@@ -51,6 +65,7 @@ type nowPlaying struct {
 	likeTitle   string
 	vars        *vars
 	glyph       *glyph
+	commands    io.Writer
 }
 
 func (n *nowPlaying) run() {
@@ -64,6 +79,10 @@ func (n *nowPlaying) run() {
 func (n *nowPlaying) session() error {
 	cmd := exec.Command("/usr/bin/perl", n.script, n.lib)
 	cmd.Stderr = os.Stderr
+	in, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -71,6 +90,15 @@ func (n *nowPlaying) session() error {
 	if err := cmd.Start(); err != nil {
 		return err
 	}
+	n.mu.Lock()
+	n.commands = in
+	n.mu.Unlock()
+	defer func() {
+		n.mu.Lock()
+		n.commands = nil
+		n.mu.Unlock()
+		in.Close()
+	}()
 	lines := bufio.NewScanner(out)
 	lines.Buffer(make([]byte, 64*1024), 1024*1024)
 	for lines.Scan() {
@@ -129,6 +157,33 @@ func (n *nowPlaying) publish() {
 	n.vars.set("np_app", t.App)
 	n.vars.set("np_art", coverURI(t))
 	n.glyph.setPlaying(t.Playing)
+	n.publishProgress()
+}
+
+func (n *nowPlaying) publishProgress() {
+	t := n.snapshot()
+	progress := 0.0
+	if t.Duration > 0 {
+		progress = t.position(time.Now()) / t.Duration * 100
+	}
+	n.vars.set("np_progress", fmt.Sprintf("%.1f", progress))
+}
+
+func (n *nowPlaying) snapshot() track {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	return n.current
+}
+
+func (n *nowPlaying) seek(seconds float64) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	if n.commands == nil {
+		return errors.New("now playing helper is not running")
+	}
+	n.current.Elapsed, n.current.At = seconds, float64(time.Now().UnixNano())/1e9
+	_, err := fmt.Fprintf(n.commands, "seek %.3f\n", seconds)
+	return err
 }
 
 func sameTitle(a, b string) bool {

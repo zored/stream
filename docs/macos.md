@@ -25,11 +25,14 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
   the strip is the HUD.
 - Pushes Companion custom variables (must exist: `make deploy` creates them from `companion/custom-variables.json`):
   - `volume` (text, `MUTE` when muted; not shown on the strip, the white bar is the HUD)
-  - the left-strip bar, shared with brightness (`bar.go`): `bar_value` (eased 30 fps), `bar_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s), `bar_mode` (`volume`, `mac`, `ctl`: who moved it last)
+  - the left-strip bar, shared with brightness (`bar.go`): `bar_value` (eased 30 fps), `bar_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s), `bar_mode` (`volume`, `mac`, `ctl`, `seek`: who moved it last; a hidden bar jumps to the new mode's value instead of easing from the old one)
   - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), `np_app` (bundle id of the Now Playing app),
     `np_svg` (base64 SVG data URI for the track strip: like mark (a heart as wide as the strip, 6% inset), lowercase gray artist `|` bold title, each cut to 30 characters with `…`, split into two lines when one line would be tiny; the heart is an SVG path (skia has no emoji fallback), reset on track change; an empty title is held back for 3 s; an image layer can't take raw SVG,
     Companion cuts data at the first `=`),
     polled every 0.5 s by the perl child (below), sent to the daemon as JSON lines on change
+  - `np_progress` (0–100) — playback position, drawn dim gray (`#383838`) bottom-up behind the track text on the left strip.
+    The perl child sends `duration`, `elapsed`, `rate`, `at` (unix time of `elapsed`) from MediaRemote; the daemon extrapolates
+    `elapsed + (now − at) × rate` every 3 s, so no extra polling; paused or no duration → the value doesn't change, nothing is sent.
   - `np_art` — cover of the current track as a JPEG data URI (empty = no cover): the perl child takes
     `kMRMediaRemoteNowPlayingInfoArtworkData`, thumbnails it to ≤160 px JPEG with ImageIO once per new image. Yandex Music gives 150×150 JPEG (verified);
     Chrome/YouTube and Music.app not checked yet.
@@ -64,7 +67,7 @@ The device has no HID interface, so it can't wake a sleeping Mac (verified: pres
 
 ## zored_stream — brightness
 
-`brightness.go`, `display_darwin.go`; HTTP on `127.0.0.1:47118` (`-brightness`). Left knob, row 3:
+`brightness.go`, `display_darwin.go`; HTTP on `127.0.0.1:47118` (`-brightness`). Крутилка справа, ряд 1 (was слева, ряд 3):
 turn = Mac display brightness, turn while held = the controller's own brightness.
 
 - `POST /brightness/up`, `/brightness/down` (same acceleration as volume), `/brightness/hold` (press), `/brightness/release`; every reply is the controller
@@ -78,3 +81,16 @@ turn = Mac display brightness, turn while held = the controller's own brightness
   A press via the HTTP API has no surface, so `self` resolves to nothing there: test on the device.
 - The bar shows the active target for 1 s: white = Mac, gray = controller; then back to volume. The knob press itself is the haptic;
   no haptic at 0/100 (the module fork has press/hold/slide only).
+
+## zored_stream — seek
+
+`seek.go`; HTTP on `127.0.0.1:47119` (`-seek`): `POST /seek/forward`, `/seek/back`. Крутилка слева, ряд 3.
+
+- A turn moves a target position: 2 / 4 / 8 / 15 s per detent by tick interval (the volume acceleration), clamped to
+  0 … duration − 1 s. The first turn after a pause of > 1 s starts from the extrapolated current position.
+- The shared bar shows the target bright white at 60 fps (`bar_mode` `seek`), fades out 1 s after the last turn; the dim
+  progress then continues from the new position.
+- Live seek: the daemon writes `seek <seconds>` to the perl child's stdin (at most every 150 ms, the last target always goes out);
+  the child calls `MRMediaRemoteSetElapsedTime`, which goes to the current Now Playing app only. Stdin EOF → the child exits.
+- Players: Yandex Music seeks (verified, 25 → 30 → 90 s). Chrome/YouTube, Music.app not checked yet.
+- No haptic at the track start/end: the module fork only vibrates on press/hold/slide, the daemon can't trigger it.

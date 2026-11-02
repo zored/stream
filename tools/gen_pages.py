@@ -13,10 +13,11 @@ VKCALL = "http://127.0.0.1:47114"
 YMUSIC = "http://127.0.0.1:47115"
 AI = "http://127.0.0.1:47117"
 BRIGHTNESS = "http://127.0.0.1:47118"
+SEEK = "http://127.0.0.1:47119"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "ym_like", "call_mic", "call_cam",
+    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state")}
 BAR_ALPHA = "$(custom:bar_alpha)"
@@ -162,14 +163,21 @@ def strip_image(layer_id, var, row, rotation, opacity=None):
                  y=v(round((center_y - cell_w / 2) / cell_h * 100, 2)), height=v(round(cell_w / cell_h * 100, 2)))
 
 
-def volume_cell(row):
+def cell_fill(var, row):
     base = (2 - row) * 100 / 3
-    fill = f"max(0, min(100, ($(custom:bar_value) - {base:.2f}) * 3))"
+    return f"max(0, min(100, ($(custom:{var}) - {base:.2f}) * 3))"
+
+
+def volume_cell(row):
+    fill = cell_fill("bar_value", row)
+    progress = cell_fill("np_progress", row)
     visible = expr(BAR_ALPHA)
+    hidden = expr(f"100 - {BAR_ALPHA}")
     color = expr(f'$(custom:bar_mode) == "ctl" ? {0x808080} : {0xFFFFFF}')
     return button([
         canvas(),
-        strip_image("np", "np_svg", row, 90, expr(f"100 - {BAR_ALPHA}")),
+        box("progress", 0x383838, opacity=hidden, y=expr(f"100 - {progress}"), height=expr(progress)),
+        strip_image("np", "np_svg", row, 90, hidden),
         box("track", 0x202020, opacity=visible),
         box("fill", color, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
     ])
@@ -301,7 +309,8 @@ def media_page():
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
         (1, 0): button(labelled("TRACK"), up=[mediakey("play")], held=ymusic("/like"),
                        left=[mediakey("prev")], right=[mediakey("next")]),
-        (2, 0): button(labelled("SUN"), down=brightness("/brightness/hold"), up=brightness("/brightness/release"),
+        (2, 0): button(labelled("SEEK"), left=[post(SEEK + "/seek/back")], right=[post(SEEK + "/seek/forward")]),
+        (0, 7): button(labelled("SUN"), down=brightness("/brightness/hold"), up=brightness("/brightness/release"),
                        left=brightness("/brightness/down"), right=brightness("/brightness/up")),
         **{(r, 1): volume_cell(r) for r in range(3)},
         (1, 2): play_pause(),

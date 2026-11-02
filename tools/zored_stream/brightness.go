@@ -45,7 +45,7 @@ func (b *brightness) turn(direction int) (int, error) {
 	amount := b.accel.step(direction)
 	if b.controller {
 		b.ctl = max(controllerMinBrightness, min(100, b.ctl+amount))
-		b.bar.show("ctl", b.ctl)
+		b.bar.show("ctl", float64(b.ctl))
 		return b.ctl, nil
 	}
 	mac, err := readDisplayBrightness()
@@ -56,7 +56,7 @@ func (b *brightness) turn(direction int) (int, error) {
 	if err := writeDisplayBrightness(mac); err != nil {
 		return 0, err
 	}
-	b.bar.show("mac", mac)
+	b.bar.show("mac", float64(mac))
 	return b.ctl, nil
 }
 
@@ -64,7 +64,7 @@ func (b *brightness) hold() (int, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.controller = true
-	b.bar.show("ctl", b.ctl)
+	b.bar.show("ctl", float64(b.ctl))
 	return b.ctl, nil
 }
 
