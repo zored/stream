@@ -100,3 +100,16 @@ turn = Mac display brightness, turn while held = the controller's own brightness
   the child calls `MRMediaRemoteSetElapsedTime`, which goes to the current Now Playing app only. Stdin EOF → the child exits.
 - Players: Yandex Music seeks (verified, 25 → 30 → 90 s). Chrome/YouTube, Music.app not checked yet.
 - No haptic at the track start/end: the module fork only vibrates on press/hold/slide, the daemon can't trigger it.
+
+## zored_stream — scroll
+
+`scroll.go`, `scroll_darwin.go`; HTTP on `127.0.0.1:47121` (`-scroll`): `POST /scroll/forward`, `/scroll/back`, `/scroll/down` (press),
+`/scroll/up` (release). Крутилка справа, ряд 3: turn = vertical wheel, turn while held = horizontal. No strip, no haptic.
+Verified on the device by the user (2026-11-02).
+
+- `CGEventCreateScrollWheelEvent` in line units (like a real wheel detent), 1 / 2 / 4 / 8 lines per detent by tick interval
+  (the volume acceleration), posted to `kCGHIDEventTap`, so it lands in the window under the cursor, as a mouse wheel does.
+- Direction is fixed: clockwise = further down / right through the document, regardless of natural scrolling
+  (synthetic events skip the HID inversion; assumed). Natural scrolling here is off (`com.apple.swipescrolldirection` = 0).
+- Permission: `CGPreflightPostEventAccess` is true for the signed binary, the Accessibility grant from ymusic covers it (verified).
+  Without it the turn returns `409` with `no permission to post events`.

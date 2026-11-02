@@ -14,12 +14,14 @@ YMUSIC = "http://127.0.0.1:47115"
 AI = "http://127.0.0.1:47117"
 BRIGHTNESS = "http://127.0.0.1:47118"
 SEEK = "http://127.0.0.1:47119"
+SCROLL = "http://127.0.0.1:47121"
+AGENTS = "http://127.0.0.1:47120"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state")}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg")}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -296,6 +298,16 @@ def ai_strip(row):
                    image("strip", expr("$(custom:ai_strip_svg)"), "fill", y=v(-100 * row), height=v(300))])
 
 
+def agents_led():
+    return button([canvas(), box("box0", expr("$(custom:agents_led)"))], down=[post(AGENTS + "/agent/focus")])
+
+
+def agents_tile():
+    return button([canvas(), box("box0", 0x000000),
+                   image("dots", expr("$(custom:agents_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
+                  down=[post(AGENTS + "/agent/focus")])
+
+
 def test_page():
     grid = {}
     for r in range(3):
@@ -329,6 +341,10 @@ def media_page():
         (2, 5): clock(),
         **{(r, 6): ai_strip(r) for r in range(3)},
         (1, 7): ai_switch(),
+        (2, 7): button(labelled("SCROLL"), down=[post(SCROLL + "/scroll/down")], up=[post(SCROLL + "/scroll/up")],
+                       left=[post(SCROLL + "/scroll/back")], right=[post(SCROLL + "/scroll/forward")]),
+        (0, 2): agents_tile(),
+        (3, 0): agents_led(),
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),
         (3, 3): hangup_led(),

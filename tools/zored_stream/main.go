@@ -110,7 +110,10 @@ func main() {
 	usageAddr := flag.String("usage", "127.0.0.1:47116", "Claude usage HTTP address")
 	aiAddr := flag.String("ai", "127.0.0.1:47117", "Claude Desktop model + effort HTTP address")
 	seekAddr := flag.String("seek", "127.0.0.1:47119", "Now Playing seek HTTP address")
+	agentsAddr := flag.String("agents", "127.0.0.1:47120", "agents waiting for input HTTP address")
+	agentsTTL := flag.Duration("agents-ttl", 4*time.Hour, "forget a waiting agent after this long")
 	brightnessAddr := flag.String("brightness", "127.0.0.1:47118", "display + controller brightness HTTP address")
+	scrollAddr := flag.String("scroll", "127.0.0.1:47121", "mouse wheel scroll HTTP address")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
@@ -177,6 +180,15 @@ func main() {
 		handle(mux, "/ai/down", ai.down)
 		handle(mux, "/ai/up", ai.up)
 	})
+	ag := newAgents(v, *agentsTTL)
+	ag.publish()
+	go ag.animate()
+	go every(agentCheckFreq, ag.expire)
+	go serve(*agentsAddr, func(mux *http.ServeMux) {
+		mux.HandleFunc("POST /agent/event", ag.serveEvent)
+		mux.HandleFunc("GET /agents", ag.serveJSON)
+		handle(mux, "/agent/focus", ag.focus)
+	})
 	vol, err := newVolume(v)
 	if err != nil {
 		log.Fatal(err)
@@ -200,6 +212,13 @@ func main() {
 		handle(mux, "/seek/forward", func() error { return seek.turn(1) })
 		handle(mux, "/seek/back", func() error { return seek.turn(-1) })
 	})
+	sc := &scroller{}
+	go serve(*scrollAddr, func(mux *http.ServeMux) {
+		handle(mux, "/scroll/down", func() error { sc.hold(true); return nil })
+		handle(mux, "/scroll/up", func() error { sc.hold(false); return nil })
+		handle(mux, "/scroll/forward", func() error { return sc.turn(1) })
+		handle(mux, "/scroll/back", func() error { return sc.turn(-1) })
+	})
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {
 			log.Fatal(err)
@@ -213,6 +232,7 @@ func main() {
 		np.glyph.publish()
 		np.tint.publish()
 		us.publish()
+		ag.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })

@@ -28,5 +28,7 @@
  "ai_level": "",
  "ai_model": "",
  "ai_effort": "",
- "ai_state": ""
+ "ai_state": "",
+ "agents_led": "",
+ "agents_svg": ""
 }
