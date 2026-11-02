@@ -24,6 +24,7 @@ const (
 	aiWait       = 1500 * time.Millisecond
 	aiStep       = 100 * time.Millisecond
 	aiPollEvery  = time.Second
+	aiPreview    = 5 * time.Second
 	keyE         = 14
 	keyEscape    = 53
 )
@@ -49,6 +50,7 @@ type aiSwitch struct {
 	vars    *vars
 	held    bool
 	turned  bool
+	preview time.Time
 	onShow  func(model string)
 }
 
@@ -60,7 +62,7 @@ func (a *aiSwitch) target() aiChoice {
 	return aiChoice{aiModels[a.index/len(aiEfforts)], aiEfforts[a.index%len(aiEfforts)]}
 }
 
-var aiStateColors = map[string]string{"ok": "#fff", "pending": "#808080", "idle": "#505050", "other": "#FFB000", "error": "#FF3030"}
+var aiStateColors = map[string]string{"ok": "#fff", "pending": "#808080", "preview": "#808080", "idle": "#505050", "other": "#FFB000", "error": "#FF3030"}
 
 func (a *aiSwitch) show(c aiChoice, state string) {
 	a.vars.set("ai_label_svg", stripSVG(c.model, c.effort, aiStateColors[state], ""))
@@ -123,7 +125,10 @@ func (a *aiSwitch) applyPending() {
 	switch {
 	case err == nil:
 		a.show(want, "ok")
-	case errors.Is(err, errNotFront), errors.Is(err, errNoNewChat):
+	case errors.Is(err, errNoNewChat):
+		a.preview = time.Now().Add(aiPreview)
+		a.show(want, "preview")
+	case errors.Is(err, errNotFront):
 		log.Printf("ai: %v", err)
 		a.show(want, "idle")
 	default:
@@ -134,9 +139,9 @@ func (a *aiSwitch) applyPending() {
 
 func (a *aiSwitch) poll() {
 	a.mu.Lock()
-	pending := a.pending
+	busy := a.pending || time.Now().Before(a.preview)
 	a.mu.Unlock()
-	if pending {
+	if busy {
 		return
 	}
 	var cur aiChoice
@@ -146,7 +151,7 @@ func (a *aiSwitch) poll() {
 	})
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.pending {
+	if a.pending || time.Now().Before(a.preview) {
 		return
 	}
 	if err != nil {

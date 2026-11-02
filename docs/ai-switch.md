@@ -57,7 +57,8 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   - read back the popup description; mismatch → `Escape`, `ai_state = error`.
 - Every second while nothing is pending and Claude is frontmost, `zored_stream` reads the popup in the focused window — the new-chat
   screen or an open session — and publishes the truth; the knob position follows it (verified 2026-11-02: an open Opus·Medium session
-  showed `ok`). Applying stays new-chat only. Claude Code CLI is not synced.
+  showed `ok`). Applying stays new-chat only: a turn in an open session previews the choice for 5 s (gray label, the strip shows that
+  model's limits, state `preview`), then the poll brings back the session's real model. Claude Code CLI is not synced (user: not needed).
 - Turn while pressed: only the model changes, the effort stays. A press released without a turn re-applies the shown choice.
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
