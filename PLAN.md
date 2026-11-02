@@ -15,10 +15,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md)):
 
 | Used | Free |
 |---|---|
-| left knobs `0/0` volume, `1/0` track (hold press = like), `2/0` brightness (claimed); left strip `0–2/1` volume | — |
+| left knobs `0/0` volume, `1/0` track (hold press = like), `2/0` seek; left strip `0–2/1` volume | — |
 | tiles `1/2` play (hold = like), `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/2–0/5`, `1/3–1/5` |
 | buttons `3/1` mic, `3/2` camera, `3/3` hang up | buttons `3/0`, `3/4–3/7` |
-| right strip `0–2/6` AI limits + model, right knob `1/7` AI model | right knobs `0/7`, `2/7` |
+| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model | right knob `2/7` |
 
 Idea: mic, camera and hang-up tiles do something else outside a call.
 
@@ -39,7 +39,9 @@ Idea: mic, camera and hang-up tiles do something else outside a call.
 - Track strip: `zored_stream` `np_svg` — gray artist | bold title (two lines when long), like mark inside; clock `2/5` stretched SVG + gray `DD.MM` date
 - AI: Claude limits in `zored_stream` (`usage`, every 15 min, no CLI), right strip = limits + model/effort, right knob row 2 switches the model;
   Hammerspoon overlay reads the daemon ([ai.md](docs/ai.md), [ai-switch.md](docs/ai-switch.md))
-- Brightness: left knob row 3 turns Mac brightness, press+turn the controller's; level on the left-strip bar
+- Brightness: right knob row 1 turns Mac brightness, press+turn the controller's; level on the left-strip bar
+- Play tile: track cover with ▶/⏸ glyph in a black glow, fades in on change; fonts: JetBrains Mono on the strips, clock fitted
+- Seek on left knob row 3: live, bright animated bar; dim progress bar behind the track every 3 s, tinted by the cover
 - Animations at 60 fps (the ceiling through Companion variables, [companion.md](docs/companion.md))
 - Yandex Music like: hold play tile / knob 2, second haptic at 400 ms, ♥/💔 on the strip from the app's player bar
   via Accessibility (`ymusic`); MediaRemote, local API, deeplinks, hotkeys are dead ends ([ymusic.md](docs/ymusic.md))
@@ -82,7 +84,6 @@ Windows and apps:
   change notification) in `zored_stream`
 - [ ] Emoji picker: knob scrolls a short favorites list on the strip, press types the emoji into the focused field
   (`CGEventKeyboardSetUnicodeString` in `zored_stream`, no clipboard)
-- [ ] Media seek on a knob (free right knob, row 1 or 3): MediaRemote `SetElapsedTime` / seek commands via the perl Now Playing host; position on the strip
 - [ ] Frontmost app icon on a tile, press cycles its windows
 
 AI agents:
