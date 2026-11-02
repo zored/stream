@@ -17,33 +17,43 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: mediakey streamd streamd-uninstall vkcall vkcall-uninstall ymusic ymusic-uninstall patch-module pages deploy
+.PHONY: build mediakey streamd-bin streamd streamd-uninstall vkcall-bin vkcall vkcall-uninstall ymusic-bin ymusic ymusic-uninstall patch-module pages deploy
+
+build:
+	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build mediakey streamd-bin vkcall-bin ymusic-bin
 
 mediakey:
 	mkdir -p $(BIN)
 	swiftc -O tools/mediakey/main.swift -o $(BIN)/mediakey
 
-streamd:
-	mkdir -p $(LIB) $(SHARE)
+streamd-bin:
+	mkdir -p $(LIB)
 	clang -dynamiclib -arch arm64 -arch arm64e -fobjc-arc -framework Foundation -framework CoreAudio \
 		-framework AudioToolbox -o $(LIB)/libstreamd.dylib tools/streamd/streamd.m
+
+streamd: streamd-bin
+	mkdir -p $(SHARE)
 	cp tools/streamd/streamd.pl $(SHARE)/streamd.pl
 	$(call install-agent,streamd)
 
 streamd-uninstall:
 	$(call uninstall-agent,streamd)
 
-vkcall:
+vkcall-bin:
 	mkdir -p $(BIN)
 	cd tools/vkcall && GOWORK=off go build -o $(BIN)/vkcall .
+
+vkcall: vkcall-bin
 	$(call install-agent,vkcall)
 
 vkcall-uninstall:
 	$(call uninstall-agent,vkcall)
 
-ymusic:
+ymusic-bin:
 	mkdir -p $(BIN)
 	swiftc -O tools/ymusic/main.swift -o $(BIN)/ymusic
+
+ymusic: ymusic-bin
 	$(call install-agent,ymusic)
 
 ymusic-uninstall:
