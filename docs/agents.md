@@ -147,5 +147,10 @@ Picking the only choice of the last question submits the card.
   reply. AX: an `AXGroup` described `Suggested next actions…` next to the question text; replies are `AXButton`s with a title and
   no description. A box that waits on the user has no `Dismiss` button (anchoring on `Dismiss` missed it), so кнопка 1 stays
   dark there. A question card wins over a box.
-- Permission prompts in the CLI: кнопка 2 = `1` (yes), кнопка 1 = `Esc` (not run yet). In Claude Desktop the permission card is not handled yet:
-  its AX tree has not been seen (this session runs in auto mode).
+- Claude Desktop permission card: кнопка 1 = `Deny`, кнопки 2… = the allow buttons in order, the first white.
+  Verified 2026-11-03 on live cards: кнопка 2 allowed a command with one press. AX: anchored on the `AXStaticText`
+  `Permission requested: …`; buttons `Deny`, then either `Allow once` or `Always allow , Switches this session to Accept edits`
+  plus an `AXPopUpButton` `More allow options` whose menu holds `Allow once` (the menu is a separate AX window, so it is looked up
+  from the app element). Like options, the first `AXPress` on these buttons only takes focus: the daemon presses until the card
+  is gone, at most 3 times. The order is question card, permission card, next-step box.
+- Permission prompts in the CLI: кнопка 2 = `1` (yes), кнопка 1 = `Esc` (not run yet).

@@ -240,8 +240,10 @@ static int card_option(int kind, AXUIElementRef element, NSString *role) {
 
 static AXUIElementRef card_root(AXUIElementRef window, int kind) {
     int truncated = 0;
-    AXUIElementRef node = kind == AX_CARD_QUESTION ? ax_find_attr(window, "AXButton", "AXTitle", "Skip", 0, 20000, &truncated)
-                                                   : ax_find_attr(window, "AXGroup", "AXDescription", "Suggested next", 1, 20000, &truncated);
+    AXUIElementRef node =
+        kind == AX_CARD_QUESTION     ? ax_find_attr(window, "AXButton", "AXTitle", "Skip", 0, 20000, &truncated)
+        : kind == AX_CARD_PERMISSION ? ax_find_attr(window, "AXStaticText", "AXValue", "Permission requested", 1, 20000, &truncated)
+                                     : ax_find_attr(window, "AXGroup", "AXDescription", "Suggested next", 1, 20000, &truncated);
     for (int level = 0; node && level < 6; level++) {
         CFTypeRef parent = NULL;
         AXUIElementCopyAttributeValue(node, kAXParentAttribute, &parent);
@@ -271,6 +273,8 @@ char *ax_card(AXUIElementRef window, int kind) {
                 [out appendFormat:@"opt\t%@\t%d\n", title, value];
             } else if ([role isEqualToString:@"AXButton"]) {
                 [out appendFormat:@"btn\t%@\n", title.length ? title : desc];
+            } else if ([role isEqualToString:@"AXPopUpButton"]) {
+                [out appendFormat:@"pop\t%@\n", title.length ? title : desc];
             } else if ([role isEqualToString:@"AXStaticText"]) {
                 NSString *value = card_attr(e, kAXValueAttribute);
                 if ([value hasSuffix:@" selected"] || [value rangeOfString:@"^[0-9]+ of [0-9]+$" options:NSRegularExpressionSearch].location != NSNotFound)
@@ -290,7 +294,7 @@ int ax_card_press(AXUIElementRef window, int kind, const char *text) {
         __block AXUIElementRef hit = NULL;
         int budget = 2000;
         card_walk(root, 0, &budget, ^(AXUIElementRef e, NSString *role) {
-            if (hit || !([role isEqualToString:@"AXButton"] || [role isEqualToString:@"AXCheckBox"])) return;
+            if (hit || !([role isEqualToString:@"AXButton"] || [role isEqualToString:@"AXCheckBox"] || [role isEqualToString:@"AXPopUpButton"])) return;
             if ([card_attr(e, kAXTitleAttribute) isEqualToString:want] || [card_attr(e, kAXDescriptionAttribute) isEqualToString:want])
                 hit = (AXUIElementRef)CFRetain(e);
         });

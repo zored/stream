@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -73,6 +74,9 @@ func desktopDump(pid C.pid_t, kind C.int) string {
 func readDesktopCard(pid C.pid_t) (*choiceCard, choiceTarget, error) {
 	dump := desktopDump(pid, C.AX_CARD_QUESTION)
 	if dump == "" {
+		if card, target, err := readDesktopPermission(pid); card != nil || err != nil {
+			return card, target, err
+		}
 		return readDesktopBox(pid)
 	}
 	card := &choiceCard{Index: 1, Count: 1}
@@ -118,6 +122,88 @@ func readDesktopBox(pid C.pid_t) (*choiceCard, choiceTarget, error) {
 	}
 	return card, target, nil
 }
+
+func readDesktopPermission(pid C.pid_t) (*choiceCard, choiceTarget, error) {
+	dump := desktopDump(pid, C.AX_CARD_PERMISSION)
+	if dump == "" {
+		return nil, nil, nil
+	}
+	target := permissionTarget{}
+	deny, hidden := false, false
+	for _, line := range strings.Split(dump, "\n") {
+		f := strings.Split(line, "\t")
+		switch {
+		case f[0] == "opt" && f[1] == "Deny":
+			deny = true
+		case f[0] == "opt":
+			target.titles = append(target.titles, f[1])
+		case f[0] == "pop" && f[1] == permissionMore:
+			hidden = true
+		}
+	}
+	if hidden && !slices.Contains(target.titles, permissionOnce) {
+		target.titles = append([]string{permissionOnce}, target.titles...)
+		target.viaMore = true
+	}
+	if !deny || len(target.titles) == 0 {
+		return nil, nil, fmt.Errorf("unexpected permission card: %q", dump)
+	}
+	card := &choiceCard{Index: 1, Count: 1}
+	for i, title := range target.titles {
+		label, _, _ := strings.Cut(title, " ,")
+		card.Options = append(card.Options, choiceOption{Label: label, Primary: i == 0})
+	}
+	return card, target, nil
+}
+
+const (
+	permissionOnce = "Allow once"
+	permissionMore = "More allow options"
+)
+
+type permissionTarget struct {
+	titles  []string
+	viaMore bool
+}
+
+func (t permissionTarget) choose(_ choiceCard, i int) error {
+	press := func() error { return desktopPress(C.AX_CARD_PERMISSION, t.titles[i]) }
+	if i == 0 && t.viaMore {
+		press = pressAllowOnce
+	}
+	for range 3 {
+		if err := press(); err != nil {
+			return err
+		}
+		time.Sleep(choiceSettle)
+		if desktopDump(claudePid(), C.AX_CARD_PERMISSION) == "" {
+			return nil
+		}
+	}
+	return fmt.Errorf("permission card still open after pressing %q", t.titles[i])
+}
+
+func pressAllowOnce() error {
+	app := C.ax_app(claudePid())
+	defer C.ax_release(app)
+	for range 3 {
+		if e := findAttr(app, "AXButton", "AXTitle", permissionOnce, false); e != 0 {
+			defer C.ax_release(e)
+			if code := C.ax_press(e); code != 0 {
+				return fmt.Errorf("press %q: AX error %d", permissionOnce, code)
+			}
+			return nil
+		}
+		if err := desktopPress(C.AX_CARD_PERMISSION, permissionMore); err != nil {
+			return err
+		}
+		time.Sleep(choiceSettle)
+	}
+	return fmt.Errorf("%q did not show up under %q", permissionOnce, permissionMore)
+}
+func (t permissionTarget) forward(choiceCard) error { return nil }
+func (t permissionTarget) back(choiceCard) error    { return nil }
+func (t permissionTarget) skip(choiceCard) error    { return desktopPress(C.AX_CARD_PERMISSION, "Deny") }
 
 type boxTarget struct{ titles []string }
 
