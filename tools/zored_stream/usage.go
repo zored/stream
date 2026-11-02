@@ -31,10 +31,11 @@ const (
 	weekShowFor     = 4 * time.Second
 	stripDrawW      = 48
 	stripDrawH      = 258
+	stripTextY      = 238
 )
 
 var (
-	aiStateColors = map[string]string{"ok": "#fff", "pending": "#808080", "preview": "#FFD94D", "idle": "#505050", "other": "#FFB000", "error": "#FF3030"}
+	aiStateColors = map[string]string{"ok": "#fff", "pending": "#fff", "preview": "#fff", "idle": "#fff", "other": "#FFB000", "error": "#FF3030"}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
 )
 
@@ -363,7 +364,7 @@ func aiStripSVG(label stripLabel, text string, pct float64, failed bool) string 
 		}
 		return fmt.Sprintf(`<g transform="translate(0 %.1f) rotate(-90) scale(%.4f)">%s</g>`+
 			`<text x="%d" y="%d" text-anchor="middle" font-family="Helvetica" font-size="17" fill="%s">%s</text>`,
-			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(label, ink), w/2, h-5, fill, html.EscapeString(text))
+			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(label, ink), w/2, stripTextY, fill, html.EscapeString(text))
 	}
 	dot := ""
 	if failed {
@@ -379,9 +380,10 @@ func labelMarkup(l stripLabel, ink string) string {
 	if l.model == "" {
 		return ""
 	}
-	modelColor, dotColor := "#888", aiStateColors[l.state]
+	modelColor, dotColor := "#fff", aiStateColors[l.state]
+	style := ""
 	if l.state == "preview" {
-		modelColor = dotColor
+		style = ` font-style="italic"`
 	}
 	if ink != "" {
 		modelColor, dotColor = ink, ink
@@ -390,8 +392,8 @@ func labelMarkup(l stripLabel, ink string) string {
 	anchor := svgMinWidth / 2
 	y := svgHeight/2 + svgFont*35/100
 	var b strings.Builder
-	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
-		anchor, y, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
+	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s"%s>%s</text>`,
+		anchor, y, svgFont, modelColor, style, html.EscapeString(strings.ToLower(l.model)))
 	dots := slices.Index(aiEffortDots, strings.ToLower(l.effort)) + 1
 	if dots == 0 {
 		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="Helvetica" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
