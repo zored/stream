@@ -42,7 +42,7 @@ text inverts where the bar is under it (verified in the web preview: full bar â†
 | When | Text | Bar |
 |---|---|---|
 | default | time left in the 5h session, `1:42` | session usage |
-| while the model is switching (knob or strip) | `d` of the selected model, `120` | `d` of the selected model |
+| while the model is switching (knob or strip) | the word `day` | `d` of the selected model |
 | 4 s after the switch settles | whole days left in the week, `3d` (`h:mm` under a day) | `w` of the selected model |
 
 The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.

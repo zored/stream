@@ -333,8 +333,7 @@ func dayPct(l limit, now time.Time) float64 {
 func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (string, float64) {
 	switch {
 	case mode.switching:
-		d := dayPct(week, now)
-		return strconv.Itoa(round(d)), d
+		return "day", dayPct(week, now)
 	case now.Before(mode.weekUntil):
 		left := ""
 		if week.ResetsAt != nil {
