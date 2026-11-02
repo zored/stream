@@ -143,7 +143,7 @@ Picking the only choice of the last question submits the card.
   Verified 2026-11-03 in iTerm2 with Opus: single choice went on to the next question, multiple-choice toggles, finish submitted.
   The first use asks for Automation permission (`zored_stream` → iTerm2).
 - Claude Desktop next-step box (the recap with a question and reply buttons under the last message): кнопка 1 = `Dismiss`
-  when the box has one, кнопки 2… = its buttons in order, a press clicks it. Verified 2026-11-03: кнопка 3 clicked the second
+  when the box has one, кнопки 2… = its buttons in order (the first, primary one white like in the app, the rest red), a press clicks it. Verified 2026-11-03: кнопка 3 clicked the second
   reply. AX: an `AXGroup` described `Suggested next actions…` next to the question text; replies are `AXButton`s with a title and
   no description. A box that waits on the user has no `Dismiss` button (anchoring on `Dismiss` missed it), so кнопка 1 stays
   dark there. A question card wins over a box.

@@ -110,7 +110,7 @@ func readDesktopBox(pid C.pid_t) (*choiceCard, choiceTarget, error) {
 	for _, line := range strings.Split(dump, "\n") {
 		switch f := strings.Split(line, "\t"); {
 		case f[0] == "opt" && len(f) == 3:
-			card.Options = append(card.Options, choiceOption{Label: f[1]})
+			card.Options = append(card.Options, choiceOption{Label: f[1], Primary: len(card.Options) == 0})
 			target.titles = append(target.titles, f[1])
 		case f[0] == "btn" && f[1] == "Dismiss":
 			card.NoSkip = false

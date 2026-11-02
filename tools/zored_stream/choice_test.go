@@ -47,6 +47,11 @@ func TestChoiceLEDs(t *testing.T) {
 	if got := multi.leds(); got != want {
 		t.Errorf("multi: got %x, want %x", got, want)
 	}
+	box := choiceCard{Options: []choiceOption{{Primary: true}, {}}, Index: 1, Count: 1, NoSkip: true}
+	want = [choiceButtons]int{0, choicePrimary, choiceLive, 0, 0, 0, 0, 0}
+	if got := box.leds(); got != want {
+		t.Errorf("box: got %x, want %x", got, want)
+	}
 	single := choiceCard{Options: options(3, 0), Index: 1, Count: 1}
 	want = [choiceButtons]int{choiceLive, choicePicked, choiceLive, choiceLive, 0, 0, 0, 0}
 	if got := single.leds(); got != want {

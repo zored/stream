@@ -15,12 +15,14 @@ const (
 	choicePollEvery = 500 * time.Millisecond
 	choicePicked    = 0x00FF00
 	choiceLive      = 0xFF0000
+	choicePrimary   = 0xFFFFFF
 	choiceKeepPolls = 3
 )
 
 type choiceOption struct {
 	Label    string
 	Selected bool
+	Primary  bool
 }
 
 type choiceCard struct {
@@ -75,6 +77,8 @@ func (c choiceCard) leds() [choiceButtons]int {
 		switch {
 		case act == actChoose && c.Options[i].Selected:
 			out[b-1] = choicePicked
+		case act == actChoose && c.Options[i].Primary:
+			out[b-1] = choicePrimary
 		case act != actNone:
 			out[b-1] = choiceLive
 		}
