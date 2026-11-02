@@ -26,27 +26,32 @@ const (
 
 var cardPosition = regexp.MustCompile(`^(\d+) of (\d+)$`)
 
-func readChoiceCard(a *agents) (*choiceCard, choiceTarget, error) {
-	front := C.ax_frontmost_pid()
+func readChoiceCard(a *agents) (*choiceCard, choiceTarget, string, error) {
+	front := frontPid()
 	if pid := claudePid(); pid != 0 && front == pid {
-		return readDesktopCard(pid)
+		card, target, err := readDesktopCard(pid)
+		return card, target, "claude desktop", err
 	}
 	bundle := C.CString(itermBundle)
 	defer C.free(unsafe.Pointer(bundle))
-	if iterm := C.ax_app_pid(bundle); iterm == 0 || front != iterm || !a.hasCLIChoice() {
-		return nil, nil, nil
+	iterm := C.ax_app_pid(bundle)
+	switch {
+	case iterm == 0 || front != iterm:
+		return nil, nil, fmt.Sprintf("frontmost pid %d is neither Claude nor iTerm2 (%d)", front, iterm), nil
+	case !a.hasCLIChoice():
+		return nil, nil, "no CLI session with a pending choice", nil
 	}
 	out, err := exec.Command("/usr/bin/osascript", "-e",
 		`tell application id "`+itermBundle+`" to get unique id of current session of current window`).CombinedOutput()
 	if err != nil {
-		return nil, nil, fmt.Errorf("iTerm2 current session: %v: %s", err, out)
+		return nil, nil, "", fmt.Errorf("iTerm2 current session: %v: %s", err, out)
 	}
 	uid := strings.TrimSpace(string(out))
 	card, id := a.cliCard(uid)
 	if card == nil {
-		return nil, nil, nil
+		return nil, nil, "no pending choice for iTerm2 session " + uid, nil
 	}
-	return card, cliTarget{a: a, id: id, uid: uid}, nil
+	return card, cliTarget{a: a, id: id, uid: uid}, "iTerm2 session " + uid, nil
 }
 
 func readDesktopCard(pid C.pid_t) (*choiceCard, choiceTarget, error) {

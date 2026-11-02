@@ -138,7 +138,7 @@ func (d *dictation) recording() (bool, error) {
 
 func (d *dictation) switchTo(want bool) error {
 	pid := claudePid()
-	if pid != 0 && C.ax_frontmost_pid() != pid {
+	if pid != 0 && frontPid() != pid {
 		if out, err := exec.Command("/usr/bin/open", "-b", claudeBundle).CombinedOutput(); err != nil {
 			return fmt.Errorf("activate Claude: %v: %s", err, out)
 		}

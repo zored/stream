@@ -354,9 +354,9 @@ func agentsSVG(kinds []string, current int) string {
 			case agentInput:
 				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="#FFB000"/>`, x, y)
 			case agentDone:
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="%s"/>`, x, y, gray)
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="#fff"/>`, x, y)
 			default:
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="6.5" fill="none" stroke="%s" stroke-width="2.5"/>`, x, y, gray)
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="%s"/>`, x, y, gray)
 			}
 			if i == current {
 				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="10.5" fill="none" stroke="#fff" stroke-width="1.5"/>`, x, y)

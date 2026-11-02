@@ -42,13 +42,13 @@ func TestChoiceAction(t *testing.T) {
 
 func TestChoiceLEDs(t *testing.T) {
 	multi := choiceCard{Options: options(2, 1), Multi: true, Index: 1, Count: 1}
-	want := [choiceButtons]int{choiceNav, choiceOff, choiceOn, 0, 0, 0, 0, choiceWhite}
+	want := [choiceButtons]int{choiceLive, choiceLive, choicePicked, 0, 0, 0, 0, choiceLive}
 	if got := multi.leds(); got != want {
 		t.Errorf("multi: got %x, want %x", got, want)
 	}
-	paged := choiceCard{Options: options(1), Index: 1, Count: 2}
-	want = [choiceButtons]int{choiceNav, choiceWhite, 0, 0, 0, 0, 0, choiceNav}
-	if got := paged.leds(); got != want {
-		t.Errorf("paged: got %x, want %x", got, want)
+	single := choiceCard{Options: options(3, 0), Index: 1, Count: 1}
+	want = [choiceButtons]int{choiceLive, choicePicked, choiceLive, choiceLive, 0, 0, 0, 0}
+	if got := single.leds(); got != want {
+		t.Errorf("single: got %x, want %x", got, want)
 	}
 }

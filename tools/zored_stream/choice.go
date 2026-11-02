@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -11,10 +13,8 @@ import (
 const (
 	choiceButtons   = 8
 	choicePollEvery = 500 * time.Millisecond
-	choiceNav       = 0x606060
-	choiceWhite     = 0xFFFFFF
-	choiceOn        = 0x00FF00
-	choiceOff       = 0xFF0000
+	choicePicked    = 0x00FF00
+	choiceLive      = 0xFF0000
 )
 
 type choiceOption struct {
@@ -68,20 +68,11 @@ func (c choiceCard) leds() [choiceButtons]int {
 	var out [choiceButtons]int
 	for b := 1; b <= choiceButtons; b++ {
 		act, i := c.action(b)
-		switch act {
-		case actBack, actSkip:
-			out[b-1] = choiceNav
-		case actForward:
-			out[b-1] = map[bool]int{true: choiceWhite, false: choiceNav}[c.Index >= c.Count]
-		case actChoose:
-			switch {
-			case !c.Multi:
-				out[b-1] = choiceWhite
-			case c.Options[i].Selected:
-				out[b-1] = choiceOn
-			default:
-				out[b-1] = choiceOff
-			}
+		switch {
+		case act == actChoose && c.Options[i].Selected:
+			out[b-1] = choicePicked
+		case act != actNone:
+			out[b-1] = choiceLive
 		}
 	}
 	return out
@@ -90,24 +81,26 @@ func (c choiceCard) leds() [choiceButtons]int {
 type choice struct {
 	mu       sync.Mutex
 	vars     *vars
-	read     func() (*choiceCard, choiceTarget, error)
+	read     func() (*choiceCard, choiceTarget, string, error)
+	why      string
 	card     *choiceCard
 	target   choiceTarget
 	consumed [choiceButtons + 1]bool
 	presses  chan int
 }
 
-func newChoice(v *vars, read func() (*choiceCard, choiceTarget, error)) *choice {
+func newChoice(v *vars, read func() (*choiceCard, choiceTarget, string, error)) *choice {
 	return &choice{vars: v, read: read, presses: make(chan int, 16)}
 }
 
 func (c *choice) poll() {
-	card, target, err := c.read()
+	card, target, why, err := c.read()
 	if err != nil {
 		log.Printf("choice: %v", err)
+		why = err.Error()
 	}
 	c.mu.Lock()
-	c.card, c.target = card, target
+	c.card, c.target, c.why = card, target, why
 	c.mu.Unlock()
 	c.publish(card)
 }
@@ -175,4 +168,17 @@ func (c *choice) apply(card choiceCard, target choiceTarget, b int) error {
 		return target.choose(card, i)
 	}
 	return nil
+}
+
+func (c *choice) serveJSON(w http.ResponseWriter, _ *http.Request) {
+	c.mu.Lock()
+	state := struct {
+		Why  string      `json:"why"`
+		Card *choiceCard `json:"card"`
+	}{c.why, c.card}
+	c.mu.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(state); err != nil {
+		log.Printf("choice json: %v", err)
+	}
 }

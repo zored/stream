@@ -12,7 +12,6 @@ AXUIElementRef ax_find_attr(AXUIElementRef root, const char *role, const char *a
                             int max_nodes, int *truncated);
 char *ax_string(AXUIElementRef element, const char *attr);
 AXUIElementRef ax_focused_window(AXUIElementRef app);
-pid_t ax_frontmost_pid(void);
 void ax_key(pid_t pid, int keycode, int flags);
 int ax_int_value(AXUIElementRef element, int *out);
 int ax_press(AXUIElementRef element);

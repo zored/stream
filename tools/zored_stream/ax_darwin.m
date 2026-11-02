@@ -173,12 +173,6 @@ AXUIElementRef ax_focused_window(AXUIElementRef app) {
     return window;
 }
 
-pid_t ax_frontmost_pid(void) {
-    @autoreleasepool {
-        return NSWorkspace.sharedWorkspace.frontmostApplication.processIdentifier;
-    }
-}
-
 void ax_key(pid_t pid, int keycode, int flags) {
     CGEventFlags mask = 0;
     if (flags & AX_CMD) mask |= kCGEventFlagMaskCommand;

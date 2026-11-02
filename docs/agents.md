@@ -6,7 +6,7 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 ## Controls
 
 - кнопка 6 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
-- тайл ряд 2, колонка 4: one dot per session: amber = needs input, gray = done, gray ring = working, in that order; the last focused one has a white ring; a number above 8; a hollow gray circle when none.
+- тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working, in that order; the last focused one has a white ring; a number above 8; a hollow gray circle when none.
 - Press either: focus the next session (needs input, then done, then working, oldest first), the next press moves on and wraps.
   Focusing a "done" session drops it; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile (400 ms) always opens a new Code session; the tile focuses on release.
 
@@ -112,16 +112,24 @@ dictation) are suspended until the card is gone.
 
 | Button | Single question, single choice | Several questions or multiple choice |
 |---|---|---|
-| кнопка 1 (gray) | skip | previous question; skip on the first |
-| кнопки 2–7 | options 1–6, white: pick and go on | single choice: white, pick and go on; multiple: green = picked, red = not, press toggles |
-| кнопка 8 | option 7 | next question (gray); finish on the last one (white) |
+| кнопка 1 | skip | previous question; skip on the first |
+| кнопки 2–7 | options 1–6: pick and go on | single choice: pick and go on; multiple: press toggles |
+| кнопка 8 | option 7 | next question; finish on the last one |
+
+LEDs: red = the button does something now, green = the option is picked (Claude Desktop preselects the first option of a
+single choice, so it starts green), off = unused.
 
 Picking the only choice of the last question submits the card.
 
 - Gate: every row-3 button runs `curl -f :47120/choice/{down,up}?b=N || <its own action>`. The daemon answers `204` while a card is
   on screen (and for the matching release), `409` otherwise, so with the daemon down the buttons work as before.
   LEDs come from `choice_on` and `choice_1`…`choice_8`, an overlay layer on each button.
-- Detection every 500 ms, only while Claude Desktop or iTerm2 is frontmost (`choice.go`, `choice_darwin.go`).
+- Detection every 500 ms, only while Claude Desktop or iTerm2 is frontmost (`choice.go`, `choice_darwin.go`);
+  `GET :47120/choice` shows what the daemon sees and why choice mode is off.
+- Frontmost app: `lsappinfo front` + `lsappinfo info -only pid` (~13 ms). Verified 2026-11-03 that the alternatives fail in the
+  LaunchAgent: `NSWorkspace.frontmostApplication` never updates without an AppKit run loop (stayed on Claude), the system-wide
+  `AXFocusedApplication` returns nothing, and the first layer-0 window of `CGWindowListCopyWindowInfo` belongs to
+  Stage Manager (`WindowManager`) or another app's window (Preview) rather than the frontmost app.
 - Claude Desktop (verified 2026-11-03 on live cards, pressed through Companion): `ax_card` finds the `Skip` button, walks up to the
   card and reads options (`AXCheckBox`/`AXToggleButton` with a title and no description, `AXValue` 1 = picked), `N of M`,
   `N selected` (only on multiple choice), `Next`/`Submit`, `Show previous question`. An option of a single-choice question
@@ -130,6 +138,7 @@ Picking the only choice of the last question submits the card.
   question and the picks itself and types into the session whose `unique id` is current (`write text … newline NO`).
   Keys verified in `tmux` 2026-11-03: a digit picks a single choice and goes on (submits a lone question), a digit toggles a
   multiple choice, `Tab`/`Shift-Tab` move, `Tab` past the last question opens the review where `1` submits, `Esc` cancels.
-  The iTerm2 path itself is assumed: not run yet, and the first use asks for Automation permission (`zored_stream` → iTerm2).
-- Permission prompts in the CLI: кнопка 2 = `1` (yes), кнопка 1 = `Esc`. In Claude Desktop the permission card is not handled yet:
+  Verified 2026-11-03 in iTerm2 with Opus: single choice went on to the next question, multiple-choice toggles, finish submitted.
+  The first use asks for Automation permission (`zored_stream` → iTerm2).
+- Permission prompts in the CLI: кнопка 2 = `1` (yes), кнопка 1 = `Esc` (not run yet). In Claude Desktop the permission card is not handled yet:
   its AX tree has not been seen (this session runs in auto mode).

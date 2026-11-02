@@ -11,7 +11,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os/exec"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -214,7 +217,7 @@ func withNewChat(f func(pid C.pid_t, window C.AXUIElementRef) error) error {
 
 func withClaude(newChatOnly bool, f func(pid C.pid_t, window C.AXUIElementRef) error) error {
 	pid := claudePid()
-	if pid == 0 || C.ax_frontmost_pid() != pid {
+	if pid == 0 || frontPid() != pid {
 		return errNotFront
 	}
 	return inClaudeWindow(pid, func(w C.AXUIElementRef) error {
@@ -227,6 +230,24 @@ func withClaude(newChatOnly bool, f func(pid C.pid_t, window C.AXUIElementRef) e
 		}
 		return f(pid, w)
 	})
+}
+
+var lsappinfoPid = regexp.MustCompile(`"pid"=(\d+)`)
+
+func frontPid() C.pid_t {
+	asn, err := exec.Command("/usr/bin/lsappinfo", "front").Output()
+	if err != nil {
+		log.Printf("lsappinfo front: %v", err)
+		return 0
+	}
+	out, err := exec.Command("/usr/bin/lsappinfo", "info", "-only", "pid", strings.TrimSpace(string(asn))).Output()
+	m := lsappinfoPid.FindSubmatch(out)
+	if err != nil || m == nil {
+		log.Printf("lsappinfo info %s: %v: %s", asn, err, out)
+		return 0
+	}
+	pid, _ := strconv.Atoi(string(m[1]))
+	return C.pid_t(pid)
 }
 
 func claudePid() C.pid_t {
