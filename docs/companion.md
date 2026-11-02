@@ -83,6 +83,14 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
 - Web previews of strip cells are square; the editor can't show the real 60×90 aspect. Check strips on the device.
 - Raw device traffic without Companion: quit Companion, run `tools/sniff.py` (see [device.md](device.md)).
 
+## Fonts in SVG images
+
+Image layers go through `@napi-rs/canvas` (Skia) `loadImage`; verified by rendering with the bundled module and node runtime.
+- `font-family` resolves system fonts and `~/Library/Fonts`; an unknown family falls back silently. `@font-face` is ignored.
+- Variable fonts render only their default instance (`font-weight` ignored): install static weights.
+- `letter-spacing` is ignored; narrow text with `transform="scale(x 1)"`.
+- Device text uses JetBrains Mono (OFL, static weights in `~/Library/Fonts`): clock, date, track strip (scaled to 85 %).
+
 ## Animation frame rate
 
 Measured 2026-11-02 with temporary counters in the module fork (draw calls, bytes, time from `DrawFramebuffer` to its ack)

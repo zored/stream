@@ -431,8 +431,8 @@ func aiStripSVG(f stripFrame) string {
 			fill = ink
 		}
 		return fmt.Sprintf(`<g transform="translate(0 %.1f) rotate(-90) scale(%.4f)">%s</g>`+
-			`<text x="%d" y="%d" text-anchor="middle" font-family="Helvetica" font-size="17" fill="%s">%s</text>`,
-			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.dots, ink), w/2, stripTextY, fill, html.EscapeString(f.text))
+			`<text x="%d" y="%d" text-anchor="middle" font-family="%s" font-size="17" fill="%s">%s</text>`,
+			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.dots, ink), w/2, stripTextY, stripFont, fill, html.EscapeString(f.text))
 	}
 	dot := ""
 	if f.failed {
@@ -459,11 +459,11 @@ func labelMarkup(l stripLabel, dots [5]float64, ink string) string {
 	anchor := svgMinWidth / 2
 	y := svgHeight/2 + svgFont*35/100
 	var b strings.Builder
-	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="Helvetica" font-size="%d" fill="%s">%s</text>`,
-		anchor, y, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
+	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="%s" font-size="%d" fill="%s">%s</text>`,
+		anchor, y, stripFont, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
 	if !slices.Contains(aiEffortDots, strings.ToLower(l.effort)) {
-		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="Helvetica" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
-			anchor+2*gap, y, svgFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
+		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="%s" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
+			anchor+2*gap, y, stripFont, svgFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
 	}
 	for i, alpha := range dots {
 		if alpha > 0 {

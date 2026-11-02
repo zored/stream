@@ -20,9 +20,11 @@ const (
 	titleHold         = 3 * time.Second
 	yandexMusic       = "ru.yandex.desktop.music"
 	svgFont           = 100
+	stripFont         = "JetBrains Mono"
+	stripScaleX       = 0.85
 	svgHeight         = 250
 	svgMinWidth       = svgHeight * 270 / 60
-	stripMaxRunes     = 30
+	stripMaxRunes     = 23
 	heartPath         = "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
 )
 
@@ -162,7 +164,7 @@ func join(lines ...svgLine) svgLine {
 }
 
 func lineWidth(l svgLine) int {
-	return l.runes * svgFont * 62 / 100 * 112 / 100
+	return int(float64(l.runes*svgFont*60/100) * stripScaleX * 1.16)
 }
 
 func shorten(s string) string {
@@ -206,10 +208,11 @@ func stripSVG(gray, bold, fill, heart string) string {
 	texts := ""
 	for i, l := range lines {
 		center := svgHeight * (2*i + 1) / (2 * len(lines))
-		texts += fmt.Sprintf(`<text x="%d" y="%d">%s</text>`, pad+(width-pad)/2, center+svgFont*35/100, l.markup)
+		texts += fmt.Sprintf(`<text transform="translate(%d %d) scale(%.2f 1)">%s</text>`,
+			pad+(width-pad)/2, center+svgFont*35/100, stripScaleX, l.markup)
 	}
 	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">%s<g text-anchor="middle" `+
-		`font-family="Helvetica" font-size="%d" fill="%s">%s</g></svg>`, width, svgHeight, heart, svgFont, fill, texts)
+		`font-family="%s" font-size="%d" fill="%s">%s</g></svg>`, width, svgHeight, heart, stripFont, svgFont, fill, texts)
 	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(svg))
 }
 

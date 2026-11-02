@@ -236,8 +236,8 @@ def hangup_tile():
     ], down=vkcall("/call/end"))
 
 
-TIME_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -74 256 77"><text font-family="Helvetica" '
-            'font-size="100" fill="#fff"', "/text></svg>")
+DIGITS_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 -74 289 75"><text font-family="JetBrains Mono" '
+              'font-size="100" fill="{fill}"', "/text></svg>")
 
 
 def b64(value):
@@ -248,18 +248,27 @@ def lookup(table, var):
     return f'substr("{"".join(map(b64, table))}", {var} * 4, {var} * 4 + 4)'
 
 
-def time_image():
-    head, tail = TIME_SVG
+def digits_image(fill, first, second):
+    head, tail = DIGITS_SVG
+    head = head.format(fill=fill)
     head += " " * (-(len(head) + 1) % 3) + ">"
-    hours = lookup([f"{h:02d}:" for h in range(24)], "$(internal:time_h)")
-    minutes = lookup([f"{m:02d}<" for m in range(60)], "$(internal:time_m)")
-    return expr(f'concat("data:image/svg+xml;base64,{b64(head)}", {hours}, {minutes}, "{b64(tail)}")')
+    return expr(f'concat("data:image/svg+xml;base64,{b64(head)}", {first}, {second}, "{b64(tail)}")')
+
+
+def time_image():
+    return digits_image("#fff", lookup([f"{h:02d}:" for h in range(24)], "$(internal:time_h)"),
+                        lookup([f"{m:02d}<" for m in range(60)], "$(internal:time_m)"))
+
+
+def date_image():
+    return digits_image("#808080", lookup([f"{d:02d}." for d in range(32)], "$(internal:date_d)"),
+                        lookup([f"{m:02d}<" for m in range(13)], "$(internal:date_m)"))
 
 
 def clock():
     return button([canvas(), box("box0", 0x000000),
-                   image("time", time_image(), "fill", x=v(6), y=v(6), width=v(88), height=v(58)),
-                   text("date", "$(internal:date_d).$(internal:date_m)", 0x808080, fontsize=80, y=v(66), height=v(32))])
+                   image("time", time_image(), x=v(6), y=v(6), width=v(88), height=v(58)),
+                   image("date", date_image(), x=v(6), y=v(74), width=v(88), height=v(17))])
 
 
 def ai_switch():
