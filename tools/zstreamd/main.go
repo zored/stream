@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +14,6 @@ import (
 
 const (
 	companionVars = "http://127.0.0.1:8000/api/custom-variable/"
-	listenAddr    = "127.0.0.1:47120"
 	pollEvery     = 250 * time.Millisecond
 	resendEvery   = 10 * time.Second
 )
@@ -77,8 +77,29 @@ func every(d time.Duration, f func()) {
 	}
 }
 
+func serve(addr string, register func(*http.ServeMux)) {
+	mux := http.NewServeMux()
+	register(mux)
+	log.Printf("listening on %s", addr)
+	log.Fatal(http.ListenAndServe(addr, mux))
+}
+
 func main() {
+	callAddr := flag.String("call", "127.0.0.1:47114", "VK WorkSpace call HTTP address")
+	volumeAddr := flag.String("volume", "127.0.0.1:47120", "volume HTTP address")
+	flag.Parse()
 	log.SetPrefix("zstreamd: ")
+
+	c := &call{mic: unknown, cam: unknown, changed: make(chan struct{}, 1)}
+	go c.publish()
+	go c.run()
+	go serve(*callAddr, func(mux *http.ServeMux) {
+		handle(mux, "/mic/down", c.micDown)
+		handle(mux, "/mic/up", c.micUp)
+		handle(mux, "/cam/down", c.camDown)
+		handle(mux, "/call/end", c.hangUp)
+	})
+
 	v := &vars{sent: map[string]string{}}
 	vol := &volume{vars: v}
 	if err := vol.poll(); err != nil {
@@ -93,10 +114,9 @@ func main() {
 		v.forget()
 		vol.publish()
 	})
-	mux := http.NewServeMux()
-	handle(mux, "/volume/up", func() error { return vol.step(1) })
-	handle(mux, "/volume/down", func() error { return vol.step(-1) })
-	handle(mux, "/volume/mute", vol.toggleMute)
-	log.Printf("listening on %s", listenAddr)
-	log.Fatal(http.ListenAndServe(listenAddr, mux))
+	serve(*volumeAddr, func(mux *http.ServeMux) {
+		handle(mux, "/volume/up", func() error { return vol.step(1) })
+		handle(mux, "/volume/down", func() error { return vol.step(-1) })
+		handle(mux, "/volume/mute", vol.toggleMute)
+	})
 }

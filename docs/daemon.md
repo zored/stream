@@ -54,24 +54,31 @@ signature: TCC keeps the designated requirement, which for ad-hoc signing is the
 signing with a certificate (Apple Development or a self-signed code-signing cert in the login keychain) makes it identifier + cert
 (assumed, standard TCC behaviour). That holds for any language.
 
-## Spike (verified)
+## zstreamd today
 
-`tools/zstreamd/`: Go, no dependencies, CoreAudio through cgo (`audio_darwin.go`), `volume.go` ports `streamd`'s
-step acceleration and unmute-on-raise, `main.go` is the Companion client + HTTP on `127.0.0.1:47120`.
+`tools/zstreamd/`, one Go binary, one HTTP server per module on the module's old port, so pages need no change:
 
-- `POST /volume/up` → 204, system volume 10 → 11, Companion `volume` 10 → 11; `POST /volume/down` back to 10; unknown path → 404.
-- Pushes only `volume` (same value as `streamd`, no fight); no animation, no Now Playing, no LaunchAgent.
-- Build: `cd tools/zstreamd && GOWORK=off go build -o ~/.local/bin/zstreamd .` (`CGO_LDFLAGS=` while the stale env is around).
+| Module | File | Address (flag) | Status |
+|---|---|---|---|
+| VK WorkSpace calls | `call.go`, `vkcall/main.go` copied, only `setVariable` → `post` | `127.0.0.1:47114` (`-call`) | verified on spare ports next to `vkcall`: finds the call service, `409` without a call; in-call toggles not checked yet |
+| Volume | `volume.go`, `audio_darwin.go` (CoreAudio via cgo) | `127.0.0.1:47120` (`-volume`), moves to `:47113` when `streamd` goes | verified: up/down move the system volume and `volume`; no animation, drag, Now Playing |
+
+- `make zstreamd-cert` runs `tools/zstreamd/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
+  (asks for the password). Verified on a throwaway keychain: the identity imports; `codesign` refuses it while untrusted and
+  outside the keychain search list, so the trusted login-keychain path is assumed until the user runs it.
+- `make zstreamd-bin` builds and signs with `SIGN` (default `zored-stream`, `make build`/CI use `SIGN=-`), identifier
+  `com.zored.stream.zstreamd`. `make zstreamd` also installs the LaunchAgent, log `~/Library/Logs/zored-stream/zstreamd.log`.
+- `CGO_LDFLAGS=` in front of `make` while the stale environment is around.
 
 ## Migration
 
-Each step keeps the old helper until the new path is verified on the device; ports move only with `gen_pages.py`.
+Each step keeps the old helper until the new path is verified on the device. Modules keep their old ports, so a switch is
+"uninstall the helper, restart `zstreamd`", no `gen_pages.py` change.
 
-1. Signing: create a code-signing identity once (user, keychain), `codesign -s <id> -i com.zored.stream.zstreamd` in the build.
-   Check that a rebuild keeps the Accessibility grant.
-2. Skeleton: `make zstreamd` + LaunchAgent `com.zored.stream.zstreamd`, CI builds it. One HTTP server, path prefixes
-   `/volume`, `/call`, `/ym`, and a shared `vars` with the 10 s resend.
-3. `vkcall` → package `call`: copy, wire into the mux, switch the 4 commands in `gen_pages.py`, uninstall `vkcall`.
+1. Signing (user): `make zstreamd-cert`; after the first AX module, check that a rebuild keeps the Accessibility grant.
+2. Skeleton: done (`make zstreamd`, LaunchAgent, CI).
+3. `vkcall` → `call.go`: done in code. Switch: `make vkcall-uninstall`, then `make zstreamd`; verify mic/cam/hang-up in a call;
+   then delete `tools/vkcall/`.
 4. `streamd` volume: animation (`volume_anim`, `volume_alpha`, 30 fps ticker only while changing), drag; switch knobs, keep `streamd` for Now Playing.
 5. Now Playing: `zstreamd` starts `/usr/bin/perl streamd.pl libnowplaying.dylib`, the dylib prints JSON lines on change, the daemon
    restarts it on exit and pushes `np_*`. Uninstall `streamd`.

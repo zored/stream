@@ -22,5 +22,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: tools/vkcall/go.mod
-          cache-dependency-path: tools/vkcall/go.sum
+          cache-dependency-path: |
+            tools/vkcall/go.sum
+            tools/zstreamd/go.sum
       - run: make build
