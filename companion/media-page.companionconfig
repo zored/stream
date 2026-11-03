@@ -2284,7 +2284,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "$HOME/.local/bin/mediakey play",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/play",
             "isExpression": false
            },
            "cwd": {
@@ -2338,7 +2338,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "$HOME/.local/bin/mediakey prev",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/prev",
             "isExpression": false
            },
            "cwd": {
@@ -2390,7 +2390,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "$HOME/.local/bin/mediakey next",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/next",
             "isExpression": false
            },
            "cwd": {
@@ -3193,7 +3193,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "$HOME/.local/bin/mediakey play",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/play",
             "isExpression": false
            },
            "cwd": {

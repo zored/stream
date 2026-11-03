@@ -96,7 +96,7 @@ Each step keeps the old helper until the new path is verified on the device. Mod
 5. Now Playing: done, perl child with `libnowplaying.dylib`. `streamd` uninstalled, `tools/streamd/` removed.
 6. `ymusic`: done, AX walk in C (`ax_darwin.m`), `np_app` from memory, on `:47115`. The Accessibility grant survived a rebuild
    with a new cdhash (verified). `tools/ymusic/` removed.
-7. Optional: `mediakey` as `POST /key/<name>`; drops the `exec` and Companion's Accessibility.
+7. Done 2026-11-03: `mediakey` as `POST :47113/key/<name>`; the CLI stays as a fallback only.
 8. New features land as packages: keep-awake (`IOPMAssertion`), headphones (IOBluetooth ObjC + CoreAudio), AI limits, Claude hooks
    (`POST /agent/...`), Dock badges (AX), calendar (EventKit ObjC).
 9. Windows: `*_windows.go` files behind the same endpoints and variables, replaces the C# plan in [windows.md](windows.md) if the

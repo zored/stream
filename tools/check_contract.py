@@ -7,7 +7,6 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DAEMON = os.path.join(ROOT, "tools", "zored_stream")
 MAC_ONLY_PORTS = {"47114": "/mic", "47115": None, "47122": None, "47123": None, "47124": None, "47125": None, "47126": None, "47128": None}
-WINDOWS_PLANNED = ("/key/",)
 COMPANION_SET = {"ctl_brightness"}
 errors = []
 
@@ -63,8 +62,6 @@ def check(directory, windows, go, served):
                     for port, path in re.findall(r"http://127\.0\.0\.1:(\d+)(/[\w/]*)", command):
                         if port not in served:
                             fail(f"{where}: no daemon module on :{port}")
-                        elif windows and path.startswith(WINDOWS_PLANNED):
-                            pass
                         elif path not in served[port] and path.rsplit("/", 1)[0] + "/" not in served[port]:
                             fail(f"{where}: :{port} has no route {path}")
                         if windows and port in MAC_ONLY_PORTS and not (MAC_ONLY_PORTS[port] and path.startswith(MAC_ONLY_PORTS[port])):

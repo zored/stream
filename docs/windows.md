@@ -62,7 +62,7 @@ past `resets_at` the percent counts as 0. On Windows the folder is `%USERPROFILE
 `gen_pages.py <out> [mac|windows]`, default `mac`. `make pages` writes `companion/` (mac, byte-identical to before, verified)
 and `companion/windows/` (verified generated). The windows profile:
 
-- media keys: `curl … :47113/key/<name>` instead of `$HOME/.local/bin/mediakey`;
+- media keys: `curl … :47113/key/<name>`, same as mac;
 - `exec` goes through `cmd.exe` there (assumed), so URLs with `?` are double-quoted instead of single-quoted;
 - no Yandex Music hold, no keep-awake, camera, hang-up, dictation controls; no `call_cam`, `ym_like`, `dictation`, `power_svg` variables;
 - no choice-mode gate on the buttons;

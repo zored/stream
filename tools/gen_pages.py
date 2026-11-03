@@ -11,7 +11,6 @@ if PROFILE not in ("mac", "windows"):
 WINDOWS = PROFILE == "windows"
 ALPHABET = string.ascii_letters + string.digits + "_-"
 RAINBOW = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0x8000FF, 0xFF00FF]
-MEDIAKEY = "$HOME/.local/bin/mediakey"
 STREAMD = "http://127.0.0.1:47113"
 VKCALL = "http://127.0.0.1:47114"
 YMUSIC = "http://127.0.0.1:47115"
@@ -110,7 +109,7 @@ def sh(command, target=None):
 
 
 def mediakey(key):
-    return post(f"{STREAMD}/key/{key}") if WINDOWS else sh(f"{MEDIAKEY} {key}")
+    return post(f"{STREAMD}/key/{key}")
 
 
 def post(url):

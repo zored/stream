@@ -30,7 +30,7 @@ Status and next steps: `PLAN.md`.
    - state: `GET /api/custom-variable/<name>/value`, `POST /api/location/<p>/<r>/<c>/press`
    - looks: web preview at `http://127.0.0.1:8000/buttons/1`; strips and haptics only on the device — ask the user
 
-Helpers: `make mediakey`, `make zored_stream` (LaunchAgent), `make module` (builds the module fork, restarts Companion), `make companion` (autostart).
+Helpers: `make mediakey` (CLI fallback, pages use `:47113/key/*`), `make zored_stream` (LaunchAgent), `make module` (builds the module fork, restarts Companion), `make companion` (autostart).
 Run them yourself; hand to the user only what needs them: macOS permission grants, `make zored_stream-cert` (keychain password), `make companion` (login item), `make agent-hooks` (global settings).
 
 ## Rules

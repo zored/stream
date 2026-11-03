@@ -462,6 +462,7 @@ func main() {
 		handle(mux, "/nowplaying/show", func() error { np.glyph.show(); return nil })
 		handle(mux, "/nowplaying/next", func() error { sk.show(1); return nil })
 		handle(mux, "/nowplaying/prev", func() error { sk.show(-1); return nil })
+		mux.HandleFunc("POST /key/{name}", serveKey(postMediaKey))
 		mux.HandleFunc("POST /volume/drag", func(w http.ResponseWriter, r *http.Request) {
 			dy, err := strconv.ParseFloat(r.URL.Query().Get("dy"), 64)
 			if err != nil {
