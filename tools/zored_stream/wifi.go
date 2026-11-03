@@ -9,6 +9,7 @@ import (
 	"log"
 	"maps"
 	"net/http"
+	"net/netip"
 	"slices"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ const (
 	wifiHoldFor     = 400 * time.Millisecond
 	wifiPickFor     = 5 * time.Second
 	wifiJoinAfter   = time.Second
+	wifiJoinFor     = 15 * time.Second
 	wifiPollEvery   = 3 * time.Second
 	wifiProbeEvery  = 15 * time.Second
 	wifiProbeURL    = "http://captive.apple.com/hotspot-detect.html"
@@ -39,6 +41,9 @@ type wifi struct {
 	app      string
 	strip    func(note stripNote, d time.Duration)
 	loading  bool
+	phone    bool
+	joining  string
+	joinTill time.Time
 	turned   bool
 	on       bool
 	ssid     string
@@ -62,11 +67,13 @@ func (w *wifi) publish() {
 }
 
 func (w *wifi) publishLocked() {
-	state := "off"
+	state, name, phone := "off", w.ssid, w.phone
 	switch {
 	case time.Now().Before(w.errorTil):
 		state = "error"
 	case !w.on:
+	case w.joining != "" && time.Now().Before(w.joinTill):
+		state, name, phone = "joining", w.joining, false
 	case w.ssid == "":
 		state = "on"
 	case !w.online:
@@ -74,7 +81,7 @@ func (w *wifi) publishLocked() {
 	default:
 		state = "joined"
 	}
-	w.vars.set("wifi_svg", wifiSVG(state, w.ssid))
+	w.vars.set("wifi_svg", wifiSVG(state, name, phone))
 }
 
 func (w *wifi) poll() {
@@ -83,16 +90,23 @@ func (w *wifi) poll() {
 		log.Print(err)
 		return
 	}
-	ssid := ""
+	var link wifiLink
 	if on {
-		if ssid, err = wifiSSID(); err != nil {
+		if link, err = wifiCurrent(); err != nil {
 			log.Print(err)
 		}
 	}
 	w.mu.Lock()
-	w.on, w.ssid = on, ssid
+	changed := link.ssid != w.ssid
+	w.on, w.ssid, w.phone = on, link.ssid, link.phone()
+	if link.ssid != "" && link.ssid == w.joining {
+		w.joining = ""
+	}
 	w.publishLocked()
 	w.mu.Unlock()
+	if changed {
+		go w.probe()
+	}
 }
 
 func (w *wifi) probe() {
@@ -297,9 +311,15 @@ func (w *wifi) joinPick() {
 		return
 	}
 	ssid := w.list[w.pick]
+	w.joining, w.joinTill, w.online = ssid, time.Now().Add(wifiJoinFor), false
+	w.publishLocked()
 	w.mu.Unlock()
+	time.AfterFunc(wifiJoinFor, w.publish)
 	if err := wifiJoin(ssid); err != nil {
 		log.Print(err)
+		w.mu.Lock()
+		w.joining = ""
+		w.mu.Unlock()
 		w.fail()
 		return
 	}
@@ -325,16 +345,34 @@ func (w *wifi) fail() {
 	time.AfterFunc(3*time.Second, w.publish)
 }
 
-func ipconfigSSID(summary string) (string, error) {
+type wifiLink struct {
+	ssid   string
+	router netip.Addr
+}
+
+var iphoneHotspot = netip.MustParsePrefix("172.20.10.0/28")
+
+func (l wifiLink) phone() bool {
+	return l.router.IsValid() && iphoneHotspot.Contains(l.router)
+}
+
+func ipconfigLink(summary string) (wifiLink, error) {
+	var l wifiLink
 	for line := range strings.Lines(summary) {
-		if k, v, ok := strings.Cut(strings.TrimSpace(line), " : "); ok && k == "SSID" {
-			if v == "<redacted>" {
-				return "", errors.New("ipconfig: SSID redacted, run sudo ipconfig setverbose 1")
+		k, v, ok := strings.Cut(strings.TrimSpace(line), " : ")
+		switch {
+		case !ok:
+		case k == "SSID" && v == "<redacted>":
+			return wifiLink{}, errors.New("ipconfig: SSID redacted, run sudo ipconfig setverbose 1")
+		case k == "SSID":
+			l.ssid = v
+		case k == "Router" && !l.router.IsValid():
+			if a, err := netip.ParseAddr(v); err == nil {
+				l.router = a
 			}
-			return v, nil
 		}
 	}
-	return "", nil
+	return l, nil
 }
 
 func wifiLabel(name string) string {
@@ -349,11 +387,13 @@ func clip(s string, n int) string {
 	return string(r)
 }
 
-func wifiSVG(state, ssid string) string {
-	color, fill := "#fff", "none"
+func wifiSVG(state, ssid string, phone bool) string {
+	color, fill, text := "#fff", "none", "#fff"
 	switch state {
 	case "off":
 		color = gray
+	case "joining":
+		text = gray
 	case "error":
 		color = "#FF3030"
 	case "joined", "nonet":
@@ -365,13 +405,18 @@ func wifiSVG(state, ssid string) string {
 	if ssid != "" {
 		dy = -12
 	}
-	fmt.Fprintf(&b, `<g transform="translate(0 %d)"><path d="M50 74 L22.4 46.4 A39 39 0 0 1 77.6 46.4 Z" fill="%s" stroke="%s" stroke-width="4" stroke-linejoin="round"/>`, dy, fill, color)
+	fmt.Fprintf(&b, `<g transform="translate(0 %d)">`, dy)
+	if phone {
+		fmt.Fprintf(&b, `<rect x="38" y="30" width="24" height="44" rx="5" fill="%s" stroke="%s" stroke-width="4"/>`, fill, color)
+	} else {
+		fmt.Fprintf(&b, `<path d="M50 74 L22.4 46.4 A39 39 0 0 1 77.6 46.4 Z" fill="%s" stroke="%s" stroke-width="4" stroke-linejoin="round"/>`, fill, color)
+	}
 	if state == "nonet" {
 		b.WriteString(`<circle cx="80" cy="74" r="6" fill="#FFB000"/>`)
 	}
 	b.WriteString(`</g>`)
 	if ssid != "" {
-		fmt.Fprintf(&b, `<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="#fff">%s</text>`, html.EscapeString(clip(ssid, wifiTileRune)))
+		fmt.Fprintf(&b, `<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, text, html.EscapeString(clip(ssid, wifiTileRune)))
 	}
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())

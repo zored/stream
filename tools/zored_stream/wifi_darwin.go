@@ -35,12 +35,12 @@ func wifiSetPower(on bool) error {
 	return nil
 }
 
-func wifiSSID() (string, error) {
+func wifiCurrent() (wifiLink, error) {
 	out, err := exec.Command("/usr/sbin/ipconfig", "getsummary", "en0").Output()
 	if err != nil {
-		return "", fmt.Errorf("ipconfig getsummary: %w", err)
+		return wifiLink{}, fmt.Errorf("ipconfig getsummary: %w", err)
 	}
-	return ipconfigSSID(string(out))
+	return ipconfigLink(string(out))
 }
 
 func wifiKnown() ([]string, error) {

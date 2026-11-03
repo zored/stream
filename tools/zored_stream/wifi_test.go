@@ -41,16 +41,16 @@ func TestWifiLabel(t *testing.T) {
 	}
 }
 
-func TestIpconfigSSID(t *testing.T) {
-	for summary, want := range map[string]string{
-		"<dictionary> {\n  BSSID : aa\n  SSID : Момент и ВайФай\n}": "Момент и ВайФай",
-		"<dictionary> {\n  InterfaceType : WiFi\n}":                 "",
-	} {
-		if got, err := ipconfigSSID(summary); err != nil || got != want {
-			t.Errorf("ipconfigSSID = %q, %v, want %q", got, err, want)
-		}
+func TestIpconfigLink(t *testing.T) {
+	l, err := ipconfigLink("<dictionary> {\n  SSID : bo phone\n  Router : 172.20.10.1\n}")
+	if err != nil || l.ssid != "bo phone" || !l.phone() {
+		t.Errorf("hotspot: %+v, %v", l, err)
 	}
-	if _, err := ipconfigSSID("  SSID : <redacted>\n"); err == nil {
+	l, err = ipconfigLink("  SSID : Момент и ВайФай\n  Router : 192.168.4.1\n")
+	if err != nil || l.ssid != "Момент и ВайФай" || l.phone() {
+		t.Errorf("router: %+v, %v", l, err)
+	}
+	if _, err := ipconfigLink("  SSID : <redacted>\n"); err == nil {
 		t.Error("redacted SSID must fail")
 	}
 }
