@@ -129,6 +129,7 @@ func main() {
 	timersAddr := flag.String("timers", "127.0.0.1:47129", "timers + alarms HTTP address")
 	timersFile := flag.String("timers-file", filepath.Join(home, ".config/zored-stream/timers.json"), "pending timers and alarms")
 	emojiAddr := flag.String("emoji", "127.0.0.1:47128", "emoji picker HTTP address")
+	unreadAddr := flag.String("unread", "127.0.0.1:47130", "unread chats HTTP address")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
 	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
 	kvmWOL := flag.String("kvm-wol", "192.168.4.255:9", "Wake-on-LAN broadcast address")
@@ -352,6 +353,17 @@ func main() {
 	go every(pollEvery, tile24.publish)
 	go serve(*calendarAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/24/press", tile24.press)
+	})
+	ur := newUnread(v)
+	go every(unreadPollEvery, ur.poll)
+	tile22 := &slot{vars: v, name: "tile_22", layers: []layer{
+		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
+		{name: "unread", press: ur.down, up: ur.up},
+	}}
+	go every(pollEvery, tile22.publish)
+	go serve(*unreadAddr, func(mux *http.ServeMux) {
+		handle(mux, "/tile/22/down", tile22.press)
+		handle(mux, "/tile/22/up", tile22.up)
 	})
 	go func() {
 		stop := make(chan os.Signal, 1)

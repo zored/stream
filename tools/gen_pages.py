@@ -27,13 +27,14 @@ CALENDAR = "http://127.0.0.1:47126"
 INPUT = "http://127.0.0.1:47127"
 EMOJI = "http://127.0.0.1:47128"
 TIMERS = "http://127.0.0.1:47129"
+UNREAD = "http://127.0.0.1:47130"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -240,19 +241,32 @@ def call_led(var):
     }))], **call_actions(var))
 
 
-def call_tile(var, name):
+def call_layers(var, name):
     state = f"$(custom:{var})"
-    return button([
+    return [
         canvas(),
         box("box0", by_state(var, {"on": 0x1B5E20, "off": 0xB3261E, "pending": 0x8A6100, "unknown": 0x8A6100})),
         image("on", icon(name), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
         image("off", icon(f"{name}-off"), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
         text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60,
              opacity=expr(f'{state} == "unknown" || {state} == "pending" ? 100 : 0')),
-    ], **call_actions(var))
+    ]
+
+
+def call_tile(var, name):
+    return button(call_layers(var, name), **call_actions(var))
 
 
 IN_CALL = '$(custom:call_mic) != "none"'
+
+
+def mic_tile():
+    if WINDOWS:
+        return call_tile("call_mic", "mic")
+    return button([*call_layers("call_mic", "mic"),
+                   image("unread", expr("$(custom:unread_svg)"), enabled=expr('$(custom:tile_22) == "unread"'),
+                         x=v(6), y=v(6), width=v(88), height=v(88))],
+                  down=[post(UNREAD + "/tile/22/down")], up=[post(UNREAD + "/tile/22/up")])
 
 
 def hangup_led():
@@ -425,7 +439,7 @@ def media_page():
                        left=brightness("/brightness/down"), right=brightness("/brightness/up")),
         **{(r, 1): volume_cell(r) for r in range(3)},
         (1, 2): play_pause(),
-        (2, 2): call_tile("call_mic", "mic"),
+        (2, 2): mic_tile(),
         (2, 3): call_tile("call_cam", "cam"),
         (2, 4): day_tile(),
         (2, 5): clock(),
