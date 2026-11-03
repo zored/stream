@@ -147,7 +147,6 @@ Fork commits (surface settings, `plugin_cfg_*`):
   matches the long-press in `gen_pages.py`). `hapticHoldControls` limits the second one to listed control ids (generated `companion/hold-controls.txt`)
   (Makefile `HAPTIC_HOLD_CONTROLS`, now `encoder-1-0` = the TRACK knob; knob ids: `encoder-<row>-<0|7>`, buttons `button-1…8`). The driver has `vibrate(pattern)`, upstream never calls it. Patterns: `LoupedeckVibratePattern` in `@loupedeck/core`.
 - touch position in buttons mode: sliding a strip updates the fader value variables, upstream only did that in slider mode.
-- `hapticSlidePattern`, `hapticSlideStep`: a tick each time a touch crosses a `step`-px line on a strip (270 px tall), at most one per 30 ms.
 - left strip swipe → `POST zored_stream /volume/drag?dy=<px>` (`:47113`); right strip → `POST /ai/slide?y=<px>` (`:47117`, absolute position).
 
 The changes stay in the fork: no upstream PR (bitfocus/companion-surface-loupedeck#36 was opened and closed).

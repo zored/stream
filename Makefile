@@ -8,8 +8,6 @@ MODULES = $(SHARE)/companion-modules
 HAPTIC ?= SHORT_LOWER
 HAPTIC_HOLD_MS ?= 400
 HAPTIC_HOLD_CONTROLS ?= $(shell cat companion/hold-controls.txt)
-HAPTIC_SLIDE ?= SHORT_LOWER
-HAPTIC_STEP ?= 10
 SIGN ?= zored-stream
 USAGE_PROXY ?= http://squid.ai-proxy.vk.team:8083
 
@@ -58,8 +56,7 @@ module:
 	ln -sfn $(MODULE) $(MODULES)/loupedeck
 	python3 -I tools/companion_config.py enable_developer=true dev_modules_path=$(MODULES)
 	$(MAKE) companion-restart
-	node tools/surface.mjs dev hapticPressPattern=$(HAPTIC) hapticHoldMs=$(HAPTIC_HOLD_MS) hapticHoldControls=$(HAPTIC_HOLD_CONTROLS) \
-		hapticSlidePattern=$(HAPTIC_SLIDE) hapticSlideStep=$(HAPTIC_STEP)
+	node tools/surface.mjs dev hapticPressPattern=$(HAPTIC) hapticHoldMs=$(HAPTIC_HOLD_MS) hapticHoldControls=$(HAPTIC_HOLD_CONTROLS)
 
 YMUSIC_APP = /Applications/Яндекс Музыка.app
 YMUSIC_FLAGS = --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling

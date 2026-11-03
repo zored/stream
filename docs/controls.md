@@ -20,7 +20,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 `·` = free. Grid coords for code: `row/col`, knobs `r/0` and `r/7`, strips `r/1` and `r/6`, tiles `r/2–5`, buttons `3/0–7`
 ([companion.md](companion.md)).
 
-Everywhere: a short haptic tap on every press of a knob, tile or button; soft ticks every 10 px while sliding along a strip.
+Everywhere: a short haptic tap on every press of a knob, tile or button, no haptics while sliding along a strip.
 Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed; the release after it does nothing. The haptic list (`companion/hold-controls.txt`) is generated from every control with a hold. Exceptions timed on release: keep-awake sleep, push-to-talk, dictation.
 
 ## Left knobs
