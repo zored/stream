@@ -12,8 +12,17 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 
 - Cost: a plain read, no model call; the percentages did not move across several fetches in 10 minutes and the response carries
   no rate-limit headers (verified). That it never counts against the plan is assumed.
-- The daemon never calls the `claude` CLI and never refreshes the OAuth token: refreshing would rotate the refresh token under
-  Claude Code. An expired token is an error until Claude Code is used again and refreshes it.
+- The daemon never calls the `claude` CLI. The CLI refreshes its token only when it runs; the user mostly works in Claude Desktop,
+  so the token used to expire and the limits froze (2026-11-03: expired 8 h, `claude auth status` does not refresh it, verified).
+- Token refresh (`claude_token.go`, user-approved 2026-11-03): when the access token is expired or within 5 min of it, or after a
+  `401` from the usage endpoint, the daemon does what Claude Code 2.1.316 does (read in its binary): `POST
+  https://platform.claude.com/v1/oauth/token` `{"grant_type":"refresh_token","refresh_token","client_id":"9d1c250a-e61b-44d9-88ed-5944d1962f5e","scope":<scopes joined by spaces>}`,
+  then writes `accessToken`, `refreshToken`, `expiresAt`, `refreshTokenExpiresAt` back into the same keychain item the same way:
+  `security -i` ← `add-generic-password -U -a <user> -s "Claude Code-credentials" -X <hex JSON>`, every other field kept
+  (`mcpOAuth`, `scopes`, `subscriptionType`…). Verified: the access token lives 8 h and the refresh token **rotates**, so a private
+  copy would have logged the CLI out; after the write the item kept all fields and the new token fetched the limits.
+  Not covered: Claude Code's own write lock (`.storage-write`); a CLI refreshing at the same second could lose the race (assumed rare).
+- Claude Desktop keeps its own token encrypted with Electron safeStorage (`oauth:tokenCacheV2` in `config.json`); not used.
 - Network: `api.anthropic.com` resolves to `0.0.0.0` here; the system PAC (`jbproxy.vk.team/aiproxy/wpad.dat`) sends it to
   `squid.ai-proxy.vk.team:8083`. Go ignores PAC, so the LaunchAgent passes `-usage-proxy` (Makefile `USAGE_PROXY`, verified).
 
@@ -25,7 +34,8 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 | `-usage-every` | `15m` | fetch interval |
 | `-usage-proxy` | empty | HTTP proxy for `api.anthropic.com` |
 
-- Fetch on start, then every `-usage-every`. Errors back off: interval × 2ⁿ, at most 1 h, at least `Retry-After`.
+- Fetch on start, then every `-usage-every`. Network/HTTP errors back off: interval × 2ⁿ, at most 1 h, at least `Retry-After`.
+  Keychain problems (no item, no refresh token) retry every minute: a local read, no network.
 - `GET /usage`: `{"limits": [...as upstream...], "fetched_at", "error", "next_at"}` from the cache, never fetches.
 - `POST /usage/refresh`: fetch now, ignored within a minute of the last fetch.
 - Variables: `ai_strip_svg` (right strip top cell), `ai_session`, `ai_session_reset`, `ai_day`, `ai_week`, `ai_week_reset`, `ai_level`
@@ -48,6 +58,8 @@ text inverts where the bar is under it (verified in the web preview: full bar �
 The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
 Bars over 100 % stay full. The bar and the effort dots ease to new values at 30 fps (`animateStrip`, step 0.5 —
 faster than the volume bar's 0.3), so a change takes ~0.2 s. A red dot in the corner means the last fetch failed.
+Stale data is never shown as current: once a limit's `resets_at` has passed, its value and bar are cleared; when the last fetch
+failed or is older than 2 intervals, the bar is gray instead of white.
 
 ## Hammerspoon overlay
 

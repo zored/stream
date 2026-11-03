@@ -11,7 +11,6 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"os/exec"
 	"slices"
 	"strconv"
 	"strings"
@@ -20,21 +19,22 @@ import (
 )
 
 const (
-	usageURL        = "https://api.anthropic.com/api/oauth/usage"
-	usageKeychain   = "Claude Code-credentials"
-	usageMinRefresh = time.Minute
-	usageMaxBackoff = time.Hour
-	workdays        = 5
-	day             = 24 * time.Hour
-	sessionHours    = 5
-	gray            = "#808080"
-	weekShowFor     = 5 * time.Second
-	weekHoldMax     = 15 * time.Second
-	stripHz         = 60
-	stripEasing     = 0.293
-	stripDrawW      = 48
-	stripDrawH      = 258
-	stripTextY      = stripDrawH - 8
+	usageURL           = "https://api.anthropic.com/api/oauth/usage"
+	usageKeychain      = "Claude Code-credentials"
+	usageMinRefresh    = time.Minute
+	usageMaxBackoff    = time.Hour
+	usageKeychainRetry = time.Minute
+	workdays           = 5
+	day                = 24 * time.Hour
+	sessionHours       = 5
+	gray               = "#808080"
+	weekShowFor        = 5 * time.Second
+	weekHoldMax        = 15 * time.Second
+	stripHz            = 60
+	stripEasing        = 0.293
+	stripDrawW         = 48
+	stripDrawH         = 258
+	stripTextY         = stripDrawH - 8
 )
 
 var (
@@ -74,15 +74,16 @@ type usageSnapshot struct {
 }
 
 type usage struct {
-	mu       sync.Mutex
-	every    time.Duration
-	http     *http.Client
-	vars     *vars
-	snap     usageSnapshot
-	limits   []limit
-	failures int
-	wake     chan struct{}
-	label    stripLabel
+	mu           sync.Mutex
+	every        time.Duration
+	http         *http.Client
+	vars         *vars
+	snap         usageSnapshot
+	limits       []limit
+	failures     int
+	forceRefresh bool
+	wake         chan struct{}
+	label        stripLabel
 	stripMode
 	target  stripFrame
 	shown   stripFrame
@@ -93,6 +94,7 @@ type stripFrame struct {
 	label  stripLabel
 	text   string
 	failed bool
+	stale  bool
 	pct    float64
 	dots   [5]float64
 }
@@ -200,10 +202,13 @@ func (u *usage) fetch() {
 	now := time.Now()
 	u.mu.Lock()
 	if err != nil {
-		u.failures++
 		u.snap.Error = err.Error()
-		wait := min(u.every<<u.failures, usageMaxBackoff)
-		u.snap.NextAt = now.Add(max(wait, retryAfter))
+		if errors.Is(err, errKeychain) {
+			u.snap.NextAt = now.Add(usageKeychainRetry)
+		} else {
+			u.failures++
+			u.snap.NextAt = now.Add(max(min(u.every<<u.failures, usageMaxBackoff), retryAfter))
+		}
 		log.Printf("usage: %v, next try at %s", err, u.snap.NextAt.Format(time.TimeOnly))
 	} else {
 		u.failures = 0
@@ -215,7 +220,10 @@ func (u *usage) fetch() {
 }
 
 func (u *usage) get() ([]json.RawMessage, []limit, time.Duration, error) {
-	token, err := claudeToken()
+	u.mu.Lock()
+	force := u.forceRefresh
+	u.mu.Unlock()
+	token, err := u.claudeToken(force)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -234,6 +242,9 @@ func (u *usage) get() ([]json.RawMessage, []limit, time.Duration, error) {
 	if err != nil {
 		return nil, nil, 0, err
 	}
+	u.mu.Lock()
+	u.forceRefresh = resp.StatusCode == http.StatusUnauthorized
+	u.mu.Unlock()
 	if resp.StatusCode != http.StatusOK {
 		retry, _ := strconv.Atoi(resp.Header.Get("Retry-After"))
 		return nil, nil, time.Duration(retry) * time.Second, fmt.Errorf("%s: %.120s", resp.Status, body)
@@ -256,29 +267,6 @@ func (u *usage) get() ([]json.RawMessage, []limit, time.Duration, error) {
 	return data.Limits, limits, 0, nil
 }
 
-func claudeToken() (string, error) {
-	out, err := exec.Command("/usr/bin/security", "find-generic-password", "-s", usageKeychain, "-w").Output()
-	if err != nil {
-		return "", fmt.Errorf("keychain: %w", err)
-	}
-	var creds struct {
-		OAuth *struct {
-			AccessToken string `json:"accessToken"`
-			ExpiresAt   int64  `json:"expiresAt"`
-		} `json:"claudeAiOauth"`
-	}
-	if err := json.Unmarshal(out, &creds); err != nil {
-		return "", fmt.Errorf("keychain: %w", err)
-	}
-	if creds.OAuth == nil || creds.OAuth.AccessToken == "" {
-		return "", errors.New("keychain: no claudeAiOauth.accessToken")
-	}
-	if time.UnixMilli(creds.OAuth.ExpiresAt).Before(time.Now()) {
-		return "", errors.New("Claude Code token expired: it refreshes on the next Claude Code use")
-	}
-	return creds.OAuth.AccessToken, nil
-}
-
 func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 	u.mu.Lock()
 	body, err := json.Marshal(u.snap)
@@ -294,8 +282,10 @@ func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 func (u *usage) publish() {
 	u.mu.Lock()
 	limits, failed, label, mode := u.limits, u.snap.Error != "", u.label, u.stripMode
+	fetched := u.snap.FetchedAt
 	u.mu.Unlock()
 	now := time.Now()
+	stale := failed || fetched == nil || now.Sub(*fetched) > 2*u.every
 	week := scopedFor(limits, label.model)
 	if week == nil {
 		week = findLimit(limits, "weekly_all")
@@ -303,7 +293,7 @@ func (u *usage) publish() {
 	frame := stripFrame{label: label, failed: true, dots: dotTargets(label.effort)}
 	if week != nil {
 		frame.text, frame.pct = stripValue(limits, *week, mode, now)
-		frame.failed = failed
+		frame.failed, frame.stale = failed, stale
 	}
 	u.mu.Lock()
 	u.target = frame
@@ -391,6 +381,9 @@ func dayPct(l limit, now time.Time) float64 {
 }
 
 func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (string, float64) {
+	if week.ResetsAt != nil && !now.Before(*week.ResetsAt) {
+		return "", 0
+	}
 	switch {
 	case mode.switching:
 		return "day", dayPct(week, now)
@@ -403,6 +396,9 @@ func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (stri
 	}
 	text, pct := clockLeft(sessionHours*time.Hour), 0.0
 	if s := findLimit(limits, "session"); s != nil {
+		if s.ResetsAt != nil && !now.Before(*s.ResetsAt) {
+			return "", 0
+		}
 		pct = s.Percent
 		if s.ResetsAt != nil {
 			text = clockLeft(s.ResetsAt.Sub(now))
@@ -423,6 +419,10 @@ func dotTargets(effort string) [5]float64 {
 func aiStripSVG(f stripFrame) string {
 	const w, h = stripDrawW, stripDrawH
 	barH := h * min(max(f.pct, 0), 100) / 100
+	barColor := "#fff"
+	if f.stale {
+		barColor = gray
+	}
 	bar := fmt.Sprintf(`x="0" y="%.1f" width="%d" height="%.1f"`, h-barH, w, barH)
 	k := min(float64(h)/svgMinWidth, float64(w)/svgHeight)
 	content := func(ink string) string {
@@ -440,8 +440,8 @@ func aiStripSVG(f stripFrame) string {
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
-		`%s<rect %s fill="#fff"/><g clip-path="url(#bar)">%s</g>%s</svg>`,
-		w, h, bar, w, h, content(""), bar, content("#000"), dot))
+		`%s<rect %s fill="%s"/><g clip-path="url(#bar)">%s</g>%s</svg>`,
+		w, h, bar, w, h, content(""), bar, barColor, content("#000"), dot))
 }
 
 func labelMarkup(l stripLabel, dots [5]float64, ink string) string {

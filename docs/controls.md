@@ -146,7 +146,9 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 - slide: picks the model + effort by position, bottom Sonnet·Low → top Fable·High *(on the device: assumed)*
 - tap: nothing
 
-Limits refresh every 15 min. [ai.md](ai.md), [ai-switch.md](ai-switch.md)
+- stale: gray bar = the numbers are old (fetch failed or >30 min); after a reset the bar and the time clear until the next fetch
+
+Limits refresh every 15 min; the daemon renews the Claude Code login token itself. [ai.md](ai.md), [ai-switch.md](ai-switch.md)
 
 ## Right knobs
 

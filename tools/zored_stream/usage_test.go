@@ -88,3 +88,15 @@ func TestStripValue(t *testing.T) {
 		}
 	}
 }
+
+func TestStripValueAfterReset(t *testing.T) {
+	now := at(19, 12)
+	week := lim("weekly_all", 23, "", ptr(at(23, 18)))
+	if text, pct := stripValue([]limit{lim("session", 38, "", ptr(now.Add(-time.Minute))), week}, week, stripMode{}, now); text != "" || pct != 0 {
+		t.Errorf("session reset passed: got %q %v", text, pct)
+	}
+	old := lim("weekly_all", 23, "", ptr(now.Add(-time.Hour)))
+	if text, pct := stripValue([]limit{old}, old, stripMode{switching: true}, now); text != "" || pct != 0 {
+		t.Errorf("week reset passed: got %q %v", text, pct)
+	}
+}
