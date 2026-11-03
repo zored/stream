@@ -73,16 +73,20 @@ type calText struct {
 }
 
 func calPNG(w, h float64, rotate bool, texts []calText) (string, error) {
-	c := C.cal_canvas_new(C.double(w), C.double(h), cBool(rotate))
+	c := C.cal_canvas_new(C.double(w), C.double(h), 4, cBool(rotate))
 	for _, t := range texts {
 		s := C.CString(t.text)
 		C.cal_canvas_text(c, s, C.double(t.x), C.double(t.y), C.double(t.w), C.double(t.h), C.double(t.size), C.uint(t.rgb), cBool(t.center))
 		C.free(unsafe.Pointer(s))
 	}
+	return canvasPNG(c)
+}
+
+func canvasPNG(c unsafe.Pointer) (string, error) {
 	var n C.int
 	p := C.cal_canvas_png(c, &n)
 	if p == nil {
-		return "", errors.New("calendar png: encode failed")
+		return "", errors.New("canvas png: encode failed")
 	}
 	defer C.free(p)
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(C.GoBytes(p, n)), nil

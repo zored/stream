@@ -15,6 +15,7 @@ Status and next steps: `PLAN.md`.
 - `docs/ai.md` — Claude usage limits: `usage` module of `zored_stream`, right strip, Hammerspoon overlay
 - `docs/ai-switch.md` — Claude Desktop model + effort knob via Accessibility
 - `docs/agents.md` — agents waiting (hooks, Desktop unread), dictation, choice mode on кнопки 1–8
+- `docs/emoji.md` — emoji picker on two strips: `emoji` module of `zored_stream`, fork touch edges, rendering
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `zored_stream` module, dead ends
 - `docs/windows.md` — port plan: what carries over, what needs a Windows build
 - `docs/device.md` — USB, raw protocol events, `tools/sniff.py`, firmware

@@ -101,21 +101,19 @@ char *cal_set_done(const char *id, int done) {
     }
 }
 
-static const double canvas_scale = 4;
-
 typedef struct {
     CGContextRef ctx;
     double h;
 } canvas;
 
-void *cal_canvas_new(double w, double h, int rotate) {
+void *cal_canvas_new(double w, double h, double scale, int rotate) {
     canvas *c = malloc(sizeof *c);
     c->h = h;
     double bw = rotate ? h : w, bh = rotate ? w : h;
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-    c->ctx = CGBitmapContextCreate(NULL, bw * canvas_scale, bh * canvas_scale, 8, 0, cs, (CGBitmapInfo)kCGImageAlphaPremultipliedLast);
+    c->ctx = CGBitmapContextCreate(NULL, bw * scale, bh * scale, 8, 0, cs, (CGBitmapInfo)kCGImageAlphaPremultipliedLast);
     CGColorSpaceRelease(cs);
-    CGContextScaleCTM(c->ctx, canvas_scale, canvas_scale);
+    CGContextScaleCTM(c->ctx, scale, scale);
     if (rotate) {
         CGContextTranslateCTM(c->ctx, bw, 0);
         CGContextRotateCTM(c->ctx, M_PI_2);
@@ -152,6 +150,33 @@ void cal_canvas_text(void *c, const char *text, double x, double y, double w, do
         CGColorRelease(color);
         CFRelease(font);
     }
+}
+
+void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double size, double alpha) {
+    @autoreleasepool {
+        CGContextRef ctx = ((canvas *)c)->ctx;
+        double H = ((canvas *)c)->h;
+        CTFontRef font = CTFontCreateWithName(CFSTR("Apple Color Emoji"), size, NULL);
+        NSDictionary *attrs = @{(id)kCTFontAttributeName: (__bridge id)font};
+        NSAttributedString *as = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:text] attributes:attrs];
+        CTLineRef line = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)as);
+        CGRect b = CTLineGetBoundsWithOptions(line, kCTLineBoundsUseGlyphPathBounds);
+        CGContextSaveGState(ctx);
+        CGContextSetAlpha(ctx, alpha);
+        CGContextSetTextPosition(ctx, cx - b.origin.x - b.size.width / 2, H - cy - b.origin.y - b.size.height / 2);
+        CTLineDraw(line, ctx);
+        CGContextRestoreGState(ctx);
+        CFRelease(line);
+        CFRelease(font);
+    }
+}
+
+void cal_canvas_ring(void *c, double cx, double cy, double r, double width, unsigned rgb) {
+    CGContextRef ctx = ((canvas *)c)->ctx;
+    double H = ((canvas *)c)->h;
+    CGContextSetRGBStrokeColor(ctx, ((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
+    CGContextSetLineWidth(ctx, width);
+    CGContextStrokeEllipseInRect(ctx, CGRectMake(cx - r, H - cy - r, 2 * r, 2 * r));
 }
 
 void *cal_canvas_png(void *c, int *len) {

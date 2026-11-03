@@ -26,13 +26,14 @@ WIFI = "http://127.0.0.1:47124"
 KVM = "http://127.0.0.1:47125"
 CALENDAR = "http://127.0.0.1:47126"
 INPUT = "http://127.0.0.1:47127"
+EMOJI = "http://127.0.0.1:47128"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg"))}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -194,6 +195,7 @@ def volume_cell(row):
         box("track", 0x000000, opacity=visible),
         box("fill", color, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
         *(skip_arrows() if row == 2 else ()),
+        *emoji_strip("emoji_l", row),
     ])
 
 
@@ -316,7 +318,22 @@ def ai_switch():
 
 def ai_strip(row):
     return button([canvas(), box("box0", 0x000000),
-                   image("strip", expr("$(custom:ai_strip_svg)"), "fill", y=v(-100 * row), height=v(300))])
+                   image("strip", expr("$(custom:ai_strip_svg)"), "fill", y=v(-100 * row), height=v(300)),
+                   *emoji_strip("emoji_r", row)])
+
+
+def emoji_strip(var, row):
+    if WINDOWS:
+        return ()
+    on = expr("$(custom:emoji_on) == 1")
+    return (box("emoji_bg", 0x000000, enabled=on),
+            image("emoji", expr(f"$(custom:{var})"), "fill", enabled=on, y=v(-100 * row), height=v(300)))
+
+
+def emoji_tile():
+    return button([canvas(), box("box0", 0x000000),
+                   image("emoji", expr("$(custom:emoji_tile)"), x=v(6), y=v(6), width=v(88), height=v(88))],
+                  down=[post(EMOJI + "/emoji/tile")])
 
 
 def agents_led():
@@ -415,6 +432,7 @@ def media_page():
                        left=[post(SCROLL + "/scroll/back")], right=[post(SCROLL + "/scroll/forward")]),
         (1, 5): agents_tile(),
         (0, 2): input_tile(),
+        (1, 3): emoji_tile(),
         (0, 3): wifi_tile(),
         (0, 4): headphones_tile(),
         (0, 5): awake_tile(),
@@ -426,7 +444,7 @@ def media_page():
         (3, 0): kvm_led(),
     }
     if WINDOWS:
-        for cell in ((3, 0), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
+        for cell in ((3, 0), (1, 3), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
             del grid[cell]
     else:
         for c in range(8):

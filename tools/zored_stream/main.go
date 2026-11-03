@@ -126,6 +126,7 @@ func main() {
 	calendarAddr := flag.String("calendar", "127.0.0.1:47126", "calendar + reminders HTTP address")
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
 	inputAddr := flag.String("input", "127.0.0.1:47127", "keyboard layout HTTP address")
+	emojiAddr := flag.String("emoji", "127.0.0.1:47128", "emoji picker HTTP address")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
 	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
 	kvmWOL := flag.String("kvm-wol", "192.168.4.255:9", "Wake-on-LAN broadcast address")
@@ -148,6 +149,39 @@ func main() {
 	})
 
 	v := &vars{sent: map[string]string{}}
+	em := newEmoji(v)
+	em.publish()
+	go em.animate()
+	go serve(*emojiAddr, func(mux *http.ServeMux) {
+		handle(mux, "/emoji/tile", em.tile)
+		mux.HandleFunc("POST /emoji/{edge}", func(w http.ResponseWriter, r *http.Request) {
+			side := map[string]int{"l": emojiLeft, "r": emojiRight}
+			s, ok := side[r.URL.Query().Get("s")]
+			if !ok {
+				http.Error(w, "s: l or r", http.StatusBadRequest)
+				return
+			}
+			switch r.PathValue("edge") {
+			case "start":
+				y, err := strconv.ParseFloat(r.URL.Query().Get("y"), 64)
+				if err != nil {
+					http.Error(w, "y: "+err.Error(), http.StatusBadRequest)
+					return
+				}
+				em.start(s, y)
+			case "end":
+				if err := em.end(s); err != nil {
+					log.Printf("/emoji/end: %v", err)
+					http.Error(w, err.Error(), http.StatusConflict)
+					return
+				}
+			default:
+				http.Error(w, "edge: start or end", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		})
+	})
 	np := &nowPlaying{script: *npScript, lib: *npLib, vars: v, glyph: newGlyph(v), tint: newTint(v)}
 	go np.glyph.animate()
 	np.tint.publish()
@@ -194,7 +228,9 @@ func main() {
 				http.Error(w, "y: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			ai.slide(y)
+			if !em.slide(emojiRight, y) {
+				ai.slide(y)
+			}
 			w.WriteHeader(http.StatusNoContent)
 		})
 		handle(mux, "/ai/down", ai.down)
@@ -259,19 +295,29 @@ func main() {
 	}
 	go serve(*brightnessAddr, func(mux *http.ServeMux) {
 		handleValue(mux, "/brightness/up", func() (int, error) {
-			if pw.turn(1) || wf.turn(1) {
+			if pw.turn(1) || wf.turn(1) || em.turn(emojiRight, 1) {
 				return br.level(), nil
 			}
 			return br.turn(1)
 		})
 		handleValue(mux, "/brightness/down", func() (int, error) {
-			if pw.turn(-1) || wf.turn(-1) {
+			if pw.turn(-1) || wf.turn(-1) || em.turn(emojiRight, -1) {
 				return br.level(), nil
 			}
 			return br.turn(-1)
 		})
-		handleValue(mux, "/brightness/hold", br.hold)
-		handleValue(mux, "/brightness/release", br.release)
+		handleValue(mux, "/brightness/hold", func() (int, error) {
+			if took, err := em.press(emojiRight); took {
+				return br.level(), err
+			}
+			return br.hold()
+		})
+		handleValue(mux, "/brightness/release", func() (int, error) {
+			if em.release(emojiRight) {
+				return br.level(), nil
+			}
+			return br.release()
+		})
 	})
 	seek := &seeker{np: np, bar: vol.bar}
 	go every(progressEvery, np.publishProgress)
@@ -364,11 +410,27 @@ func main() {
 		kv.publish()
 		cal.publish()
 		in.publish()
+		em.publish()
 	})
 	go serve(*volumeAddr, func(mux *http.ServeMux) {
-		handle(mux, "/volume/up", func() error { return vol.step(1) })
-		handle(mux, "/volume/down", func() error { return vol.step(-1) })
-		handle(mux, "/volume/mute", vol.toggleMute)
+		handle(mux, "/volume/up", func() error {
+			if em.turn(emojiLeft, 1) {
+				return nil
+			}
+			return vol.step(1)
+		})
+		handle(mux, "/volume/down", func() error {
+			if em.turn(emojiLeft, -1) {
+				return nil
+			}
+			return vol.step(-1)
+		})
+		handle(mux, "/volume/mute", func() error {
+			if took, err := em.press(emojiLeft); took {
+				return err
+			}
+			return vol.toggleMute()
+		})
 		handle(mux, "/nowplaying/show", func() error { np.glyph.show(); return nil })
 		handle(mux, "/nowplaying/next", func() error { sk.show(1); return nil })
 		handle(mux, "/nowplaying/prev", func() error { sk.show(-1); return nil })
@@ -376,6 +438,10 @@ func main() {
 			dy, err := strconv.ParseFloat(r.URL.Query().Get("dy"), 64)
 			if err != nil {
 				http.Error(w, "dy: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+			if em.drag(emojiLeft, dy) {
+				w.WriteHeader(http.StatusNoContent)
 				return
 			}
 			if err := vol.drag(dy); err != nil {

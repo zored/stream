@@ -10,7 +10,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
           left                         tiles                           right
         knob strip   колонка 1   колонка 2   колонка 3   колонка 4   strip knob
 ряд 1   VOL   ┐      en/ru       ·           ·           awake       ┐     SUN
-ряд 2   TRACK ├trk   play/cover  ·           ·           agents      ├ai   AI
+ряд 2   TRACK ├trk   play/cover  emoji       ·           agents      ├ai   AI
 ряд 3   SEEK  ┘      mic         camera      hang up     clock       ┘     SCROLL
 
         кнопка 1  2      3       4        5   6        7          8
@@ -102,7 +102,19 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 [macos.md](macos.md), [ymusic.md](ymusic.md)
 
-### тайлы ряд 2, колонки 2–3 — free
+### тайл ряд 2, колонка 2 — emoji picker
+
+- idle: a gray smiley
+- touch: opens the picker for 4 s, every action below extends it; shows the highlighted emoji of the last used strip
+- touch while open: types that emoji into the focused field
+- while open: both strips turn into emoji columns, the top one in a gray ring, the rest dimmed;
+  left = recent emoji, then all of them; right = one category (people first)
+- strip swipe: scrolls its column, flicks keep coasting; tap on the top emoji types it; tap lower: left jumps back to the recents, right switches to the next category
+- крутилка слева, ряд 1 / справа, ряд 1: turn scrolls its column (faster turns step more), press types its top emoji; volume and brightness are off while the picker is open
+
+[emoji.md](emoji.md)
+
+### тайл ряд 2, колонка 3 — free
 
 ### тайл ряд 2, колонка 4 — agents waiting
 
@@ -190,7 +202,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 1 — brightness
 
-- turn: Mac display brightness (built-in display); for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4); for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
+- turn: Mac display brightness (built-in display); while the emoji picker is open, its right column; for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4); for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
 - press + turn: the controller's own brightness, never below 10 %
 - shows: the left strip bar for 1 s, white = Mac, gray = controller
 
@@ -211,7 +223,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - click (press and release without a turn): switch wheel ↔ tab mode; the mode survives restarts
 - wheel mode, turn: mouse wheel under the cursor, clockwise = down; 1 / 2 / 4 / 8 lines per detent by speed
 - tab mode, turn: Ctrl held, clockwise = Tab, counter-clockwise = Shift+Tab; Ctrl is released 500 ms after the last detent
-- press + turn: horizontal wheel in both modes, clockwise = right; no mode switch
+- press + turn: wheel mode = horizontal wheel, clockwise = right; tab mode = windows of all apps one by one, front to back, clockwise = deeper; no mode switch
 - while the clock list is open: turn scrolls the list, press = clock hold
 
 [macos.md](macos.md)
