@@ -66,7 +66,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 3 — headphones
 
-- shows the current output: speaker = wired / built-in, headphones = any Bluetooth output; gray = switching; red for 3 s = switch failed
+- shows the current output: speaker = wired / built-in, headphones = any Bluetooth output; yellow = connecting; red for 3 s = switch failed
 - touch: toggle. To headphones: connect over Bluetooth, output and mic go to them (the mic always, so music drops to headset quality).
   Back: output to Logi, else MacBook; mic to a USB camera, else MacBook; then Bluetooth disconnects
 - no hold

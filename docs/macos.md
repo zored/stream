@@ -75,7 +75,7 @@ The device has no HID interface, so it can't wake a sleeping Mac (verified: pres
 ## zored_stream — headphones
 
 `headphones.go`, `headphones_darwin.{go,m,h}`, `:47123`: `POST /headphones/toggle` from тайл ряд 1, колонка 3; variable `headphones_svg`
-= the whole tile (speaker or headphones glyph, gray while switching, red 3 s on failure). State is polled every 2 s:
+= the whole tile (speaker or headphones glyph, yellow while switching, red 3 s on failure). State is polled every 2 s:
 headphones = the default output is any Bluetooth CoreAudio device; a press then goes back to speakers.
 
 - On: `IOBluetoothDevice openConnection` to `80:C3:BA:5F:A4:76` (Sennheiser Accentum), wait up to 10 s for its CoreAudio device,
@@ -83,7 +83,7 @@ headphones = the default output is any Bluetooth CoreAudio device; a press then 
   then `closeConnection`. The toggle returns at once, the switch runs in the background.
 - IOBluetooth needs the Bluetooth permission (`kTCCServiceBluetoothAlways`); without `NSBluetoothAlwaysUsageDescription` it fails
   silently (verified). With it, `openConnection` reaches the headset (verified: `0xe00002d6` timeout while it was off). `Info.plist` is linked into the binary (`-sectcreate __TEXT __info_plist`).
-  First press: macOS asks to allow Bluetooth for `zored_stream`; until then the tile stays gray.
+  First press: macOS asks to allow Bluetooth for `zored_stream`; until then the tile stays yellow.
 - No `blueutil` / `SwitchAudioSource`: all in-process.
 
 ## zored_stream — keep awake and sleep

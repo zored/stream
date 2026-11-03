@@ -50,7 +50,7 @@ func (h *headphones) publish() {
 	case time.Now().Before(h.errorTil):
 		stroke = "#f00"
 	case h.busy:
-		stroke = gray
+		stroke = "#FFB000"
 	}
 	h.vars.set("headphones_svg", headphonesSVG(h.on, stroke))
 }
