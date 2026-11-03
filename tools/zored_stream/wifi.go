@@ -25,6 +25,7 @@ const (
 	wifiOffline     = "offline"
 	wifiNameMaxRune = 14
 	wifiTileRune    = 10
+	wifiIconScale   = 0.6
 )
 
 type wifi struct {
@@ -433,7 +434,7 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	if ssid != "" {
 		dy = -12
 	}
-	fmt.Fprintf(&b, `<g transform="translate(0 %d)">`, dy)
+	fmt.Fprintf(&b, `<g transform="translate(50 %d) scale(%g) translate(-50 -52)">`, 52+dy, wifiIconScale)
 	if phone {
 		fmt.Fprintf(&b, `<rect x="38" y="30" width="24" height="44" rx="5" fill="%s" stroke="%s" stroke-width="4"/>`, fill, color)
 	} else {
