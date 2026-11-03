@@ -51,28 +51,35 @@ func wifiKnown() ([]string, error) {
 	return keychainNetworks(string(out))
 }
 
-func wifiScan(app string) ([]wifiNetwork, error) {
+func runHelper(app string, args ...string) (string, error) {
 	f, err := os.CreateTemp("", "zored_wifi-*.tsv")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	f.Close()
 	defer os.Remove(f.Name())
-	if out, err := exec.Command("/usr/bin/open", "-g", "-n", "-W", app, "--args", f.Name()).CombinedOutput(); err != nil {
-		return nil, fmt.Errorf("open %s: %w: %s", app, err, out)
+	if out, err := exec.Command("/usr/bin/open", append([]string{"-g", "-n", "-W", app, "--args", f.Name()}, args...)...).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("open %s: %w: %s", app, err, out)
 	}
 	data, err := os.ReadFile(f.Name())
+	return string(data), err
+}
+
+func wifiScan(app string) ([]wifiNetwork, error) {
+	out, err := runHelper(app)
 	if err != nil {
 		return nil, err
 	}
-	return scanNetworks(string(data))
+	return scanNetworks(out)
 }
 
-func wifiJoin(ssid string) error {
-	out, err := exec.Command("/usr/sbin/networksetup", "-setairportnetwork", "en0", ssid).CombinedOutput()
-	msg := strings.TrimSpace(string(out))
-	if err != nil || msg != "" {
-		return fmt.Errorf("wi-fi join %q: %v %s", ssid, err, msg)
+func wifiJoin(app, ssid string) error {
+	out, err := runHelper(app, "join", ssid)
+	if err != nil {
+		return err
+	}
+	if out != "ok\n" {
+		return fmt.Errorf("wi-fi join %q: %s", ssid, strings.TrimSpace(out))
 	}
 	return nil
 }

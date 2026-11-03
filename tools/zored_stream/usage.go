@@ -460,7 +460,7 @@ func aiStripSVG(f stripFrame) string {
 	}
 	dot := ""
 	if f.note.arrow {
-		dot = fmt.Sprintf(`<path d="M%d 37l6 6-6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`, w-9)
+		dot = fmt.Sprintf(`<path d="M%d 24l6 6-6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`, w/2-3)
 	}
 	if f.failed {
 		dot += fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="#FF6666"/>`, w-4)

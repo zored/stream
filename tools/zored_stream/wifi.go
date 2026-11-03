@@ -19,7 +19,7 @@ import (
 const (
 	wifiHoldFor     = 400 * time.Millisecond
 	wifiPickFor     = 5 * time.Second
-	wifiJoinAfter   = 2 * time.Second
+	wifiJoinAfter   = time.Second
 	wifiPollEvery   = 3 * time.Second
 	wifiProbeEvery  = 15 * time.Second
 	wifiProbeURL    = "http://captive.apple.com/hotspot-detect.html"
@@ -298,7 +298,7 @@ func (w *wifi) joinPick() {
 	}
 	ssid := w.list[w.pick]
 	w.mu.Unlock()
-	if err := wifiJoin(ssid); err != nil {
+	if err := wifiJoin(w.app, ssid); err != nil {
 		log.Print(err)
 		w.fail()
 		return

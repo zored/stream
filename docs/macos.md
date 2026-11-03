@@ -165,7 +165,7 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
 
 ## Wi-fi (`wifi.go`, :47124, helper `zored_wifi.app`)
 
-- Power: CoreWLAN. Join: `networksetup -setairportnetwork en0 <ssid>`, password from the keychain *(assumed)*.
+- Power: CoreWLAN. Join: macOS never fills the password itself: `networksetup -setairportnetwork` and `associate(password:nil)` both fail with `tmpErr`, even for the current network (verified). `zored_wifi.app <file> join <ssid>` reads the `AirPort` item from the System keychain (`SecKeychainFindGenericPassword`, admin dialog once per network, "Always Allow" puts the app into the item ACL *(assumed)*) and calls `associate`; it writes `ok` or `error\t…`.
 - Every SSID source is redacted without Location: `ipconfig`, `system_profiler`, `wdutil`, CoreWLAN scan (verified). A bare binary with `NSLocation*UsageDescription` in the embedded `Info.plist` gets an `#AuthPrompt` in the `locationd` log but no window (verified).
 - Current SSID: `sudo ipconfig setverbose 1` once, then `ipconfig getsummary en0` prints it (verified). Survives a reboot *(unknown)*.
 - Scan: `tools/zored_wifi` is an `LSUIElement` app with its own Location grant (window shown, verified). The daemon runs `open -g -n -W zored_wifi.app --args <file>`; it scans once and writes `ssid\trssi` lines or `error\t…` (~2.3 s, verified). Run as a child process it would inherit the daemon's (missing) grant, hence `open`. `make zored_wifi` builds and signs it into `~/.local/share/zored-stream/`; `make zored_stream` depends on it.
