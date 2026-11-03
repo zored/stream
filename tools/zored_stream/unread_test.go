@@ -22,8 +22,8 @@ func TestUnreadTiles(t *testing.T) {
 		t.Fatalf("waiting: %+v", got)
 	}
 	u.update(now.Add(2*time.Minute), map[string]string{})
-	if u.vars.sent["unread_svg"] != "" {
-		t.Fatal("no badges must clear the tile")
+	if u.vars.sent["unread_svg"] != unreadSVG(nil, now) {
+		t.Fatal("no badges must show the eye")
 	}
 }
 

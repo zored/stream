@@ -98,14 +98,15 @@ func ago(at, now time.Time) string {
 
 func unreadSVG(apps []*unreadApp, now time.Time) string {
 	if len(apps) == 0 {
-		return ""
+		return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="none" stroke="#808080" stroke-width="5">` +
+			`<path d="M14 50Q50 14 86 50Q50 86 14 50Z"/><circle cx="50" cy="50" r="11"/></g></svg>`)
 	}
 	var b strings.Builder
 	step := 88.0 / float64(len(apps))
 	for i, a := range apps {
 		cx := 6 + step*(float64(i)+0.5)
 		fmt.Fprintf(&b, `<circle cx="%.1f" cy="40" r="20" fill="%s"/>`+
-			`<text x="%.1f" y="40" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="#fff">%s</text>`+
+			`<text x="%.1f" y="40" text-anchor="middle" dominant-baseline="central" font-family="JetBrains Mono" font-size="18" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke">%s</text>`+
 			`<text x="%.1f" y="76" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#808080">%s</text>`,
 			cx, a.fill, cx, capped(a.badge, 99), cx, ago(a.lastAt, now))
 	}
