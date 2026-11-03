@@ -3,6 +3,7 @@ package main
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -40,6 +41,7 @@ type calendar struct {
 	browseTill time.Time
 	pick       int
 	knobDown   bool
+	sticky     string
 }
 
 func newCalendar(v *vars, release func()) *calendar {
@@ -71,7 +73,10 @@ func calKeep(items []calItem, now time.Time) []calItem {
 	})
 }
 
-func calNext(items []calItem, now time.Time) int {
+func calNext(items []calItem, now time.Time, sticky string) int {
+	if i := slices.IndexFunc(items, func(it calItem) bool { return sticky != "" && it.id == sticky }); i >= 0 {
+		return i
+	}
 	return slices.IndexFunc(items, func(it calItem) bool { return !it.allDay && !it.done && !it.start.After(now.Add(calAhead)) })
 }
 
@@ -90,8 +95,8 @@ func (c *calendar) publishLocked() {
 	}
 	c.vars.set("cal_browse", "0")
 	line := ""
-	if i := calNext(c.items, now); i >= 0 {
-		line = calLineImage(c.items[i])
+	if i := calNext(c.items, now, c.sticky); i >= 0 {
+		line = calLineImage(c.items[i], now)
 	}
 	c.vars.set("cal_line", line)
 }
@@ -115,14 +120,15 @@ func (c *calendar) up() error {
 	}
 	held := time.Since(c.downAt)
 	c.downAt = time.Time{}
-	if held >= calHoldFor {
+	if held < calHoldFor {
 		i := c.pick
 		if !c.browsing() {
-			i = calNext(c.items, time.Now())
+			i = calNext(c.items, time.Now(), c.sticky)
 		}
 		c.mu.Unlock()
 		return c.act(i)
 	}
+	c.sticky = ""
 	if c.browsing() {
 		c.browseTill = time.Time{}
 	} else {
@@ -174,7 +180,9 @@ func (c *calendar) act(i int) error {
 	it := c.items[i]
 	if it.reminder {
 		c.items[i].done = !it.done
-		if c.browsing() {
+		if !c.browsing() {
+			c.sticky = it.id
+		} else {
 			c.browseTill = time.Now().Add(calBrowseFor)
 		}
 	} else {
@@ -237,8 +245,23 @@ func calImage(w, h float64, texts ...calText) string {
 	return uri
 }
 
-func calLineImage(it calItem) string {
-	return calImage(88, 24, calText{text: calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
+func calIn(d time.Duration) string {
+	sign := "+"
+	if d < 0 {
+		sign, d = "-", -d
+	}
+	switch {
+	case d >= 24*time.Hour:
+		return fmt.Sprintf("%s%dd", sign, int(d.Round(time.Hour).Hours()/24))
+	case d >= time.Hour:
+		return fmt.Sprintf("%s%dh", sign, int(d.Round(time.Minute).Minutes()/60))
+	default:
+		return fmt.Sprintf("%s%dm", sign, int(d.Minutes()))
+	}
+}
+
+func calLineImage(it calItem, now time.Time) string {
+	return calImage(88, 24, calText{text: calIn(it.start.Sub(now)) + " " + calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
 }
 
 func calBrowseImage(items []calItem, pick int, now time.Time) string {
