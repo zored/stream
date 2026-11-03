@@ -63,7 +63,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 ## Tiles
 
 ### тайл ряд 1, колонка 1 — keyboard layout
-- shows the current layout: `en` / `ru`, white; follows ⌃Space and any other switch
+- shows the current layout as a flag: 🇬🇧 / 🇷🇺 (other languages: the code, white); follows ⌃Space and any other switch
 - touch: next enabled layout (two enabled now, so EN ↔ RU)
 
 
