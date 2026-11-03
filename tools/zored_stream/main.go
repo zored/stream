@@ -119,6 +119,7 @@ func main() {
 	scrollModeFile := flag.String("scroll-mode-file", filepath.Join(home, ".local/share/zored-stream/scroll-mode"), "scroll knob mode: wheel or tab")
 	powerAddr := flag.String("power", "127.0.0.1:47122", "keep-awake + sleep HTTP address")
 	headphonesAddr := flag.String("headphones", "127.0.0.1:47123", "headphones toggle HTTP address")
+	wifiVPN := flag.String("wifi-vpn", "Barbos_SE", "Viscosity connection to bring up after a network switch; empty = leave VPNs alone")
 	wifiAddr := flag.String("wifi", "127.0.0.1:47124", "wi-fi power + network picker HTTP address")
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
@@ -246,7 +247,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	wf := newWifi(v, us.say)
+	wf := newWifi(v, *wifiVPN, us.say)
 	wf.poll()
 	br, err := newBrightness(vol.bar, *companionDB)
 	if err != nil {

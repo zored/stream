@@ -34,6 +34,7 @@ type wifi struct {
 	loading  bool
 	cache    []string
 	vpn      string
+	vpnName  string
 	waitJoin bool
 	phone    bool
 	joining  string
@@ -50,8 +51,8 @@ type wifi struct {
 	errorTil time.Time
 }
 
-func newWifi(v *vars, strip func(stripNote, time.Duration)) *wifi {
-	return &wifi{vars: v, strip: strip, online: true}
+func newWifi(v *vars, vpnName string, strip func(stripNote, time.Duration)) *wifi {
+	return &wifi{vars: v, vpnName: vpnName, strip: strip, online: true}
 }
 
 func (w *wifi) publish() {
@@ -248,7 +249,7 @@ func (w *wifi) joinPick() {
 	w.publishLocked()
 	w.mu.Unlock()
 	time.AfterFunc(wifiJoinFor, w.publish)
-	if err := switchNetwork(ssid); err != nil {
+	if err := w.switchNetwork(ssid); err != nil {
 		log.Print(err)
 		w.mu.Lock()
 		w.joining = ""
@@ -308,33 +309,46 @@ func ipconfigLink(summary string) (wifiLink, error) {
 	return l, nil
 }
 
-func switchNetwork(ssid string) error {
-	vpns, err := vpnConnections()
-	if err != nil {
-		return err
-	}
-	var restore []string
-	for name, state := range vpns {
-		if state != "Disconnected" {
-			restore = append(restore, name)
-		}
-	}
-	if len(restore) > 0 {
-		defer time.AfterFunc(vpnAfter, func() {
-			for _, name := range restore {
-				if err := vpnConnect(name); err != nil {
-					log.Print(err)
-				}
-			}
-		})
-	}
+func (w *wifi) switchNetwork(ssid string) error {
 	wifiDisassociate()
-	if len(restore) > 0 {
+	if w.vpnName != "" {
 		if err := vpnDisconnectAll(); err != nil {
 			return err
 		}
+		defer func() { go w.restoreVPN(ssid) }()
 	}
 	return wifiJoin(ssid)
+}
+
+func (w *wifi) restoreVPN(ssid string) {
+	deadline := time.Now().Add(wifiJoinFor)
+	for {
+		l, err := wifiCurrent()
+		if err == nil && l.ssid == ssid && l.router.IsValid() {
+			break
+		}
+		if time.Now().After(deadline) {
+			log.Printf("viscosity: %q has no link after %v, connecting anyway", ssid, wifiJoinFor)
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	time.Sleep(vpnAfter)
+	for attempt := 1; attempt <= 2; attempt++ {
+		if err := vpnConnect(w.vpnName); err != nil {
+			log.Print(err)
+		}
+		for range 20 {
+			time.Sleep(time.Second)
+			vpns, err := vpnConnections()
+			if err == nil && vpns[w.vpnName] == "Connected" {
+				w.poll()
+				return
+			}
+		}
+		log.Printf("viscosity: %s not connected after attempt %d", w.vpnName, attempt)
+	}
+	w.poll()
 }
 
 func vpnStatus() (string, error) {
