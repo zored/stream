@@ -282,7 +282,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cal := newCalendar(v, sc.release)
+	cal := newCalendar(v, sc.release, us.cover)
 	go cal.poll()
 	go every(calPollEvery, cal.poll)
 	go every(time.Second, cal.publish)

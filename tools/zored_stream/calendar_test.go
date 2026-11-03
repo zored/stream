@@ -35,7 +35,7 @@ func TestCalKeepAndNext(t *testing.T) {
 }
 
 func TestCalBrowse(t *testing.T) {
-	c := &calendar{vars: &vars{sent: map[string]string{}}, release: func() {}, items: []calItem{{title: "a"}, {title: "b"}}}
+	c := &calendar{vars: &vars{sent: map[string]string{}}, release: func() {}, strip: func(string) {}, items: []calItem{{title: "a"}, {title: "b"}}}
 	postVar = func(string, string) error { return nil }
 	if c.turn(1) {
 		t.Fatal("idle turn must pass to scroll")

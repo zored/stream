@@ -35,6 +35,8 @@ type calendar struct {
 	mu         sync.Mutex
 	vars       *vars
 	release    func()
+	strip      func(uri string)
+	covered    bool
 	fetch      func(from, to time.Time) ([]calItem, error)
 	items      []calItem
 	downAt     time.Time
@@ -44,8 +46,8 @@ type calendar struct {
 	sticky     string
 }
 
-func newCalendar(v *vars, release func()) *calendar {
-	return &calendar{vars: v, release: release, fetch: calFetch}
+func newCalendar(v *vars, release func(), strip func(string)) *calendar {
+	return &calendar{vars: v, release: release, strip: strip, fetch: calFetch}
 }
 
 func (c *calendar) poll() {
@@ -89,11 +91,12 @@ func (c *calendar) publish() {
 func (c *calendar) publishLocked() {
 	now := time.Now()
 	if c.browsing() {
-		c.vars.set("cal_browse", "1")
-		c.vars.set("cal_svg", calBrowseImage(c.items, c.pick, now))
-		return
+		c.covered = true
+		c.strip(calStripImage(c.items, c.pick, now))
+	} else if c.covered {
+		c.covered = false
+		c.strip("")
 	}
-	c.vars.set("cal_browse", "0")
 	line := ""
 	if i := calNext(c.items, now, c.sticky); i >= 0 {
 		line = calLineImage(c.items[i], now)
@@ -237,8 +240,8 @@ func calColor(it calItem, now time.Time) uint32 {
 	return 0
 }
 
-func calImage(w, h float64, texts ...calText) string {
-	uri, err := calPNG(w, h, texts)
+func calImage(w, h float64, rotate bool, texts ...calText) string {
+	uri, err := calPNG(w, h, rotate, texts)
 	if err != nil {
 		log.Print(err)
 	}
@@ -261,15 +264,17 @@ func calIn(d time.Duration) string {
 }
 
 func calLineImage(it calItem, now time.Time) string {
-	return calImage(88, 24, calText{text: calIn(it.start.Sub(now)) + " " + calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
+	return calImage(88, 24, false, calText{text: calIn(it.start.Sub(now)) + " " + calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
 }
 
-func calBrowseImage(items []calItem, pick int, now time.Time) string {
+func calStripImage(items []calItem, pick int, now time.Time) string {
+	const w, h = stripDrawH, stripDrawW
 	if pick >= len(items) {
-		return calImage(100, 100, calText{text: "·", y: 40, w: 100, h: 20, size: 16, rgb: grayRGB, center: true})
+		return calImage(w, h, true, calText{text: "·", y: 12, w: w, h: 24, size: 16, rgb: grayRGB, center: true})
 	}
 	it := items[pick]
-	return calImage(100, 100,
-		calText{text: calTime(it) + it.start.Format("02.01"), x: 6, y: 6, w: 88, h: 17, size: 13, rgb: cmp.Or(calColor(it, now), whiteRGB)},
-		calText{text: calTitle(it), x: 6, y: 27, w: 88, h: 67, size: 16, rgb: grayRGB})
+	head := calIn(it.start.Sub(now)) + " " + calTime(it) + it.start.Format("02.01")
+	return calImage(w, h, true,
+		calText{text: head, x: 4, y: 2, w: w - 8, h: 22, size: 15, rgb: cmp.Or(calColor(it, now), whiteRGB)},
+		calText{text: calTitle(it), x: 4, y: 24, w: w - 8, h: 24, size: 15, rgb: grayRGB})
 }

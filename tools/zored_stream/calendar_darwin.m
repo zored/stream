@@ -103,18 +103,30 @@ char *cal_set_done(const char *id, int done) {
 
 static const double canvas_scale = 4;
 
-void *cal_canvas_new(double w, double h) {
+typedef struct {
+    CGContextRef ctx;
+    double h;
+} canvas;
+
+void *cal_canvas_new(double w, double h, int rotate) {
+    canvas *c = malloc(sizeof *c);
+    c->h = h;
+    double bw = rotate ? h : w, bh = rotate ? w : h;
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-    CGContextRef ctx = CGBitmapContextCreate(NULL, w * canvas_scale, h * canvas_scale, 8, 0, cs, (CGBitmapInfo)kCGImageAlphaPremultipliedLast);
+    c->ctx = CGBitmapContextCreate(NULL, bw * canvas_scale, bh * canvas_scale, 8, 0, cs, (CGBitmapInfo)kCGImageAlphaPremultipliedLast);
     CGColorSpaceRelease(cs);
-    CGContextScaleCTM(ctx, canvas_scale, canvas_scale);
-    return ctx;
+    CGContextScaleCTM(c->ctx, canvas_scale, canvas_scale);
+    if (rotate) {
+        CGContextTranslateCTM(c->ctx, bw, 0);
+        CGContextRotateCTM(c->ctx, M_PI_2);
+    }
+    return c;
 }
 
 void cal_canvas_text(void *c, const char *text, double x, double y, double w, double h, double size, unsigned rgb, int center) {
     @autoreleasepool {
-        CGContextRef ctx = c;
-        double H = CGBitmapContextGetHeight(ctx) / canvas_scale;
+        CGContextRef ctx = ((canvas *)c)->ctx;
+        double H = ((canvas *)c)->h;
         CTFontRef font = CTFontCreateWithName(CFSTR("JetBrains Mono"), size, NULL);
         CGColorRef color = CGColorCreateSRGB(((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
         CTTextAlignment align = center ? kCTTextAlignmentCenter : kCTTextAlignmentLeft;
@@ -144,7 +156,8 @@ void cal_canvas_text(void *c, const char *text, double x, double y, double w, do
 
 void *cal_canvas_png(void *c, int *len) {
     @autoreleasepool {
-        CGContextRef ctx = c;
+        CGContextRef ctx = ((canvas *)c)->ctx;
+        free(c);
         CGImageRef img = CGBitmapContextCreateImage(ctx);
         CGContextRelease(ctx);
         NSMutableData *data = [NSMutableData data];

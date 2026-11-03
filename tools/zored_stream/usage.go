@@ -87,6 +87,7 @@ type usage struct {
 	label        stripLabel
 	note         stripNote
 	noteTill     time.Time
+	covered      string
 	stripMode
 	target  stripFrame
 	shown   stripFrame
@@ -198,6 +199,13 @@ func (u *usage) say(note stripNote, d time.Duration) {
 	u.publish()
 }
 
+func (u *usage) cover(uri string) {
+	u.mu.Lock()
+	u.covered = uri
+	u.mu.Unlock()
+	u.stripStep()
+}
+
 func (u *usage) animateStrip() {
 	for range u.animate {
 		ticker := time.NewTicker(time.Second / stripHz)
@@ -216,7 +224,12 @@ func (u *usage) stripStep() bool {
 	}
 	t := u.target
 	t.pct, t.dots = u.shown.pct, u.shown.dots
+	covered := u.covered
 	u.mu.Unlock()
+	if covered != "" {
+		u.vars.set("ai_strip_svg", covered)
+		return moving
+	}
 	u.vars.set("ai_strip_svg", aiStripSVG(t))
 	return moving
 }
