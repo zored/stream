@@ -148,7 +148,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | кнопка 3 | camera toggle | as кнопка 2 |
 | кнопка 4 | hang up | white while in a call |
 | кнопка 5 | free | off |
-| кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, off = none |
+| кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, white = none |
 | кнопка 7 | dictation into Claude Desktop (below) | red = ready, blinking green = recording, off = no Claude window with a record button |
 | кнопка 8 | free | off |
 

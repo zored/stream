@@ -26,6 +26,7 @@ const (
 	agentBreathe   = 2 * time.Second
 	agentMaxDots   = 8
 	agentLedDone   = 0x404040
+	agentLedIdle   = 0xFFFFFF
 	agentLedRed    = 0xFF
 	agentLedGreen  = 0xB0
 	agentLedFloor  = 0.12
@@ -344,7 +345,7 @@ func (a *agents) publish() {
 		}
 		return
 	}
-	a.vars.set("agents_led", strconv.Itoa(map[bool]int{true: agentLedDone, false: 0}[done > 0]))
+	a.vars.set("agents_led", strconv.Itoa(map[bool]int{true: agentLedDone, false: agentLedIdle}[done > 0]))
 }
 
 func (a *agents) animate() {
