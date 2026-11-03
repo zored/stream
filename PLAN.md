@@ -16,7 +16,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/3` wi-fi (in progress), `0/4` headphones (in progress), `0/5` keep-awake, `1/2` play (hold = like), `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/2`, `1/3–1/4` |
+| tiles `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like), `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock | tiles `0/2`, `1/3–1/4` |
 | buttons `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/0`, `3/4`, `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
@@ -33,7 +33,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   scroll + Ctrl+Tab mode; keep-awake via Amphetamine + hold-to-sleep ([macos.md](docs/macos.md)); limits token refreshed by the
   daemon, stale values gray; animations at 60 fps; [controls.md](docs/controls.md); Windows plan + `gen_pages.py` profile `mac|windows`
   ([windows.md](docs/windows.md)); CI: concurrency + timeout, pages ↔ daemon contract check, Go tests; [invariants.md](docs/invariants.md);
-  verified by the user: calls reconnect after a VK WorkSpace restart, seek + cover with Chrome, keep-awake hold → sleep
+  verified by the user: calls reconnect after a VK WorkSpace restart, seek + cover with Chrome, keep-awake hold → sleep;
+  headphones tile `0/4` — Accentum BT toggle, output icon (speaker/headphones, yellow while connecting, red on error), KVM auto route
+  Logi + USB camera, port 47123 ([macos.md](docs/macos.md)); wi-fi tile `0/3` — hold toggles power, touch = 5 s network pick on
+  крутилка справа, ряд 1, name on the right strip and tile, scan via `zored_wifi.app` (Location permission), port 47124; invariant F21
 
 ## Next
 
@@ -43,6 +46,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Choice mode: CLI permission prompt in iTerm2 (кнопка 1 = Esc not run)
 - [ ] Seek and cover with Music.app; dictation resume with a browser player
 - [ ] Right strip slide picks the model on the device
+- [ ] Headphones and wi-fi tiles on the device: icons, yellow/red states, the `›` arrow and the network name on the strip
 
 ### More buttons and actions
 
@@ -58,10 +62,11 @@ New features go on the MEDIA page as buttons; separate pages only once it runs o
 Desk and display:
 - [ ] Monitor brightness, input switch (KVM), PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] In progress (child session): headphones tile `0/4` — connect/disconnect Sennheiser Accentum over Bluetooth (IOBluetooth in `zored_stream`)
-  and move output + mic to them; back: Logi + USB camera if present, else MacBook (CoreAudio in `zored_stream`)
-- [ ] In progress (child session): wi-fi tile `0/3` — hold = wi-fi on/off; press = крутилка справа, ряд 1 picks a network for a few seconds,
-  the name replaces the model on the right strip; known auto-join networks first
+- [ ] Wi-fi join: macOS refuses to join even a known network without a password (`networksetup`, CoreWLAN `associate(password:nil)` → `tmpErr`);
+  needs a password source — System keychain via `security find-generic-password` (admin prompt once per network, "Always allow")
+  or a copy in the login keychain; `join` mode in `tools/zored_wifi/main.swift` is drafted, uncommitted, waiting for the user's choice
+- [ ] Performance pass over `zored_stream` and helpers: measure CPU/wakeups, replace polling with CoreAudio/notification listeners,
+  cut redundant Companion variable sets
 
 Windows and apps:
 - [ ] App switcher (Cmd+Tab) on a knob, same release rules as Ctrl+Tab ([invariants.md](docs/invariants.md) S1)
