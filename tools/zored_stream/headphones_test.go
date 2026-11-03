@@ -34,3 +34,16 @@ func TestHeadphonesRoute(t *testing.T) {
 		t.Fatal("want error without headphones")
 	}
 }
+
+func TestSpeakersArrived(t *testing.T) {
+	before := deviceKeys([]audioDevice{macOut, macIn})
+	if !speakersArrived(before, []audioDevice{macOut, macIn, logi, camera}) {
+		t.Error("want arrival on KVM switch")
+	}
+	if speakersArrived(deviceKeys([]audioDevice{macOut, macIn, logi, camera}), []audioDevice{macOut, macIn, logi, camera}) {
+		t.Error("want no arrival when nothing changed")
+	}
+	if speakersArrived(before, []audioDevice{macOut, macIn, accentum}) {
+		t.Error("want no arrival for headphones")
+	}
+}

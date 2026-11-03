@@ -75,6 +75,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - shows the current output: speaker = wired / built-in, headphones = any Bluetooth output; yellow = connecting; red for 3 s = switch failed
 - touch: toggle. To headphones: connect over Bluetooth, output and mic go to them (the mic always, so music drops to headset quality).
   Back: output to Logi, else MacBook; mic to a USB camera, else MacBook; then Bluetooth disconnects
+- auto: when Logi or the USB camera appear (KVM switched to this Mac) and the output isn't headphones, output goes to Logi, mic to the camera; a manual choice afterwards stays
 - no hold
 
 [macos.md](macos.md)

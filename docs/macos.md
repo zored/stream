@@ -81,6 +81,8 @@ headphones = the default output is any Bluetooth CoreAudio device; a press then 
 - On: `IOBluetoothDevice openConnection` to `80:C3:BA:5F:A4:76` (Sennheiser Accentum), wait up to 10 s for its CoreAudio device,
   then default output + input = Accentum. Off: output = a device named `Logi*`, else built-in; input = a USB device, else built-in;
   then `closeConnection`. The toggle returns at once, the switch runs in the background.
+- Auto route: each poll compares devices (`transport/name`) with the previous poll; a new `Logi*` output or USB input while the
+  output isn't Bluetooth → the speakers route. Only on arrival, so a manual pick stays. The monitor's DisplayPort output is never picked.
 - IOBluetooth needs the Bluetooth permission (`kTCCServiceBluetoothAlways`); without `NSBluetoothAlwaysUsageDescription` it fails
   silently (verified). With it, `openConnection` reaches the headset (verified: `0xe00002d6` timeout while it was off). `Info.plist` is linked into the binary (`-sectcreate __TEXT __info_plist`).
   First press: macOS asks to allow Bluetooth for `zored_stream`; until then the tile stays yellow.

@@ -36,6 +36,7 @@ type headphones struct {
 	on       bool
 	busy     bool
 	errorTil time.Time
+	seen     map[string]bool
 }
 
 func newHeadphones(v *vars) *headphones {
@@ -56,16 +57,35 @@ func (h *headphones) publish() {
 }
 
 func (h *headphones) poll() {
-	on, err := headphonesActive()
+	devices, err := audioDevices()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	on, err := headphonesActive(devices)
 	if err != nil {
 		log.Print(err)
 		return
 	}
 	h.mu.Lock()
+	arrived := h.seen != nil && speakersArrived(h.seen, devices)
+	h.seen = deviceKeys(devices)
 	if !h.busy {
 		h.on = on
 	}
+	auto := arrived && !h.busy && !h.on
 	h.mu.Unlock()
+	if auto {
+		route, err := speakersRoute(devices)
+		if err == nil {
+			err = applyRoute(route)
+		}
+		if err != nil {
+			log.Print(err)
+		} else {
+			log.Printf("headphones: auto route %s / %s", route.output.name, route.input.name)
+		}
+	}
 	h.publish()
 }
 
@@ -94,12 +114,8 @@ func (h *headphones) toggle() error {
 	return nil
 }
 
-func headphonesActive() (bool, error) {
+func headphonesActive(devices []audioDevice) (bool, error) {
 	id, err := audioDefault(false)
-	if err != nil {
-		return false, err
-	}
-	devices, err := audioDevices()
 	if err != nil {
 		return false, err
 	}
@@ -152,6 +168,31 @@ func switchHeadphones(on bool) error {
 	}
 }
 
+func deviceKey(d audioDevice) string {
+	return d.transport + "/" + d.name
+}
+
+func deviceKeys(devices []audioDevice) map[string]bool {
+	keys := make(map[string]bool, len(devices))
+	for _, d := range devices {
+		keys[deviceKey(d)] = true
+	}
+	return keys
+}
+
+func isSpeakers(d audioDevice) bool {
+	return d.output && strings.Contains(strings.ToLower(d.name), speakersName)
+}
+
+func isCameraMic(d audioDevice) bool {
+	return d.input && d.transport == "usb "
+}
+
+func speakersArrived(seen map[string]bool, devices []audioDevice) bool {
+	_, ok := findDevice(devices, func(d audioDevice) bool { return (isSpeakers(d) || isCameraMic(d)) && !seen[deviceKey(d)] })
+	return ok
+}
+
 func applyRoute(r audioRoute) error {
 	if err := audioSetDefault(false, r.output.id); err != nil {
 		return err
@@ -173,16 +214,14 @@ func headphonesRoute(devices []audioDevice) (audioRoute, error) {
 }
 
 func speakersRoute(devices []audioDevice) (audioRoute, error) {
-	out, ok := findDevice(devices, func(d audioDevice) bool {
-		return d.output && strings.Contains(strings.ToLower(d.name), speakersName)
-	})
+	out, ok := findDevice(devices, isSpeakers)
 	if !ok {
 		out, ok = findDevice(devices, func(d audioDevice) bool { return d.output && d.transport == "bltn" })
 	}
 	if !ok {
 		return audioRoute{}, errors.New("no speakers found")
 	}
-	in, ok := findDevice(devices, func(d audioDevice) bool { return d.input && d.transport == "usb " })
+	in, ok := findDevice(devices, isCameraMic)
 	if !ok {
 		in, ok = findDevice(devices, func(d audioDevice) bool { return d.input && d.transport == "bltn" })
 	}
