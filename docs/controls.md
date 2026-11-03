@@ -106,7 +106,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 2, колонка 2 — emoji picker
 
-- idle: a random emoji picked at daemon start, smaller than while picking
+- idle: a white sun with a face
 - touch: opens the picker for 4 s, every action below extends it; shows the highlighted emoji of the last used strip
 - touch while open: types that emoji into the focused field
 - while open: the top item of each strip sits in a gray ring;

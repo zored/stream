@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand/v2"
 	"slices"
 	"sync"
 	"time"
@@ -17,7 +16,6 @@ const (
 	emojiPitch    = 43
 	emojiSize     = 30
 	emojiTileSize = 64
-	emojiIdleSize = 44
 	emojiTapPx    = 6
 	emojiFriction = 0.94
 	emojiFling    = 2.0
@@ -59,8 +57,7 @@ type emoji struct {
 }
 
 func newEmoji(v *vars) *emoji {
-	all := slices.Concat(emojiGroups...)
-	return &emoji{vars: v, idle: emojiTileImage(all[rand.IntN(len(all))], emojiIdleSize), wake: make(chan struct{}, 1), recents: emojiRecents, send: emojiType, render: emojiPNG,
+	return &emoji{vars: v, idle: emojiIdle, wake: make(chan struct{}, 1), recents: emojiRecents, send: emojiType, render: emojiPNG,
 		strips: [2]*emojiStrip{{}, {}}}
 }
 
@@ -367,6 +364,13 @@ func emojiColumn(list []string, offset float64) []emojiGlyph {
 }
 
 var emojiCategories = []string{"🕘", "😀", "👋", "🐻", "🍔", "⚽", "🚗", "💡", "🔣", "🏁"}
+
+var emojiIdle = dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
+	`<circle cx="50" cy="50" r="20" fill="none" stroke="#fff" stroke-width="5"/>` +
+	`<circle cx="43" cy="46" r="3" fill="#fff"/><circle cx="57" cy="46" r="3" fill="#fff"/>` +
+	`<path d="M42 56q8 7 16 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>` +
+	`<g stroke="#fff" stroke-width="5" stroke-linecap="round">` +
+	`<path d="M50 8v12M50 80v12M8 50h12M80 50h12M20 20l8 8M72 72l8 8M80 20l-8 8M28 72l-8 8"/></g></svg>`)
 
 func emojiTileImage(text string, size float64) string {
 	uri, err := emojiTilePNG(text, size)
