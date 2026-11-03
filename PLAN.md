@@ -16,7 +16,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like), `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock + calendar (in progress) | tiles `0/2`, `1/3–1/4` |
+| tiles `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like), `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock + calendar | tiles `0/2`, `1/3–1/4` |
 | buttons `3/0` KVM (in progress), `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/4`, `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
@@ -42,7 +42,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   (`-wifi-vpn`), VPN dot on the tile, hotspot icon, no-internet dot; keep-awake: a tap that turns it off blanked the display
   (idle > `displaysleep`, not a real sleep) → idle reset via `IOPMAssertionDeclareUserActivity` (`4c9311f`);
   KVM module `kvm.go` on 47125 (кнопка 1, `m1ddc`), PIP under discussion; limits: after a Mac sleep the fetch timer stood still,
-  the session `resets_at` expired and the bar was cleared → refetch on wake / expiry (`250f73d`)
+  the session `resets_at` expired and the bar was cleared → refetch on wake / expiry (`250f73d`); calendar on the clock tile —
+  next event/reminder ≤ 12 h under the clock (`●` event, `○` reminder, text rendered to PNG by the daemon via CoreText for emoji),
+  touch = 5 s list on крутилка справа, ряд 3 (clock hidden, scroll mode paused), hold / knob press = reminder done ↔ undone or
+  open the event in Calendar; EventKit, port 47126, F19 rewritten (`15772c9`); wi-fi icon at 60 % (`e574eac`)
 
 ## Next
 
@@ -55,6 +58,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Headphones and wi-fi tiles on the device: icons, yellow/red states, the `›` arrow and the network name on the strip
 - [ ] Wi-fi switch end to end from the device (`bo phone` ↔ `zored_5G`): dot red → yellow → white, VPN back
 - [ ] Keep-awake: on, 15 min without keyboard/mouse, short tap → the display must stay on
+- [ ] Calendar tile on the device: emoji, wrapping, list on the knob; hold on an event opens it in Calendar (not run)
 
 ### More buttons and actions
 
@@ -89,8 +93,6 @@ AI agents:
 - [ ] Haptic on a new waiting session (needs a fork endpoint)
 
 Communication:
-- [ ] In progress (child session): next event / reminder on the clock tile; tap = browse with крутилка справа, ряд 3 (clock hidden);
-  hold or knob press = reminder done / open the event in Calendar; EventKit, port 47126
 - [ ] Unread Telegram / VK WorkSpace: Dock badge via AX (`AXStatusLabel`), works for any app; press opens the app
 
 Network:
