@@ -95,9 +95,9 @@ func (c *calendar) publishLocked() {
 	}
 	line := ""
 	if i := calNext(c.items, now); i >= 0 {
-		line = calLineImage(c.items[i], now)
+		line = calCardImage(c.items[i], now)
 	}
-	c.vars.set("cal_line", line)
+	c.vars.set("cal_card", line)
 }
 
 func (c *calendar) browsing() bool {
@@ -243,8 +243,10 @@ func calWhen(it calItem, now time.Time) string {
 	return calIn(it.start.Sub(now))
 }
 
-func calLineImage(it calItem, now time.Time) string {
-	return calImage(88, 24, false, calText{text: calWhen(it, now) + " " + calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
+func calCardImage(it calItem, now time.Time) string {
+	return calImage(88, 66, false,
+		calText{text: calTime(it) + calWhen(it, now), w: 88, h: 22, size: 16, rgb: whiteRGB, center: true},
+		calText{text: calTitle(it), y: 24, w: 88, h: 42, size: 15, rgb: grayRGB, center: true})
 }
 
 var calWeekdays = [...]string{"вс", "пн", "вт", "ср", "чт", "пт", "сб"}

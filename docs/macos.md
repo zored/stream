@@ -204,3 +204,10 @@ the window; a 5 s timer, SIGINT/SIGTERM and the start release it too. A turn wit
 - Done toggles `EKReminder.completed` + `saveReminder:commit:`; reminders completed since midnight are listed too.
 - Text is drawn by CoreText (`cal_canvas_*`, JetBrains Mono, system emoji fallback, char wrap) into a 4× PNG: Companion's SVG text has no emoji. The frame path is taller than the box and clipped, otherwise a line taller than the box (emoji ascent) is dropped; lines are drawn one by one at a fixed baseline (font ascent, step = 1.25 × size) so an emoji does not push its line down. Open: `open ical://ekevent/<eventIdentifier>?method=show&options=more`.
 - Knob capture: `/scroll/*` ask `calendar` first (`knob`, `turn`); entering the list releases Ctrl (S1).
+- The tile tap goes to `/tile/24/press`: the `slot` in `layers.go` routes it to hang-up during a call, else to the calendar (F23).
+
+## Timers (`timers.go`, :47129)
+
+- `/timer/down` + `/timer/up`: tap = edit / start / silence, hold ≥ 400 ms = cancel the nearest; `/seek/*` ask `timers.turn` first.
+- Ticks every 250 ms: idle edit commits, due timers drop out and ring (`timer_ring`, `afplay Glass.aiff` every 2 s, 1 min); `timer_svg` is the line under the clock.
+- No Clock.app / Reminders timers: there is no API, so timers are the daemon's own, in `~/.config/zored-stream/timers.json`. No haptic: the daemon cannot drive the motor.

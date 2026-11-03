@@ -27,13 +27,14 @@ KVM = "http://127.0.0.1:47125"
 CALENDAR = "http://127.0.0.1:47126"
 INPUT = "http://127.0.0.1:47127"
 EMOJI = "http://127.0.0.1:47128"
+TIMERS = "http://127.0.0.1:47129"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -259,14 +260,6 @@ def hangup_led():
     return button([canvas(), box("box0", expr(f"{IN_CALL} ? {0xFFFFFF} : 0"))], down=vkcall("/call/end"))
 
 
-def hangup_tile():
-    return button([
-        canvas(),
-        box("box0", 0x000000),
-        image("icon", icon("hangup"), opacity=expr(f"{IN_CALL} ? 100 : 0"), x=v(15), y=v(15), width=v(70), height=v(70)),
-    ], down=vkcall("/call/end"))
-
-
 DIGITS_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 -74 289 75"><text font-family="JetBrains Mono" '
               'font-size="100" fill="{fill}"', "/text></svg>")
 
@@ -301,15 +294,26 @@ def clock():
         return button([canvas(), box("box0", 0x000000),
                        image("time", time_image(), x=v(6), y=v(6), width=v(88), height=v(58)),
                        image("date", date_image(), x=v(6), y=v(74), width=v(88), height=v(17))])
-    idle = expr("$(custom:cal_browse) != 1")
-    line = expr('$(custom:cal_browse) != 1 && $(custom:cal_line) != ""')
+    ring = '$(custom:timer_ring) == 1 && $(internal:time_unix) % 2 == 0'
+    return button([canvas(), box("box0", expr(f"{ring} ? {0xFFFFFF} : 0")),
+                   image("time", time_image(), opacity=expr(f"{ring} ? 0 : 100"), x=v(6), y=v(6), width=v(88), height=v(58)),
+                   image("timer", expr("$(custom:timer_svg)"), x=v(6), y=v(70), width=v(88), height=v(24))],
+                  down=[post(TIMERS + "/timer/down")], up=[post(TIMERS + "/timer/up")])
+
+
+CAL = '$(custom:tile_24) == "cal"'
+
+
+def day_tile():
+    idle = expr(f"{CAL} && $(custom:cal_browse) != 1")
     return button([canvas(), box("box0", 0x000000),
-                   image("time", time_image(), enabled=idle, x=v(6), y=v(6), width=v(88), height=v(40)),
-                   image("next", expr("$(custom:cal_line)"), enabled=line, x=v(6), y=v(46), width=v(88), height=v(24)),
-                   image("date", date_image(), enabled=idle, x=v(6), y=v(74), width=v(88), height=v(17)),
-                   image("act", expr("$(custom:cal_icon)"), enabled=expr("$(custom:cal_browse) == 1"),
-                         x=v(6), y=v(6), width=v(88), height=v(88))],
-                  down=[post(CALENDAR + "/calendar/press")])
+                   image("date", date_image(), enabled=idle, x=v(6), y=v(6), width=v(88), height=v(17)),
+                   image("card", expr("$(custom:cal_card)"), enabled=idle, x=v(6), y=v(28), width=v(88), height=v(66)),
+                   image("act", expr("$(custom:cal_icon)"), enabled=expr(f"{CAL} && $(custom:cal_browse) == 1"),
+                         x=v(6), y=v(6), width=v(88), height=v(88)),
+                   image("hangup", icon("hangup"), enabled=expr('$(custom:tile_24) == "call"'),
+                         x=v(15), y=v(15), width=v(70), height=v(70))],
+                  down=[post(CALENDAR + "/tile/24/press")])
 
 
 def ai_switch():
@@ -424,7 +428,7 @@ def media_page():
         (1, 2): play_pause(),
         (2, 2): call_tile("call_mic", "mic"),
         (2, 3): call_tile("call_cam", "cam"),
-        (2, 4): hangup_tile(),
+        (2, 4): day_tile(),
         (2, 5): clock(),
         **{(r, 6): ai_strip(r) for r in range(3)},
         (1, 7): ai_switch(),

@@ -126,6 +126,8 @@ func main() {
 	calendarAddr := flag.String("calendar", "127.0.0.1:47126", "calendar + reminders HTTP address")
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
 	inputAddr := flag.String("input", "127.0.0.1:47127", "keyboard layout HTTP address")
+	timersAddr := flag.String("timers", "127.0.0.1:47129", "timers + alarms HTTP address")
+	timersFile := flag.String("timers-file", filepath.Join(home, ".config/zored-stream/timers.json"), "pending timers and alarms")
 	emojiAddr := flag.String("emoji", "127.0.0.1:47128", "emoji picker HTTP address")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
 	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
@@ -319,11 +321,30 @@ func main() {
 			return br.release()
 		})
 	})
+	tm, err := newTimers(v, *timersFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go every(timerTick, tm.tick)
+	go serve(*timersAddr, func(mux *http.ServeMux) {
+		handle(mux, "/timer/down", tm.down)
+		handle(mux, "/timer/up", tm.up)
+	})
 	seek := &seeker{np: np, bar: vol.bar}
 	go every(progressEvery, np.publishProgress)
 	go serve(*seekAddr, func(mux *http.ServeMux) {
-		handle(mux, "/seek/forward", func() error { return seek.turn(1) })
-		handle(mux, "/seek/back", func() error { return seek.turn(-1) })
+		handle(mux, "/seek/forward", func() error {
+			if tm.turn(1) {
+				return nil
+			}
+			return seek.turn(1)
+		})
+		handle(mux, "/seek/back", func() error {
+			if tm.turn(-1) {
+				return nil
+			}
+			return seek.turn(-1)
+		})
 	})
 	sc, err := newScroller(*scrollModeFile)
 	if err != nil {
@@ -332,9 +353,14 @@ func main() {
 	cal := newCalendar(v, sc.release, us.cover)
 	go cal.poll()
 	go every(calPollEvery, cal.poll)
+	tile24 := &slot{vars: v, name: "tile_24", layers: []layer{
+		{name: "call", active: c.inCall, press: c.hangUp},
+		{name: "cal", press: cal.press},
+	}}
 	go every(time.Second, cal.publish)
+	go every(pollEvery, tile24.publish)
 	go serve(*calendarAddr, func(mux *http.ServeMux) {
-		handle(mux, "/calendar/press", cal.press)
+		handle(mux, "/tile/24/press", tile24.press)
 	})
 	go func() {
 		stop := make(chan os.Signal, 1)
@@ -409,6 +435,8 @@ func main() {
 		wf.publish()
 		kv.publish()
 		cal.publish()
+		tile24.publish()
+		tm.publish()
 		in.publish()
 		em.publish()
 	})

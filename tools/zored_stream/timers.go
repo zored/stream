@@ -1,0 +1,237 @@
+package main
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"slices"
+	"sync"
+	"time"
+)
+
+const (
+	timerEditFor   = 5 * time.Second
+	timerHoldAfter = 400 * time.Millisecond
+	timerRingFor   = time.Minute
+	timerSoundGap  = 2 * time.Second
+	timerTick      = 250 * time.Millisecond
+	alarmStep      = 5 * time.Minute
+)
+
+var timerSteps = [...]time.Duration{time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour}
+
+var timerSound = func() error {
+	return exec.Command("afplay", "/System/Library/Sounds/Glass.aiff").Start()
+}
+
+type timerItem struct {
+	At    time.Time `json:"at"`
+	Alarm bool      `json:"alarm,omitempty"`
+}
+
+type timers struct {
+	mu       sync.Mutex
+	vars     *vars
+	file     string
+	items    []timerItem
+	editTill time.Time
+	edit     time.Duration
+	alarm    time.Time
+	accel    accel
+	downAt   time.Time
+	ringTill time.Time
+	sounded  time.Time
+}
+
+func newTimers(v *vars, file string) (*timers, error) {
+	t := &timers{vars: v, file: file}
+	b, err := os.ReadFile(file)
+	if errors.Is(err, os.ErrNotExist) {
+		return t, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(b, &t.items); err != nil {
+		return nil, fmt.Errorf("%s: %w", file, err)
+	}
+	return t, nil
+}
+
+func (t *timers) saveLocked() error {
+	b, err := json.Marshal(t.items)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(t.file), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(t.file, b, 0o644)
+}
+
+func (t *timers) editing(now time.Time) bool {
+	return now.Before(t.editTill)
+}
+
+func (t *timers) down() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.downAt = time.Now()
+	return nil
+}
+
+func (t *timers) up() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if t.downAt.IsZero() {
+		return errors.New("release without press")
+	}
+	now := time.Now()
+	held := now.Sub(t.downAt) >= timerHoldAfter
+	t.downAt = time.Time{}
+	defer t.publishLocked(now)
+	switch {
+	case now.Before(t.ringTill):
+		t.ringTill = time.Time{}
+		return nil
+	case t.editing(now):
+		return t.commitLocked(now)
+	case held:
+		if len(t.items) == 0 {
+			return nil
+		}
+		t.items = t.items[1:]
+		log.Printf("timers: cancel nearest, %d left", len(t.items))
+		return t.saveLocked()
+	}
+	t.edit, t.alarm, t.editTill = 0, time.Time{}, now.Add(timerEditFor)
+	return nil
+}
+
+func (t *timers) turn(direction int) bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	now := time.Now()
+	if !t.editing(now) {
+		return false
+	}
+	amount := t.accel.step(direction)
+	switch {
+	case !t.alarm.IsZero():
+		t.alarm = t.alarm.Add(time.Duration(amount) * alarmStep)
+		if t.alarm.Before(now) {
+			t.alarm = t.alarm.Add(24 * time.Hour)
+		}
+	case t.edit == 0 && direction < 0:
+		t.alarm = now.Truncate(alarmStep).Add(alarmStep)
+	default:
+		step := timerSteps[max(amount, -amount)-1]
+		t.edit = max(0, t.edit+time.Duration(direction)*step)
+	}
+	t.editTill = now.Add(timerEditFor)
+	t.publishLocked(now)
+	return true
+}
+
+func (t *timers) commitLocked(now time.Time) error {
+	t.editTill = time.Time{}
+	var it timerItem
+	switch {
+	case !t.alarm.IsZero():
+		it = timerItem{At: t.alarm, Alarm: true}
+	case t.edit > 0:
+		it = timerItem{At: now.Add(t.edit)}
+	default:
+		return nil
+	}
+	t.items = append(t.items, it)
+	slices.SortFunc(t.items, func(a, b timerItem) int { return a.At.Compare(b.At) })
+	log.Printf("timers: set %s", it.At.Format("15:04"))
+	return t.saveLocked()
+}
+
+func (t *timers) tick() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	now := time.Now()
+	if !t.editTill.IsZero() && !t.editing(now) {
+		if err := t.commitLocked(now); err != nil {
+			log.Print(err)
+		}
+	}
+	due := 0
+	for due < len(t.items) && !t.items[due].At.After(now) {
+		due++
+	}
+	if due > 0 {
+		t.items = t.items[due:]
+		t.ringTill = now.Add(timerRingFor)
+		log.Printf("timers: ring, %d due", due)
+		if err := t.saveLocked(); err != nil {
+			log.Print(err)
+		}
+	}
+	if now.Before(t.ringTill) && now.Sub(t.sounded) >= timerSoundGap {
+		t.sounded = now
+		if err := timerSound(); err != nil {
+			log.Printf("timers: sound: %v", err)
+		}
+	}
+	t.publishLocked(now)
+}
+
+func (t *timers) publish() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.publishLocked(time.Now())
+}
+
+func (t *timers) publishLocked(now time.Time) {
+	ring := "0"
+	if now.Before(t.ringTill) {
+		ring = "1"
+	}
+	t.vars.set("timer_ring", ring)
+	t.vars.set("timer_svg", timerSVG(t.line(now)))
+}
+
+func (t *timers) line(now time.Time) (string, string) {
+	if t.editing(now) {
+		if !t.alarm.IsZero() {
+			return t.alarm.Format("15:04"), "#fff"
+		}
+		return timerLeft(t.edit), "#fff"
+	}
+	if len(t.items) == 0 {
+		return "", ""
+	}
+	it := t.items[0]
+	s := timerLeft(it.At.Sub(now))
+	if it.Alarm {
+		s = it.At.Format("15:04")
+	}
+	if n := len(t.items) - 1; n > 0 {
+		s += fmt.Sprintf(" +%d", n)
+	}
+	return s, gray
+}
+
+func timerLeft(d time.Duration) string {
+	m := int((d + time.Minute - 1) / time.Minute)
+	if m < 60 {
+		return fmt.Sprintf("%dm", m)
+	}
+	return fmt.Sprintf("%dh%02d", m/60, m%60)
+}
+
+func timerSVG(text, fill string) string {
+	if text == "" {
+		return ""
+	}
+	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 24"><text x="44" y="19" text-anchor="middle" `+
+		`font-family="JetBrains Mono" font-size="20" fill="%s">%s</text></svg>`, fill, text))
+}

@@ -492,6 +492,12 @@ func (d *call) camDown() error {
 	return d.change(func(mic, cam bool) (bool, bool) { return mic, !cam })
 }
 
+func (d *call) inCall() bool {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.mic != none
+}
+
 func (d *call) publish() {
 	sent := map[string]string{}
 	resend := time.NewTicker(resendEvery)
