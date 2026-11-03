@@ -111,3 +111,24 @@ func TestTileLayers(t *testing.T) {
 		t.Fatalf("call must win: %s", got)
 	}
 }
+
+func TestTimerSpinAccelerates(t *testing.T) {
+	var s spin
+	now := time.Now()
+	if s.step(1, now) != time.Minute {
+		t.Fatal("first detent = 1 min")
+	}
+	var got time.Duration
+	for i := range 30 {
+		got = s.step(1, now.Add(time.Duration(i+1)*100*time.Millisecond))
+	}
+	if got != time.Hour {
+		t.Errorf("long fast spin = %v, want 1h", got)
+	}
+	if s.step(1, now.Add(10*time.Second)) != time.Minute {
+		t.Error("a pause resets to minutes")
+	}
+	if s.step(-1, now.Add(10*time.Second+50*time.Millisecond)) != time.Minute {
+		t.Error("reversing resets to minutes")
+	}
+}

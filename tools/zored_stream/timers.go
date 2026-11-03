@@ -22,7 +22,28 @@ const (
 	alarmStep      = 5 * time.Minute
 )
 
-var timerSteps = [...]time.Duration{time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour}
+var timerSteps = [...]time.Duration{time.Minute, 2 * time.Minute, 5 * time.Minute, 10 * time.Minute, 15 * time.Minute, 30 * time.Minute, time.Hour}
+
+const (
+	spinGap   = 200 * time.Millisecond
+	spinShift = 4
+)
+
+type spin struct {
+	last      time.Time
+	direction int
+	streak    int
+}
+
+func (s *spin) step(direction int, now time.Time) time.Duration {
+	if direction == s.direction && now.Sub(s.last) <= spinGap {
+		s.streak++
+	} else {
+		s.streak = 0
+	}
+	s.last, s.direction = now, direction
+	return timerSteps[min(s.streak/spinShift, len(timerSteps)-1)]
+}
 
 var timerSound = func() error {
 	return exec.Command("afplay", "/System/Library/Sounds/Glass.aiff").Start()
@@ -44,7 +65,7 @@ type timers struct {
 	editTill time.Time
 	edit     time.Duration
 	alarm    time.Time
-	accel    accel
+	spin     spin
 	downAt   time.Time
 	ringTill time.Time
 	sounded  time.Time
@@ -139,18 +160,18 @@ func (t *timers) turn(direction int) bool {
 	if !t.editing(now) {
 		return false
 	}
-	amount := t.accel.step(direction)
+	step := t.spin.step(direction, now)
 	switch {
 	case !t.alarm.IsZero():
-		t.alarm = t.alarm.Add(time.Duration(amount) * alarmStep)
+		step = max(step, alarmStep)
+		t.alarm = t.alarm.Truncate(step).Add(time.Duration(direction) * step)
 		if t.alarm.Before(now) {
 			t.alarm = t.alarm.Add(24 * time.Hour)
 		}
 	case t.edit == 0 && direction < 0:
 		t.alarm = now.Truncate(alarmStep).Add(alarmStep)
 	default:
-		step := timerSteps[max(amount, -amount)-1]
-		t.edit = max(0, t.edit+time.Duration(direction)*step)
+		t.edit = max(0, t.edit.Truncate(step)+time.Duration(direction)*step)
 	}
 	t.editTill = now.Add(timerEditFor)
 	t.publishLocked(now)
