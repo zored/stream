@@ -73,13 +73,42 @@ func wifiScan(app string) ([]wifiNetwork, error) {
 	return scanNetworks(out)
 }
 
-func wifiJoin(app, ssid string) error {
-	out, err := runHelper(app, "join", ssid)
+const wifiMenuJoin = `on run argv
+	set target to "wifi-network-" & item 1 of argv
+	tell application "System Events" to tell process "ControlCenter"
+		click (first menu bar item of menu bar 1 whose description is "Control Center")
+		delay 0.6
+		set tile to missing value
+		repeat with e in (UI elements of group 1 of window 1)
+			try
+				if value of attribute "AXIdentifier" of e is "controlcenter-wifi" then set tile to e
+			end try
+		end repeat
+		if tile is missing value then
+			key code 53
+			error "no wi-fi tile in Control Center"
+		end if
+		perform (first action of tile whose name contains "show details")
+		delay 0.8
+		repeat with e in (entire contents of window 1)
+			try
+				if value of attribute "AXIdentifier" of e is target then
+					click e
+					delay 0.3
+					key code 53
+					return "ok"
+				end if
+			end try
+		end repeat
+		key code 53
+		error "not in the Wi-Fi menu: " & item 1 of argv
+	end tell
+end run`
+
+func wifiJoin(ssid string) error {
+	out, err := exec.Command("/usr/bin/osascript", "-e", wifiMenuJoin, ssid).CombinedOutput()
 	if err != nil {
-		return err
-	}
-	if out != "ok\n" {
-		return fmt.Errorf("wi-fi join %q: %s", ssid, strings.TrimSpace(out))
+		return fmt.Errorf("wi-fi join %q: %w: %s", ssid, err, strings.TrimSpace(string(out)))
 	}
 	return nil
 }

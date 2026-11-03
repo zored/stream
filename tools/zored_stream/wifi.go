@@ -298,7 +298,7 @@ func (w *wifi) joinPick() {
 	}
 	ssid := w.list[w.pick]
 	w.mu.Unlock()
-	if err := wifiJoin(w.app, ssid); err != nil {
+	if err := wifiJoin(ssid); err != nil {
 		log.Print(err)
 		w.fail()
 		return
