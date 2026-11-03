@@ -15,7 +15,6 @@ const (
 	emojiRing     = 22
 	emojiPitch    = 43
 	emojiSize     = 30
-	emojiDim      = 0.5
 	emojiTapPx    = 6
 	emojiFriction = 0.94
 	emojiFling    = 2.0
@@ -29,7 +28,6 @@ const (
 
 type emojiStrip struct {
 	list           []string
-	group          int
 	offset, target float64
 	vel            float64
 	touching       bool
@@ -48,6 +46,7 @@ type emoji struct {
 	openTill time.Time
 	strips   [2]*emojiStrip
 	active   int
+	starts   []int
 	tileText string
 	wake     chan struct{}
 	recents  func() ([]string, error)
@@ -57,7 +56,7 @@ type emoji struct {
 
 func newEmoji(v *vars) *emoji {
 	return &emoji{vars: v, wake: make(chan struct{}, 1), recents: emojiRecents, send: emojiType, render: emojiPNG,
-		strips: [2]*emojiStrip{{}, {group: 1}}}
+		strips: [2]*emojiStrip{{}, {}}}
 }
 
 func (e *emoji) open() bool {
@@ -75,7 +74,7 @@ func (e *emoji) touch() {
 func (e *emoji) tile() error {
 	e.mu.Lock()
 	if e.open() {
-		s := e.top(e.active)
+		s := e.top(emojiLeft)
 		e.touch()
 		e.mu.Unlock()
 		return e.sendLogged(s)
@@ -87,8 +86,13 @@ func (e *emoji) tile() error {
 	}
 	left := e.strips[emojiLeft]
 	left.list = slices.Concat(append([][]string{recents}, emojiGroups...)...)
-	right := e.strips[emojiRight]
-	right.list = emojiGroups[right.group]
+	e.starts = []int{0}
+	next := len(recents)
+	for _, g := range emojiGroups {
+		e.starts = append(e.starts, next)
+		next += len(g)
+	}
+	e.strips[emojiRight].list = emojiCategories
 	for _, s := range e.strips {
 		s.offset, s.target, s.vel, s.shown = 0, 0, 0, ""
 	}
@@ -136,7 +140,7 @@ func (e *emoji) press(side int) (bool, error) {
 		return false, nil
 	}
 	e.active = side
-	text := e.top(side)
+	text := e.top(emojiLeft)
 	e.touch()
 	e.mu.Unlock()
 	return true, e.sendLogged(text)
@@ -225,16 +229,14 @@ func (e *emoji) end(side int) error {
 		e.mu.Unlock()
 		return nil
 	}
-	if y < emojiTop+emojiPitch/2 {
-		text := e.top(side)
+	rows := math.Round((y - emojiTop) / emojiPitch)
+	if rows == 0 && side == emojiLeft {
+		text := e.top(emojiLeft)
 		e.mu.Unlock()
 		return e.sendLogged(text)
 	}
-	if side == emojiRight {
-		s.group = (s.group + 1) % len(emojiGroups)
-		s.list = emojiGroups[s.group]
-	}
-	s.offset, s.target, s.vel = 0, 0, 0
+	s.target, s.vel = e.clamp(s, math.Round(s.offset)+rows), 0
+	e.active = side
 	e.mu.Unlock()
 	return nil
 }
@@ -261,9 +263,34 @@ func (e *emoji) frame() bool {
 	for _, s := range e.strips {
 		e.step(s)
 	}
+	e.sync()
 	e.mu.Unlock()
 	e.publish()
 	return open
+}
+
+func (e *emoji) sync() {
+	left, right := e.strips[emojiLeft], e.strips[emojiRight]
+	if len(e.starts) == 0 {
+		return
+	}
+	if e.active == emojiRight {
+		start := float64(e.starts[int(math.Round(right.target))])
+		if left.target != start {
+			left.target, left.vel = start, 0
+		}
+		return
+	}
+	at := int(math.Round(left.offset))
+	cat := 0
+	for i, start := range e.starts {
+		if start <= at {
+			cat = i
+		}
+	}
+	if !right.touching && right.vel == 0 {
+		right.target = float64(cat)
+	}
 }
 
 func (e *emoji) step(s *emojiStrip) {
@@ -311,7 +338,7 @@ func (e *emoji) publish() {
 			e.vars.set("emoji_r", uri)
 		}
 	}
-	if text := e.top(e.active); text != e.tileText {
+	if text := e.top(emojiLeft); text != e.tileText {
 		e.tileText = text
 		e.vars.set("emoji_tile", emojiTileImage(text))
 	}
@@ -325,19 +352,16 @@ func emojiColumn(list []string, offset float64) []emojiGlyph {
 		if i < 0 {
 			continue
 		}
-		pos := float64(i) - offset
-		y := emojiTop + pos*emojiPitch
+		y := emojiTop + (float64(i)-offset)*emojiPitch
 		if y > stripDrawH+emojiPitch {
 			break
 		}
-		alpha := emojiDim
-		if math.Abs(pos) < 0.5 {
-			alpha = 1
-		}
-		glyphs = append(glyphs, emojiGlyph{text: list[i], y: y, size: emojiSize, alpha: alpha})
+		glyphs = append(glyphs, emojiGlyph{text: list[i], y: y, size: emojiSize, alpha: 1})
 	}
 	return glyphs
 }
+
+var emojiCategories = []string{"🕘", "😀", "👋", "🐻", "🍔", "⚽", "🚗", "💡", "🔣", "🏁"}
 
 var emojiIdle = dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
 	`<circle cx="50" cy="50" r="30" fill="none" stroke="#808080" stroke-width="6"/>` +

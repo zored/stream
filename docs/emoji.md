@@ -4,12 +4,13 @@ Controls: [controls.md](controls.md#тайл-ряд-2-колонка-2--emoji-pi
 
 ## Flow
 
-- `POST /emoji/tile` (тайл ряд 2, колонка 2): closed → open for 4 s; open → type the top emoji of the last used strip.
+- `POST /emoji/tile` (тайл ряд 2, колонка 2): closed → open for 4 s; open → type the left top emoji.
+- Right strip = categories; `sync()` moves the left column to the picked category's start, or the right ring to the category the left column is in.
 - Knobs: `/volume/{up,down,mute}` and `/brightness/{up,down,hold,release}` ask the picker first, like keep-awake / wi-fi do;
   closed, it takes nothing.
 - Strips: the fork keeps sending `/volume/drag?dy=` (left) and `/ai/slide?y=` (right); while open the daemon routes them
   to the picker. The fork also posts every strip touch edge: `POST /emoji/start?s=l|r&y=` and `/emoji/end?s=l|r&y=`
-  (ignored while closed). Tap = < 6 px of movement.
+  (ignored while closed). Tap = < 6 px of movement: on a lower item it scrolls that item to the top, on the left top it types.
 - Typing: `CGEventKeyboardSetUnicodeString` on a key down/up pair through the HID tap (S7) — the focused field, no clipboard.
 
 ## Data

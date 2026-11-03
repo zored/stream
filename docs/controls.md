@@ -107,10 +107,10 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - idle: a gray smiley
 - touch: opens the picker for 4 s, every action below extends it; shows the highlighted emoji of the last used strip
 - touch while open: types that emoji into the focused field
-- while open: both strips turn into emoji columns, the top one in a gray ring, the rest dimmed;
-  left = recent emoji, then all of them; right = one category (people first)
-- strip swipe: scrolls its column, flicks keep coasting; tap on the top emoji types it; tap lower: left jumps back to the recents, right switches to the next category
-- крутилка слева, ряд 1 / справа, ряд 1: turn scrolls its column (faster turns step more), press types its top emoji; volume and brightness are off while the picker is open
+- while open: the top item of each strip sits in a gray ring;
+  left = recent emoji, then all of them; right = categories (🕘 recent, 😀, 👋, 🐻, 🍔, ⚽, 🚗, 💡, 🔣, 🏁), kept in sync with the left column: picking one jumps the left column to its start
+- strip swipe: scrolls its column, flicks keep coasting; tap on an item lower down brings it to the top; tap on the left top emoji types it
+- крутилка слева, ряд 1 / справа, ряд 1: turn scrolls its column (faster turns step more), press types the left top emoji; volume and brightness are off while the picker is open
 
 [emoji.md](emoji.md)
 
@@ -202,7 +202,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 1 — brightness
 
-- turn: Mac display brightness (built-in display); while the emoji picker is open, its right column; for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4); for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
+- turn: Mac display brightness (built-in display); while the emoji picker is open, its categories; for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4); for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
 - press + turn: the controller's own brightness, never below 10 %
 - shows: the left strip bar for 1 s, white = Mac, gray = controller
 
