@@ -13,6 +13,7 @@ func newTestTimers(t *testing.T) *timers {
 	if err != nil {
 		t.Fatal(err)
 	}
+	tm.release = func() {}
 	return tm
 }
 
@@ -44,6 +45,17 @@ func TestTimerKnobCaptureAndReturn(t *testing.T) {
 	tm.tick()
 	if len(tm.items) != 2 || tm.turn(1) {
 		t.Fatal("edit timeout must start and release the knob")
+	}
+	tap(t, tm)
+	tm.turn(1)
+	if took, _ := tm.knob(true); !took {
+		t.Fatal("knob press while editing must be taken")
+	}
+	if took, err := tm.knob(false); !took || err != nil || len(tm.items) != 3 || tm.turn(1) {
+		t.Fatal("knob press must start the timer and release the knob")
+	}
+	if took, _ := tm.knob(true); took {
+		t.Fatal("idle knob press must pass to scroll")
 	}
 }
 

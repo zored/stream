@@ -210,6 +210,6 @@ the window; a 5 s timer, SIGINT/SIGTERM and the start release it too. A turn wit
 
 ## Timers (`timers.go`, :47129)
 
-- `/timer/down` + `/timer/up`: tap = edit / start / silence, hold ≥ 400 ms = cancel the nearest; `/seek/*` ask `timers.turn` first.
+- `/timer/down` + `/timer/up`: tap = edit / start / silence, hold ≥ 400 ms = cancel the nearest; `/scroll/*` ask `timers` first (`knob`, `turn`), then `calendar`; entering the edit releases Ctrl (S1).
 - Ticks every 250 ms: idle edit commits, due timers drop out and ring (`timer_ring`, `afplay Glass.aiff` every 2 s, 1 min); `timer_svg` is the line under the clock.
-- No Clock.app / Reminders timers: there is no API, so timers are the daemon's own, in `~/.config/zored-stream/timers.json`. No haptic: the daemon cannot drive the motor.
+- No Clock.app timers: Shortcuts can start one (`Start Timer`), but nothing reads the running ones back, so the tile could not show them; timers are the daemon's own, in `~/.config/zored-stream/timers.json`. No haptic: the daemon cannot drive the motor.

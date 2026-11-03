@@ -36,6 +36,8 @@ type timerItem struct {
 type timers struct {
 	mu       sync.Mutex
 	vars     *vars
+	release  func()
+	knobDown bool
 	file     string
 	items    []timerItem
 	editTill time.Time
@@ -109,7 +111,24 @@ func (t *timers) up() error {
 		return t.saveLocked()
 	}
 	t.edit, t.alarm, t.editTill = 0, time.Time{}, now.Add(timerEditFor)
+	go t.release()
 	return nil
+}
+
+func (t *timers) knob(down bool) (bool, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	now := time.Now()
+	if down {
+		t.knobDown = t.editing(now)
+		return t.knobDown, nil
+	}
+	if !t.knobDown {
+		return false, nil
+	}
+	t.knobDown = false
+	defer t.publishLocked(now)
+	return true, t.commitLocked(now)
 }
 
 func (t *timers) turn(direction int) bool {

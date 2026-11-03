@@ -333,23 +333,14 @@ func main() {
 	seek := &seeker{np: np, bar: vol.bar}
 	go every(progressEvery, np.publishProgress)
 	go serve(*seekAddr, func(mux *http.ServeMux) {
-		handle(mux, "/seek/forward", func() error {
-			if tm.turn(1) {
-				return nil
-			}
-			return seek.turn(1)
-		})
-		handle(mux, "/seek/back", func() error {
-			if tm.turn(-1) {
-				return nil
-			}
-			return seek.turn(-1)
-		})
+		handle(mux, "/seek/forward", func() error { return seek.turn(1) })
+		handle(mux, "/seek/back", func() error { return seek.turn(-1) })
 	})
 	sc, err := newScroller(*scrollModeFile)
 	if err != nil {
 		log.Fatal(err)
 	}
+	tm.release = sc.release
 	cal := newCalendar(v, sc.release, us.cover)
 	go cal.poll()
 	go every(calPollEvery, cal.poll)
@@ -372,6 +363,9 @@ func main() {
 	go serve(*scrollAddr, func(mux *http.ServeMux) {
 		press := func(down bool) func() error {
 			return func() error {
+				if took, err := tm.knob(down); took {
+					return err
+				}
 				if took, err := cal.knob(down); took {
 					return err
 				}
@@ -380,7 +374,7 @@ func main() {
 		}
 		turn := func(direction int) func() error {
 			return func() error {
-				if cal.turn(direction) {
+				if tm.turn(direction) || cal.turn(direction) {
 					return nil
 				}
 				return sc.turn(direction)

@@ -44,7 +44,6 @@ Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed
 ### крутилка слева, ряд 3 — seek
 
 - turn: seek in the current track, 2 / 4 / 8 / 15 s per detent by speed; live, the player follows while you turn
-- while a timer is being set (clock tap): sets it instead of seeking, seek is back once it starts
 - press: nothing
 - shows: a bright white position bar on the left strip, fades 1 s after the last turn
 
@@ -156,7 +155,7 @@ Same as кнопка 3. [vkcall.md](vkcall.md)
 ### тайл ряд 3, колонка 4 — clock + timers
 
 - shows: `HH:MM` white, vertically centered when no timer; below it the nearest timer gray, to the minute: `12m`, `1h05`, an alarm `07:30`; more pending = ` +2`
-- tap: set a timer for 5 s, крутилка слева, ряд 3 sets it (1 / 5 / 15 / 60 min per detent by speed), the value white; a second tap or 5 s idle starts it, 0 = nothing
+- tap: set a timer for 5 s, крутилка справа, ряд 3 sets it (1 / 5 / 15 / 60 min per detent by speed), the value white; a second tap, the knob press or 5 s idle starts it, 0 = nothing
 - turn left from 0: an alarm instead, time of day from the next 5 min, 5 min per detent
 - hold ≥ 400 ms: cancel the nearest timer
 - due: the tile blinks white and Glass plays every 2 s for 1 min; a tap silences it
@@ -232,6 +231,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - tab mode, turn: Ctrl held, clockwise = Tab, counter-clockwise = Shift+Tab; Ctrl is released 500 ms after the last detent
 - press + turn: wheel mode = horizontal wheel, clockwise = right; tab mode = Cmd held while pressed, clockwise = Cmd+Tab, counter-clockwise = Cmd+Shift+Tab (Contexts shows the window list), release picks; no mode switch
 - while the clock list is open: turn scrolls the list, press = clock hold
+- while a timer is being set (clock tap): turn sets it, press starts it; scroll is back after
 
 [macos.md](macos.md)
 
