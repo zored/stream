@@ -84,7 +84,7 @@ type usage struct {
 	forceRefresh bool
 	wake         chan struct{}
 	label        stripLabel
-	note         string
+	note         stripNote
 	noteTill     time.Time
 	stripMode
 	target  stripFrame
@@ -94,12 +94,17 @@ type usage struct {
 
 type stripFrame struct {
 	label  stripLabel
-	note   string
+	note   stripNote
 	text   string
 	failed bool
 	stale  bool
 	pct    float64
 	dots   [5]float64
+}
+
+type stripNote struct {
+	text, color string
+	arrow       bool
 }
 
 type stripLabel struct{ model, effort, state string }
@@ -169,7 +174,7 @@ func (u *usage) focus(label stripLabel) {
 	}
 }
 
-func (u *usage) say(note string, d time.Duration) {
+func (u *usage) say(note stripNote, d time.Duration) {
 	u.mu.Lock()
 	u.note, u.noteTill = note, time.Now().Add(d)
 	u.mu.Unlock()
@@ -298,7 +303,7 @@ func (u *usage) publish() {
 	u.mu.Lock()
 	limits, failed, label, mode := u.limits, u.snap.Error != "", u.label, u.stripMode
 	fetched := u.snap.FetchedAt
-	note := ""
+	var note stripNote
 	if time.Now().Before(u.noteTill) {
 		note = u.note
 	}
@@ -454,8 +459,11 @@ func aiStripSVG(f stripFrame) string {
 			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.note, f.dots, ink), w/2, stripTextY, stripFont, fill, html.EscapeString(f.text))
 	}
 	dot := ""
+	if f.note.arrow {
+		dot = fmt.Sprintf(`<path d="M%d 37l6 6-6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`, w-9)
+	}
 	if f.failed {
-		dot = fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="#FF6666"/>`, w-4)
+		dot += fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="#FF6666"/>`, w-4)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
@@ -463,14 +471,14 @@ func aiStripSVG(f stripFrame) string {
 		w, h, bar, w, h, content(""), bar, barColor, content("#000"), dot))
 }
 
-func labelMarkup(l stripLabel, note string, dots [5]float64, ink string) string {
-	if note != "" {
-		fill := "#fff"
+func labelMarkup(l stripLabel, note stripNote, dots [5]float64, ink string) string {
+	if note.text != "" {
+		fill := note.color
 		if ink != "" {
 			fill = ink
 		}
 		return fmt.Sprintf(`<text x="%d" y="%d" text-anchor="middle" font-family="%s" font-size="%d" fill="%s">%s</text>`,
-			svgMinWidth/2, svgHeight/2+svgFont*35/100, stripFont, svgFont, fill, html.EscapeString(note))
+			svgMinWidth/2, svgHeight/2+svgFont*35/100, stripFont, svgFont, fill, html.EscapeString(note.text))
 	}
 	if l.model == "" {
 		return ""

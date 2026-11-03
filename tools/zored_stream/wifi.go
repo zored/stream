@@ -3,13 +3,14 @@ package main
 import (
 	"cmp"
 	"encoding/hex"
-	"maps"
-	"strconv"
 	"errors"
 	"fmt"
+	"html"
 	"log"
+	"maps"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -24,6 +25,7 @@ const (
 	wifiProbeURL    = "http://captive.apple.com/hotspot-detect.html"
 	wifiOffline     = "offline"
 	wifiNameMaxRune = 14
+	wifiTileRune    = 10
 )
 
 type wifiNetwork struct {
@@ -35,7 +37,9 @@ type wifi struct {
 	mu       sync.Mutex
 	vars     *vars
 	app      string
-	strip    func(note string, d time.Duration)
+	strip    func(note stripNote, d time.Duration)
+	loading  bool
+	turned   bool
 	on       bool
 	ssid     string
 	online   bool
@@ -47,7 +51,7 @@ type wifi struct {
 	errorTil time.Time
 }
 
-func newWifi(v *vars, app string, strip func(string, time.Duration)) *wifi {
+func newWifi(v *vars, app string, strip func(stripNote, time.Duration)) *wifi {
 	return &wifi{vars: v, app: app, strip: strip, online: true}
 }
 
@@ -70,7 +74,7 @@ func (w *wifi) publishLocked() {
 	default:
 		state = "joined"
 	}
-	w.vars.set("wifi_svg", wifiSVG(state))
+	w.vars.set("wifi_svg", wifiSVG(state, w.ssid))
 }
 
 func (w *wifi) poll() {
@@ -139,6 +143,7 @@ func (w *wifi) up() error {
 		w.list, w.pick = []string{w.ssid}, 0
 	}
 	w.pickTill = time.Now().Add(wifiPickFor)
+	w.loading, w.turned = true, false
 	w.showLocked()
 	w.mu.Unlock()
 	go w.scan()
@@ -155,6 +160,12 @@ func (w *wifi) scan() {
 		}
 	}
 	log.Print(err)
+	w.mu.Lock()
+	w.loading = false
+	if w.picking() {
+		w.showLocked()
+	}
+	w.mu.Unlock()
 	w.fail()
 }
 
@@ -172,6 +183,8 @@ func (w *wifi) setList(list []string) {
 		list = append([]string{current}, list...)
 	}
 	w.list, w.pick = list, slices.Index(list, current)
+	w.loading = false
+	w.showLocked()
 }
 
 func wifiOrder(known []string, found []wifiNetwork) []string {
@@ -255,6 +268,7 @@ func (w *wifi) turn(direction int) bool {
 		w.pick = (max(w.pick, 0) + direction + len(w.list)) % len(w.list)
 	}
 	w.pickTill = time.Now().Add(wifiPickFor)
+	w.turned = true
 	if w.join != nil {
 		w.join.Stop()
 	}
@@ -268,7 +282,11 @@ func (w *wifi) showLocked() {
 	if w.pick >= 0 {
 		name = w.list[w.pick]
 	}
-	w.strip(wifiLabel(name), time.Until(w.pickTill))
+	color := "#fff"
+	if w.loading {
+		color = "#FFB000"
+	}
+	w.strip(stripNote{text: wifiLabel(name), color: color, arrow: !w.turned}, time.Until(w.pickTill))
 }
 
 func (w *wifi) joinPick() {
@@ -295,7 +313,7 @@ func (w *wifi) closePick() {
 	}
 	if w.picking() {
 		w.pickTill = time.Time{}
-		w.strip("", 0)
+		w.strip(stripNote{}, 0)
 	}
 }
 
@@ -320,14 +338,18 @@ func ipconfigSSID(summary string) (string, error) {
 }
 
 func wifiLabel(name string) string {
-	r := []rune(name)
-	if len(r) > wifiNameMaxRune {
-		r = append(r[:wifiNameMaxRune-1], '…')
+	return clip(name, wifiNameMaxRune)
+}
+
+func clip(s string, n int) string {
+	r := []rune(s)
+	if len(r) > n {
+		r = append(r[:n-1], '…')
 	}
 	return string(r)
 }
 
-func wifiSVG(state string) string {
+func wifiSVG(state, ssid string) string {
 	color, fill := "#fff", "none"
 	switch state {
 	case "off":
@@ -339,9 +361,17 @@ func wifiSVG(state string) string {
 	}
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
-	fmt.Fprintf(&b, `<path d="M50 74 L22.4 46.4 A39 39 0 0 1 77.6 46.4 Z" fill="%s" stroke="%s" stroke-width="4" stroke-linejoin="round"/>`, fill, color)
+	dy := 0
+	if ssid != "" {
+		dy = -12
+	}
+	fmt.Fprintf(&b, `<g transform="translate(0 %d)"><path d="M50 74 L22.4 46.4 A39 39 0 0 1 77.6 46.4 Z" fill="%s" stroke="%s" stroke-width="4" stroke-linejoin="round"/>`, dy, fill, color)
 	if state == "nonet" {
 		b.WriteString(`<circle cx="80" cy="74" r="6" fill="#FFB000"/>`)
+	}
+	b.WriteString(`</g>`)
+	if ssid != "" {
+		fmt.Fprintf(&b, `<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="#fff">%s</text>`, html.EscapeString(clip(ssid, wifiTileRune)))
 	}
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
