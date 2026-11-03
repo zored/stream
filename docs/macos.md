@@ -173,12 +173,11 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
 - Permission: `CGPreflightPostEventAccess` is true for the signed binary, the daemon's Accessibility grant covers it (verified).
   Without it the turn returns `409` with `no permission to post events`.
 
-## Wi-fi (`wifi.go`, :47124, helper `zored_wifi.app`)
+## Wi-fi (`wifi.go`, :47124)
 
-- Power: CoreWLAN. Join: macOS never fills the password for an API call: `networksetup -setairportnetwork` and `associate(password:nil)` fail with `tmpErr` even for the current network (verified); reading the System keychain asks for the admin password (verified, rejected). So the daemon clicks the network in Control Center via `osascript`: Control Center menu bar item → tile `controlcenter-wifi` → action "show details" → checkbox `wifi-network-<ssid>` (the tree verified; the switch itself *(unverified)*). The details list known networks in range plus Instant Hotspots.
-- Every SSID source is redacted without Location: `ipconfig`, `system_profiler`, `wdutil`, CoreWLAN scan (verified). A bare binary with `NSLocation*UsageDescription` in the embedded `Info.plist` gets an `#AuthPrompt` in the `locationd` log but no window (verified).
-- Hotspot: the router of an iPhone Personal Hotspot is in 172.20.10.0/28 *(assumed, Apple default)*; the tile draws a phone then.
+- Power: CoreWLAN.
+- Every SSID source is redacted without Location: `ipconfig`, `system_profiler`, `wdutil`, CoreWLAN scan (verified). A bare binary with `NSLocation*UsageDescription` in the embedded `Info.plist` gets an `#AuthPrompt` in the `locationd` log but no window (verified). A separate `LSUIElement` app with its own grant did scan with names, but its list mixed unknown networks and missed Instant Hotspots; dropped.
 - Current SSID: `sudo ipconfig setverbose 1` once, then `ipconfig getsummary en0` prints it (verified). Survives a reboot *(unknown)*.
-- Scan: `tools/zored_wifi` is an `LSUIElement` app with its own Location grant (window shown, verified). The daemon runs `open -g -n -W zored_wifi.app --args <file>`; it scans once and writes `ssid\trssi` lines or `error\t…` (~2.3 s, verified). Run as a child process it would inherit the daemon's (missing) grant, hence `open`. `make zored_wifi` builds and signs it into `~/.local/share/zored-stream/`; `make zored_stream` depends on it.
-- Known networks: `security dump-keychain /Library/Keychains/System.keychain`, items with `svce` `AirPort`, `acct` = SSID (hex for non-ASCII); no root needed (verified, ~40 vs 4 from `networksetup -listpreferredwirelessnetworks`).
-- Instant Hotspot (iPhone over Continuity) shows only while the phone broadcasts.
+- Hotspot: the router of an iPhone Personal Hotspot is in 172.20.10.0/28 *(assumed, Apple default)*; the tile draws a phone then.
+- List and join go through Control Center via `osascript` (`wifiMenu` in `wifi_darwin.go`): menu bar item whose description starts with "Control Center" (it becomes "Control Center, Microphone is in use", so no `is`; and `click` on a loop reference does nothing, `AXPress` by index works) → tile `controlcenter-wifi` → action "show details" → checkboxes `wifi-network-<ssid>`: hotspots, then known networks in range (verified, ~2.8 s). Join clicks the checkbox; macOS fills the password itself (verified on `zored_5G`). API joins fail: `networksetup -setairportnetwork`, `associate(password:nil)` → `tmpErr`; the System keychain asks for the admin password.
+- AppleScript: iterate a list stored in a variable (`set nodes to entire contents …`), not `repeat with e in (entire contents …)` — the latter re-queries and finds nothing (verified).

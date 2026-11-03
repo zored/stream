@@ -1,17 +1,13 @@
 package main
 
 import (
-	"cmp"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"html"
 	"log"
-	"maps"
 	"net/http"
 	"net/netip"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -30,15 +26,9 @@ const (
 	wifiTileRune    = 10
 )
 
-type wifiNetwork struct {
-	ssid string
-	rssi int
-}
-
 type wifi struct {
 	mu       sync.Mutex
 	vars     *vars
-	app      string
 	strip    func(note stripNote, d time.Duration)
 	loading  bool
 	phone    bool
@@ -56,8 +46,8 @@ type wifi struct {
 	errorTil time.Time
 }
 
-func newWifi(v *vars, app string, strip func(stripNote, time.Duration)) *wifi {
-	return &wifi{vars: v, app: app, strip: strip, online: true}
+func newWifi(v *vars, strip func(stripNote, time.Duration)) *wifi {
+	return &wifi{vars: v, strip: strip, online: true}
 }
 
 func (w *wifi) publish() {
@@ -165,13 +155,10 @@ func (w *wifi) up() error {
 }
 
 func (w *wifi) scan() {
-	known, err := wifiKnown()
+	list, err := wifiMenuList()
 	if err == nil {
-		var found []wifiNetwork
-		if found, err = wifiScan(w.app); err == nil {
-			w.setList(wifiOrder(known, found))
-			return
-		}
+		w.setList(list)
+		return
 	}
 	log.Print(err)
 	w.mu.Lock()
@@ -199,73 +186,6 @@ func (w *wifi) setList(list []string) {
 	w.list, w.pick = list, slices.Index(list, current)
 	w.loading = false
 	w.showLocked()
-}
-
-func wifiOrder(known []string, found []wifiNetwork) []string {
-	strongest := map[string]int{}
-	for _, n := range found {
-		if r, ok := strongest[n.ssid]; !ok || n.rssi > r {
-			strongest[n.ssid] = n.rssi
-		}
-	}
-	list := slices.Collect(maps.Keys(strongest))
-	isKnown := func(s string) bool { return slices.Contains(known, s) }
-	slices.SortFunc(list, func(a, b string) int {
-		if ka, kb := isKnown(a), isKnown(b); ka != kb {
-			if ka {
-				return -1
-			}
-			return 1
-		}
-		return cmp.Or(strongest[b]-strongest[a], strings.Compare(a, b))
-	})
-	return list
-}
-
-func scanNetworks(tsv string) ([]wifiNetwork, error) {
-	var out []wifiNetwork
-	for line := range strings.Lines(tsv) {
-		f := strings.Split(strings.TrimSuffix(line, "\n"), "\t")
-		if len(f) != 2 {
-			return nil, fmt.Errorf("zored_wifi line %q", line)
-		}
-		if f[0] == "error" {
-			return nil, fmt.Errorf("zored_wifi: %s", f[1])
-		}
-		rssi, err := strconv.Atoi(f[1])
-		if err != nil {
-			return nil, fmt.Errorf("zored_wifi rssi %q: %w", line, err)
-		}
-		out = append(out, wifiNetwork{ssid: f[0], rssi: rssi})
-	}
-	return out, nil
-}
-
-func keychainNetworks(dump string) ([]string, error) {
-	var out []string
-	for _, item := range strings.Split(dump, "keychain: ") {
-		if !strings.Contains(item, `"svce"<blob>="AirPort"`) {
-			continue
-		}
-		for line := range strings.Lines(item) {
-			_, v, ok := strings.Cut(strings.TrimSpace(line), `"acct"<blob>=`)
-			if !ok {
-				continue
-			}
-			if h, ok := strings.CutPrefix(v, "0x"); ok {
-				h, _, _ = strings.Cut(h, " ")
-				b, err := hex.DecodeString(h)
-				if err != nil {
-					return nil, fmt.Errorf("keychain acct %q: %w", v, err)
-				}
-				v = string(b)
-			} else {
-				v = strings.TrimSuffix(strings.TrimPrefix(v, `"`), `"`)
-			}
-			out = append(out, v)
-		}
-	}
-	return out, nil
 }
 
 func (w *wifi) picking() bool {

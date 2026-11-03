@@ -9,7 +9,6 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -43,40 +42,16 @@ func wifiCurrent() (wifiLink, error) {
 	return ipconfigLink(string(out))
 }
 
-func wifiKnown() ([]string, error) {
-	out, err := exec.Command("/usr/bin/security", "dump-keychain", "/Library/Keychains/System.keychain").Output()
-	if err != nil {
-		return nil, fmt.Errorf("security dump-keychain: %w", err)
-	}
-	return keychainNetworks(string(out))
-}
-
-func runHelper(app string, args ...string) (string, error) {
-	f, err := os.CreateTemp("", "zored_wifi-*.tsv")
-	if err != nil {
-		return "", err
-	}
-	f.Close()
-	defer os.Remove(f.Name())
-	if out, err := exec.Command("/usr/bin/open", append([]string{"-g", "-n", "-W", app, "--args", f.Name()}, args...)...).CombinedOutput(); err != nil {
-		return "", fmt.Errorf("open %s: %w: %s", app, err, out)
-	}
-	data, err := os.ReadFile(f.Name())
-	return string(data), err
-}
-
-func wifiScan(app string) ([]wifiNetwork, error) {
-	out, err := runHelper(app)
-	if err != nil {
-		return nil, err
-	}
-	return scanNetworks(out)
-}
-
-const wifiMenuJoin = `on run argv
-	set target to "wifi-network-" & item 1 of argv
+const wifiMenu = `on run argv
+	set mode to item 1 of argv
 	tell application "System Events" to tell process "ControlCenter"
-		click (first menu bar item of menu bar 1 whose description is "Control Center")
+		set items_ to menu bar items of menu bar 1
+		repeat with i from 1 to count of items_
+			if description of item i of items_ starts with "Control Center" then
+				perform action "AXPress" of item i of items_
+				exit repeat
+			end if
+		end repeat
 		delay 0.6
 		set tile to missing value
 		repeat with e in (UI elements of group 1 of window 1)
@@ -92,30 +67,50 @@ const wifiMenuJoin = `on run argv
 		repeat 15 times
 			delay 0.2
 			set nodes to entire contents of window 1
+			set found to {}
 			repeat with e in nodes
 				try
-					if value of attribute "AXIdentifier" of e is target then
-						if item 2 of argv is "find" then
+					set id_ to value of attribute "AXIdentifier" of e
+					if id_ starts with "wifi-network-" then
+						if mode is "join" and id_ is "wifi-network-" & item 2 of argv then
+							click e
+							delay 0.3
 							key code 53
-							return "found"
+							return "ok"
 						end if
-						click e
-						delay 0.3
-						key code 53
-						return "ok"
+						set end of found to text 14 thru -1 of id_
 					end if
 				end try
 			end repeat
+			if mode is "list" and found is not {} then
+				key code 53
+				set AppleScript's text item delimiters to linefeed
+				return found as text
+			end if
 		end repeat
 		key code 53
-		error "not in the Wi-Fi menu: " & item 1 of argv
+		if mode is "list" then return ""
+		error "not in the Wi-Fi menu: " & item 2 of argv
 	end tell
 end run`
 
-func wifiJoin(ssid string) error {
-	out, err := exec.Command("/usr/bin/osascript", "-e", wifiMenuJoin, ssid, "click").CombinedOutput()
+func wifiMenuRun(args ...string) (string, error) {
+	out, err := exec.Command("/usr/bin/osascript", append([]string{"-e", wifiMenu}, args...)...).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("wi-fi join %q: %w: %s", ssid, err, strings.TrimSpace(string(out)))
+		return "", fmt.Errorf("wi-fi menu %q: %w: %s", args, err, strings.TrimSpace(string(out)))
 	}
-	return nil
+	return strings.TrimSuffix(string(out), "\n"), nil
+}
+
+func wifiMenuList() ([]string, error) {
+	out, err := wifiMenuRun("list")
+	if err != nil || out == "" {
+		return nil, err
+	}
+	return strings.Split(out, "\n"), nil
+}
+
+func wifiJoin(ssid string) error {
+	_, err := wifiMenuRun("join", ssid)
+	return err
 }

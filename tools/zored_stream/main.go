@@ -124,7 +124,6 @@ func main() {
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
 	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
 	kvmWOL := flag.String("kvm-wol", "192.168.4.255:9", "Wake-on-LAN broadcast address")
-	wifiApp := flag.String("wifi-app", filepath.Join(home, ".local/share/zored-stream/zored_wifi.app"), "helper app that scans Wi-Fi with Location permission")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
@@ -247,7 +246,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	wf := newWifi(v, *wifiApp, us.say)
+	wf := newWifi(v, us.say)
 	wf.poll()
 	br, err := newBrightness(vol.bar, *companionDB)
 	if err != nil {

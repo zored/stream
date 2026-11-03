@@ -25,10 +25,10 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey zored_wifi zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages check test deploy agent-hooks
+.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages check test deploy agent-hooks
 
 build:
-	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey zored_stream-bin zored_wifi
+	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey zored_stream-bin
 
 mediakey:
 	mkdir -p $(BIN)
@@ -45,13 +45,7 @@ zored_stream-bin:
 	cd tools/zored_stream && GOWORK=off go build -o $(BIN)/zored_stream .
 	codesign -f -s $(SIGN) -i com.zored.stream.zored_stream $(BIN)/zored_stream
 
-zored_wifi:
-	mkdir -p $(SHARE)/zored_wifi.app/Contents/MacOS
-	cp tools/zored_wifi/Info.plist $(SHARE)/zored_wifi.app/Contents/Info.plist
-	swiftc -O tools/zored_wifi/main.swift -o $(SHARE)/zored_wifi.app/Contents/MacOS/zored_wifi
-	codesign -f -s $(SIGN) $(SHARE)/zored_wifi.app
-
-zored_stream: zored_stream-bin zored_wifi
+zored_stream: zored_stream-bin
 	$(call install-agent,zored_stream)
 
 zored_stream-uninstall:
