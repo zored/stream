@@ -16,15 +16,18 @@ const (
 	awakeStep        = 15 * time.Minute
 	awakeMax         = 12 * time.Hour
 	awakeEditFor     = 5 * time.Second
+	awakeApplyAfter  = 500 * time.Millisecond
+	awakePollEvery   = 2 * time.Second
 )
 
 type power struct {
 	mu       sync.Mutex
 	vars     *vars
-	awake    *awakeAssertion
+	session  amphSession
 	until    time.Time
 	editTill time.Time
 	accel    accel
+	apply    *time.Timer
 	downAt   time.Time
 	timers   []*time.Timer
 }
@@ -41,25 +44,37 @@ func (p *power) publish() {
 
 func (p *power) publishLocked() {
 	held := time.Since(p.downAt)
-	if !p.downAt.IsZero() && held >= sleepArmAfter && held < sleepCancelAfter {
+	switch {
+	case !p.downAt.IsZero() && held >= sleepArmAfter && held < sleepCancelAfter:
 		p.vars.set("power_svg", powerSVG("arm", ""))
-		return
-	}
-	if p.awake == nil {
+	case !p.session.active:
 		p.vars.set("power_svg", powerSVG("off", ""))
-		return
+	case p.session.timed:
+		p.vars.set("power_svg", powerSVG("on", awakeLeft(max(0, time.Until(p.until)), time.Now().Before(p.editTill))))
+	default:
+		p.vars.set("power_svg", powerSVG("on", ""))
 	}
-	p.vars.set("power_svg", powerSVG("on", awakeLeft(time.Until(p.until), time.Now().Before(p.editTill))))
 }
 
-func (p *power) tick() {
+func (p *power) poll() {
+	p.mu.Lock()
+	busy := p.apply != nil || time.Now().Before(p.editTill)
+	p.mu.Unlock()
+	if busy {
+		return
+	}
+	s, err := readAmphetamine()
+	if err != nil {
+		log.Print(err)
+		return
+	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.awake != nil && !time.Now().Before(p.until) {
-		if err := p.letSleep(); err != nil {
-			log.Fatalf("keep-awake: %v", err)
-		}
+	if p.apply != nil || time.Now().Before(p.editTill) {
+		return
 	}
+	p.session = s
+	p.until = time.Now().Add(s.left)
 	p.publishLocked()
 }
 
@@ -89,52 +104,71 @@ func (p *power) up() error {
 	case held < sleepArmAfter:
 		return p.toggle()
 	case held < sleepCancelAfter:
-		if err := p.letSleep(); err != nil {
+		if err := p.end(); err != nil {
 			return err
 		}
-		p.vars.set("power_svg", powerSVG("off", ""))
+		p.publishLocked()
 		return sleepSystem()
 	}
+	return nil
+}
+
+func (p *power) toggle() error {
+	if p.session.active {
+		return p.end()
+	}
+	if err := startAmphetamine(awakeDefault); err != nil {
+		return err
+	}
+	p.session = amphSession{active: true, left: awakeDefault, timed: true}
+	p.until = time.Now().Add(awakeDefault)
+	p.editTill = time.Now().Add(awakeEditFor)
+	return nil
+}
+
+func (p *power) end() error {
+	if p.apply != nil {
+		p.apply.Stop()
+		p.apply = nil
+	}
+	p.editTill = time.Time{}
+	if !p.session.active {
+		return nil
+	}
+	if err := endAmphetamine(); err != nil {
+		return err
+	}
+	p.session = amphSession{}
 	return nil
 }
 
 func (p *power) turn(direction int) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.awake == nil || !time.Now().Before(p.editTill) {
+	if !p.session.active || !p.session.timed || !time.Now().Before(p.editTill) {
 		return false
 	}
 	left := time.Until(p.until).Round(awakeStep) + time.Duration(p.accel.step(direction))*awakeStep
 	p.until = time.Now().Add(max(awakeStep, min(awakeMax, left)))
 	p.editTill = time.Now().Add(awakeEditFor)
+	if p.apply != nil {
+		p.apply.Stop()
+	}
+	p.apply = time.AfterFunc(awakeApplyAfter, p.applyLength)
 	p.publishLocked()
 	return true
 }
 
-func (p *power) toggle() error {
-	if p.awake != nil {
-		return p.letSleep()
+func (p *power) applyLength() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.apply = nil
+	if !p.session.active {
+		return
 	}
-	a, err := holdAwake()
-	if err != nil {
-		return err
+	if err := startAmphetamine(time.Until(p.until).Round(time.Minute)); err != nil {
+		log.Print(err)
 	}
-	p.awake = &a
-	p.until = time.Now().Add(awakeDefault)
-	p.editTill = time.Now().Add(awakeEditFor)
-	return nil
-}
-
-func (p *power) letSleep() error {
-	if p.awake == nil {
-		return nil
-	}
-	if err := p.awake.release(); err != nil {
-		return err
-	}
-	p.awake = nil
-	p.editTill = time.Time{}
-	return nil
 }
 
 func (p *power) stopTimers() {

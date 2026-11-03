@@ -76,16 +76,18 @@ The device has no HID interface, so it can't wake a sleeping Mac (verified: pres
 `power.go`, `power_darwin.go`, `:47122`: `POST /power/down`, `/power/up` from тайл ряд 1, колонка 4; variable `power_svg` = the whole tile
 (sun hollow / filled, time left in JetBrains Mono, moon while armed).
 
-- Session: 1 h by default, released when it runs out (checked every second). For 5 s after turning on, `/brightness/up|down`
-  (`:47118`) go to the session length instead: ±15 min with the knob acceleration, 15 min – 12 h, each turn restarts the 5 s
-  (verified: 1:00 → 1:30, then brightness again).
-
-- keep-awake = an IOKit assertion `PreventUserIdleDisplaySleep` named `zored_stream keep-awake`, held by the daemon; it also blocks
-  idle system sleep. Check: `pmset -g assertions | grep zored` (verified: appears on, gone off).
-- Here `pmset -g` shows `sleep 0` (idle system sleep already off), `displaysleep 15`, so in practice it keeps the display on.
-- The assertion dies with the process: a daemon restart = keep-awake off, on purpose (no state on disk).
-- Closing the lid sleeps the Mac anyway, unless clamshell (power + external display); macOS rule *(assumed)*.
-- Sleep = `IOPMSleepSystem`, no root, no `pmset sleepnow` *(assumed: not triggered during development)*. Keep-awake is released first.
+- Keep-awake = an [Amphetamine](https://apps.apple.com/app/amphetamine/id937984704) session, driven by `osascript`
+  (`Amphetamine.sdef`): `start new session with options {duration:N, interval:minutes, displaySleepAllowed:false}`, `end session`,
+  `session is active`, `session time remaining`. The session shows in Amphetamine's menu; ending it there turns the tile off.
+- State comes from Amphetamine, polled every 2 s (`-3` remaining = no session, `0` = infinite: sun without time,
+  `-1`/`-2` = Trigger / app session: same). Time left ticks locally every second between polls.
+- Press = 1 h session or end. For 5 s after turning on, `/brightness/up|down` (`:47118`) set the length instead: ±15 min with the knob
+  acceleration, 15 min – 12 h, each turn restarts the 5 s; 500 ms after the last turn the session restarts with the new length
+  (verified: 1:00 → 1:45, Amphetamine 6300 s, display sleep not allowed).
+- First run: macOS asks to let `zored_stream` control Amphetamine (Automation); until allowed, `osascript` hangs and the tile stays off.
+- Amphetamine must be running *(assumed: `tell application` launches it otherwise)*.
+- Closing the lid sleeps the Mac anyway unless Amphetamine's closed-display mode is on; not set here.
+- Sleep = end the session, then `IOPMSleepSystem` (cgo), no root, no `pmset sleepnow` *(assumed: not triggered during development)*.
 - Timing lives in the daemon (press 1 s → `arm`, 3 s → cancel), not in Companion's 400 ms hold, so no second haptic.
 - `/location/…/press` over the API sends down and up at once and they race; test with `/down` + `/up`.
 

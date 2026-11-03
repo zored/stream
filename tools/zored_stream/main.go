@@ -259,7 +259,8 @@ func main() {
 		handle(mux, "/scroll/forward", func() error { return sc.turn(1) })
 		handle(mux, "/scroll/back", func() error { return sc.turn(-1) })
 	})
-	go every(time.Second, pw.tick)
+	go every(time.Second, pw.publish)
+	go every(awakePollEvery, pw.poll)
 	go serve(*powerAddr, func(mux *http.ServeMux) {
 		handle(mux, "/power/down", pw.down)
 		handle(mux, "/power/up", pw.up)

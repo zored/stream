@@ -83,7 +83,7 @@ Same binary name, same ports, same endpoints, same variables. Shared files stay 
 | Now Playing + seek | 47119 | perl child + dylib | PowerShell child (below) | on |
 | agents | 47120 | `agents_darwin.go` (focus, pid) | `agents_windows.go` | on, Codex source |
 | scroll | 47121 | `scroll_darwin.go` | `scroll_windows.go` | on |
-| keep awake + sleep | 47122 | `power_darwin.go` (IOKit) | `power_windows.go` (`SetThreadExecutionState`, `SetSuspendState`) | off |
+| keep awake + sleep | 47122 | `power_darwin.go` (Amphetamine, IOKit sleep) | `power_windows.go` (`SetThreadExecutionState`, `SetSuspendState`) | off |
 
 - Module wiring moves out of `main.go` into `modules_darwin.go` / `modules_windows.go`, so the Windows build never links the
   mac-only modules; no stubs.
