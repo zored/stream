@@ -165,6 +165,6 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
 
 ## Wi-fi (`wifi.go`, :47124)
 
-- Power, scan and preferred networks: CoreWLAN. Join: `networksetup -setairportnetwork en0 <ssid>`, password from the keychain *(assumed)*.
+- Power: CoreWLAN. Pick list: `networksetup -listpreferredwirelessnetworks en0`; scan results (CoreWLAN, `system_profiler`) have every name redacted without Location (verified), so unknown networks are not offered. Join: `networksetup -setairportnetwork en0 <ssid>`, password from the keychain *(assumed)*.
 - SSID: macOS redacts it without Location permission (`ipconfig`, `system_profiler`, `wdutil`, CoreWLAN, verified). A bare binary with `NSLocation*UsageDescription` in the embedded `Info.plist` gets an `#AuthPrompt` in the `locationd` log but no window (verified).
 - Working path: `sudo ipconfig setverbose 1` once, then `ipconfig getsummary en0` prints the SSID (verified). Without it the daemon logs the hint and shows "on, not joined". Survives a reboot *(unknown)*.

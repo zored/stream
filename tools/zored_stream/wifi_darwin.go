@@ -2,7 +2,6 @@ package main
 
 /*
 #cgo LDFLAGS: -framework CoreWLAN -framework Foundation
-#include <stdlib.h>
 #include "wifi_darwin.h"
 */
 import "C"
@@ -11,18 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"strconv"
 	"strings"
-	"unsafe"
 )
-
-func takeString(p *C.char) (string, bool) {
-	if p == nil {
-		return "", false
-	}
-	defer C.free(unsafe.Pointer(p))
-	return C.GoString(p), true
-}
 
 func wifiPower() (bool, error) {
 	switch C.wifi_power() {
@@ -53,29 +42,12 @@ func wifiSSID() (string, error) {
 	return ipconfigSSID(string(out))
 }
 
-func wifiKnown() []string {
-	s, _ := takeString(C.wifi_known())
-	return strings.FieldsFunc(s, func(r rune) bool { return r == '\n' })
-}
-
-func wifiScan() ([]wifiNetwork, error) {
-	s, ok := takeString(C.wifi_scan())
-	if !ok {
-		return nil, errors.New("wi-fi: scan failed")
+func wifiPreferred() ([]string, error) {
+	out, err := exec.Command("/usr/sbin/networksetup", "-listpreferredwirelessnetworks", "en0").Output()
+	if err != nil {
+		return nil, fmt.Errorf("networksetup preferred: %w", err)
 	}
-	var out []wifiNetwork
-	for line := range strings.Lines(s) {
-		f := strings.Split(strings.TrimSuffix(line, "\n"), "\t")
-		if len(f) != 3 {
-			return nil, fmt.Errorf("wi-fi scan line %q", line)
-		}
-		rssi, err := strconv.Atoi(f[1])
-		if err != nil {
-			return nil, fmt.Errorf("wi-fi scan rssi %q: %w", line, err)
-		}
-		out = append(out, wifiNetwork{ssid: f[0], rssi: rssi, secure: f[2] == "1"})
-	}
-	return out, nil
+	return preferredNetworks(string(out)), nil
 }
 
 func wifiJoin(ssid string) error {

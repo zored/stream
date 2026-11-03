@@ -22,12 +22,6 @@ const (
 	wifiNameMaxRune = 14
 )
 
-type wifiNetwork struct {
-	ssid   string
-	rssi   int
-	secure bool
-}
-
 type wifi struct {
 	mu       sync.Mutex
 	vars     *vars
@@ -142,13 +136,12 @@ func (w *wifi) up() error {
 }
 
 func (w *wifi) scan() {
-	found, err := wifiScan()
+	list, err := wifiPreferred()
 	if err != nil {
 		log.Print(err)
 		w.fail()
 		return
 	}
-	list := wifiOrder(wifiKnown(), found)
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if !w.picking() {
@@ -158,30 +151,10 @@ func (w *wifi) scan() {
 	if w.pick >= 0 {
 		current = w.list[w.pick]
 	}
+	if current != "" && !slices.Contains(list, current) {
+		list = append([]string{current}, list...)
+	}
 	w.list, w.pick = list, slices.Index(list, current)
-}
-
-func wifiOrder(known []string, found []wifiNetwork) []string {
-	strongest := map[string]int{}
-	for _, n := range found {
-		if r, ok := strongest[n.ssid]; !ok || n.rssi > r {
-			strongest[n.ssid] = n.rssi
-		}
-	}
-	var out []string
-	for _, k := range known {
-		if _, ok := strongest[k]; ok && !slices.Contains(out, k) {
-			out = append(out, k)
-		}
-	}
-	var rest []string
-	for s := range strongest {
-		if !slices.Contains(out, s) {
-			rest = append(rest, s)
-		}
-	}
-	slices.SortFunc(rest, func(a, b string) int { return strongest[b] - strongest[a] })
-	return append(out, rest...)
 }
 
 func (w *wifi) picking() bool {
@@ -248,6 +221,16 @@ func (w *wifi) fail() {
 	w.publishLocked()
 	w.mu.Unlock()
 	time.AfterFunc(3*time.Second, w.publish)
+}
+
+func preferredNetworks(out string) []string {
+	var list []string
+	for line := range strings.Lines(out) {
+		if strings.HasPrefix(line, "\t") {
+			list = append(list, strings.TrimSpace(line))
+		}
+	}
+	return list
 }
 
 func ipconfigSSID(summary string) (string, error) {

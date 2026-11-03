@@ -5,13 +5,10 @@ import (
 	"testing"
 )
 
-func TestWifiOrder(t *testing.T) {
-	got := wifiOrder([]string{"home", "gone", "work"}, []wifiNetwork{
-		{ssid: "cafe", rssi: -70}, {ssid: "work", rssi: -40}, {ssid: "home", rssi: -80},
-		{ssid: "mall", rssi: -50}, {ssid: "cafe", rssi: -45},
-	})
-	if want := []string{"home", "work", "cafe", "mall"}; !slices.Equal(got, want) {
-		t.Errorf("wifiOrder = %v, want %v", got, want)
+func TestPreferredNetworks(t *testing.T) {
+	got := preferredNetworks("Preferred networks on en0:\n\tМомент и ВайФай\n\tzored_smart\n")
+	if want := []string{"Момент и ВайФай", "zored_smart"}; !slices.Equal(got, want) {
+		t.Errorf("preferredNetworks = %v, want %v", got, want)
 	}
 }
 

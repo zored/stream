@@ -18,26 +18,3 @@ int wifi_set_power(int on) {
         return i && [i setPower:on error:nil];
     }
 }
-
-char *wifi_known(void) {
-    @autoreleasepool {
-        NSMutableString *out = [NSMutableString string];
-        for (CWNetworkProfile *p in wifi_iface().configuration.networkProfiles) {
-            if (p.ssid) [out appendFormat:@"%@\n", p.ssid];
-        }
-        return strdup(out.UTF8String);
-    }
-}
-
-char *wifi_scan(void) {
-    @autoreleasepool {
-        NSError *err = nil;
-        NSSet<CWNetwork *> *found = [wifi_iface() scanForNetworksWithName:nil error:&err];
-        if (!found) return NULL;
-        NSMutableString *out = [NSMutableString string];
-        for (CWNetwork *n in found) {
-            if (n.ssid) [out appendFormat:@"%@\t%ld\t%d\n", n.ssid, (long)n.rssiValue, ![n supportsSecurity:kCWSecurityNone]];
-        }
-        return strdup(out.UTF8String);
-    }
-}
