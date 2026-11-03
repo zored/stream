@@ -37,7 +37,11 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   headphones tile `0/4` — Accentum BT toggle, output icon (speaker/headphones, yellow while connecting, red on error), KVM auto route
   Logi + USB camera, port 47123 ([macos.md](docs/macos.md)); wi-fi tile `0/3` — hold toggles power, touch = 5 s network pick on
   крутилка справа, ряд 1, name on the right strip and tile, scan via `zored_wifi.app` (Location permission), port 47124; invariant F21;
-  [architecture.html](docs/architecture.html) — layers, pages pipeline, daemon modules, mechanisms, invariants (11 diagrams)
+  [architecture.html](docs/architecture.html) — layers, pages pipeline, daemon modules, mechanisms, invariants (11 diagrams);
+  wi-fi join by clicking the network in Control Center's Wi-Fi details (no password prompts), then Viscosity `Barbos_SE` reconnect
+  (`-wifi-vpn`), VPN dot on the tile, hotspot icon, no-internet dot; keep-awake: a tap that turns it off blanked the display
+  (idle > `displaysleep`, not a real sleep) → idle reset via `IOPMAssertionDeclareUserActivity` (`4c9311f`);
+  KVM module `kvm.go` on 47125 (кнопка 1, `m1ddc`), PIP under discussion
 
 ## Next
 
@@ -48,6 +52,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Seek and cover with Music.app; dictation resume with a browser player
 - [ ] Right strip slide picks the model on the device
 - [ ] Headphones and wi-fi tiles on the device: icons, yellow/red states, the `›` arrow and the network name on the strip
+- [ ] Wi-fi switch end to end from the device (`bo phone` ↔ `zored_5G`): dot red → yellow → white, VPN back
+- [ ] Keep-awake: on, 15 min without keyboard/mouse, short tap → the display must stay on
 
 ### More buttons and actions
 
@@ -64,9 +70,6 @@ Desk and display:
 - [ ] In progress (child session): KVM switch to Windows on кнопка 1 — `m1ddc set input 15` (MSI 321URX, from `~/switch_to_windows.command`)
 - [ ] Monitor brightness, PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] Wi-fi join: macOS refuses to join even a known network without a password (`networksetup`, CoreWLAN `associate(password:nil)` → `tmpErr`);
-  `b7f643d` joins with the password from the System keychain, which asks for an admin password — the user wants no prompts;
-  next option under discussion: click the network in the menu-bar Wi-Fi menu via Accessibility (child session, waiting for the user)
 - [ ] Performance pass over `zored_stream` and helpers: measure CPU/wakeups, replace polling with CoreAudio/notification listeners,
   cut redundant Companion variable sets
 
