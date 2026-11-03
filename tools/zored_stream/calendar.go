@@ -3,6 +3,7 @@ package main
 import (
 	"cmp"
 	"fmt"
+	"html"
 	"log"
 	"regexp"
 	"slices"
@@ -280,10 +281,13 @@ func calStripImage(items []calItem, pick int) string {
 var (
 	calLink  = regexp.MustCompile(`<?(?:https?://|www\.)[^\s<>()\[\]]+>?`)
 	calEmpty = regexp.MustCompile(`\(\s*\)|\[\s*\]`)
+	calBreak = regexp.MustCompile(`(?i)<br\s*/?>|</p>|</div>|</li>`)
+	calTag   = regexp.MustCompile(`<[^>]*>`)
 	calJunk  = regexp.MustCompile(`(?im)^\s*(?:[-=_*~]{3,}|(?:id звонка|код доступа|пароль|meeting id|passcode)\s*:.*)\s*$`)
 )
 
 func calNotes(s string) string {
+	s = html.UnescapeString(calTag.ReplaceAllString(calBreak.ReplaceAllString(s, "\n"), ""))
 	return strings.Join(strings.Fields(calEmpty.ReplaceAllString(calLink.ReplaceAllString(calJunk.ReplaceAllString(s, ""), ""), " ")), " ")
 }
 

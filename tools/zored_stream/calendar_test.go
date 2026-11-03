@@ -73,3 +73,10 @@ func TestCalNotes(t *testing.T) {
 		t.Errorf("calNotes = %q, want %q", got, want)
 	}
 }
+
+func TestCalNotesHTML(t *testing.T) {
+	got := calNotes("план<br/>---------------------------<br>ID звонка: 1<br/><b>итоги</b> &amp; задачи<br />")
+	if want := "план итоги & задачи"; got != want {
+		t.Errorf("calNotes = %q, want %q", got, want)
+	}
+}
