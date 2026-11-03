@@ -20,3 +20,17 @@ func TestWifiLabel(t *testing.T) {
 		t.Errorf("wifiLabel = %q", got)
 	}
 }
+
+func TestIpconfigSSID(t *testing.T) {
+	for summary, want := range map[string]string{
+		"<dictionary> {\n  BSSID : aa\n  SSID : Момент и ВайФай\n}": "Момент и ВайФай",
+		"<dictionary> {\n  InterfaceType : WiFi\n}":                 "",
+	} {
+		if got, err := ipconfigSSID(summary); err != nil || got != want {
+			t.Errorf("ipconfigSSID = %q, %v, want %q", got, err, want)
+		}
+	}
+	if _, err := ipconfigSSID("  SSID : <redacted>\n"); err == nil {
+		t.Error("redacted SSID must fail")
+	}
+}

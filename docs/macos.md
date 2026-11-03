@@ -162,3 +162,9 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
   (synthetic events skip the HID inversion; assumed). Natural scrolling here is off (`com.apple.swipescrolldirection` = 0).
 - Permission: `CGPreflightPostEventAccess` is true for the signed binary, the daemon's Accessibility grant covers it (verified).
   Without it the turn returns `409` with `no permission to post events`.
+
+## Wi-fi (`wifi.go`, :47124)
+
+- Power, scan and preferred networks: CoreWLAN. Join: `networksetup -setairportnetwork en0 <ssid>`, password from the keychain *(assumed)*.
+- SSID: macOS redacts it without Location permission (`ipconfig`, `system_profiler`, `wdutil`, CoreWLAN, verified). A bare binary with `NSLocation*UsageDescription` in the embedded `Info.plist` gets an `#AuthPrompt` in the `locationd` log but no window (verified).
+- Working path: `sudo ipconfig setverbose 1` once, then `ipconfig getsummary en0` prints the SSID (verified). Without it the daemon logs the hint and shows "on, not joined". Survives a reboot *(unknown)*.

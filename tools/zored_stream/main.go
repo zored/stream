@@ -239,7 +239,6 @@ func main() {
 	hp := newHeadphones(v)
 	hp.publish()
 	wf := newWifi(v, us.say)
-	wifiRequestLocation()
 	wf.poll()
 	br, err := newBrightness(vol.bar, *companionDB)
 	if err != nil {

@@ -1,5 +1,4 @@
 #import <CoreWLAN/CoreWLAN.h>
-#import <CoreLocation/CoreLocation.h>
 #include "wifi_darwin.h"
 
 static CWInterface *wifi_iface(void) {
@@ -17,13 +16,6 @@ int wifi_set_power(int on) {
     @autoreleasepool {
         CWInterface *i = wifi_iface();
         return i && [i setPower:on error:nil];
-    }
-}
-
-char *wifi_ssid(void) {
-    @autoreleasepool {
-        NSString *s = wifi_iface().ssid;
-        return s ? strdup(s.UTF8String) : NULL;
     }
 }
 
@@ -48,11 +40,4 @@ char *wifi_scan(void) {
         }
         return strdup(out.UTF8String);
     }
-}
-
-static CLLocationManager *wifi_location;
-
-void wifi_request_location(void) {
-    wifi_location = [[CLLocationManager alloc] init];
-    [wifi_location requestAlwaysAuthorization];
 }

@@ -1,7 +1,7 @@
 package main
 
 /*
-#cgo LDFLAGS: -framework CoreWLAN -framework CoreLocation -framework Foundation
+#cgo LDFLAGS: -framework CoreWLAN -framework Foundation
 #include <stdlib.h>
 #include "wifi_darwin.h"
 */
@@ -45,9 +45,12 @@ func wifiSetPower(on bool) error {
 	return nil
 }
 
-func wifiSSID() string {
-	s, _ := takeString(C.wifi_ssid())
-	return s
+func wifiSSID() (string, error) {
+	out, err := exec.Command("/usr/sbin/ipconfig", "getsummary", "en0").Output()
+	if err != nil {
+		return "", fmt.Errorf("ipconfig getsummary: %w", err)
+	}
+	return ipconfigSSID(string(out))
 }
 
 func wifiKnown() []string {
@@ -82,8 +85,4 @@ func wifiJoin(ssid string) error {
 		return fmt.Errorf("wi-fi join %q: %v %s", ssid, err, msg)
 	}
 	return nil
-}
-
-func wifiRequestLocation() {
-	C.wifi_request_location()
 }

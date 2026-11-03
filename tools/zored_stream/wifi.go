@@ -77,7 +77,9 @@ func (w *wifi) poll() {
 	}
 	ssid := ""
 	if on {
-		ssid = wifiSSID()
+		if ssid, err = wifiSSID(); err != nil {
+			log.Print(err)
+		}
 	}
 	w.mu.Lock()
 	w.on, w.ssid = on, ssid
@@ -246,6 +248,18 @@ func (w *wifi) fail() {
 	w.publishLocked()
 	w.mu.Unlock()
 	time.AfterFunc(3*time.Second, w.publish)
+}
+
+func ipconfigSSID(summary string) (string, error) {
+	for line := range strings.Lines(summary) {
+		if k, v, ok := strings.Cut(strings.TrimSpace(line), " : "); ok && k == "SSID" {
+			if v == "<redacted>" {
+				return "", errors.New("ipconfig: SSID redacted, run sudo ipconfig setverbose 1")
+			}
+			return v, nil
+		}
+	}
+	return "", nil
 }
 
 func wifiLabel(name string) string {
