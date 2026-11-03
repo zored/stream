@@ -16,7 +16,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like, swipes in progress), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats (in progress), `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
+| tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats (in progress), `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
 | buttons `3/0` KVM (in progress), `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/4`, `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
@@ -56,7 +56,12 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   verified on the device; tab mode press + turn reworked to a real Cmd+Tab (Cmd held until release, Contexts shows the window list,
   F6/F7 updated, `5751ece`); tile layers in the daemon (`layers.go`, F23): date + calendar moved to `2/4` under the call layer,
   clock `2/5` keeps `HH:MM` + timers (tap captures крутилка слева, ряд 3, persisted in `~/.config/zored-stream/timers`, F24, port
-  47129, `d42c1a8`)
+  47129, `d42c1a8`); tab mode: a knob press during the 3 s window cycle always wins and gives Cmd+Tab again (`c3f4832`);
+  `mediakey` folded into the daemon as `POST :47113/key/<name>`, the CLI, `make mediakey` and `~/.local/bin/mediakey` removed
+  (`3d012d5`, `ab4ef3d`); tile swipes on the play tile `1/2`: left/right = prev/next, up/down = like/dislike, touches pinned to the
+  start tile so a drag no longer sticks a tile (fork `f0820fa`, stream `2e83202`, verified on the device); perf pass: forks at idle
+  9/s → 0 (frontmost via `NSWorkspaceDidActivateApplicationNotification`, Amphetamine via an in-process IOPM check, Viscosity via
+  utun), CPU ~17 % → 8–14 % (`448f726`, `45467da`)
 
 ## Next
 
@@ -82,7 +87,6 @@ New features go on the MEDIA page as buttons; separate pages only once it runs o
   the unread chats' avatars/letters, press opens the app
 - [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` already reads it via `lsappinfo` and can push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
-- [ ] In progress (child session): `mediakey` into the daemon as `POST /key/<name>` (drops the `exec` and Companion's Accessibility)
 
 ### Ideas (mechanisms assumed, not checked)
 
@@ -90,12 +94,11 @@ Desk and display:
 - [ ] In progress (child session): KVM switch to Windows on кнопка 1 — `m1ddc set input 15` (MSI 321URX, from `~/switch_to_windows.command`)
 - [ ] Monitor brightness, PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] In progress (child session): performance pass over `zored_stream` and helpers: measure CPU/wakeups, replace polling with CoreAudio/notification listeners,
-  cut redundant Companion variable sets
+- [ ] Perf, next round: SVG/PNG render + GC from animations and `tile*.publish` every 0.25 s; volume via CoreAudio listeners instead of the 0.25 s poll
 
 Windows and apps:
 - [ ] Frontmost app icon on a tile, press cycles its windows
-- [ ] In progress (child session, experiment on the play tile `1/2`: left/right = track, up/down = like/dislike). Tile swipes (researched 2026-11-03, sniffed: one touch surface, ~70 move events/s, see [device.md](docs/device.md#touch)): `@loupedeck/core` `onTouch` delivers `touchmove` for the center
+- [ ] Tile swipes on more tiles (play tile done, see Done). Research (2026-11-03, sniffed: one touch surface, ~70 move events/s, see [device.md](docs/device.md#touch)): `@loupedeck/core` `onTouch` delivers `touchmove` for the center
   with per-tile x/y and multitouch ids, the fork's `instance.ts` drops it (`continue`); patch = `src/tile-swipe.ts` beside
   `strip-drag.ts`: remember x/y on `touchstart`, on `touchend` with ≥ 40 px and ≤ 400 ms post `/tile/swipe?from=<id>&dir=l|r|u|d`;
   fix first: the fork recomputes `touch.target.control` per event, so a drag from tile A to B sends `keyDown(A)` + `keyUp(B)` and A
