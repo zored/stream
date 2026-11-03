@@ -172,9 +172,13 @@ func (c *calendar) act(i int) error {
 		return nil
 	}
 	it := c.items[i]
-	c.browseTill = time.Time{}
 	if it.reminder {
 		c.items[i].done = !it.done
+		if c.browsing() {
+			c.browseTill = time.Now().Add(calBrowseFor)
+		}
+	} else {
+		c.browseTill = time.Time{}
 	}
 	c.publishLocked()
 	c.mu.Unlock()

@@ -138,7 +138,7 @@ Same as кнопка 4. [vkcall.md](vkcall.md)
 - titles keep emoji (drawn by CoreText into a PNG, the SVG renderer had none) and wrap by character; a recurring event is listed once, at its next occurrence
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
 - touch: 5 s list, one item at a time (clock hidden): top row `HH:MM DD.MM` (white, amber for an event in ≤ 5 min or an overdue reminder), title gray below; крутилка справа, ряд 3 scrolls it; touch again closes
-- hold ≥ 400 ms: reminder → done / not done, event → opens in Calendar (the listed item while the list is open, else the shown one)
+- hold ≥ 400 ms: reminder → done / not done (the list stays open), event → opens in Calendar (the listed item while the list is open, else the shown one)
 
 ## Buttons
 
