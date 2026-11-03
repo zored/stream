@@ -51,7 +51,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   flag 🇬🇧/🇷🇺 with a 0.3 s crossfade, press = next layout (TIS on the main-thread run loop, port 47127, `beef447`); emoji picker on
   tile `1/3` ([emoji.md](docs/emoji.md)): tap opens it for 4 s, left strip recent then all, right strip one category, top emoji in a gray
   ring, swipe with inertia (computed in the daemon, the fork only reports touch start/end — fork `54d3abb`), крутилки ряд 1 scroll +
-  press types it via `CGEventKeyboardSetUnicodeString`, volume/brightness paused meanwhile; port 47128, F22 (`d043aae`)
+  press types it via `CGEventKeyboardSetUnicodeString`, volume/brightness paused meanwhile; port 47128, F22 (`d043aae`); idle tile =
+  a random emoji picked at daemon start (`44e37ce`); no haptic ticks while sliding on a strip — fork `e013f66`, stream `cb9de4e`
 
 ## Next
 
