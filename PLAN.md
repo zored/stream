@@ -45,7 +45,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   the session `resets_at` expired and the bar was cleared → refetch on wake / expiry (`250f73d`); calendar on the clock tile —
   next event/reminder ≤ 12 h under the clock (`●` event, `○` reminder, text rendered to PNG by the daemon via CoreText for emoji),
   touch = 5 s list on крутилка справа, ряд 3 (clock hidden, scroll mode paused), hold / knob press = reminder done ↔ undone (list stays open, `2c5645c`) or
-  open the event in Calendar; EventKit, port 47126, F19 rewritten (`15772c9`); wi-fi icon at 60 % (`e574eac`)
+  open the event in Calendar; list moved to the right strip over model + effort, hold opens it, touch acts (`ff5229a`); EventKit, port 47126, F19 rewritten (`15772c9`); wi-fi icon at 60 % (`e574eac`)
 
 ## Next
 
@@ -87,7 +87,7 @@ Windows and apps:
 - [ ] Emoji picker: knob scrolls a short favorites list on the strip, press types the emoji into the focused field
   (`CGEventKeyboardSetUnicodeString` in `zored_stream`, no clipboard)
 - [ ] Frontmost app icon on a tile, press cycles its windows
-- [ ] Tile swipes (researched 2026-11-03, code only, not on the device): `@loupedeck/core` `onTouch` delivers `touchmove` for the center
+- [ ] Tile swipes (researched 2026-11-03, sniffed: one touch surface, ~70 move events/s, see [device.md](docs/device.md#touch)): `@loupedeck/core` `onTouch` delivers `touchmove` for the center
   with per-tile x/y and multitouch ids, the fork's `instance.ts` drops it (`continue`); patch = `src/tile-swipe.ts` beside
   `strip-drag.ts`: remember x/y on `touchstart`, on `touchend` with ≥ 40 px and ≤ 400 ms post `/tile/swipe?from=<id>&dir=l|r|u|d`;
   fix first: the fork recomputes `touch.target.control` per event, so a drag from tile A to B sends `keyDown(A)` + `keyUp(B)` and A
