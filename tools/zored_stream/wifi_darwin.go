@@ -2,6 +2,7 @@ package main
 
 /*
 #cgo LDFLAGS: -framework CoreWLAN -framework Foundation
+#include <stdlib.h>
 #include "wifi_darwin.h"
 */
 import "C"
@@ -11,6 +12,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
+	"unsafe"
 )
 
 func wifiPower() (bool, error) {
@@ -48,6 +51,24 @@ func wifiPreferred() ([]string, error) {
 		return nil, fmt.Errorf("networksetup preferred: %w", err)
 	}
 	return preferredNetworks(string(out)), nil
+}
+
+func wifiVisible(ssid string) (bool, error) {
+	s := C.CString(ssid)
+	defer C.free(unsafe.Pointer(s))
+	for range 10 {
+		switch C.wifi_visible(s) {
+		case 1:
+			return true, nil
+		case 0:
+			return false, nil
+		case -2:
+			time.Sleep(300 * time.Millisecond)
+			continue
+		}
+		return false, fmt.Errorf("wi-fi scan %q failed", ssid)
+	}
+	return false, fmt.Errorf("wi-fi scan %q: busy", ssid)
 }
 
 func wifiJoin(ssid string) error {

@@ -136,12 +136,31 @@ func (w *wifi) up() error {
 }
 
 func (w *wifi) scan() {
-	list, err := wifiPreferred()
+	known, err := wifiPreferred()
 	if err != nil {
 		log.Print(err)
 		w.fail()
 		return
 	}
+	for _, ssid := range known {
+		w.mu.Lock()
+		skip := !w.picking() || slices.Contains(w.list, ssid)
+		w.mu.Unlock()
+		if skip {
+			continue
+		}
+		visible, err := wifiVisible(ssid)
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		if visible {
+			w.add(ssid)
+		}
+	}
+}
+
+func (w *wifi) add(ssid string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if !w.picking() {
@@ -151,10 +170,8 @@ func (w *wifi) scan() {
 	if w.pick >= 0 {
 		current = w.list[w.pick]
 	}
-	if current != "" && !slices.Contains(list, current) {
-		list = append([]string{current}, list...)
-	}
-	w.list, w.pick = list, slices.Index(list, current)
+	w.list = append(w.list, ssid)
+	w.pick = slices.Index(w.list, current)
 }
 
 func (w *wifi) picking() bool {
