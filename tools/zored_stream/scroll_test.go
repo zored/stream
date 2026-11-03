@@ -37,6 +37,10 @@ func fakeScroller(t *testing.T, tab bool) (*scroller, *keyLog) {
 		wheel:   func(v, h int) error { return k.add(fmt.Sprintf("wheel %d %d", v, h)) },
 		ctrlKey: func(down bool) error { return k.add(fmt.Sprintf("ctrl %v", down)) },
 		tabKey:  func(shift bool) error { return k.add(fmt.Sprintf("tab %v", shift)) },
+		windows: func() ([]window, error) {
+			return []window{{1, 10}, {2, 20}, {1, 11}}, k.add("list")
+		},
+		raise: func(w window) error { return k.add(fmt.Sprintf("raise %d", w.id)) },
 	}, k
 }
 
@@ -121,5 +125,33 @@ func TestScrollModes(t *testing.T) {
 		if !strings.HasPrefix(e, "wheel") {
 			t.Fatalf("wheel mode posted keys: %v", k.get())
 		}
+	}
+}
+
+func TestScrollTabPressCyclesWindows(t *testing.T) {
+	s, k := fakeScroller(t, true)
+	if err := s.hold(true); err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range []int{1, 1, 1, -1} {
+		if err := s.turn(d); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := s.hold(false); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.hold(true); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.turn(-1); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"list", "raise 20", "raise 11", "raise 10", "raise 11", "list", "raise 11"}
+	if got := k.get(); !slices.Equal(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	if !s.tab {
+		t.Fatal("press + turn switched the mode")
 	}
 }

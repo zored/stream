@@ -23,13 +23,22 @@ type scroller struct {
 	turned  bool
 	ctrl    bool
 	timer   *time.Timer
+	cycle   []window
+	at      int
 	wheel   func(vertical, horizontal int) error
 	ctrlKey func(down bool) error
 	tabKey  func(shift bool) error
+	windows func() ([]window, error)
+	raise   func(window) error
+}
+
+type window struct {
+	pid int
+	id  uint32
 }
 
 func newScroller(file string) (*scroller, error) {
-	s := &scroller{file: file, wheel: postScroll, ctrlKey: postCtrl, tabKey: postTab}
+	s := &scroller{file: file, wheel: postScroll, ctrlKey: postCtrl, tabKey: postTab, windows: listWindows, raise: raiseWindow}
 	data, err := os.ReadFile(file)
 	switch {
 	case os.IsNotExist(err):
@@ -51,13 +60,13 @@ func (s *scroller) hold(down bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if down {
-		s.pressed, s.turned = true, false
+		s.pressed, s.turned, s.cycle = true, false, nil
 		return s.releaseLocked()
 	}
 	if !s.pressed {
 		return nil
 	}
-	s.pressed = false
+	s.pressed, s.cycle = false, nil
 	if s.turned {
 		return nil
 	}
@@ -78,6 +87,9 @@ func (s *scroller) turn(direction int) error {
 	defer s.mu.Unlock()
 	if s.pressed {
 		s.turned = true
+		if s.tab {
+			return s.nextWindow(direction)
+		}
 		return s.wheel(0, s.lines(direction))
 	}
 	if !s.tab {
@@ -95,6 +107,22 @@ func (s *scroller) turn(direction int) error {
 		s.timer.Reset(tabRelease)
 	}
 	return s.tabKey(direction < 0)
+}
+
+func (s *scroller) nextWindow(direction int) error {
+	if s.cycle == nil {
+		windows, err := s.windows()
+		if err != nil {
+			return err
+		}
+		if len(windows) == 0 {
+			return fmt.Errorf("no windows to cycle")
+		}
+		s.cycle, s.at = windows, 0
+	}
+	n := len(s.cycle)
+	s.at = ((s.at+direction)%n + n) % n
+	return s.raise(s.cycle[s.at])
 }
 
 func (s *scroller) lines(direction int) int {
