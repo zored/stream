@@ -366,11 +366,9 @@ func emojiColumn(list []string, offset float64) []emojiGlyph {
 var emojiCategories = []string{"🕘", "😀", "👋", "🐻", "🍔", "⚽", "🚗", "💡", "🔣", "🏁"}
 
 var emojiIdle = dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
-	`<circle cx="50" cy="50" r="20" fill="none" stroke="#fff" stroke-width="5"/>` +
-	`<circle cx="43" cy="46" r="3" fill="#fff"/><circle cx="57" cy="46" r="3" fill="#fff"/>` +
-	`<path d="M42 56q8 7 16 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>` +
-	`<g stroke="#fff" stroke-width="5" stroke-linecap="round">` +
-	`<path d="M50 8v12M50 80v12M8 50h12M80 50h12M20 20l8 8M72 72l8 8M80 20l-8 8M28 72l-8 8"/></g></svg>`)
+	`<g stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none">` +
+	`<circle cx="50" cy="50" r="24"/><path d="M40 56q10 9 20 0"/></g>` +
+	`<circle cx="41" cy="44" r="3" fill="#fff"/><circle cx="59" cy="44" r="3" fill="#fff"/></svg>`)
 
 func emojiTileImage(text string, size float64) string {
 	uri, err := emojiTilePNG(text, size)
