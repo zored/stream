@@ -98,8 +98,8 @@ func ago(at, now time.Time) string {
 
 func unreadSVG(apps []*unreadApp, now time.Time) string {
 	if len(apps) == 0 {
-		return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="none" stroke="#808080" stroke-width="5">` +
-			`<path d="M14 50Q50 14 86 50Q50 86 14 50Z"/><circle cx="50" cy="50" r="11"/></g></svg>`)
+		return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="none" stroke="#808080" stroke-width="6" stroke-linejoin="round">` +
+			`<path d="M28 50Q50 28 72 50Q50 72 28 50Z"/></g><circle cx="50" cy="50" r="6" fill="#808080"/></svg>`)
 	}
 	var b strings.Builder
 	step := 88.0 / float64(len(apps))
