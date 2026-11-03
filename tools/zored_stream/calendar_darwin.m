@@ -129,9 +129,12 @@ void cal_canvas_text(void *c, const char *text, double x, double y, double w, do
         CGColorRef color = CGColorCreateSRGB(((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
         CTTextAlignment align = center ? kCTTextAlignmentCenter : kCTTextAlignmentLeft;
         CTLineBreakMode wrap = kCTLineBreakByCharWrapping;
+        CGFloat lh = size * 1.25;
         CTParagraphStyleSetting ps[] = {{kCTParagraphStyleSpecifierAlignment, sizeof align, &align},
-                                        {kCTParagraphStyleSpecifierLineBreakMode, sizeof wrap, &wrap}};
-        CTParagraphStyleRef style = CTParagraphStyleCreate(ps, 2);
+                                        {kCTParagraphStyleSpecifierLineBreakMode, sizeof wrap, &wrap},
+                                        {kCTParagraphStyleSpecifierMinimumLineHeight, sizeof lh, &lh},
+                                        {kCTParagraphStyleSpecifierMaximumLineHeight, sizeof lh, &lh}};
+        CTParagraphStyleRef style = CTParagraphStyleCreate(ps, 4);
         NSDictionary *attrs = @{(id)kCTFontAttributeName: (__bridge id)font, (id)kCTForegroundColorAttributeName: (__bridge id)color,
                                 (id)kCTParagraphStyleAttributeName: (__bridge id)style};
         NSAttributedString *as = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:text] attributes:attrs];
