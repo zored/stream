@@ -287,8 +287,7 @@ func main() {
 	go every(calPollEvery, cal.poll)
 	go every(time.Second, cal.publish)
 	go serve(*calendarAddr, func(mux *http.ServeMux) {
-		handle(mux, "/calendar/down", cal.down)
-		handle(mux, "/calendar/up", cal.up)
+		handle(mux, "/calendar/press", cal.press)
 	})
 	go func() {
 		stop := make(chan os.Signal, 1)

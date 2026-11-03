@@ -2,7 +2,6 @@ package main
 
 import (
 	"cmp"
-	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -12,7 +11,6 @@ import (
 )
 
 const (
-	calHoldFor   = 400 * time.Millisecond
 	calBrowseFor = 5 * time.Second
 	calPollEvery = time.Minute
 	calHorizon   = 7 * 24 * time.Hour
@@ -39,11 +37,9 @@ type calendar struct {
 	covered    bool
 	fetch      func(from, to time.Time) ([]calItem, error)
 	items      []calItem
-	downAt     time.Time
 	browseTill time.Time
 	pick       int
 	knobDown   bool
-	sticky     string
 }
 
 func newCalendar(v *vars, release func(), strip func(string)) *calendar {
@@ -75,10 +71,7 @@ func calKeep(items []calItem, now time.Time) []calItem {
 	})
 }
 
-func calNext(items []calItem, now time.Time, sticky string) int {
-	if i := slices.IndexFunc(items, func(it calItem) bool { return sticky != "" && it.id == sticky }); i >= 0 {
-		return i
-	}
+func calNext(items []calItem, now time.Time) int {
 	return slices.IndexFunc(items, func(it calItem) bool { return !it.allDay && !it.done && !it.start.After(now.Add(calAhead)) })
 }
 
@@ -93,12 +86,15 @@ func (c *calendar) publishLocked() {
 	if c.browsing() {
 		c.covered = true
 		c.strip(calStripImage(c.items, c.pick, now))
+		c.vars.set("cal_icon", calIcon(c.items, c.pick))
+		c.vars.set("cal_browse", "1")
 	} else if c.covered {
 		c.covered = false
 		c.strip("")
+		c.vars.set("cal_browse", "0")
 	}
 	line := ""
-	if i := calNext(c.items, now, c.sticky); i >= 0 {
+	if i := calNext(c.items, now); i >= 0 {
 		line = calLineImage(c.items[i], now)
 	}
 	c.vars.set("cal_line", line)
@@ -108,36 +104,15 @@ func (c *calendar) browsing() bool {
 	return time.Now().Before(c.browseTill)
 }
 
-func (c *calendar) down() error {
+func (c *calendar) press() error {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.downAt = time.Now()
-	return nil
-}
-
-func (c *calendar) up() error {
-	c.mu.Lock()
-	if c.downAt.IsZero() {
-		c.mu.Unlock()
-		return errors.New("release without press")
-	}
-	held := time.Since(c.downAt)
-	c.downAt = time.Time{}
-	if held < calHoldFor {
+	if c.browsing() {
 		i := c.pick
-		if !c.browsing() {
-			i = calNext(c.items, time.Now(), c.sticky)
-		}
 		c.mu.Unlock()
 		return c.act(i)
 	}
-	c.sticky = ""
-	if c.browsing() {
-		c.browseTill = time.Time{}
-	} else {
-		c.pick, c.browseTill = 0, time.Now().Add(calBrowseFor)
-		go c.release()
-	}
+	c.pick, c.browseTill = 0, time.Now().Add(calBrowseFor)
+	go c.release()
 	c.publishLocked()
 	c.mu.Unlock()
 	return nil
@@ -183,9 +158,7 @@ func (c *calendar) act(i int) error {
 	it := c.items[i]
 	if it.reminder {
 		c.items[i].done = !it.done
-		if !c.browsing() {
-			c.sticky = it.id
-		} else {
+		if c.browsing() {
 			c.browseTill = time.Now().Add(calBrowseFor)
 		}
 	} else {
@@ -267,14 +240,31 @@ func calLineImage(it calItem, now time.Time) string {
 	return calImage(88, 24, false, calText{text: calIn(it.start.Sub(now)) + " " + calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
 }
 
+var calWeekdays = [...]string{"вс", "пн", "вт", "ср", "чт", "пт", "сб"}
+
 func calStripImage(items []calItem, pick int, now time.Time) string {
 	const w, h = stripDrawH, stripDrawW
 	if pick >= len(items) {
 		return calImage(w, h, true, calText{text: "·", y: 12, w: w, h: 24, size: 16, rgb: grayRGB, center: true})
 	}
 	it := items[pick]
-	head := calIn(it.start.Sub(now)) + " " + calTime(it) + it.start.Format("02.01")
-	return calImage(w, h, true,
-		calText{text: head, x: 4, y: 2, w: w - 8, h: 22, size: 15, rgb: cmp.Or(calColor(it, now), whiteRGB)},
-		calText{text: calTitle(it), x: 4, y: 24, w: w - 8, h: 24, size: 15, rgb: grayRGB})
+	text := calWeekdays[it.start.Weekday()] + " " + it.start.Format("02.01") + " " + calTime(it) + calIn(it.start.Sub(now)) + " " + calTitle(it)
+	return calImage(w, h, true, calText{text: text, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: cmp.Or(calColor(it, now), whiteRGB)})
+}
+
+func calIcon(items []calItem, pick int) string {
+	var body string
+	switch {
+	case pick >= len(items):
+		body = fmt.Sprintf(`<circle cx="50" cy="50" r="5" fill="%s"/>`, gray)
+	case !items[pick].reminder:
+		body = `<rect x="18" y="24" width="64" height="58" rx="8" fill="none" stroke="#fff" stroke-width="6"/>` +
+			`<path d="M18 42h64M36 16v16M64 16v16" stroke="#fff" stroke-width="6" stroke-linecap="round"/>`
+	case items[pick].done:
+		body = `<rect x="20" y="20" width="60" height="60" rx="10" fill="#fff"/>` +
+			`<path d="M34 51l11 11 21-24" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`
+	default:
+		body = `<rect x="23" y="23" width="54" height="54" rx="8" fill="none" stroke="#fff" stroke-width="6"/>`
+	}
+	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + body + `</svg>`)
 }

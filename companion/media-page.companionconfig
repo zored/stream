@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "-yPVMPbWzLMGwQ3cpGr5-",
+  "id": "pVNrSQy9qPf7BIHPMCrVM",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -777,7 +777,7 @@
         "down": [
          {
           "type": "action",
-          "id": "loUSyX7da2SaAIlfUShy1",
+          "id": "gVJ02FKOioexkUL1trMIr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -804,7 +804,7 @@
         "up": [
          {
           "type": "action",
-          "id": "suZT4K48nLo9xH_aWsX1n",
+          "id": "loUSyX7da2SaAIlfUShy1",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -982,7 +982,7 @@
         "down": [
          {
           "type": "action",
-          "id": "9XMZPsgkQNjCcw-1DjY9i",
+          "id": "suZT4K48nLo9xH_aWsX1n",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1161,7 +1161,7 @@
         "down": [
          {
           "type": "action",
-          "id": "n2FEXX9BQGpzKJEh1PLkZ",
+          "id": "9XMZPsgkQNjCcw-1DjY9i",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1188,7 +1188,7 @@
         "up": [
          {
           "type": "action",
-          "id": "-9Ctfutp7uupreH1p3yL6",
+          "id": "n2FEXX9BQGpzKJEh1PLkZ",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3172,7 +3172,7 @@
         "up": [
          {
           "type": "action",
-          "id": "70QJio7ZU4gUmPVkoWjtL",
+          "id": "eS6Fum16PeYiojl0PTnwz",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3199,7 +3199,7 @@
         "400": [
          {
           "type": "action",
-          "id": "gVJ02FKOioexkUL1trMIr",
+          "id": "70QJio7ZU4gUmPVkoWjtL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3559,7 +3559,7 @@
         "down": [
          {
           "type": "action",
-          "id": "eS5oJpyGVKTurplzq_yfA",
+          "id": "BmKVMTI1k7ej2S99T5Wxr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3586,7 +3586,7 @@
         "up": [
          {
           "type": "action",
-          "id": "c2zWJ3eJKUa06XnNNaWPd",
+          "id": "eS5oJpyGVKTurplzq_yfA",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3613,7 +3613,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "R3n-qcRIty8D4JiI8KM8D",
+          "id": "c2zWJ3eJKUa06XnNNaWPd",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3640,7 +3640,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "YNA8kUk_Mt79yNBm7b1z2",
+          "id": "R3n-qcRIty8D4JiI8KM8D",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5215,8 +5215,8 @@
          "valign"
         ],
         "enabled": {
-         "value": true,
-         "isExpression": false
+         "value": "$(custom:cal_browse) != 1",
+         "isExpression": true
         },
         "opacity": {
          "value": 100,
@@ -5270,7 +5270,7 @@
          "valign"
         ],
         "enabled": {
-         "value": "$(custom:cal_line) != \"\"",
+         "value": "$(custom:cal_browse) != 1 && $(custom:cal_line) != \"\"",
          "isExpression": true
         },
         "opacity": {
@@ -5325,8 +5325,8 @@
          "valign"
         ],
         "enabled": {
-         "value": true,
-         "isExpression": false
+         "value": "$(custom:cal_browse) != 1",
+         "isExpression": true
         },
         "opacity": {
          "value": 100,
@@ -5368,6 +5368,61 @@
          "value": "fit",
          "isExpression": false
         }
+       },
+       {
+        "id": "act",
+        "name": "act",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": "$(custom:cal_browse) == 1",
+         "isExpression": true
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 88,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "$(custom:cal_icon)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -5383,7 +5438,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47126/calendar/down",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47126/calendar/press",
             "isExpression": false
            },
            "cwd": {
@@ -5402,33 +5457,7 @@
           "upgradeIndex": null
          }
         ],
-        "up": [
-         {
-          "type": "action",
-          "id": "BmKVMTI1k7ej2S99T5Wxr",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47126/calendar/up",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ]
+        "up": []
        },
        "options": {
         "runWhileHeld": []
@@ -5763,7 +5792,7 @@
         "down": [
          {
           "type": "action",
-          "id": "5FJuPMPcMZniNBTZVwymy",
+          "id": "YNA8kUk_Mt79yNBm7b1z2",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5790,7 +5819,7 @@
         "up": [
          {
           "type": "action",
-          "id": "GsUaCH6Cq9_adVXbrHSYH",
+          "id": "5FJuPMPcMZniNBTZVwymy",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5817,7 +5846,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "X1UuxRPtxEusuggvtq2rD",
+          "id": "GsUaCH6Cq9_adVXbrHSYH",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5844,7 +5873,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "eS6Fum16PeYiojl0PTnwz",
+          "id": "X1UuxRPtxEusuggvtq2rD",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5969,7 +5998,7 @@
         "down": [
          {
           "type": "action",
-          "id": "ESuVqKMtiIJ0obGKB2_QC",
+          "id": "THHDtRXTLqrLLqy3503At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5996,7 +6025,7 @@
         "up": [
          {
           "type": "action",
-          "id": "6QY0HC0aFZLhiO6LA6ecA",
+          "id": "ESuVqKMtiIJ0obGKB2_QC",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6023,7 +6052,7 @@
         "400": [
          {
           "type": "action",
-          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
+          "id": "6QY0HC0aFZLhiO6LA6ecA",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6148,7 +6177,7 @@
         "down": [
          {
           "type": "action",
-          "id": "UUuaZkswN9ud5PAPapMpW",
+          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6175,7 +6204,7 @@
         "up": [
          {
           "type": "action",
-          "id": "mw6Aoeumb4cqbejYVNQd0",
+          "id": "UUuaZkswN9ud5PAPapMpW",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6298,7 +6327,7 @@
         "down": [
          {
           "type": "action",
-          "id": "4bjSxODAm1Fnx1nEN90-6",
+          "id": "mw6Aoeumb4cqbejYVNQd0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6325,7 +6354,7 @@
         "up": [
          {
           "type": "action",
-          "id": "8jmrkllUzNPJY6CS8ZsyP",
+          "id": "4bjSxODAm1Fnx1nEN90-6",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6448,7 +6477,7 @@
         "down": [
          {
           "type": "action",
-          "id": "f7k9xQwOdXw1Qb3tafqaL",
+          "id": "8jmrkllUzNPJY6CS8ZsyP",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6475,7 +6504,7 @@
         "up": [
          {
           "type": "action",
-          "id": "1w6V81qLrUqm_Yq0eB7DV",
+          "id": "f7k9xQwOdXw1Qb3tafqaL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6598,7 +6627,7 @@
         "down": [
          {
           "type": "action",
-          "id": "BoJoXiNj-b0uo0jRSctp5",
+          "id": "1w6V81qLrUqm_Yq0eB7DV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6625,7 +6654,7 @@
         "up": [
          {
           "type": "action",
-          "id": "tNM4h_30k5rzbNPfAccl7",
+          "id": "BoJoXiNj-b0uo0jRSctp5",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6748,7 +6777,7 @@
         "down": [
          {
           "type": "action",
-          "id": "DfEvaASc8m9uu4Dm5rhyn",
+          "id": "tNM4h_30k5rzbNPfAccl7",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6775,7 +6804,7 @@
         "up": [
          {
           "type": "action",
-          "id": "yK9rN837stCdSb4uOOBKY",
+          "id": "DfEvaASc8m9uu4Dm5rhyn",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6802,7 +6831,7 @@
         "400": [
          {
           "type": "action",
-          "id": "Vr3ZMVC6MhWYxzSJerJlh",
+          "id": "yK9rN837stCdSb4uOOBKY",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6927,7 +6956,7 @@
         "down": [
          {
           "type": "action",
-          "id": "sGkbE15Cm9SHYOS-W34At",
+          "id": "Vr3ZMVC6MhWYxzSJerJlh",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6954,7 +6983,7 @@
         "up": [
          {
           "type": "action",
-          "id": "xHQwMNTKuTn1ui4pSjZI0",
+          "id": "sGkbE15Cm9SHYOS-W34At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7077,7 +7106,7 @@
         "down": [
          {
           "type": "action",
-          "id": "qc26706JsftfcZpxhSaDV",
+          "id": "xHQwMNTKuTn1ui4pSjZI0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7104,7 +7133,7 @@
         "up": [
          {
           "type": "action",
-          "id": "pVNrSQy9qPf7BIHPMCrVM",
+          "id": "qc26706JsftfcZpxhSaDV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
