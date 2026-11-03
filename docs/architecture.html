@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zored/stream — архитектура</title>
+<style>
+:root{--bg:#fafaf9;--fg:#1c1c1c;--mut:#6b6b6b;--line:#c9c9c9;--box:#fff;--acc:#2563eb;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;--code:#f0efed}
+@media (prefers-color-scheme:dark){:root{--bg:#141414;--fg:#e8e8e8;--mut:#9a9a9a;--line:#4a4a4a;--box:#1f1f1f;--acc:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--code:#262626}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 -apple-system,system-ui,sans-serif}
+main{max-width:1040px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:28px;margin:0 0 4px}h2{margin:48px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}h3{margin:28px 0 6px}
+code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--code);padding:1px 4px;border-radius:4px}
+a{color:var(--acc)}
+nav{columns:2;font-size:14px;margin:16px 0}nav a{display:block}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}th,td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+.v,.a{font-size:11px;font-weight:600;padding:1px 6px;border-radius:9px;white-space:nowrap}
+.v{color:var(--ok);border:1px solid var(--ok)}.a{color:var(--warn);border:1px solid var(--warn)}
+.note{color:var(--mut);font-size:13px}
+.wrap{overflow-x:auto}
+svg{display:block;max-width:100%;height:auto;margin:12px auto}
+svg text{fill:var(--fg);font:12px ui-monospace,Menlo,monospace}
+svg .t{font:600 13px -apple-system,system-ui,sans-serif}
+svg .m{fill:var(--mut);font-size:11px}
+svg rect.b{fill:var(--box);stroke:var(--line);stroke-width:1.2}
+svg rect.k{fill:var(--box);stroke:var(--acc);stroke-width:1.6}
+svg rect.w{fill:var(--box);stroke:var(--warn);stroke-width:1.4;stroke-dasharray:4 3}
+svg line,svg path.l{stroke:var(--mut);stroke-width:1.3;fill:none}
+svg line.ll{stroke:var(--line);stroke-dasharray:3 4}
+svg .ar{fill:var(--mut)}
+svg .r{stroke:var(--bad)!important}svg text.r{fill:var(--bad)}
+svg .g{stroke:var(--ok)!important}svg text.g{fill:var(--ok)}
+</style>
+</head>
+<body><main>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ar" d="M0,0L10,5L0,10z"/></marker></defs></svg>
+
+<h1>zored/stream — архитектура</h1>
+<p class="note">Razer Stream Controller (= Loupedeck Live) + Bitfocus Companion + Go-демон <code>zored_stream</code>, macOS. Состояние на 2026-11-03.
+Метки: <span class="v">verified</span> — прочитано в коде этой сессией (<code>main.go</code>, <code>Makefile</code>, <code>ci.yml</code>, <code>deploy.mjs</code>, <code>gen_pages.py</code>), <span class="a">assumed</span> — взято только из <code>docs/*.md</code> (сами доки помечают, что проверено на устройстве).</p>
+
+<nav>
+<a href="#top">1. Верхний уровень</a><a href="#companion">2. Companion: страницы как код</a><a href="#daemon">3. Демон zored_stream</a>
+<a href="#choice">4.1 Choice mode</a><a href="#calls">4.2 Звонки VK WorkSpace</a><a href="#ai">4.3 AI limits + model switch</a>
+<a href="#dict">4.4 Диктовка + пауза музыки</a><a href="#agents">4.5 Agents waiting</a><a href="#scroll">4.6 Scroll / Ctrl+Tab</a>
+<a href="#awake">4.7 Keep-awake</a><a href="#capture">4.8 Захват крутилки</a><a href="#hp">4.9 Headphones route</a>
+<a href="#wifi">4.10 Wi-fi scan</a><a href="#np">4.11 Now Playing, seek, strip</a><a href="#inv">5. Инварианты и процесс</a>
+</nav>
+
+<h2 id="top">1. Верхний уровень</h2>
+<p>Три слоя, у каждого одна роль (инвариант <code>A1</code>): Companion рисует и запускает действия, <code>zored_stream</code> владеет состоянием и всеми вызовами ОС, <code>mediakey</code> шлёт медиаклавиши. Связь только двумя способами: Companion → демон <code>curl -fsS -m 1 -X POST http://127.0.0.1:&lt;port&gt;/…</code> в <code>exec</code>; демон → Companion <code>POST :8000/api/custom-variable/&lt;name&gt;/value</code>. <span class="v">verified</span></p>
+<div class="wrap"><svg viewBox="0 0 980 360" width="980">
+<rect class="b" x="10" y="120" width="150" height="110" rx="8"/><text class="t" x="20" y="142">Stream Controller</text><text x="20" y="162">12 тайлов, 6 крутилок</text><text x="20" y="178">8 RGB-кнопок, 2 стрипа</text><text class="m" x="20" y="198">USB CDC serial, без HID</text><text class="m" x="20" y="214">haptics 0x1B</text>
+<rect class="k" x="230" y="90" width="230" height="170" rx="8"/><text class="t" x="240" y="112">Bitfocus Companion :8000</text>
+<rect class="w" x="244" y="124" width="202" height="46" rx="6"/><text x="252" y="142">форк surface-loupedeck</text><text class="m" x="252" y="160">haptics, strip touch → POST</text>
+<text x="244" y="192">страницы MEDIA (1), TEST (2)</text><text x="244" y="210">custom variables</text><text x="244" y="228">exec: curl / mediakey</text><text class="m" x="244" y="248">HTTP API, tRPC import</text>
+<rect class="k" x="540" y="60" width="200" height="230" rx="8"/><text class="t" x="550" y="82">zored_stream (Go)</text><text class="m" x="550" y="100">LaunchAgent, signed</text>
+<text x="550" y="124">:47113 volume, NP</text><text x="550" y="140">:47114 calls</text><text x="550" y="156">:47115 ymusic</text><text x="550" y="172">:47116 usage</text><text x="550" y="188">:47117 ai + dictation</text><text x="550" y="204">:47118 brightness</text><text x="550" y="220">:47119 seek</text><text x="550" y="236">:47120 agents + choice</text><text x="550" y="252">:47121 scroll  :47122 power</text><text x="550" y="268">:47123 hp  :47124 wifi</text>
+<rect class="b" x="810" y="20" width="160" height="320" rx="8"/><text class="t" x="820" y="42">macOS / приложения</text>
+<text x="820" y="66">CoreAudio, IOBluetooth</text><text x="820" y="84">AX (Claude, YM)</text><text x="820" y="102">CGEvent (keys, wheel)</text><text x="820" y="120">DisplayServices</text><text x="820" y="138">MediaRemote (perl)</text><text x="820" y="156">VK WS gRPC</text><text x="820" y="174">Amphetamine (osascript)</text><text x="820" y="192">CoreWLAN, keychain</text><text x="820" y="210">api.anthropic.com</text><text x="820" y="228">Desktop session files</text><text x="820" y="246">iTerm2 (AppleScript)</text><text x="820" y="264">zored_wifi.app</text>
+<rect class="b" x="230" y="290" width="230" height="50" rx="8"/><text class="t" x="240" y="312">mediakey</text><text class="m" x="240" y="330">play/next/prev, Accessibility Companion</text>
+<rect class="b" x="540" y="305" width="200" height="40" rx="8"/><text class="t" x="550" y="330">Claude Code hooks</text>
+<line x1="160" y1="165" x2="228" y2="165" marker-end="url(#ar)"/><line x1="228" y1="190" x2="162" y2="190" marker-end="url(#ar)"/><text class="m" x="166" y="158">events</text><text class="m" x="166" y="206">pixels, LED</text>
+<line x1="460" y1="140" x2="538" y2="140" marker-end="url(#ar)"/><text class="m" x="466" y="132">curl -m 1 POST</text>
+<line x1="538" y1="200" x2="462" y2="200" marker-end="url(#ar)"/><text class="m" x="466" y="216">custom-variable</text>
+<line x1="345" y1="260" x2="345" y2="288" marker-end="url(#ar)"/>
+<line x1="740" y1="170" x2="808" y2="170" marker-end="url(#ar)"/><line x1="808" y1="190" x2="742" y2="190" marker-end="url(#ar)"/>
+<line x1="640" y1="305" x2="640" y2="292" marker-end="url(#ar)"/><text class="m" x="648" y="300">/agent/event</text>
+<line x1="460" y1="315" x2="808" y2="315" marker-end="url(#ar)"/>
+</svg></div>
+<ul>
+<li>Демон шлёт только изменившиеся значения и раз в 10 с (<code>resendEvery</code>) всё заново — Companion после рестарта лечится сам (<code>A4</code>). <span class="v">verified</span></li>
+<li>Форк <code>zored/companion-surface-loupedeck</code> (ветка <code>zored_stream</code>): вибрация, позиция пальца на стрипе, POST в демон напрямую (<code>/volume/drag</code>, <code>/ai/slide</code>) (<code>A10</code>). <span class="v">verified</span> роуты в <code>main.go</code>, остальное <span class="a">assumed</span></li>
+<li>Один процесс держит serial-порт: Companion, Loupedeck app или <code>tools/sniff.py</code> (<code>A8</code>). <span class="a">assumed</span></li>
+</ul>
+
+<h2 id="companion">2. Companion: страницы как код</h2>
+<div class="wrap"><svg viewBox="0 0 980 170" width="980">
+<rect class="k" x="10" y="40" width="170" height="70" rx="8"/><text class="t" x="20" y="62">tools/gen_pages.py</text><text class="m" x="20" y="82">profile mac | windows</text><text class="m" x="20" y="98">rng seeded by page name</text>
+<rect class="b" x="240" y="20" width="220" height="110" rx="8"/><text class="t" x="250" y="42">companion/* (коммитится)</text><text x="250" y="64">media-page.companionconfig</text><text x="250" y="80">test-page.companionconfig</text><text x="250" y="96">custom-variables.json</text><text class="m" x="250" y="116">+ companion/windows/</text>
+<rect class="b" x="520" y="20" width="200" height="50" rx="8"/><text class="t" x="530" y="42">check_contract.py</text><text class="m" x="530" y="60">pages ↔ daemon</text>
+<rect class="b" x="520" y="90" width="200" height="50" rx="8"/><text class="t" x="530" y="112">tools/deploy.mjs</text><text class="m" x="530" y="130">tRPC importExport.*</text>
+<rect class="k" x="780" y="90" width="190" height="50" rx="8"/><text class="t" x="790" y="112">Companion</text><text class="m" x="790" y="130">страницы 1, 2 + переменные</text>
+<line x1="180" y1="75" x2="238" y2="75" marker-end="url(#ar)"/><text class="m" x="186" y="68">make pages</text>
+<line x1="460" y1="50" x2="518" y2="45" marker-end="url(#ar)"/><text class="m" x="464" y="38">make check</text>
+<line x1="460" y1="110" x2="518" y2="115" marker-end="url(#ar)"/><text class="m" x="462" y="150">make deploy</text>
+<line x1="720" y1="115" x2="778" y2="115" marker-end="url(#ar)"/>
+</svg></div>
+<ul>
+<li><code>make deploy</code> = <code>make pages</code> → <code>node tools/deploy.mjs --vars companion/custom-variables.json media-page…:1 test-page…:2</code>: чанки по 64 КБ, sha1, <code>importExport.prepareImport.*</code>. Перезаписывает страницы 1 и 2 — деплоит один (<code>A7</code>). <span class="v">verified</span></li>
+<li><code>companion/*</code> — только build output, детерминированный; CI делает <code>make check</code> + <code>git diff --exit-code companion</code> (<code>A5</code>). <span class="v">verified</span></li>
+<li>Кастомные переменные — контракт: каждая <code>$(custom:x)</code> есть в <code>custom-variables.json</code> профиля, всё, что ставит демон, есть в mac-профиле (<code>A3</code>). <span class="a">assumed</span> (проверка в <code>check_contract.py</code>, не читал целиком)</li>
+<li>Профили: <code>gen_pages.py companion</code> (mac) и <code>gen_pages.py companion/windows windows</code>. Windows только выкидывает ячейки/переменные (<code>call_cam</code>, <code>ym_like</code>, <code>dictation</code>, <code>power_svg</code>) и меняет <code>mediakey</code> на <code>:47113/key/*</code>; mac-вывод от этого не меняется (<code>A6</code>). <span class="v">verified</span> профили, детали <span class="a">assumed</span></li>
+<li>Кнопка — <code>button-layered</code>: слои <code>canvas/box/text</code>, выражения <code>$(custom:x)</code>, наборы <code>down/up/rotate_left/rotate_right</code>, hold = числовой набор <code>"400"</code> в <code>runWhileHeld</code>. LED RGB-кнопки = фон кнопки. <span class="a">assumed</span></li>
+</ul>
+
+<h2 id="daemon">3. Демон <code>zored_stream</code></h2>
+<p>Один Go-бинарь (<code>tools/zored_stream/</code>), один HTTP-сервер на модуль, порт = флаг с дефолтом в <code>main.go</code>. macOS-API через cgo (C/ObjC файлы в пакете), MediaRemote — в дочернем <code>/usr/bin/perl</code>. <span class="v">verified</span></p>
+<table>
+<tr><th>Порт</th><th>Модуль</th><th>Файлы</th><th>Роуты (основные)</th><th>Переменные</th></tr>
+<tr><td>47113</td><td>volume, Now Playing, skip</td><td><code>volume.go bar.go audio_darwin.go nowplaying.go cover.go tint.go skip.go</code></td><td><code>/volume/{up,down,mute,drag}</code>, <code>/nowplaying/{next,prev,show}</code></td><td><code>bar_*</code>, <code>np_*</code></td></tr>
+<tr><td>47114</td><td>звонки VK WS</td><td><code>call.go</code></td><td><code>/mic/{down,up}</code>, <code>/cam/down</code>, <code>/call/end</code></td><td><code>call_mic</code>, <code>call_cam</code></td></tr>
+<tr><td>47115</td><td>Yandex Music like</td><td><code>ymusic_darwin.go ax_darwin.m</code></td><td><code>/like</code>, <code>/dislike</code></td><td><code>ym_like</code></td></tr>
+<tr><td>47116</td><td>Claude usage</td><td><code>usage.go claude_token.go</code></td><td><code>GET /usage</code>, <code>/usage/refresh</code></td><td>правый стрип</td></tr>
+<tr><td>47117</td><td>AI model + dictation</td><td><code>ai_darwin.go dictate_darwin.go</code></td><td><code>/ai/turn</code>, <code>/ai/slide</code>, <code>/dictation/{down,up}</code></td><td><code>dictation</code>, модель</td></tr>
+<tr><td>47118</td><td>brightness (+ захват)</td><td><code>brightness.go display_darwin.go</code></td><td><code>/brightness/{up,down,hold,release}</code></td><td><code>ctl_brightness</code> (пишет Companion)</td></tr>
+<tr><td>47119</td><td>seek</td><td><code>seek.go</code></td><td><code>/seek/{forward,back}</code></td><td><code>bar_mode=seek</code></td></tr>
+<tr><td>47120</td><td>agents + choice</td><td><code>agents.go agents_desktop.go choice.go choice_darwin.go</code></td><td><code>/agent/event</code>, <code>GET /agents</code>, <code>/agent/focus</code>, <code>/choice/{edge}</code>, <code>GET /choice</code></td><td><code>agents_led</code>, <code>agents_svg</code>, <code>choice_*</code></td></tr>
+<tr><td>47121</td><td>scroll</td><td><code>scroll.go scroll_darwin.go</code></td><td><code>/scroll/{forward,back,down,up}</code></td><td>—</td></tr>
+<tr><td>47122</td><td>keep-awake, sleep</td><td><code>power.go power_darwin.go</code></td><td><code>/power/{down,up}</code></td><td><code>power_svg</code></td></tr>
+<tr><td>47123</td><td>headphones</td><td><code>headphones*.go/.m</code></td><td><code>/headphones/toggle</code></td><td><code>headphones_svg</code></td></tr>
+<tr><td>47124</td><td>wi-fi</td><td><code>wifi*.go/.m</code> + <code>tools/zored_wifi</code></td><td><code>/wifi/{down,up}</code></td><td>тайл wi-fi</td></tr>
+</table>
+<p class="note">Порты и роуты <span class="v">verified</span> по <code>main.go</code>; имена переменных частично из доков <span class="a">assumed</span>.</p>
+<h3>Общие части</h3>
+<ul>
+<li><code>vars.set(name, value)</code> пропускает неизменённое, <code>forget()</code> + <code>every(resendEvery)</code> пересылает всё раз в 10 с. <span class="v">verified</span></li>
+<li>Loud fail: кривые флаги, нечитаемый <code>scroll-mode</code>, нет аудиоустройства → exit; <code>KeepAlive</code> поднимает (<code>ThrottleInterval</code> 5 с); проваленное действие = <code>409</code> + строка в логе (<code>A9</code>). <span class="a">assumed</span></li>
+<li>LaunchAgent <code>com.zored.stream.zored_stream</code>, лог <code>~/Library/Logs/zored-stream/zored_stream.log</code>, рестарт через <code>launchctl kickstart -k</code>. <span class="a">assumed</span></li>
+<li>Подпись: self-signed сертификат <code>zored-stream</code> (<code>make zored_stream-cert</code>), identifier <code>com.zored.stream.zored_stream</code> → TCC держит Accessibility после пересборки (<code>A11</code>). CI собирает с <code>SIGN=-</code>. <span class="v">verified</span> цели Makefile</li>
+<li>Тикеры анимаций 60 Hz только пока что-то движется; поллы редкие (<code>P1</code>, <code>P2</code>). <span class="a">assumed</span></li>
+</ul>
+
+<h2>4. Механизмы</h2>
+
+<h3 id="choice">4.1 Choice mode — гейт и fallback</h3>
+<p>Пока на экране карточка вопроса / permission / next-step box во фронтовом Claude Desktop или iTerm2, кнопки 1–8 отвечают на неё; своё действие пропускается (<code>F1–F3</code>). Release принадлежит своему press (<code>F2</code>).</p>
+<div class="wrap"><svg viewBox="0 0 900 300" width="900">
+<text class="t" x="40" y="20">кнопка N</text><text class="t" x="230" y="20">Companion exec</text><text class="t" x="460" y="20">:47120 choice</text><text class="t" x="700" y="20">Claude / iTerm2</text>
+<line class="ll" x1="70" y1="28" x2="70" y2="290"/><line class="ll" x1="280" y1="28" x2="280" y2="290"/><line class="ll" x1="510" y1="28" x2="510" y2="290"/><line class="ll" x1="750" y1="28" x2="750" y2="290"/>
+<line x1="510" y1="50" x2="748" y2="50" marker-end="url(#ar)"/><text class="m" x="520" y="44">каждые 500 мс: lsappinfo front + AX card</text>
+<line x1="70" y1="80" x2="278" y2="80" marker-end="url(#ar)"/><text class="m" x="80" y="74">down</text>
+<line x1="280" y1="105" x2="508" y2="105" marker-end="url(#ar)"/><text x="290" y="99">curl -f /choice/down?b=N</text>
+<line class="g" x1="510" y1="135" x2="748" y2="135" marker-end="url(#ar)"/><text class="g" x="520" y="129">карточка есть: AXPress опции</text>
+<line class="g" x1="508" y1="155" x2="282" y2="155" marker-end="url(#ar)"/><text class="g" x="300" y="170">204 → своё действие пропущено</text>
+<line class="r" x1="508" y1="210" x2="282" y2="210" marker-end="url(#ar)"/><text class="r" x="300" y="225">409 / демон лежит</text>
+<path class="l r" d="M280,230 h40 v30 h-38" marker-end="url(#ar)"/><text class="r" x="330" y="255">|| { mic / cam / hang-up / agents / dictation ; }</text>
+</svg></div>
+<ul>
+<li>Приоритет: question card &gt; permission card &gt; next-step box. LED через цвет <code>box0</code>: red = активна, green = выбрано, white = primary. <span class="a">assumed</span></li>
+<li>Тесты <code>TestChoiceGate</code>, <code>TestChoiceAction</code>, <code>TestChoiceLEDs</code>; CI проверяет, что все row-3 действия гейтятся с fallback. <span class="a">assumed</span> (имена из <code>invariants.md</code>)</li>
+<li>CLI в iTerm2: опции из hook JSON (<code>tool_input.questions</code>), ответ печатается в сессию по <code>unique id</code>. <span class="a">assumed</span></li>
+</ul>
+
+<h3 id="calls">4.2 Звонки — gRPC VK WorkSpace</h3>
+<div class="wrap"><svg viewBox="0 0 900 260" width="900">
+<text class="t" x="30" y="20">кнопки 2–4</text><text class="t" x="250" y="20">:47114 call.go</text><text class="t" x="560" y="20">vkws-call-service (QtGrpc h2c)</text>
+<line class="ll" x1="70" y1="28" x2="70" y2="250"/><line class="ll" x1="300" y1="28" x2="300" y2="250"/><line class="ll" x1="640" y1="28" x2="640" y2="250"/>
+<line x1="300" y1="50" x2="638" y2="50" marker-end="url(#ar)"/><text class="m" x="310" y="44">найти --rpc-port процесса (меняется при старте)</text>
+<line x1="300" y1="80" x2="638" y2="80" marker-end="url(#ar)"/><text x="310" y="74">SubscribeToStatusNotifications</text>
+<line x1="638" y1="105" x2="302" y2="105" marker-end="url(#ar)"/><text class="m" x="310" y="120">snapshot, дальше дельты: callIds / allCallsEnded</text>
+<line x1="300" y1="140" x2="638" y2="140" marker-end="url(#ar)"/><text x="310" y="134">SubscribeToCallNotifications(callId) → MediaState</text>
+<line x1="70" y1="175" x2="298" y2="175" marker-end="url(#ar)"/><text class="m" x="80" y="169">/mic/down, /mic/up</text>
+<line x1="300" y1="200" x2="638" y2="200" marker-end="url(#ar)"/><text x="310" y="194">ChangeMyMedia{micro, camera} (оба флага)</text>
+<line x1="298" y1="235" x2="72" y2="235" marker-end="url(#ar)"/><text class="m" x="80" y="229">call_mic / call_cam ← только из ответа</text>
+</svg></div>
+<ul>
+<li>LED показывает только то, что сообщил VK WS (<code>on/off/pending/unknown/none</code>), никогда локальный toggle; без звонка <code>409</code> (<code>F4</code>). <span class="a">assumed</span></li>
+<li>Push-to-talk: hold ≥ 300 мс, считается в демоне по времени down/up (<code>F5</code>). <span class="a">assumed</span></li>
+<li><code>EndCall</code> адресуется <code>hdr.callId</code>; без <code>reqId</code> в Header — <code>errorCode 400</code>. <span class="a">assumed</span></li>
+</ul>
+
+<h3 id="ai">4.3 AI limits + model switch</h3>
+<div class="wrap"><svg viewBox="0 0 900 200" width="900">
+<rect class="b" x="10" y="30" width="170" height="54" rx="8"/><text class="t" x="20" y="52">keychain</text><text class="m" x="20" y="70">Claude Code-credentials</text>
+<rect class="k" x="250" y="30" width="190" height="54" rx="8"/><text class="t" x="260" y="52">usage.go :47116</text><text class="m" x="260" y="70">каждые 15 мин, backoff</text>
+<rect class="b" x="520" y="10" width="200" height="40" rx="8"/><text x="530" y="35">GET /api/oauth/usage</text>
+<rect class="b" x="520" y="60" width="200" height="40" rx="8"/><text x="530" y="85">POST oauth/token (refresh)</text>
+<rect class="b" x="780" y="30" width="110" height="54" rx="8"/><text class="t" x="790" y="52">стрип</text><text class="m" x="790" y="70">+ Hammerspoon</text>
+<line x1="180" y1="57" x2="248" y2="57" marker-end="url(#ar)"/><line x1="440" y1="45" x2="518" y2="30" marker-end="url(#ar)"/><line x1="440" y1="70" x2="518" y2="80" marker-end="url(#ar)"/><line x1="440" y1="57" x2="778" y2="57" marker-end="url(#ar)"/>
+<rect class="k" x="250" y="130" width="190" height="54" rx="8"/><text class="t" x="260" y="152">ai_darwin.go :47117</text><text class="m" x="260" y="170">/ai/turn, /ai/slide</text>
+<rect class="b" x="520" y="130" width="250" height="54" rx="8"/><text class="t" x="530" y="152">Claude Desktop new-chat</text><text class="m" x="530" y="170">AX popup Model:, ⌘⇧E только в pid</text>
+<line x1="440" y1="157" x2="518" y2="157" marker-end="url(#ar)"/><line x1="100" y1="157" x2="248" y2="157" marker-end="url(#ar)"/><text class="m" x="20" y="152">крутилка / стрип</text>
+</svg></div>
+<ul>
+<li>Лимиты не тратят токены: только <code>GET /api/oauth/usage</code>, никакого <code>claude</code> CLI; refresh пишет только <code>Claude Code-credentials</code>, остальные поля сохраняет (<code>F11</code>). <span class="a">assumed</span></li>
+<li>Устаревшее серое: fetch упал / не было / старше 2 интервалов; лимит после <code>resets_at</code> сбрасывается (<code>F10</code>). Прокси через <code>-usage-proxy</code> (Go не понимает PAC). <span class="v">verified</span> флаг</li>
+<li>Модель меняется только на new-chat экране Desktop во фронте; иначе 5 с серого превью; read-back расходится → <code>error</code> (<code>F12</code>). <span class="a">assumed</span></li>
+</ul>
+
+<h3 id="dict">4.4 Диктовка с паузой музыки</h3>
+<div class="wrap"><svg viewBox="0 0 900 230" width="900">
+<text class="t" x="20" y="20">кнопка 7</text><text class="t" x="200" y="20">handlers</text><text class="t" x="380" y="20">worker (очередь)</text><text class="t" x="600" y="20">Claude AX</text><text class="t" x="770" y="20">Now Playing</text>
+<line class="ll" x1="50" y1="28" x2="50" y2="220"/><line class="ll" x1="230" y1="28" x2="230" y2="220"/><line class="ll" x1="430" y1="28" x2="430" y2="220"/><line class="ll" x1="640" y1="28" x2="640" y2="220"/><line class="ll" x1="810" y1="28" x2="810" y2="220"/>
+<line x1="50" y1="50" x2="228" y2="50" marker-end="url(#ar)"/><text class="m" x="60" y="44">/dictation/down</text>
+<line x1="228" y1="70" x2="52" y2="70" marker-end="url(#ar)"/><text class="m" x="60" y="85">204 сразу</text>
+<line x1="230" y1="95" x2="428" y2="95" marker-end="url(#ar)"/><text class="m" x="240" y="89">event + timestamp</text>
+<line x1="430" y1="115" x2="638" y2="115" marker-end="url(#ar)"/><text class="m" x="440" y="109">AXPress record</text>
+<line x1="430" y1="140" x2="808" y2="140" marker-end="url(#ar)"/><text class="m" x="440" y="134">off→on: играет? pause (запомнить app+title)</text>
+<line x1="430" y1="175" x2="638" y2="175" marker-end="url(#ar)"/><text class="m" x="440" y="169">stop, ждать 700 мс тишины, Return</text>
+<line x1="430" y1="205" x2="808" y2="205" marker-end="url(#ar)"/><text class="m" x="440" y="199">on→off: play, если тот же трек и всё ещё пауза</text>
+</svg></div>
+<ul>
+<li>Жесты: hold = push-to-talk, tap = старт, tap = стоп+отправка, hold во время записи = стоп без отправки. Пустой транскрипт не шлётся (<code>F9</code>). <span class="a">assumed</span></li>
+<li>Музыка: явные <code>pause</code>/<code>play</code> через stdin perl-хелпера, не toggle; resume только если ничего не играло (с 2 с после паузы) (<code>F8</code>, тест <code>TestDictationMusic</code>). <span class="a">assumed</span></li>
+</ul>
+
+<h3 id="agents">4.5 Agents waiting — hooks + Desktop unread</h3>
+<div class="wrap"><svg viewBox="0 0 900 200" width="900">
+<rect class="b" x="10" y="20" width="200" height="60" rx="8"/><text class="t" x="20" y="42">Claude Code hooks</text><text class="m" x="20" y="60">async, curl -m 1 --noproxy || true</text>
+<rect class="b" x="10" y="110" width="200" height="60" rx="8"/><text class="t" x="20" y="132">Desktop session files</text><text class="m" x="20" y="150">lastTurnEdgeAt &gt; lastFocusedAt</text>
+<rect class="k" x="300" y="55" width="210" height="80" rx="8"/><text class="t" x="310" y="77">agents.go :47120</text><text class="m" x="310" y="97">needs input → done → working</text><text class="m" x="310" y="113">expiry 10 с: pid, TTL 4 ч</text>
+<rect class="b" x="600" y="20" width="290" height="50" rx="8"/><text x="610" y="50">agents_led (кнопка 6), agents_svg (тайл)</text>
+<rect class="b" x="600" y="110" width="290" height="60" rx="8"/><text class="t" x="610" y="132">focus</text><text class="m" x="610" y="150">claude://code/continue?session= | iTerm2 | open -b</text>
+<line x1="210" y1="50" x2="298" y2="80" marker-end="url(#ar)"/><text class="m" x="220" y="56">/agent/event</text><line x1="210" y1="140" x2="298" y2="115" marker-end="url(#ar)"/><text class="m" x="220" y="160">glob каждые 10 с</text>
+<line x1="510" y1="80" x2="598" y2="45" marker-end="url(#ar)"/><line x1="510" y1="110" x2="598" y2="140" marker-end="url(#ar)"/>
+</svg></div>
+<ul>
+<li>Хуки ставит <code>make agent-hooks</code> (<code>tools/agent_hooks.py</code>) в <code>~/.claude/settings.json</code>; никогда не блокируют агента (<code>S2</code>, проверяет CI). <span class="v">verified</span> цель Makefile</li>
+<li>Desktop "done" снимается только когда файл сессии говорит "прочитано" — не <code>SessionEnd</code>, не мёртвый pid, не рестарт демона (<code>F14</code>). <span class="a">assumed</span></li>
+</ul>
+
+<h3 id="scroll">4.6 Scroll / Ctrl+Tab — Ctrl всегда отпускается</h3>
+<div class="wrap"><svg viewBox="0 0 900 150" width="900">
+<rect class="b" x="10" y="40" width="140" height="50" rx="8"/><text class="t" x="20" y="70">click</text>
+<rect class="k" x="210" y="20" width="160" height="90" rx="8"/><text class="t" x="220" y="42">wheel ⇄ tab</text><text class="m" x="220" y="62">scroll-mode файл</text><text class="m" x="220" y="80">битый → exit</text>
+<rect class="b" x="440" y="10" width="200" height="44" rx="8"/><text x="450" y="37">wheel: CGScrollWheel 1/2/4/8</text>
+<rect class="b" x="440" y="70" width="200" height="60" rx="8"/><text x="450" y="92">tab: Ctrl↓, Tab (+Shift)</text><text class="m" x="450" y="112">kCGHIDEventTap</text>
+<rect class="w" x="700" y="60" width="190" height="80" rx="8"/><text class="t r" x="710" y="82">Ctrl↑ когда:</text><text class="m" x="710" y="100">500 мс после детента</text><text class="m" x="710" y="114">press, SIGINT/SIGTERM</text><text class="m" x="710" y="128">один раз на старте</text>
+<line x1="150" y1="65" x2="208" y2="65" marker-end="url(#ar)"/><line x1="370" y1="50" x2="438" y2="32" marker-end="url(#ar)"/><line x1="370" y1="80" x2="438" y2="100" marker-end="url(#ar)"/><line x1="640" y1="100" x2="698" y2="100" marker-end="url(#ar)"/>
+</svg></div>
+<p><code>F6</code>, <code>F7</code>, <code>S1</code>: тесты <code>TestScrollTabReleasesCtrl</code>, <code>TestScrollPressReleasesCtrl</code>, <code>TestScrollSignalReleasesCtrl</code>, <code>TestScrollModes</code>. Press + turn = горизонталь. <span class="v">verified</span> роуты, <span class="a">assumed</span> тайминги</p>
+
+<h3 id="awake">4.7 Keep-awake (Amphetamine)</h3>
+<div class="wrap"><svg viewBox="0 0 900 140" width="900">
+<line x1="40" y1="70" x2="860" y2="70"/><text class="m" x="40" y="95">0</text><text class="m" x="300" y="95">1 с</text><text class="m" x="560" y="95">3 с</text>
+<line x1="300" y1="60" x2="300" y2="80"/><line x1="560" y1="60" x2="560" y2="80"/>
+<text x="60" y="55">tap: toggle 1 ч сессии</text><text class="r" x="320" y="55">release: end + IOPMSleepSystem</text><text x="580" y="55">release: ничего</text>
+<text class="m" x="40" y="125">после включения 5 с: крутилка справа, ряд 1 = длина 15 мин…12 ч, рестарт сессии через 500 мс после последнего поворота</text>
+</svg></div>
+<p><code>power.go</code>: тайминги в демоне (не 400 мс hold Companion), состояние из Amphetamine через <code>osascript</code> каждые 2 с (<code>F16</code>, <code>S4</code>). Сон ни разу не триггерился. <span class="a">assumed</span></p>
+
+<h3 id="capture">4.8 Захват крутилки справа, ряд 1</h3>
+<p>Крутилка по умолчанию = яркость Mac (hold = яркость контроллера). Power и wi-fi временно её перехватывают: <span class="v">verified</span> в <code>main.go</code>:</p>
+<pre><code>/brightness/up:  if pw.turn(1) || wf.turn(1) { return br.level() }  else br.turn(1)</code></pre>
+<div class="wrap"><svg viewBox="0 0 900 120" width="900">
+<rect class="b" x="10" y="35" width="150" height="50" rx="8"/><text x="20" y="64">/brightness/up</text>
+<rect class="k" x="220" y="10" width="200" height="40" rx="8"/><text x="230" y="35">pw.turn: 5 с после вкл</text>
+<rect class="k" x="220" y="70" width="200" height="40" rx="8"/><text x="230" y="95">wf.turn: 5 с после touch</text>
+<rect class="b" x="500" y="35" width="200" height="50" rx="8"/><text x="510" y="64">br.turn: DisplayServices</text>
+<line x1="160" y1="55" x2="218" y2="30" marker-end="url(#ar)"/><line x1="160" y1="65" x2="218" y2="90" marker-end="url(#ar)"/><line x1="420" y1="60" x2="498" y2="60" marker-end="url(#ar)"/><text class="m" x="430" y="54">false, false</text>
+</svg></div>
+<p>Ответ всегда = яркость контроллера текстом, Companion пишет её в <code>ctl_brightness</code> и делает <code>set_brightness</code> (пол 10 %, <code>F17</code>).</p>
+
+<h3 id="hp">4.9 Headphones route</h3>
+<ul>
+<li><code>/headphones/toggle</code> возвращается сразу, переключение в фоне. On: <code>IOBluetoothDevice openConnection</code> к Accentum, ждать до 10 с CoreAudio-устройство, default output+input. Off: output = <code>Logi*</code> иначе built-in, input = USB иначе built-in, <code>closeConnection</code>. <span class="a">assumed</span></li>
+<li>Авто-роут: опрос 2 с, новый <code>Logi*</code>/USB, пока output не Bluetooth → колонки. Только на появление — ручной выбор не перебивается. <span class="a">assumed</span></li>
+<li>Нужен <code>NSBluetoothAlwaysUsageDescription</code> в <code>Info.plist</code>, вшитом через <code>-sectcreate __TEXT __info_plist</code>. Тайл: жёлтый при переключении, красный 3 с при ошибке. <span class="a">assumed</span></li>
+</ul>
+
+<h3 id="wifi">4.10 Wi-fi scan через helper app</h3>
+<div class="wrap"><svg viewBox="0 0 900 170" width="900">
+<rect class="k" x="10" y="50" width="180" height="60" rx="8"/><text class="t" x="20" y="72">wifi.go :47124</text><text class="m" x="20" y="92">нет Location grant</text>
+<rect class="b" x="260" y="10" width="250" height="60" rx="8"/><text class="t" x="270" y="32">zored_wifi.app (LSUIElement)</text><text class="m" x="270" y="52">свой Location grant, CoreWLAN scan</text>
+<rect class="b" x="260" y="100" width="250" height="60" rx="8"/><text class="t" x="270" y="122">System.keychain AirPort</text><text class="m" x="270" y="142">известные сети</text>
+<rect class="b" x="590" y="50" width="300" height="60" rx="8"/><text class="t" x="600" y="72">join</text><text class="m" x="600" y="92">networksetup -setairportnetwork en0</text>
+<line x1="190" y1="65" x2="258" y2="40" marker-end="url(#ar)"/><text class="m" x="196" y="40">open -g -n -W</text>
+<line x1="258" y1="55" x2="192" y2="80" marker-end="url(#ar)"/><text class="m" x="196" y="100">ssid\trssi в файл</text>
+<line x1="190" y1="95" x2="258" y2="125" marker-end="url(#ar)"/>
+<line x1="510" y1="80" x2="588" y2="80" marker-end="url(#ar)"/><text class="m" x="516" y="72">2 с паузы</text>
+</svg></div>
+<ul>
+<li>Почему <code>open</code>: дочерний процесс наследовал бы grant демона (его нет); без Location все источники SSID редактированы. <span class="a">assumed</span></li>
+<li>Hold ≥ 400 мс = питание; touch = 5 с выбора сети крутилкой (захват, 4.8); join только после 2 с на другой сети (<code>F21</code>, тесты <code>TestWifiOrder</code>, <code>TestScanNetworks</code>). <span class="v">verified</span> роуты, поллы <code>wifiPollEvery</code>/<code>wifiProbeEvery</code></li>
+</ul>
+
+<h3 id="np">4.11 Now Playing, seek, рендер стрипа</h3>
+<div class="wrap"><svg viewBox="0 0 900 190" width="900">
+<rect class="b" x="10" y="60" width="200" height="70" rx="8"/><text class="t" x="20" y="82">/usr/bin/perl + dylib</text><text class="m" x="20" y="100">MediaRemote (Apple-signed)</text><text class="m" x="20" y="116">JSON lines, 0.5 с</text>
+<rect class="k" x="300" y="40" width="230" height="110" rx="8"/><text class="t" x="310" y="62">nowplaying.go</text><text class="m" x="310" y="82">elapsed + (now − at) × rate</text><text class="m" x="310" y="98">tint.go: акцент обложки</text><text class="m" x="310" y="114">cover.go: glyph 60 Hz</text><text class="m" x="310" y="130">seek.go: ≤ 1 раз/150 мс</text>
+<rect class="b" x="620" y="20" width="270" height="150" rx="8"/><text class="t" x="630" y="42">переменные → Companion</text><text x="630" y="64">np_svg (base64 SVG data URI)</text><text x="630" y="82">np_progress, np_tint</text><text x="630" y="100">np_art (JPEG ≤160 px)</text><text x="630" y="118">np_glyph, np_skip(_x)</text><text x="630" y="136">bar_value / bar_alpha / bar_mode</text><text class="m" x="630" y="156">Skia рисует слои</text>
+<line x1="210" y1="85" x2="298" y2="85" marker-end="url(#ar)"/><line x1="298" y1="115" x2="212" y2="115" marker-end="url(#ar)"/><text class="m" x="216" y="132">stdin: seek / pause / play</text>
+<line x1="530" y1="95" x2="618" y2="95" marker-end="url(#ar)"/>
+</svg></div>
+<ul>
+<li>Perl: с macOS 15.4 MediaRemote ничего не отдаёт сторонним процессам; Apple-подписанный perl с нужным entitlement — отдаёт. Ребёнок перезапускается через 1 с. <span class="a">assumed</span>; флаги <code>-nowplaying-script</code>/<code>-nowplaying-lib</code> <span class="v">verified</span></li>
+<li>Seek: цель клампится в 0 … duration − 1 с, последняя цель всегда уходит (<code>F18</code>). Стрип 48×258, 6 % inset, 3 ячейки = 3 рендера на кадр (<code>D2</code>, <code>D3</code>, <code>P3</code>). <span class="a">assumed</span></li>
+<li>Общий бар левого стрипа (<code>bar.go</code>): volume / mac / ctl / seek, кто двигал последним. <span class="a">assumed</span></li>
+</ul>
+
+<h2 id="inv">5. Инварианты и процесс</h2>
+<table>
+<tr><th>Чем проверяется</th><th>Что</th></tr>
+<tr><td>CI job <code>pages</code> (ubuntu)</td><td><code>make check</code> = <code>gen_pages.py</code> ×2 + <code>check_contract.py</code>; <code>git diff --exit-code companion</code> <span class="v">verified</span></td></tr>
+<tr><td>CI job <code>build</code> (macos)</td><td><code>make build</code> (подпись <code>-</code>), <code>go vet</code>, <code>go test</code> в <code>tools/zored_stream</code> <span class="v">verified</span></td></tr>
+<tr><td>Go-тесты</td><td>choice gate/action/LEDs, scroll Ctrl release, dictation music, agent order, Desktop scan, limits stale, wifi <span class="a">assumed</span></td></tr>
+<tr><td>Код</td><td>call LEDs, F12 model switch, F15 like, brightness floor, seek clamp</td></tr>
+<tr><td>Док / руками</td><td>A7 деплой по одному, A8 serial, S3–S6 (ключи, сон, прошивка, секреты), стиль D1–D4, проверки на устройстве</td></tr>
+</table>
+<p>Полный список с номерами — <a href="invariants.md" target="_blank">invariants.md</a>. Изменить инвариант = назвать номер в коммите, поправить файл и проверку в том же коммите.</p>
+<h3>Процесс</h3>
+<ul>
+<li>Мастер-сессия ведёт <code>PLAN.md</code> и карту свободных контролов; каждая новая задача — свежая дочерняя сессия (<code>R3</code>).</li>
+<li>Только одна сессия правит <code>gen_pages.py</code> или гоняет <code>make deploy</code> (<code>A7</code>).</li>
+<li>Цикл: правка <code>gen_pages.py</code> → <code>make deploy</code> → <code>make test</code> → проверка входов (лог/<code>custom_log</code>), состояния (HTTP API), вида (<code>:8000/buttons/1</code>); стрипы и haptics — только на устройстве.</li>
+<li>Коммит только своих путей: <code>git -C &lt;repo&gt; commit -m main -- &lt;paths&gt;</code>. Пользователь сам: <code>make zored_stream-cert</code>, <code>make companion</code>, <code>make agent-hooks</code>, TCC-гранты.</li>
+</ul>
+<p class="note">Доки: <a href="daemon.md" target="_blank">daemon</a> · <a href="companion.md" target="_blank">companion</a> · <a href="controls.md" target="_blank">controls</a> · <a href="macos.md" target="_blank">macos</a> · <a href="vkcall.md" target="_blank">vkcall</a> · <a href="ai.md" target="_blank">ai</a> · <a href="ai-switch.md" target="_blank">ai-switch</a> · <a href="agents.md" target="_blank">agents</a> · <a href="ymusic.md" target="_blank">ymusic</a> · <a href="device.md" target="_blank">device</a> · <a href="windows.md" target="_blank">windows</a></p>
+</main></body></html>

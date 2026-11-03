@@ -18,6 +18,7 @@ Status and next steps: `PLAN.md`.
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `zored_stream` module, dead ends
 - `docs/windows.md` — port plan: what carries over, what needs a Windows build
 - `docs/device.md` — USB, raw protocol events, `tools/sniff.py`, firmware
+- `docs/architecture.html` — architecture overview with diagrams: layers, pages pipeline, daemon modules, mechanisms, invariants
 
 ## Loop
 
