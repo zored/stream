@@ -105,10 +105,12 @@ func unreadSVG(apps []*unreadApp, now time.Time) string {
 	step := 88.0 / float64(len(apps))
 	for i, a := range apps {
 		cx := 6 + step*(float64(i)+0.5)
+		count := capped(a.badge, 99)
 		fmt.Fprintf(&b, `<circle cx="%.1f" cy="40" r="20" fill="%s"/>`+
-			`<text x="%.1f" y="40" text-anchor="middle" dominant-baseline="central" font-family="JetBrains Mono" font-size="18" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke">%s</text>`+
-			`<text x="%.1f" y="76" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#808080">%s</text>`,
-			cx, a.fill, cx, capped(a.badge, 99), cx, ago(a.lastAt, now))
+			`<text x="%.1f" y="46.5" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="#000" stroke="#000" stroke-width="4" stroke-linejoin="round">%s</text>`+
+			`<text x="%.1f" y="46.5" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="#fff">%s</text>`+
+			`<text x="%.1f" y="81" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#808080">%s</text>`,
+			cx, a.fill, cx, count, cx, count, cx, ago(a.lastAt, now))
 	}
 	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + b.String() + `</svg>`)
 }
