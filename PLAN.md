@@ -16,7 +16,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats (in progress), `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
+| tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
 | buttons `3/0` KVM (in progress), `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/4`, `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
@@ -36,7 +36,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   verified by the user: calls reconnect after a VK WorkSpace restart, seek + cover with Chrome, keep-awake hold → sleep;
   headphones tile `0/4` — Accentum BT toggle, output icon (speaker/headphones, yellow while connecting, red on error), KVM auto route
   Logi + USB camera, port 47123 ([macos.md](docs/macos.md)); wi-fi tile `0/3` — hold toggles power, touch = 5 s network pick on
-  крутилка справа, ряд 1, name on the right strip and tile, scan via `zored_wifi.app` (Location permission), port 47124; invariant F21;
+  крутилка справа, ряд 1, name on the right strip and tile, port 47124; invariant F21;
   [architecture.html](docs/architecture.html) — layers, pages pipeline, daemon modules, mechanisms, invariants (11 diagrams);
   wi-fi join by clicking the network in Control Center's Wi-Fi details (no password prompts), then Viscosity `Barbos_SE` reconnect
   (`-wifi-vpn`), VPN dot on the tile, hotspot icon, no-internet dot; keep-awake: a tap that turns it off blanked the display
@@ -61,7 +61,13 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   (`3d012d5`, `ab4ef3d`); tile swipes on the play tile `1/2`: left/right = prev/next, up/down = like/dislike, touches pinned to the
   start tile so a drag no longer sticks a tile (fork `f0820fa`, stream `2e83202`, verified on the device); perf pass: forks at idle
   9/s → 0 (frontmost via `NSWorkspaceDidActivateApplicationNotification`, Amphetamine via an in-process IOPM check, Viscosity via
-  utun), CPU ~17 % → 8–14 % (`448f726`, `45467da`)
+  utun), CPU ~17 % → 8–14 % (`448f726`, `45467da`); round 2: one AX walk for choice, a gate for Yandex Music, render keyed by
+  frame → ~3 % (`d2699fc`, `a6f761a`)
+- 2026-11-04: unread Telegram / VK WorkSpace on tile `2/2` under the call layer: Dock badges via `AXStatusLabel`, banner titles from
+  Notification Center via AX, eye icon, press opens the app, port 47130 ([unread.md](docs/unread.md)); docs refreshed against the
+  code — `controls.md` layout, `invariants.md` A2/A6/P2 + 8 manual checks, `daemon.md` module table, `README.md` setup (no `swiftc`,
+  `m1ddc`, permissions), `macos.md`, `windows.md`, `ymusic.md` (`9180ee6`); note: `zored_wifi.app` was dropped earlier, SSID comes from
+  `ipconfig` and the network list from Control Center; кнопка 1 (KVM) is mac-only in the Windows profile
 
 ## Next
 
@@ -77,14 +83,15 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Calendar tile on the device: emoji, wrapping, list on the knob; hold on an event opens it in Calendar (not run)
 - [ ] Tab mode: press + turn крутилка справа, ряд 3 cycles windows (checked over HTTP only)
 - [ ] Emoji picker on the device: look, swipe + inertia, typing into a field, haptics (checked over the API only)
+- [ ] Unread tile on the device; choice cards and Yandex Music like after the perf round 2 (not run live)
+- [ ] Clock timers and the date tile on the device (an alarm at 00:05 appeared once — created by a turn at 0? check)
 
 ### More buttons and actions
 
 New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
 
 - [ ] Camera tile does something else outside a call (layers, F23)
-- [ ] In progress (child session): unread chats on tile `2/2` outside a call: Dock badge via AX for Telegram + VK WorkSpace, slide through
-  the unread chats' avatars/letters, press opens the app
+- [ ] Unread tile: slide through the unread chats' avatars/letters (today: badge count + eye icon, press opens the app)
 - [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` already reads it via `lsappinfo` and can push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
 
@@ -94,7 +101,7 @@ Desk and display:
 - [ ] In progress (child session): KVM switch to Windows on кнопка 1 — `m1ddc set input 15` (MSI 321URX, from `~/switch_to_windows.command`)
 - [ ] Monitor brightness, PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] Perf, next round: SVG/PNG render + GC from animations and `tile*.publish` every 0.25 s; volume via CoreAudio listeners instead of the 0.25 s poll
+- [ ] Perf, next round: volume via CoreAudio listeners instead of the 0.25 s poll; target P2 "idle ~0" (now ~3 % of one core)
 
 Windows and apps:
 - [ ] Frontmost app icon on a tile, press cycles its windows
