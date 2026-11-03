@@ -182,11 +182,21 @@ func (n *nowPlaying) snapshot() track {
 func (n *nowPlaying) seek(seconds float64) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
+	n.current.Elapsed, n.current.At = seconds, float64(time.Now().UnixNano())/1e9
+	return n.send(fmt.Sprintf("seek %.3f", seconds))
+}
+
+func (n *nowPlaying) setPlaying(play bool) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	return n.send(map[bool]string{true: "play", false: "pause"}[play])
+}
+
+func (n *nowPlaying) send(command string) error {
 	if n.commands == nil {
 		return errors.New("now playing helper is not running")
 	}
-	n.current.Elapsed, n.current.At = seconds, float64(time.Now().UnixNano())/1e9
-	_, err := fmt.Fprintf(n.commands, "seek %.3f\n", seconds)
+	_, err := fmt.Fprintln(n.commands, command)
 	return err
 }
 

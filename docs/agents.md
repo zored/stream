@@ -103,6 +103,11 @@ Verified 2026-11-03 with `say` into the mic: all four, the sent ones arrived as 
   Errors go to the log.
 - Claude is activated first when it is in the background. `dictation` (`on`/`off`) is read every second, so dictation
   started with the mouse lights the LED too.
+- Music: on the off→on edge of `dictation` (any start: кнопка 7, mouse) the daemon pauses Now Playing if it plays and remembers
+  app + title; on the on→off edge (stop, send, cancel, error, Claude window gone) it resumes only that same app + title,
+  only if it is still paused and nothing played meanwhile (checked from 2 s after the pause, while the helper catches up).
+  Explicit `pause`/`play` through `MRMediaRemoteSendCommand` in the Now Playing helper (`nowplaying.m`, stdin commands
+  like `seek`), not the play/pause toggle key. Verified 2026-11-03 with Yandex Music: paused on tap, resumed on stop.
 - The bundle has `dictationShortcut` (`default` / `off` / an accelerator) in the app preferences, but the default key
   lives in the claude.ai frontend, not in `app.asar` (read); AX avoids depending on it.
 

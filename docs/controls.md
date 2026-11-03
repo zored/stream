@@ -145,6 +145,9 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | tap while recording | stops and sends |
 | hold while recording | stops, leaves the text in the composer, no send |
 
+Music that plays when recording starts pauses and resumes when it ends (also when started or stopped with the mouse),
+unless the track or player changed or playback was started meanwhile.
+
 [agents.md](agents.md#dictation)
 
 ## Right strip — AI limits + model

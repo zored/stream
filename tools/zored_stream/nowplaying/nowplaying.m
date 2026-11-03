@@ -8,6 +8,9 @@ typedef void (*GetIsPlaying)(dispatch_queue_t, void (^)(Boolean));
 typedef void (*GetNowPlayingClient)(dispatch_queue_t, void (^)(id));
 typedef CFStringRef (*GetClientBundleIdentifier)(id);
 typedef void (*SetElapsedTime)(double);
+typedef Boolean (*SendCommand)(int, CFDictionaryRef);
+
+enum { CommandPlay = 0, CommandPause = 1 };
 
 static const double PollSeconds = 0.5;
 static const int ArtworkPixels = 160;
@@ -18,6 +21,7 @@ static GetIsPlaying getIsPlaying;
 static GetNowPlayingClient getNowPlayingClient;
 static GetClientBundleIdentifier getClientBundleIdentifier;
 static SetElapsedTime setElapsedTime;
+static SendCommand sendCommand;
 static NSMutableDictionary *state;
 static NSData *last;
 static NSData *artworkSource;
@@ -123,6 +127,12 @@ static void command(NSString *line) {
         poll();
         return;
     }
+    if (words.count == 1 && ([words[0] isEqualToString:@"play"] || [words[0] isEqualToString:@"pause"])) {
+        if (!sendCommand([words[0] isEqualToString:@"play"] ? CommandPlay : CommandPause, NULL))
+            fprintf(stderr, "nowplaying: %s was not delivered\n", line.UTF8String);
+        poll();
+        return;
+    }
     fprintf(stderr, "nowplaying: unknown command %s\n", line.UTF8String);
 }
 
@@ -149,7 +159,8 @@ void nowplaying_main(void *perl, void *cv) {
     getNowPlayingClient = (GetNowPlayingClient)dlsym(mediaRemote, "MRMediaRemoteGetNowPlayingClient");
     getClientBundleIdentifier = (GetClientBundleIdentifier)dlsym(mediaRemote, "MRNowPlayingClientGetBundleIdentifier");
     setElapsedTime = (SetElapsedTime)dlsym(mediaRemote, "MRMediaRemoteSetElapsedTime");
-    if (!getNowPlayingInfo || !getIsPlaying || !getNowPlayingClient || !getClientBundleIdentifier || !setElapsedTime) die("MediaRemote symbols missing");
+    sendCommand = (SendCommand)dlsym(mediaRemote, "MRMediaRemoteSendCommand");
+    if (!getNowPlayingInfo || !getIsPlaying || !getNowPlayingClient || !getClientBundleIdentifier || !setElapsedTime || !sendCommand) die("MediaRemote symbols missing");
 
     state = [NSMutableDictionary dictionaryWithDictionary:@{@"title": @"", @"artist": @"", @"playing": @NO, @"app": @"", @"artwork": @"",
                                                              @"duration": @0, @"elapsed": @0, @"rate": @0, @"at": @0}];

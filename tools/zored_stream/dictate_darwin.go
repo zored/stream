@@ -16,14 +16,15 @@ import (
 )
 
 const (
-	dictateIdle      = "Press and hold to record"
-	dictateRecording = "Stop dictation"
-	dictatePrompt    = "Prompt"
-	dictatePollEvery = time.Second
-	dictateHold      = 400 * time.Millisecond
-	dictateSettle    = 700 * time.Millisecond
-	dictateFinal     = 4 * time.Second
-	keyReturn        = 36
+	dictateIdle       = "Press and hold to record"
+	dictateRecording  = "Stop dictation"
+	dictatePrompt     = "Prompt"
+	dictatePollEvery  = time.Second
+	dictateHold       = 400 * time.Millisecond
+	dictateMusicGrace = 2 * time.Second
+	dictateSettle     = 700 * time.Millisecond
+	dictateFinal      = 4 * time.Second
+	keyReturn         = 36
 )
 
 var (
@@ -39,14 +40,46 @@ type dictateEvent struct {
 type dictation struct {
 	mu      sync.Mutex
 	vars    *vars
+	np      *nowPlaying
 	events  chan dictateEvent
 	downAt  time.Time
 	pressed bool
 	started bool
+	was     bool
+	paused  *track
+	pauseAt time.Time
 }
 
-func newDictation(v *vars) *dictation {
-	return &dictation{vars: v, events: make(chan dictateEvent, 16)}
+func newDictation(v *vars, np *nowPlaying) *dictation {
+	return &dictation{vars: v, np: np, events: make(chan dictateEvent, 16)}
+}
+
+func (d *dictation) music(on bool) {
+	t := d.np.snapshot()
+	switch {
+	case on && !d.was && t.Playing:
+		if err := d.np.setPlaying(false); err != nil {
+			log.Printf("dictation: pause music: %v", err)
+			return
+		}
+		d.paused, d.pauseAt = &t, time.Now()
+		log.Printf("dictation: paused %s %q", t.App, t.Title)
+	case on && d.paused != nil && t.Playing && time.Since(d.pauseAt) > dictateMusicGrace:
+		log.Printf("dictation: music started meanwhile, not resuming")
+		d.paused = nil
+	case !on && d.was && d.paused != nil:
+		p := d.paused
+		d.paused = nil
+		if t.Playing || t.App != p.App || t.Title != p.Title {
+			log.Printf("dictation: not resuming %s %q, now %s %q playing=%v", p.App, p.Title, t.App, t.Title, t.Playing)
+			return
+		}
+		if err := d.np.setPlaying(true); err != nil {
+			log.Printf("dictation: resume music: %v", err)
+			return
+		}
+		log.Printf("dictation: resumed %s %q", t.App, t.Title)
+	}
 }
 
 func (d *dictation) push(down bool) error {
@@ -137,6 +170,8 @@ func (d *dictation) recording() (bool, error) {
 		state = "none"
 	}
 	d.vars.set("dictation", state)
+	d.music(on)
+	d.was = on
 	return on, err
 }
 

@@ -159,7 +159,7 @@ func main() {
 	})
 	ai := newAISwitch(v, us.focus)
 	go every(aiPollEvery, ai.poll)
-	dict := newDictation(v)
+	dict := newDictation(v, np)
 	go dict.run()
 	go every(dictatePollEvery, dict.poll)
 	go serve(*aiAddr, func(mux *http.ServeMux) {
