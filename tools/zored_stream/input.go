@@ -5,10 +5,20 @@ import (
 	"html"
 	"log"
 	"strings"
+	"sync"
+	"time"
+)
+
+const (
+	inputFadeFor    = 300 * time.Millisecond
+	inputFadeFrames = 12
 )
 
 type input struct {
-	vars *vars
+	mu    sync.Mutex
+	vars  *vars
+	shown string
+	gen   int
 }
 
 func (in *input) publish() {
@@ -17,7 +27,31 @@ func (in *input) publish() {
 		log.Print(err)
 		return
 	}
-	in.vars.set("input_svg", inputSVG(lang))
+	code := inputCode(lang)
+	in.mu.Lock()
+	from := in.shown
+	in.shown = code
+	in.gen++
+	gen := in.gen
+	in.mu.Unlock()
+	if from == "" || from == code {
+		in.vars.set("input_svg", inputSVG(code, code, 1))
+		return
+	}
+	go in.fade(from, code, gen)
+}
+
+func (in *input) fade(from, to string, gen int) {
+	for i := 1; i <= inputFadeFrames; i++ {
+		in.mu.Lock()
+		stale := in.gen != gen
+		in.mu.Unlock()
+		if stale {
+			return
+		}
+		in.vars.set("input_svg", inputSVG(from, to, float64(i)/inputFadeFrames))
+		time.Sleep(inputFadeFor / inputFadeFrames)
+	}
 }
 
 var inputFlags = map[string]string{
@@ -27,14 +61,24 @@ var inputFlags = map[string]string{
 		`<path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="12"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/>`,
 }
 
-func inputSVG(lang string) string {
+func inputCode(lang string) string {
 	code, _, _ := strings.Cut(strings.ToLower(lang), "-")
-	body, ok := inputFlags[code]
-	if !ok {
-		return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`+
-			`<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="44" fill="#fff">%s</text></svg>`,
-			html.EscapeString(code)))
+	return code
+}
+
+func inputLayer(code string, opacity float64) string {
+	if body, ok := inputFlags[code]; ok {
+		return fmt.Sprintf(`<g opacity="%.2f" clip-path="url(#c)"><g transform="translate(20 30)">%s</g></g>`, opacity, body)
 	}
-	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><rect y="20" width="100" height="60" rx="4"/></clipPath>` +
-		`<g clip-path="url(#c)"><g transform="translate(0 20) scale(1.6667 1.5)">` + body + `</g></g></svg>`)
+	return fmt.Sprintf(`<text opacity="%.2f" x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="32" fill="#fff">%s</text>`,
+		opacity, html.EscapeString(code))
+}
+
+func inputSVG(from, to string, t float64) string {
+	layers := inputLayer(to, t)
+	if from != to && t < 1 {
+		layers = inputLayer(from, 1-t) + layers
+	}
+	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><rect x="20" y="30" width="60" height="40" rx="3"/></clipPath>` +
+		layers + `</svg>`)
 }
