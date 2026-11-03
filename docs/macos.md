@@ -113,6 +113,9 @@ keeps the on/off state itself, so a change from the monitor menu puts it out of 
   (verified: 1:00 → 1:45, Amphetamine 6300 s, display sleep not allowed).
 - First run: macOS asks to let `zored_stream` control Amphetamine (Automation); until allowed, `osascript` hangs and the tile stays off.
 - Amphetamine must be running *(assumed: `tell application` launches it otherwise)*.
+- Tap off also calls `IOPMAssertionDeclareUserActivity`: the session's display assertion hid the idle timer, so with no keyboard
+  or mouse input for longer than `displaysleep` the screen went dark the moment the session ended and looked like sleep
+  (verified in `pmset -g log`: Amphetamine release and "Display is turned off" in the same second, no system sleep).
 - Closing the lid sleeps the Mac anyway unless Amphetamine's closed-display mode is on; not set here.
 - Sleep = end the session, then `IOPMSleepSystem` (cgo), no root, no `pmset sleepnow` *(assumed: not triggered during development)*.
 - Timing lives in the daemon (press 1 s → `arm`, 3 s → cancel), not in Companion's 400 ms hold, so no second haptic.

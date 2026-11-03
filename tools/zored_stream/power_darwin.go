@@ -13,6 +13,11 @@ static IOReturn sleepNow(void) {
 	IOServiceClose(port);
 	return r;
 }
+
+static IOReturn userActive(void) {
+	IOPMAssertionID id;
+	return IOPMAssertionDeclareUserActivity(CFSTR("zored_stream keep-awake off"), kIOPMUserActiveLocal, &id);
+}
 */
 import "C"
 
@@ -27,6 +32,13 @@ import (
 func sleepSystem() error {
 	if r := C.sleepNow(); r != C.kIOReturnSuccess {
 		return fmt.Errorf("IOPMSleepSystem: 0x%x", uint32(r))
+	}
+	return nil
+}
+
+func declareUserActivity() error {
+	if r := C.userActive(); r != C.kIOReturnSuccess {
+		return fmt.Errorf("IOPMAssertionDeclareUserActivity: 0x%x", uint32(r))
 	}
 	return nil
 }

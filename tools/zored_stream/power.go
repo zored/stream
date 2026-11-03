@@ -20,6 +20,13 @@ const (
 	awakePollEvery   = 2 * time.Second
 )
 
+var (
+	amphStart    = startAmphetamine
+	amphEnd      = endAmphetamine
+	userActivity = declareUserActivity
+	systemSleep  = sleepSystem
+)
+
 type power struct {
 	mu       sync.Mutex
 	vars     *vars
@@ -102,22 +109,25 @@ func (p *power) up() error {
 	defer p.publishLocked()
 	switch {
 	case held < sleepArmAfter:
-		return p.toggle()
+		if !p.session.active {
+			return p.start()
+		}
+		if err := p.end(); err != nil {
+			return err
+		}
+		return userActivity()
 	case held < sleepCancelAfter:
 		if err := p.end(); err != nil {
 			return err
 		}
 		p.publishLocked()
-		return sleepSystem()
+		return systemSleep()
 	}
 	return nil
 }
 
-func (p *power) toggle() error {
-	if p.session.active {
-		return p.end()
-	}
-	if err := startAmphetamine(awakeDefault); err != nil {
+func (p *power) start() error {
+	if err := amphStart(awakeDefault); err != nil {
 		return err
 	}
 	p.session = amphSession{active: true, left: awakeDefault, timed: true}
@@ -135,7 +145,7 @@ func (p *power) end() error {
 	if !p.session.active {
 		return nil
 	}
-	if err := endAmphetamine(); err != nil {
+	if err := amphEnd(); err != nil {
 		return err
 	}
 	p.session = amphSession{}
@@ -166,7 +176,7 @@ func (p *power) applyLength() {
 	if !p.session.active {
 		return
 	}
-	if err := startAmphetamine(time.Until(p.until).Round(time.Minute)); err != nil {
+	if err := amphStart(time.Until(p.until).Round(time.Minute)); err != nil {
 		log.Print(err)
 	}
 }

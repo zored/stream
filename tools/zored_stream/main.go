@@ -25,6 +25,8 @@ const (
 
 var client = &http.Client{Timeout: time.Second}
 
+var postVar = post
+
 type vars struct {
 	mu   sync.Mutex
 	sent map[string]string
@@ -38,7 +40,7 @@ func (v *vars) set(name, value string) {
 	}
 	v.sent[name] = value
 	v.mu.Unlock()
-	if err := post(name, value); err != nil {
+	if err := postVar(name, value); err != nil {
 		log.Printf("set %s: %v", name, err)
 		v.mu.Lock()
 		delete(v.sent, name)
