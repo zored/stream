@@ -23,6 +23,7 @@ const (
 	usageKeychain      = "Claude Code-credentials"
 	usageMinRefresh    = time.Minute
 	usageMaxBackoff    = time.Hour
+	usageTick          = time.Minute
 	usageKeychainRetry = time.Minute
 	workdays           = 5
 	day                = 24 * time.Hour
@@ -130,14 +131,29 @@ func newUsage(v *vars, every time.Duration, proxy string) (*usage, error) {
 func (u *usage) run() {
 	for {
 		u.fetch()
+		u.sleepUntilDue()
+	}
+}
+
+func (u *usage) sleepUntilDue() {
+	for {
 		u.mu.Lock()
-		wait := time.Until(u.snap.NextAt)
+		wait := usageWait(u.snap.NextAt, time.Now())
 		u.mu.Unlock()
+		if wait <= 0 {
+			return
+		}
 		select {
 		case <-time.After(wait):
 		case <-u.wake:
+			return
 		}
 	}
+}
+
+// Go timers stop while the Mac sleeps, so wait in short ticks against the wall clock.
+func usageWait(next, now time.Time) time.Duration {
+	return min(next.Round(0).Sub(now.Round(0)), usageTick)
 }
 
 func (u *usage) refresh() error {

@@ -120,3 +120,13 @@ func TestLimitsStale(t *testing.T) {
 		}
 	}
 }
+
+func TestUsageWaitSurvivesSleep(t *testing.T) {
+	now := time.Now()
+	if w := usageWait(now.Add(time.Hour), now); w > usageTick {
+		t.Fatalf("wait %v longer than tick %v: a sleeping Mac stalls the fetch", w, usageTick)
+	}
+	if w := usageWait(now.Add(-time.Minute), now); w > 0 {
+		t.Fatalf("overdue fetch waits %v", w)
+	}
+}
