@@ -189,10 +189,15 @@ func main() {
 		handle(mux, "/ai/down", ai.down)
 		handle(mux, "/ai/up", ai.up)
 	})
-	ag := newAgents(v, *agentsTTL)
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ag := newAgents(v, *agentsTTL, newDesktopSessions(configDir))
 	ch := newChoice(v, func() (*choiceCard, choiceTarget, string, error) { return readChoiceCard(ag) })
 	go ch.run()
 	go every(choicePollEvery, ch.poll)
+	ag.expire()
 	ag.publish()
 	go ag.animate()
 	go every(agentCheckFreq, ag.expire)

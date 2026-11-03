@@ -87,7 +87,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 2, колонка 4 — agents waiting
 
-- shows: one dot per Claude Code session: amber = needs input, white = done, gray = working; white ring = last focused;
+- shows: one dot per Claude Code session: amber = needs input, white = done and unread (a Desktop chat stays white while its sidebar shows the blue dot), gray = working; white ring = last focused;
   a number above 8; a hollow gray circle when none
 - press (on release): focus the next session (needs input → done → working, oldest first), next press moves on and wraps;
   none waiting → opens a new Code session
@@ -132,7 +132,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | кнопка 3 | camera toggle | as кнопка 2 |
 | кнопка 4 | hang up | white while in a call |
 | кнопка 5 | free | off |
-| кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished ones, off = none |
+| кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, off = none |
 | кнопка 7 | dictation into Claude Desktop (below) | red = ready, blinking green = recording, off = no Claude window with a record button |
 | кнопка 8 | free | off |
 

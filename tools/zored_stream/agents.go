@@ -81,10 +81,15 @@ type agents struct {
 	ttl      time.Duration
 	vars     *vars
 	breathe  chan struct{}
+	desktop  *desktopSessions
 }
 
-func newAgents(v *vars, ttl time.Duration) *agents {
-	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, breathe: make(chan struct{}, 1)}
+func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
+	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, breathe: make(chan struct{}, 1), desktop: desktop}
+}
+
+func (s *agentSession) desktopDone() bool {
+	return s.Kind == agentDone && desktopSession.MatchString(s.Host)
 }
 
 func (a *agents) serveEvent(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +157,11 @@ func (a *agents) mark(s agentSession, kind string) {
 	for i := range s.Picked {
 		s.Picked[i] = map[int]bool{}
 	}
+	for id, o := range a.sessions {
+		if s.Host != "" && o.Host == s.Host && id != s.ID {
+			delete(a.sessions, id)
+		}
+	}
 	a.sessions[s.ID] = &s
 	a.mu.Unlock()
 	log.Printf("agents: %s %s %s", s.ID, kind, filepath.Base(s.Cwd))
@@ -160,8 +170,11 @@ func (a *agents) mark(s agentSession, kind string) {
 
 func (a *agents) remove(id string) {
 	a.mu.Lock()
-	_, ok := a.sessions[id]
-	delete(a.sessions, id)
+	s, ok := a.sessions[id]
+	ok = ok && !s.desktopDone()
+	if ok {
+		delete(a.sessions, id)
+	}
 	a.mu.Unlock()
 	if ok {
 		log.Printf("agents: %s cleared", id)
@@ -170,12 +183,34 @@ func (a *agents) remove(id string) {
 }
 
 func (a *agents) expire() {
+	recs, err := a.desktop.scan()
+	if err != nil {
+		log.Printf("agents: desktop sessions: %v", err)
+	}
 	a.mu.Lock()
 	changed := false
+	hosts := map[string]bool{}
 	for id, s := range a.sessions {
-		if time.Since(s.Since) > a.ttl || s.Pid > 0 && errors.Is(syscall.Kill(s.Pid, 0), syscall.ESRCH) {
+		rec, known := recs[s.Host]
+		var drop bool
+		if known && s.desktopDone() {
+			drop = !rec.unread()
+		} else {
+			drop = time.Since(s.Since) > a.ttl || s.Pid > 0 && errors.Is(syscall.Kill(s.Pid, 0), syscall.ESRCH)
+		}
+		if drop {
 			delete(a.sessions, id)
 			changed = true
+			continue
+		}
+		hosts[s.Host] = true
+	}
+	for host, rec := range recs {
+		if rec.unread() && !hosts[host] {
+			s := rec.session()
+			a.sessions[s.ID] = s
+			changed = true
+			log.Printf("agents: %s unread %s", s.ID, filepath.Base(s.Cwd))
 		}
 	}
 	a.mu.Unlock()
@@ -220,7 +255,7 @@ func (a *agents) focus() error {
 		}
 	}
 	a.cursor = next
-	if next.Kind == agentDone {
+	if next.Kind == agentDone && !next.desktopDone() {
 		delete(a.sessions, next.ID)
 	}
 	target := *next

@@ -8,7 +8,7 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 - кнопка 6 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
 - тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working, in that order; the last focused one has a white ring; a number above 8; a hollow gray circle when none.
 - Press either: focus the next session (needs input, then done, then working, oldest first), the next press moves on and wraps.
-  Focusing a "done" session drops it; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile or кнопка 6 (400 ms) always opens a new Code session; both focus on release.
+  A Desktop "done" session stays until Desktop marks it read (see Unread); a CLI one drops when focused; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile or кнопка 6 (400 ms) always opens a new Code session; both focus on release.
 
 ## Flow
 
@@ -31,6 +31,23 @@ and without it the post went to the corporate proxy and was lost (verified).
 | `SessionStart`, `SessionEnd` | removed |
 
 Expiry every 10 s: the hook's `$PPID` is the `claude` process (verified), a dead pid drops the session; `-agents-ttl` (4 h) is the backstop.
+Desktop "done" sessions are the exception, see Unread.
+
+## Unread (Desktop)
+
+Desktop stops idle `claude` processes a few minutes after a turn: `SessionEnd` fires and the pid dies while the chat is
+still unread (verified 2026-11-03: two finished chats vanished from the tile 2 min after `Stop`). Restarts of `zored_stream` lost them too.
+
+- Desktop keeps one file per chat in `~/Library/Application Support/Claude/claude-code-sessions/<account>/<org>/local_*.json`:
+  `lastTurnEdgeAt` (turn start or end), `lastFocusedAt` (set when the chat becomes visible, read in `app.asar`),
+  `isArchived`, `scheduledTaskId`, `cliSessionId`.
+- Unread = not archived, not a routine run, `lastTurnEdgeAt > lastFocusedAt`. Matches the sidebar's blue dots
+  (verified 2026-11-03 by the user on three chats). A turn that ends while the chat is on screen counts as unread, same as the dot.
+- Every 10 s (and at start) the daemon globs those files (~1050, ~3 ms warm; only changed ones are re-read):
+  an unread chat with no entry becomes "done" (`since` = `lastTurnEdgeAt`); a Desktop "done" entry is dropped only once
+  the file says read. `SessionStart`/`SessionEnd`, a dead pid and the TTL do not drop it.
+- A new hook event for the same Desktop chat replaces the older entry (the `cliSessionId` changes on `/clear`).
+- After a restart a chat in the middle of a turn shows as "done" until its next hook (≤ one tool call).
 
 Variables: `agents_led` (LED color as an int), `agents_svg` (tile). `GET /agents` lists the state, `POST /agent/focus` is the press (`409` when empty).
 
@@ -52,7 +69,7 @@ Variables: `agents_led` (LED color as an int), `agents_svg` (tile). `GET /agents
 - Anything else: `open -b $__CFBundleIdentifier` activates the app (no tab).
 
 Setup: `make agent-hooks` (`tools/agent_hooks.py`) adds the hooks to `~/.claude/settings.json`, rerunning replaces them
-(entries posting to `/agent/event` are removed first). State lives in memory: restarting `zored_stream` forgets waiting sessions.
+(entries posting to `/agent/event` are removed first). State lives in memory: restarting `zored_stream` forgets waiting sessions, except Desktop unread ones (read back from Desktop's files).
 
 ## Next: Codex
 
