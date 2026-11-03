@@ -188,6 +188,11 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
 - VPN restore runs even when the join fails (it used to return early and leave Viscosity down).
 - AppleScript: iterate a list stored in a variable (`set nodes to entire contents …`), not `repeat with e in (entire contents …)` — the latter re-queries and finds nothing (verified).
 
+## Keyboard layout (`input.go`, :47127)
+
+- Text Input Sources in-process (`input_darwin.m`): `POST /input/next` selects the next enabled select-capable keyboard source (`TISCreateInputSourceList`, palette/dictation/press-and-hold are not keyboard sources); variable `input_svg` = the first language of the current source (`RussianWin` → `ru`).
+- No polling: `kTISNotifySelectedKeyboardInputSourceChanged` on the distributed center. Both the notification and the `TISCopyCurrentKeyboardInputSource` cache need the **main thread** run loop: on a background thread the callback never fires and the current source stays stale (verified with a probe). So `input_darwin.go` locks `main` to the main thread in `init` and `main` ends in `CFRunLoopRun`; every HTTP server runs in a goroutine.
+
 ## Calendar (`calendar.go`, :47126)
 
 - EventKit in-process (`calendar_darwin.m`): events ±7 days (cancelled dropped) and incomplete reminders with a due date up to +7 days, polled every minute; past events drop out, overdue reminders stay.

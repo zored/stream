@@ -125,6 +125,7 @@ func main() {
 	wifiAddr := flag.String("wifi", "127.0.0.1:47124", "wi-fi power + network picker HTTP address")
 	calendarAddr := flag.String("calendar", "127.0.0.1:47126", "calendar + reminders HTTP address")
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
+	inputAddr := flag.String("input", "127.0.0.1:47127", "keyboard layout HTTP address")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
 	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
 	kvmWOL := flag.String("kvm-wol", "192.168.4.255:9", "Wake-on-LAN broadcast address")
@@ -328,6 +329,11 @@ func main() {
 	go serve(*headphonesAddr, func(mux *http.ServeMux) {
 		handle(mux, "/headphones/toggle", hp.toggle)
 	})
+	in := &input{vars: v}
+	in.publish()
+	go serve(*inputAddr, func(mux *http.ServeMux) {
+		handle(mux, "/input/next", inputNext)
+	})
 	go serve(*kvmAddr, func(mux *http.ServeMux) {
 		handle(mux, "/kvm/windows", kv.windows)
 		handle(mux, "/kvm/pip", kv.togglePIP)
@@ -357,8 +363,9 @@ func main() {
 		wf.publish()
 		kv.publish()
 		cal.publish()
+		in.publish()
 	})
-	serve(*volumeAddr, func(mux *http.ServeMux) {
+	go serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })
 		handle(mux, "/volume/down", func() error { return vol.step(-1) })
 		handle(mux, "/volume/mute", vol.toggleMute)
@@ -379,4 +386,5 @@ func main() {
 			w.WriteHeader(http.StatusNoContent)
 		})
 	})
+	inputWatch(in.publish)
 }

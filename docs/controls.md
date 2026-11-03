@@ -9,7 +9,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ```
           left                         tiles                           right
         knob strip   колонка 1   колонка 2   колонка 3   колонка 4   strip knob
-ряд 1   VOL   ┐      ·           ·           ·           awake       ┐     SUN
+ряд 1   VOL   ┐      en/ru       ·           ·           awake       ┐     SUN
 ряд 2   TRACK ├trk   play/cover  ·           ·           agents      ├ai   AI
 ряд 3   SEEK  ┘      mic         camera      hang up     clock       ┘     SCROLL
 
@@ -62,7 +62,10 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ## Tiles
 
-### тайлы ряд 1, колонки 1–2 — free
+### тайл ряд 1, колонка 1 — keyboard layout
+- shows the current layout: `en` / `ru`, white; follows ⌃Space and any other switch
+- touch: next enabled layout (two enabled now, so EN ↔ RU)
+
 
 ### тайл ряд 1, колонка 2 — wi-fi
 

@@ -25,13 +25,14 @@ HEADPHONES = "http://127.0.0.1:47123"
 WIFI = "http://127.0.0.1:47124"
 KVM = "http://127.0.0.1:47125"
 CALENDAR = "http://127.0.0.1:47126"
+INPUT = "http://127.0.0.1:47127"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon"))}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_line", "cal_browse", "cal_icon", "input_svg"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -346,6 +347,12 @@ def headphones_tile():
                   down=[post(HEADPHONES + "/headphones/toggle")])
 
 
+def input_tile():
+    return button([canvas(), box("box0", 0x000000),
+                   image("layout", expr("$(custom:input_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
+                  down=[post(INPUT + "/input/next")])
+
+
 def wifi_tile():
     return button([canvas(), box("box0", 0x000000),
                    image("wifi", expr("$(custom:wifi_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
@@ -407,6 +414,7 @@ def media_page():
         (2, 7): button(labelled("SCROLL"), down=[post(SCROLL + "/scroll/down")], up=[post(SCROLL + "/scroll/up")],
                        left=[post(SCROLL + "/scroll/back")], right=[post(SCROLL + "/scroll/forward")]),
         (1, 5): agents_tile(),
+        (0, 2): input_tile(),
         (0, 3): wifi_tile(),
         (0, 4): headphones_tile(),
         (0, 5): awake_tile(),
@@ -418,7 +426,7 @@ def media_page():
         (3, 0): kvm_led(),
     }
     if WINDOWS:
-        for cell in ((3, 0), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
+        for cell in ((3, 0), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
             del grid[cell]
     else:
         for c in range(8):
