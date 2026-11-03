@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 	calSoon      = 5 * time.Minute
 	calLineRune  = 9
 	calTitleRune = 9
-	calRows      = 3
+	calRows      = 4
 	amber        = "#FFB000"
 )
 
@@ -67,7 +66,12 @@ func (c *calendar) poll() {
 func calKeep(items []calItem, now time.Time) []calItem {
 	items = slices.DeleteFunc(slices.Clone(items), func(it calItem) bool { return !it.reminder && !it.end.After(now) })
 	slices.SortStableFunc(items, func(a, b calItem) int { return a.start.Compare(b.start) })
-	return items
+	seen := map[string]bool{}
+	return slices.DeleteFunc(items, func(it calItem) bool {
+		dup := seen[it.id]
+		seen[it.id] = true
+		return dup
+	})
 }
 
 func calNext(items []calItem, now time.Time) int {
@@ -189,12 +193,19 @@ func (c *calendar) act(i int) error {
 	return err
 }
 
+const calFont = `font-family="JetBrains Mono, Apple Color Emoji"`
+
 func calTitle(s string) string {
-	s = strings.Join(strings.FieldsFunc(s, func(r rune) bool {
-		return unicode.IsSpace(r) || !(unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsPunct(r) || r == '+' || r == '=')
-	}), " ")
+	s = strings.ToLower(strings.Join(strings.Fields(s), " "))
 	if s == "" {
 		return "·"
+	}
+	return s
+}
+
+func calCut(s string, n int) string {
+	if r := []rune(s); len(r) > n {
+		return strings.TrimSpace(string(r[:n]))
 	}
 	return s
 }
@@ -230,12 +241,12 @@ func calGlyph(it calItem, x, y, r float64, color string) string {
 }
 
 func calLineSVG(it calItem, now time.Time) string {
-	color := cmp.Or(calColor(it, now), gray)
+	color := gray
 	n := calLineRune
 	if it.reminder {
 		n -= 2
 	}
-	title := clip(calTitle(it.title), n)
+	title := calCut(calTitle(it.title), n)
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 22">`)
 	anchor, x := "middle", 44.0
@@ -244,7 +255,7 @@ func calLineSVG(it calItem, now time.Time) string {
 		b.WriteString(calGlyph(it, start+4.5, 11, 4.5, color))
 		anchor, x = "start", start+12
 	}
-	fmt.Fprintf(&b, `<text x="%g" y="16.5" text-anchor="%s" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, x, anchor, color,
+	fmt.Fprintf(&b, `<text x="%g" y="16.5" text-anchor="%s" %s font-size="16" fill="%s">%s</text>`, x, anchor, calFont, color,
 		html.EscapeString(title))
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
@@ -265,10 +276,10 @@ func calWrap(s string, width, rows int) []string {
 	}
 	lines = append(lines, line)
 	if len(lines) > rows {
-		lines = append(lines[:rows-1], strings.Join(lines[rows-1:], " ")+"")
+		lines = append(lines[:rows-1], strings.Join(lines[rows-1:], " "))
 	}
 	for i := range lines {
-		lines[i] = clip(lines[i], width)
+		lines[i] = calCut(lines[i], width)
 	}
 	return lines
 }
@@ -283,16 +294,15 @@ func calBrowseSVG(items []calItem, pick int, now time.Time) string {
 	}
 	it := items[pick]
 	color := cmp.Or(calColor(it, now), "#fff")
-	x := 6.0
+	head := it.start.Format("02.01")
 	if t := calTime(it); t != "" {
-		fmt.Fprintf(&b, `<text x="6" y="24" font-family="JetBrains Mono" font-size="20" fill="%s">%s</text>`, color, t)
-		x = 6 + 5*12 + 4
+		head = t + " " + head
 	}
-	b.WriteString(calGlyph(it, x+7, 17, 7, color))
+	fmt.Fprintf(&b, `<text x="6" y="18" font-family="JetBrains Mono" font-size="12" fill="%s">%s</text>`, color, head)
+	b.WriteString(calGlyph(it, 90, 14, 4.5, color))
 	for i, line := range calWrap(calTitle(it.title), calTitleRune, calRows) {
-		fmt.Fprintf(&b, `<text x="6" y="%d" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, 45+i*16, gray, html.EscapeString(line))
+		fmt.Fprintf(&b, `<text x="6" y="%d" %s font-size="16" fill="%s">%s</text>`, 42+i*17, calFont, gray, html.EscapeString(line))
 	}
-	fmt.Fprintf(&b, `<text x="6" y="94" font-family="JetBrains Mono" font-size="13" fill="%s">%s</text>`, gray, it.start.Format("02.01"))
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
 }

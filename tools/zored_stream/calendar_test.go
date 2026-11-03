@@ -9,11 +9,12 @@ import (
 func TestCalKeepAndNext(t *testing.T) {
 	now := time.Date(2026, 11, 3, 12, 0, 0, 0, time.Local)
 	items := calKeep([]calItem{
-		{title: "past", start: now.Add(-2 * time.Hour), end: now.Add(-time.Hour)},
-		{title: "late", start: now.Add(-time.Hour), end: now.Add(-time.Hour), reminder: true},
-		{title: "far", start: now.Add(13 * time.Hour), end: now.Add(14 * time.Hour)},
-		{title: "day", start: now.Add(-12 * time.Hour), end: now.Add(12 * time.Hour), allDay: true},
-		{title: "soon", start: now.Add(3 * time.Minute), end: now.Add(time.Hour)},
+		{id: "past", title: "past", start: now.Add(-2 * time.Hour), end: now.Add(-time.Hour)},
+		{id: "late", title: "late", start: now.Add(-time.Hour), end: now.Add(-time.Hour), reminder: true},
+		{id: "far", title: "far", start: now.Add(13 * time.Hour), end: now.Add(14 * time.Hour)},
+		{id: "day", title: "day", start: now.Add(-12 * time.Hour), end: now.Add(12 * time.Hour), allDay: true},
+		{id: "soon", title: "soon", start: now.Add(3 * time.Minute), end: now.Add(time.Hour)},
+		{id: "soon", title: "soon", start: now.Add(24 * time.Hour), end: now.Add(25 * time.Hour)},
 	}, now)
 	var got []string
 	for _, it := range items {
