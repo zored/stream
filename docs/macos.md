@@ -127,6 +127,18 @@ turn = Mac display brightness, turn while held = the controller's own brightness
 `/scroll/up` (release). Крутилка справа, ряд 3: turn = vertical wheel, turn while held = horizontal. No strip, no haptic.
 Verified on the device by the user (2026-11-02).
 
+Tab mode: a click (down + up with no turn in between) toggles wheel ↔ tab, stored in `~/.local/share/zored-stream/scroll-mode`
+(`-scroll-mode-file`, `wheel` / `tab`, missing = wheel, anything else = the daemon exits). In tab mode the first detent posts
+Ctrl down, each detent a Tab tap with the Control flag (+ Shift counter-clockwise), and Ctrl up 500 ms after the last detent.
+Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start (covers a crash with Ctrl down).
+
+- `CGEventCreateKeyboardEvent` (Control = 59, Tab = 48) with `CGEventSetFlags`, posted to `kCGHIDEventTap`, so it goes
+  to the frontmost app. The toggle has no own haptic: the press tap is the cue.
+- Verified: the click toggles and persists, press + turn keeps the mode, all endpoints answer `204`.
+- Not verified: delivery to apps. `CGEventSourceFlagsState` doesn't show synthetic Ctrl, and a listen-only event tap gets
+  nothing without Input Monitoring. Ctrl+Tab cycles tabs in Chrome / Safari, opens the Switcher in JetBrains IDEs
+  (needs the Ctrl release to arrive as a flags change; assumed), and does nothing at the macOS level; app switching is Cmd+Tab.
+
 - `CGEventCreateScrollWheelEvent` in line units (like a real wheel detent), 1 / 2 / 4 / 8 lines per detent by tick interval
   (the volume acceleration), posted to `kCGHIDEventTap`, so it lands in the window under the cursor, as a mouse wheel does.
 - Direction is fixed: clockwise = further down / right through the document, regardless of natural scrolling

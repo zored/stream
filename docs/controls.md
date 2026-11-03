@@ -186,8 +186,10 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 3 — scroll
 
-- turn: mouse wheel under the cursor, clockwise = down; 1 / 2 / 4 / 8 lines per detent by speed
-- press + turn: horizontal, clockwise = right
+- click (press and release without a turn): switch wheel ↔ tab mode; the mode survives restarts
+- wheel mode, turn: mouse wheel under the cursor, clockwise = down; 1 / 2 / 4 / 8 lines per detent by speed
+- tab mode, turn: Ctrl held, clockwise = Tab, counter-clockwise = Shift+Tab; Ctrl is released 500 ms after the last detent
+- press + turn: horizontal wheel in both modes, clockwise = right; no mode switch
 
 [macos.md](macos.md)
 

@@ -11,10 +11,24 @@ static int scroll_post(int vertical, int horizontal) {
     CFRelease(e);
     return 1;
 }
+
+static int key_post(CGKeyCode key, bool down, CGEventFlags flags) {
+    CGEventRef e = CGEventCreateKeyboardEvent(NULL, key, down);
+    if (!e) return 0;
+    CGEventSetFlags(e, flags);
+    CGEventPost(kCGHIDEventTap, e);
+    CFRelease(e);
+    return 1;
+}
 */
 import "C"
 
 import "errors"
+
+const (
+	keyTab     = 48
+	keyControl = 59
+)
 
 func postScroll(vertical, horizontal int) error {
 	if !C.CGPreflightPostEventAccess() {
@@ -24,4 +38,33 @@ func postScroll(vertical, horizontal int) error {
 		return errors.New("CGEventCreateScrollWheelEvent failed")
 	}
 	return nil
+}
+
+func postKey(key C.CGKeyCode, down bool, flags C.CGEventFlags) error {
+	if !C.CGPreflightPostEventAccess() {
+		return errors.New("no permission to post events")
+	}
+	if C.key_post(key, C.bool(down), flags) == 0 {
+		return errors.New("CGEventCreateKeyboardEvent failed")
+	}
+	return nil
+}
+
+func postCtrl(down bool) error {
+	var flags C.CGEventFlags
+	if down {
+		flags = C.kCGEventFlagMaskControl
+	}
+	return postKey(keyControl, down, flags)
+}
+
+func postTab(shift bool) error {
+	flags := C.CGEventFlags(C.kCGEventFlagMaskControl)
+	if shift {
+		flags |= C.kCGEventFlagMaskShift
+	}
+	if err := postKey(keyTab, true, flags); err != nil {
+		return err
+	}
+	return postKey(keyTab, false, flags)
 }

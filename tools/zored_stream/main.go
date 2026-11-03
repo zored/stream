@@ -7,10 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -114,6 +116,7 @@ func main() {
 	agentsTTL := flag.Duration("agents-ttl", 4*time.Hour, "forget a waiting agent after this long")
 	brightnessAddr := flag.String("brightness", "127.0.0.1:47118", "display + controller brightness HTTP address")
 	scrollAddr := flag.String("scroll", "127.0.0.1:47121", "mouse wheel scroll HTTP address")
+	scrollModeFile := flag.String("scroll-mode-file", filepath.Join(home, ".local/share/zored-stream/scroll-mode"), "scroll knob mode: wheel or tab")
 	powerAddr := flag.String("power", "127.0.0.1:47122", "keep-awake + sleep HTTP address")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
@@ -252,10 +255,20 @@ func main() {
 		handle(mux, "/seek/forward", func() error { return seek.turn(1) })
 		handle(mux, "/seek/back", func() error { return seek.turn(-1) })
 	})
-	sc := &scroller{}
+	sc, err := newScroller(*scrollModeFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go func() {
+		stop := make(chan os.Signal, 1)
+		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+		<-stop
+		sc.release()
+		os.Exit(0)
+	}()
 	go serve(*scrollAddr, func(mux *http.ServeMux) {
-		handle(mux, "/scroll/down", func() error { sc.hold(true); return nil })
-		handle(mux, "/scroll/up", func() error { sc.hold(false); return nil })
+		handle(mux, "/scroll/down", func() error { return sc.hold(true) })
+		handle(mux, "/scroll/up", func() error { return sc.hold(false) })
 		handle(mux, "/scroll/forward", func() error { return sc.turn(1) })
 		handle(mux, "/scroll/back", func() error { return sc.turn(-1) })
 	})
