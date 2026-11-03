@@ -163,6 +163,12 @@ func (c *choice) up(b int) error {
 	return nil
 }
 
+func (c *choice) showing() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.card != nil
+}
+
 func (c *choice) run() {
 	for b := range c.presses {
 		c.mu.Lock()

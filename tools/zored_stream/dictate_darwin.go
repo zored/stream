@@ -46,6 +46,7 @@ type dictation struct {
 	pressed bool
 	started bool
 	was     bool
+	polled  time.Time
 	paused  *track
 	pauseAt time.Time
 }
@@ -83,6 +84,7 @@ func (d *dictation) music(on bool) {
 }
 
 func (d *dictation) push(down bool) error {
+	claude.wake()
 	select {
 	case d.events <- dictateEvent{down, time.Now()}:
 		return nil
@@ -238,6 +240,12 @@ func (d *dictation) send() error {
 func (d *dictation) poll() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	if d.was {
+		claude.wake()
+	}
+	if !claude.due(&d.polled) {
+		return
+	}
 	if _, err := d.recording(); err != nil && !errors.Is(err, errNoWindow) && !errors.Is(err, errNoDictation) &&
 		!errors.Is(err, errNoClaude) {
 		log.Printf("dictation: %v", err)

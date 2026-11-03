@@ -55,7 +55,7 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   - effort changed: `⌘⇧E` posted with `CGEventPostToPid` to Claude only (never to whatever app is in front), `AXPress` the item
     whose title starts with the level.
   - read back the popup description; mismatch → `Escape`, `ai_state = error`.
-- Every second while nothing is pending and Claude is frontmost, `zored_stream` reads the popup in the focused window — the new-chat
+- Every second (3 s when Claude is not "hot", see [agents.md](agents.md)) while nothing is pending and Claude is frontmost, `zored_stream` reads the popup in the focused window — the new-chat
   screen or an open session — and publishes the truth; the knob position follows it (verified 2026-11-02: an open Opus·Medium session
   showed `ok`). Applying stays new-chat only: a turn in an open session, or while Claude is not frontmost, previews the choice for 5 s (gray label, the strip shows that
   model's limits, state `preview`), then the poll brings back the real model: read from the focused window, or the last one read or applied (`known`) while Claude

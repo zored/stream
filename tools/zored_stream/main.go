@@ -246,7 +246,15 @@ func main() {
 	ag := newAgents(v, *agentsTTL, newDesktopSessions(configDir))
 	ch := newChoice(v, func() (*choiceCard, choiceTarget, string, error) { return readChoiceCard(ag) })
 	go ch.run()
-	go every(choicePollEvery, ch.poll)
+	var choicePolled time.Time
+	go every(choicePollEvery, func() {
+		if ch.showing() {
+			claude.wake()
+		}
+		if claude.due(&choicePolled) {
+			ch.poll()
+		}
+	})
 	ag.expire()
 	ag.publish()
 	go ag.animate()

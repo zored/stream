@@ -49,6 +49,7 @@ type aiSwitch struct {
 	pending bool
 	timer   *time.Timer
 	applyMu sync.Mutex
+	polled  time.Time
 	vars    *vars
 	held    bool
 	turned  bool
@@ -116,6 +117,7 @@ func (a *aiSwitch) up() error {
 
 func (a *aiSwitch) schedule() {
 	a.pending = true
+	claude.wake()
 	a.show(a.target(), "pending")
 	if a.timer != nil {
 		a.timer.Stop()
@@ -151,7 +153,7 @@ func (a *aiSwitch) poll() {
 	a.mu.Lock()
 	busy := a.pending || time.Now().Before(a.preview)
 	a.mu.Unlock()
-	if busy {
+	if busy || !claude.due(&a.polled) {
 		return
 	}
 	var cur aiChoice

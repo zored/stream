@@ -166,6 +166,9 @@ func (a *agents) mark(s agentSession, kind string) {
 	a.sessions[s.ID] = &s
 	a.mu.Unlock()
 	log.Printf("agents: %s %s %s", s.ID, kind, filepath.Base(s.Cwd))
+	if kind != agentWorking {
+		claude.wake()
+	}
 	a.publish()
 }
 
