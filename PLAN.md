@@ -16,7 +16,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/2` keyboard layout (in progress), `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like), `1/3` emoji (in progress), `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock + calendar | tile `1/4` |
+| tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like), `1/3` emoji (in progress), `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/4` hang up, `2/5` clock + calendar | tile `1/4` |
 | buttons `3/0` KVM (in progress), `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/4`, `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
@@ -45,7 +45,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   the session `resets_at` expired and the bar was cleared → refetch on wake / expiry (`250f73d`); calendar on the clock tile —
   next event/reminder ≤ 12 h under the clock (`●` event, `○` reminder, text rendered to PNG by the daemon via CoreText for emoji),
   touch = 5 s list on крутилка справа, ряд 3 (clock hidden, scroll mode paused), hold / knob press = reminder done ↔ undone (list stays open, `2c5645c`) or
-  open the event in Calendar; list moved to the right strip over model + effort, hold opens it, touch acts (`ff5229a`); EventKit, port 47126, F19 rewritten (`15772c9`); wi-fi icon at 60 % (`e574eac`)
+  open the event in Calendar; list moved to the right strip over model + effort, hold opens it, touch acts (`ff5229a`); EventKit, port 47126, F19 rewritten (`15772c9`); wi-fi icon at 60 % (`e574eac`);
+  calendar text on a fixed baseline, gray time on the strip (`4628b51`); крутилка справа, ряд 3 in tab mode: press + turn cycles
+  the windows of all apps (CGWindowList + AXRaise, no modifier held, `4bfdf34`, F7 updated); keyboard layout on tile `0/2`: small
+  flag 🇬🇧/🇷🇺 with a 0.3 s crossfade, press = next layout (TIS on the main-thread run loop, port 47127, `beef447`)
 
 ## Next
 
@@ -59,6 +62,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Wi-fi switch end to end from the device (`bo phone` ↔ `zored_5G`): dot red → yellow → white, VPN back
 - [ ] Keep-awake: on, 15 min without keyboard/mouse, short tap → the display must stay on
 - [ ] Calendar tile on the device: emoji, wrapping, list on the knob; hold on an event opens it in Calendar (not run)
+- [ ] Tab mode: press + turn крутилка справа, ряд 3 cycles windows (checked over HTTP only)
 
 ### More buttons and actions
 
@@ -79,10 +83,8 @@ Desk and display:
   cut redundant Companion variable sets
 
 Windows and apps:
-- [ ] In progress (child session): Cmd+Tab window cycling on крутилка справа, ряд 3 in tab mode: press + turn; same release rules as Ctrl+Tab (S1)
 - [ ] Timers and alarm on one knob: turn sets a duration or a wall-clock time (press+turn toggles), press starts;
   countdown / alarm time on the strip, gray dot on the clock tile while armed, haptic + sound at the end; owned by `zored_stream`
-- [ ] In progress (child session): keyboard layout EN/RU on tile `0/2`, press switches (Text Input Sources in `zored_stream`)
 - [ ] In progress (child session): emoji picker on tile `1/3`: press → both strips show recent, then all emoji by category (one category
   per strip), swipe or top knobs scroll with acceleration, top emoji highlighted, tap or knob press types it
   (`CGEventKeyboardSetUnicodeString`, no clipboard)
