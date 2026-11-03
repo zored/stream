@@ -72,6 +72,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Agents waiting, choice mode | `agents.go`, `agents_desktop.go`, `choice.go`, `choice_darwin.go`, [agents.md](agents.md) | `127.0.0.1:47120` (`-agents`) | verified on the device |
 | Scroll, Ctrl+Tab | `scroll.go`, `scroll_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47121` (`-scroll`) | verified on the device |
 | Keep-awake, sleep | `power.go`, `power_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47122` (`-power`) | keep-awake verified; sleep not triggered |
+| Headphones | `headphones.go`, `headphones_darwin.{go,m,h}`, [macos.md](macos.md) | `127.0.0.1:47123` (`-headphones`) | see macos.md |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain

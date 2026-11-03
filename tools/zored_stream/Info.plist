@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.zored.stream.zored_stream</string>
+	<key>CFBundleName</key>
+	<string>zored_stream</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Connect the headphones from the stream controller.</string>
+</dict>
+</plist>

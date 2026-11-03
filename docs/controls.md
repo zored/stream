@@ -62,7 +62,16 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ## Tiles
 
-### тайлы ряд 1, колонки 1–3 — free
+### тайлы ряд 1, колонки 1–2 — free
+
+### тайл ряд 1, колонка 3 — headphones
+
+- shows the current output: speaker = wired / built-in, headphones = any Bluetooth output; gray = switching; red for 3 s = switch failed
+- touch: toggle. To headphones: connect over Bluetooth, output and mic go to them (the mic always, so music drops to headset quality).
+  Back: output to Logi, else MacBook; mic to a USB camera, else MacBook; then Bluetooth disconnects
+- no hold
+
+[macos.md](macos.md)
 
 ### тайл ряд 1, колонка 4 — keep awake / sleep
 
@@ -223,7 +232,7 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 |---|---|
 | volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold; brightness = monitor over DDC/CI |
 | mic tile + кнопка 2 | system mic mute (proposal) |
-| keep-awake, camera, hang-up tiles, кнопки 3, 4, 7 | dropped, free |
+| headphones, keep-awake, camera, hang-up tiles, кнопки 3, 4, 7 | dropped, free |
 | agents tile + кнопка 6 | Codex sessions |
 | right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |
