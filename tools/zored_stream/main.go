@@ -119,6 +119,7 @@ func main() {
 	scrollModeFile := flag.String("scroll-mode-file", filepath.Join(home, ".local/share/zored-stream/scroll-mode"), "scroll knob mode: wheel or tab")
 	powerAddr := flag.String("power", "127.0.0.1:47122", "keep-awake + sleep HTTP address")
 	headphonesAddr := flag.String("headphones", "127.0.0.1:47123", "headphones toggle HTTP address")
+	wifiAddr := flag.String("wifi", "127.0.0.1:47124", "wi-fi power + network picker HTTP address")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
@@ -237,19 +238,22 @@ func main() {
 	pw.publish()
 	hp := newHeadphones(v)
 	hp.publish()
+	wf := newWifi(v, us.say)
+	wifiRequestLocation()
+	wf.poll()
 	br, err := newBrightness(vol.bar, *companionDB)
 	if err != nil {
 		log.Fatal(err)
 	}
 	go serve(*brightnessAddr, func(mux *http.ServeMux) {
 		handleValue(mux, "/brightness/up", func() (int, error) {
-			if pw.turn(1) {
+			if pw.turn(1) || wf.turn(1) {
 				return br.level(), nil
 			}
 			return br.turn(1)
 		})
 		handleValue(mux, "/brightness/down", func() (int, error) {
-			if pw.turn(-1) {
+			if pw.turn(-1) || wf.turn(-1) {
 				return br.level(), nil
 			}
 			return br.turn(-1)
@@ -290,6 +294,12 @@ func main() {
 	go serve(*headphonesAddr, func(mux *http.ServeMux) {
 		handle(mux, "/headphones/toggle", hp.toggle)
 	})
+	go every(wifiPollEvery, wf.poll)
+	go every(wifiProbeEvery, wf.probe)
+	go serve(*wifiAddr, func(mux *http.ServeMux) {
+		handle(mux, "/wifi/down", wf.down)
+		handle(mux, "/wifi/up", wf.up)
+	})
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {
 			log.Fatal(err)
@@ -306,6 +316,7 @@ func main() {
 		ag.publish()
 		pw.publish()
 		hp.publish()
+		wf.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })

@@ -64,6 +64,12 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайлы ряд 1, колонки 1–2 — free
 
+### тайл ряд 1, колонка 2 — wi-fi
+
+- shows: gray hollow fan = wi-fi off; white hollow = on, not joined; white filled = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed
+- hold ≥ 400 ms, release: wi-fi on / off
+- touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`), then the picked one instead of the model. Each turn extends the 5 s. Order: known networks in macOS preferred order, then the rest by signal. A 2 s pause joins the pick (password from the keychain)
+
 ### тайл ряд 1, колонка 3 — headphones
 
 - shows the current output: speaker = wired / built-in, headphones = any Bluetooth output; yellow = connecting; red for 3 s = switch failed
@@ -177,7 +183,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 1 — brightness
 
-- turn: Mac display brightness (built-in display); for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4)
+- turn: Mac display brightness (built-in display); for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4); for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
 - press + turn: the controller's own brightness, never below 10 %
 - shows: the left strip bar for 1 s, white = Mac, gray = controller
 
@@ -232,7 +238,7 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 |---|---|
 | volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold; brightness = monitor over DDC/CI |
 | mic tile + кнопка 2 | system mic mute (proposal) |
-| headphones, keep-awake, camera, hang-up tiles, кнопки 3, 4, 7 | dropped, free |
+| wi-fi, headphones, keep-awake, camera, hang-up tiles, кнопки 3, 4, 7 | dropped, free |
 | agents tile + кнопка 6 | Codex sessions |
 | right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |
