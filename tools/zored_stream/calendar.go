@@ -233,18 +233,18 @@ func calLineSVG(it calItem, now time.Time) string {
 	color := cmp.Or(calColor(it, now), gray)
 	n := calLineRune
 	if it.reminder {
-		n--
+		n -= 2
 	}
 	title := clip(calTitle(it.title), n)
-	x := 44.0
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 22">`)
+	anchor, x := "middle", 44.0
 	if it.reminder {
-		half := float64(len([]rune(title)))*16*0.6/2 + 6
-		b.WriteString(calGlyph(it, 44-half+1, 11, 4.5, color))
-		x += 6
+		start := 44 - (float64(len([]rune(title)))*16*0.6+12)/2
+		b.WriteString(calGlyph(it, start+4.5, 11, 4.5, color))
+		anchor, x = "start", start+12
 	}
-	fmt.Fprintf(&b, `<text x="%g" y="16.5" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, x, color,
+	fmt.Fprintf(&b, `<text x="%g" y="16.5" text-anchor="%s" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, x, anchor, color,
 		html.EscapeString(title))
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
@@ -290,7 +290,7 @@ func calBrowseSVG(items []calItem, pick int, now time.Time) string {
 	}
 	b.WriteString(calGlyph(it, x+7, 17, 7, color))
 	for i, line := range calWrap(calTitle(it.title), calTitleRune, calRows) {
-		fmt.Fprintf(&b, `<text x="6" y="%d" font-family="JetBrains Mono" font-size="16" fill="#fff">%s</text>`, 45+i*16, html.EscapeString(line))
+		fmt.Fprintf(&b, `<text x="6" y="%d" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, 45+i*16, gray, html.EscapeString(line))
 	}
 	fmt.Fprintf(&b, `<text x="6" y="94" font-family="JetBrains Mono" font-size="13" fill="%s">%s</text>`, gray, it.start.Format("02.01"))
 	b.WriteString(`</svg>`)
