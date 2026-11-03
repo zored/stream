@@ -5,6 +5,7 @@ Status and next steps: `PLAN.md`.
 
 ## Docs — read before touching the area
 
+- `docs/controls.md` — what every control does, user-facing; update it in the same commit when a control changes
 - `docs/companion.md` — grid, button JSON, expressions, internal actions, HTTP/tRPC APIs, debugging, the module fork
 - `docs/macos.md` — `mediakey` and `zored_stream` volume + Now Playing (perl child), permissions, LaunchAgent
 - `docs/vkcall.md` — VK WorkSpace call mic/camera: the client's gRPC API, call module of `zored_stream`, buttons

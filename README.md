@@ -3,7 +3,7 @@
 Config-as-code for stream controllers. First device: **Razer Stream Controller** (a rebranded Loupedeck Live),
 driven by [Bitfocus Companion](https://github.com/bitfocus/companion).
 
-What the MEDIA page does today (macOS):
+What the MEDIA page does today (macOS), every control in detail: [docs/controls.md](docs/controls.md).
 
 - left knob 1 — volume with acceleration, press = mute; left knob 2 — previous/next track, press = play/pause
 - left touch strip — current track rotated 90°, turns into an animated volume bar while the volume changes; swipe it to change the volume
@@ -50,7 +50,7 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `c
 | `tools/surface.mjs` | Switches the Loupedeck integration to a module version and sets surface config over tRPC |
 | `tools/companion_config.py` | Edits the Companion launcher's `config.json` |
 | `tools/sniff.py` | Raw device event sniffer |
-| `docs/` | [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Yandex Music](docs/ymusic.md), [Windows port](docs/windows.md), [device](docs/device.md) |
+| `docs/` | [Controls](docs/controls.md), [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Yandex Music](docs/ymusic.md), [Windows port](docs/windows.md), [device](docs/device.md) |
 
 ## Other ways to drive the device
 
