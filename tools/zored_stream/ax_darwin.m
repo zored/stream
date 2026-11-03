@@ -259,20 +259,25 @@ static AXUIElementRef card_root(AXUIElementRef window, int kind) {
     return NULL;
 }
 
-int ax_card_kinds(AXUIElementRef window) {
+static int match_card_kind(AXUIElementRef e, const void *context) {
+    int *kinds = (int *)context;
     @autoreleasepool {
-        __block int kinds = 0;
-        int budget = 20000;
-        card_walk(window, 0, &budget, ^(AXUIElementRef e, NSString *role) {
-            if ([role isEqualToString:@"AXButton"] && [card_attr(e, kAXTitleAttribute) isEqualToString:@"Skip"])
-                kinds |= 1 << AX_CARD_QUESTION;
-            else if ([role isEqualToString:@"AXStaticText"] && [card_attr(e, kAXValueAttribute) hasPrefix:@"Permission requested"])
-                kinds |= 1 << AX_CARD_PERMISSION;
-            else if ([role isEqualToString:@"AXGroup"] && [card_attr(e, kAXDescriptionAttribute) hasPrefix:@"Suggested next"])
-                kinds |= 1 << AX_CARD_BOX;
-        });
-        return kinds;
+        NSString *role = card_attr(e, kAXRoleAttribute);
+        if ([role isEqualToString:@"AXButton"] && [card_attr(e, kAXTitleAttribute) isEqualToString:@"Skip"])
+            *kinds |= 1 << AX_CARD_QUESTION;
+        else if ([role isEqualToString:@"AXStaticText"] && [card_attr(e, kAXValueAttribute) hasPrefix:@"Permission requested"])
+            *kinds |= 1 << AX_CARD_PERMISSION;
+        else if ([role isEqualToString:@"AXGroup"] && [card_attr(e, kAXDescriptionAttribute) hasPrefix:@"Suggested next"])
+            *kinds |= 1 << AX_CARD_BOX;
     }
+    return 0;
+}
+
+int ax_card_kinds(AXUIElementRef window) {
+    int kinds = 0, truncated = 0;
+    AXUIElementRef found = bfs(window, match_card_kind, &kinds, 20000, &truncated);
+    if (found) CFRelease(found);
+    return kinds;
 }
 
 char *ax_card(AXUIElementRef window, int kind) {
