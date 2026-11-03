@@ -27,6 +27,7 @@ import "errors"
 
 const (
 	keyTab     = 48
+	keyGrave   = 50
 	keyCommand = 55
 	keyControl = 59
 )
@@ -66,13 +67,17 @@ func postModifier(m modifier, down bool) error {
 	return postKey(key, down, flags)
 }
 
-func postTab(m modifier, shift bool) error {
+func postChord(m modifier, c chord, shift bool) error {
 	_, flags := modifierKey(m)
+	key := C.CGKeyCode(keyTab)
+	if c == chordGrave {
+		key = keyGrave
+	}
 	if shift {
 		flags |= C.kCGEventFlagMaskShift
 	}
-	if err := postKey(keyTab, true, flags); err != nil {
+	if err := postKey(key, true, flags); err != nil {
 		return err
 	}
-	return postKey(keyTab, false, flags)
+	return postKey(key, false, flags)
 }

@@ -13,6 +13,7 @@ import (
 const (
 	tabRelease = 500 * time.Millisecond
 	cmdRelease = 5 * time.Second
+	appWindows = 3 * time.Second
 )
 
 var scrollLines = [...]int{1, 2, 4, 8}
@@ -25,6 +26,13 @@ const (
 	modCmd
 )
 
+type chord int
+
+const (
+	chordTab chord = iota
+	chordGrave
+)
+
 type scroller struct {
 	mu      sync.Mutex
 	accel   accel
@@ -34,13 +42,15 @@ type scroller struct {
 	turned  bool
 	held    modifier
 	timer   *time.Timer
+	appEnd  time.Time
+	now     func() time.Time
 	wheel   func(vertical, horizontal int) error
 	modKey  func(m modifier, down bool) error
-	tabKey  func(m modifier, shift bool) error
+	tabKey  func(m modifier, c chord, shift bool) error
 }
 
 func newScroller(file string) (*scroller, error) {
-	s := &scroller{file: file, wheel: postScroll, modKey: postModifier, tabKey: postTab}
+	s := &scroller{file: file, wheel: postScroll, modKey: postModifier, tabKey: postChord, now: time.Now}
 	data, err := os.ReadFile(file)
 	switch {
 	case os.IsNotExist(err):
@@ -64,8 +74,12 @@ func newScroller(file string) (*scroller, error) {
 func (s *scroller) hold(down bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	switched := !down && s.pressed && s.tab && s.held == modCmd
 	if err := s.releaseLocked(); err != nil {
 		return err
+	}
+	if switched {
+		s.appEnd = s.now().Add(appWindows)
 	}
 	if down {
 		s.pressed, s.turned = true, false
@@ -98,15 +112,19 @@ func (s *scroller) turn(direction int) error {
 		if !s.tab {
 			return s.wheel(0, s.lines(direction))
 		}
-		return s.tabLocked(modCmd, cmdRelease, direction)
+		return s.tabLocked(modCmd, chordTab, cmdRelease, direction)
 	}
 	if !s.tab {
 		return s.wheel(s.lines(direction), 0)
 	}
-	return s.tabLocked(modCtrl, tabRelease, direction)
+	if now := s.now(); now.Before(s.appEnd) {
+		s.appEnd = now.Add(appWindows)
+		return s.tabLocked(modCmd, chordGrave, tabRelease, direction)
+	}
+	return s.tabLocked(modCtrl, chordTab, tabRelease, direction)
 }
 
-func (s *scroller) tabLocked(m modifier, after time.Duration, direction int) error {
+func (s *scroller) tabLocked(m modifier, c chord, after time.Duration, direction int) error {
 	if s.held != m {
 		if err := s.releaseLocked(); err != nil {
 			return err
@@ -121,7 +139,7 @@ func (s *scroller) tabLocked(m modifier, after time.Duration, direction int) err
 	} else {
 		s.timer.Reset(after)
 	}
-	return s.tabKey(m, direction < 0)
+	return s.tabKey(m, c, direction < 0)
 }
 
 func (s *scroller) lines(direction int) int {

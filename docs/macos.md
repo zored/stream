@@ -170,9 +170,12 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
   and a listen-only event tap gets nothing without Input Monitoring, so there's no local check. Ctrl+Tab does nothing
   at the macOS level; app switching is Cmd+Tab.
 
-Window switching: in tab mode, press + turn holds Cmd instead and taps Tab (+ Shift counter-clockwise), so the installed
-window switcher (Contexts, bound to Cmd+Tab) shows its list and steps through it. Cmd goes up on knob release, which picks
-the window; a 5 s timer, SIGINT/SIGTERM and the start release it too. A turn without the press swaps Cmd for Ctrl.
+App switching: in tab mode, press + turn holds Cmd and taps Tab (+ Shift counter-clockwise), the system Cmd+Tab switcher.
+Cmd goes up on knob release, which picks the app; a 5 s timer, SIGINT/SIGTERM and the start release it too. For 3 s after
+that release (each detent extends it) a plain turn posts Cmd+` (+ Shift) instead of Ctrl+Tab, cycling windows of the picked
+app; Cmd is held between those detents and released 500 ms after the last, like Ctrl. Contexts (installed) ignores synthetic
+`CGEventPost` keys, tried five event variants; its search hotkey and other entry points don't help either (no URL scheme,
+no AppleScript). The Karabiner VirtualHID route needs a root client and was not pursued.
 
 - `CGEventCreateScrollWheelEvent` in line units (like a real wheel detent), 1 / 2 / 4 / 8 lines per detent by tick interval
   (the volume acceleration), posted to `kCGHIDEventTap`, so it lands in the window under the cursor, as a mouse wheel does.

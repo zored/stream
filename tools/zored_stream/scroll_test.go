@@ -32,11 +32,14 @@ func (k *keyLog) get() []string {
 func fakeScroller(t *testing.T, tab bool) (*scroller, *keyLog) {
 	k := &keyLog{}
 	return &scroller{
-		file:    filepath.Join(t.TempDir(), "scroll-mode"),
-		tab:     tab,
-		wheel:   func(v, h int) error { return k.add(fmt.Sprintf("wheel %d %d", v, h)) },
-		modKey:  func(m modifier, down bool) error { return k.add(fmt.Sprintf("%s %v", m, down)) },
-		tabKey:  func(m modifier, shift bool) error { return k.add(fmt.Sprintf("%s-tab %v", m, shift)) },
+		file:   filepath.Join(t.TempDir(), "scroll-mode"),
+		tab:    tab,
+		wheel:  func(v, h int) error { return k.add(fmt.Sprintf("wheel %d %d", v, h)) },
+		modKey: func(m modifier, down bool) error { return k.add(fmt.Sprintf("%s %v", m, down)) },
+		tabKey: func(m modifier, c chord, shift bool) error {
+			return k.add(fmt.Sprintf("%s-%s %v", m, [...]string{"tab", "grave"}[c], shift))
+		},
+		now: time.Now,
 	}, k
 }
 
@@ -176,5 +179,28 @@ func TestScrollCmdReleasedByTimerAndSignal(t *testing.T) {
 	want = append(want, "cmd true", "cmd-tab false", "cmd false")
 	if got := k.get(); !slices.Equal(got, want) {
 		t.Fatalf("timer: got %v, want %v", got, want)
+	}
+}
+
+func TestScrollAppWindowsAfterSwitch(t *testing.T) {
+	s, k := fakeScroller(t, true)
+	clock := time.Now()
+	s.now = func() time.Time { return clock }
+	for _, step := range []func() error{
+		func() error { return s.hold(true) },
+		func() error { return s.turn(1) },
+		func() error { return s.hold(false) },
+		func() error { return s.turn(-1) },
+		func() error { clock = clock.Add(appWindows - time.Second); return s.turn(1) },
+		func() error { clock = clock.Add(appWindows + time.Second); return s.turn(1) },
+	} {
+		if err := step(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	s.release()
+	want := []string{"cmd true", "cmd-tab false", "cmd false", "cmd true", "cmd-grave true", "cmd-grave false", "cmd false", "ctrl true", "ctrl-tab false", "ctrl false"}
+	if got := k.get(); !slices.Equal(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
 	}
 }
