@@ -123,6 +123,7 @@ func main() {
 	headphonesAddr := flag.String("headphones", "127.0.0.1:47123", "headphones toggle HTTP address")
 	wifiVPN := flag.String("wifi-vpn", "Barbos_SE", "Viscosity connection to bring up after a network switch; empty = leave VPNs alone")
 	wifiAddr := flag.String("wifi", "127.0.0.1:47124", "wi-fi power + network picker HTTP address")
+	calendarAddr := flag.String("calendar", "127.0.0.1:47126", "calendar + reminders HTTP address")
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
 	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
@@ -281,6 +282,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	cal := newCalendar(v, sc.release)
+	go cal.poll()
+	go every(calPollEvery, cal.poll)
+	go every(time.Second, cal.publish)
+	go serve(*calendarAddr, func(mux *http.ServeMux) {
+		handle(mux, "/calendar/down", cal.down)
+		handle(mux, "/calendar/up", cal.up)
+	})
 	go func() {
 		stop := make(chan os.Signal, 1)
 		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -289,10 +298,26 @@ func main() {
 		os.Exit(0)
 	}()
 	go serve(*scrollAddr, func(mux *http.ServeMux) {
-		handle(mux, "/scroll/down", func() error { return sc.hold(true) })
-		handle(mux, "/scroll/up", func() error { return sc.hold(false) })
-		handle(mux, "/scroll/forward", func() error { return sc.turn(1) })
-		handle(mux, "/scroll/back", func() error { return sc.turn(-1) })
+		press := func(down bool) func() error {
+			return func() error {
+				if took, err := cal.knob(down); took {
+					return err
+				}
+				return sc.hold(down)
+			}
+		}
+		turn := func(direction int) func() error {
+			return func() error {
+				if cal.turn(direction) {
+					return nil
+				}
+				return sc.turn(direction)
+			}
+		}
+		handle(mux, "/scroll/down", press(true))
+		handle(mux, "/scroll/up", press(false))
+		handle(mux, "/scroll/forward", turn(1))
+		handle(mux, "/scroll/back", turn(-1))
 	})
 	go every(time.Second, pw.publish)
 	go every(awakePollEvery, pw.poll)
@@ -332,6 +357,7 @@ func main() {
 		hp.publish()
 		wf.publish()
 		kv.publish()
+		cal.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })

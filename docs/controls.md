@@ -134,8 +134,10 @@ Same as кнопка 4. [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 4 — clock
 
-- shows: `HH:MM` white, `DD.MM` gray
-- press: nothing
+- shows: `HH:MM` white; below it the next event or reminder within 12 h (`●` event, `○` reminder, time, title) in gray, else `DD.MM` gray
+- amber: an event starting in ≤ 5 min, an overdue reminder
+- touch: 5 s list of events and reminders (clock hidden), крутилка справа, ряд 3 scrolls it; touch again closes
+- hold ≥ 400 ms: reminder → done, event → opens in Calendar (the listed item while the list is open, else the shown one)
 
 ## Buttons
 
@@ -206,6 +208,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - wheel mode, turn: mouse wheel under the cursor, clockwise = down; 1 / 2 / 4 / 8 lines per detent by speed
 - tab mode, turn: Ctrl held, clockwise = Tab, counter-clockwise = Shift+Tab; Ctrl is released 500 ms after the last detent
 - press + turn: horizontal wheel in both modes, clockwise = right; no mode switch
+- while the clock list is open: turn scrolls the list, press = clock hold
 
 [macos.md](macos.md)
 

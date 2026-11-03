@@ -66,7 +66,7 @@ Everything else (`make zored_stream`, `make module`, `make deploy`) sessions run
 - `make zored_stream-cert` (keychain password)
 - `make companion` (adds a login item)
 - `make agent-hooks` (writes `~/.claude/settings.json`)
-- granting Accessibility to Companion and `zored_stream`, Automation for Amphetamine and iTerm2
+- granting Accessibility to Companion and `zored_stream`, Automation for Amphetamine and iTerm2, Calendars + Reminders (full access) to `zored_stream`
 
 ## Sleep
 
@@ -187,3 +187,10 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
 - Control Center is flaky when reopened right after closing: the menu bar item toggles, so the script first waits up to 2.5 s for its window to close, then presses; the list is read until two polls match; one retry in Go; calls are serialized by a mutex (two joins at once used to toggle it shut). With 2 s between calls 3/3 runs passed, back to back 1/4 (verified).
 - VPN restore runs even when the join fails (it used to return early and leave Viscosity down).
 - AppleScript: iterate a list stored in a variable (`set nodes to entire contents …`), not `repeat with e in (entire contents …)` — the latter re-queries and finds nothing (verified).
+
+## Calendar (`calendar.go`, :47126)
+
+- EventKit in-process (`calendar_darwin.m`): events ±7 days (cancelled dropped) and incomplete reminders with a due date up to +7 days, polled every minute; past events drop out, overdue reminders stay.
+- Access: `requestFullAccessTo{Events,Reminders}` (macOS 14+), usage strings in the embedded `Info.plist`; the first poll blocks until the prompt is answered.
+- Done: `EKReminder.completed = YES` + `saveReminder:commit:`. Open: `open ical://ekevent/<eventIdentifier>?method=show&options=more`.
+- Knob capture: `/scroll/*` ask `calendar` first (`knob`, `turn`); entering the list releases Ctrl (S1).

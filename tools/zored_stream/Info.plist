@@ -8,5 +8,9 @@
 	<string>zored_stream</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Connect the headphones from the stream controller.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Show the next event on the stream controller clock.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Show and complete reminders from the stream controller clock.</string>
 </dict>
 </plist>
