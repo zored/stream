@@ -23,9 +23,11 @@ One touch surface across strips and tiles (verified, sniff 2026-11-03):
 - Move events every 10–20 ms (~70/s) while the finger moves, none while it rests; pixel resolution.
 - A drag across tiles or onto a strip stays one touch id, so tile swipes are possible.
 
-The module fork ignores center `touchmove` and resolves `touch.target.control` per event: dragging tile A → B sends
-keyDown A, keyUp B (A sticks); releasing in a gap sends no keyUp. A tile swipe needs the control pinned at touchstart,
-a direction check at touchend (~40 px), one POST to the daemon per swipe, and a rule for tap/hold conflicts.
+Upstream resolves `touch.target.control` per event: dragging tile A → B sent keyDown A, keyUp B (A stuck), and a
+release in a gap sent no keyUp. The fork's `tile-swipe.ts` pins the control at touchstart and releases that one. A center
+`touchmove` ≥ 40 px from the start within 400 ms posts once `:47113/tile/swipe?id=<control>&dir=l|r|u|d`; the daemon
+answers 404 for tiles without swipes (the touch goes on as a press), otherwise the fork releases the tile right after the
+answer and the daemon skips the next `/nowplaying/tap`, so the release does no play / pause and the 400 ms hold never fires.
 
 ## Firmware
 

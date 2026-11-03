@@ -100,6 +100,8 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - shows: the track cover; ▶ stays while paused; ⏸ appears on a state change or a touch, holds 1.5 s, fades. No cover → a big ▶/⏸
 - touch: shows the glyph; release: play / pause
 - hold: Yandex Music like, as on крутилка слева, ряд 2
+- swipe left / right (≥ 40 px within 400 ms): previous / next track; up / down: Yandex Music like / dislike.
+  A swipe skips the play / pause on release. Dislike works only where the player bar shows it (not on radio or album contexts)
 
 [macos.md](macos.md), [ymusic.md](ymusic.md)
 

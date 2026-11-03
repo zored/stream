@@ -217,7 +217,7 @@ def play_pause():
                 opacity=expr(f"{NO_ART} || ({PLAYING}) != {shown} ? 0 : $(custom:np_glyph)"),
                 x=expr(f"(100 - {size}) / 2"), y=expr(f"(100 - {size}) / 2"), width=expr(size), height=expr(size))
           for name, shown in (("play", "false"), ("pause", "true"))),
-    ], down=streamd("/nowplaying/show"), up=[mediakey("play")], held=ymusic("/like"))
+    ], down=streamd("/nowplaying/show"), up=streamd("/nowplaying/tap"), held=ymusic("/like"))
 
 
 def by_state(var, colors):

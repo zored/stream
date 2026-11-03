@@ -2449,7 +2449,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/play",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/tap",
             "isExpression": false
            },
            "cwd": {

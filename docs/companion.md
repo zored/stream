@@ -25,6 +25,7 @@ Verified on Companion 5.1.1, Loupedeck surface module 1.1.1, RSC firmware 0.2.14
 - Strip cells are 60×90 px on the grid, but the module draws only 48×86 of each (`SideStripXPadding`/`SideStripYPadding` = 6 px
   hidden on every side, read in the fork's `util.ts`); a picture meant for a whole strip is 48×258, or it gets stretched.
   Tap = press in the default "buttons" strip mode.
+- Center tiles: the fork pins a touch to its start tile and posts one swipe per touch to the daemon ([device.md](device.md#touch)).
 - Knobs have no display; rotation fires only on a button with `options.rotaryActions: true`.
 - RGB button LED colour = the button's background colour (black = off).
 - Empty cells are rendered as placeholders: fill every cell with a black button.

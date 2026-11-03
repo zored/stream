@@ -462,6 +462,14 @@ func main() {
 		handle(mux, "/nowplaying/show", func() error { np.glyph.show(); return nil })
 		handle(mux, "/nowplaying/next", func() error { sk.show(1); return nil })
 		handle(mux, "/nowplaying/prev", func() error { sk.show(-1); return nil })
+		ts := &tileSwipe{actions: map[string]func() error{
+			"l": func() error { sk.show(-1); return postMediaKey(mediaKeys["prev"]) },
+			"r": func() error { sk.show(1); return postMediaKey(mediaKeys["next"]) },
+			"u": ym.pressAndPoll(true),
+			"d": ym.pressAndPoll(false),
+		}}
+		mux.HandleFunc("POST /tile/swipe", ts.serve)
+		handle(mux, "/nowplaying/tap", ts.tap(func() error { return postMediaKey(mediaKeys["play"]) }))
 		mux.HandleFunc("POST /key/{name}", serveKey(postMediaKey))
 		mux.HandleFunc("POST /volume/drag", func(w http.ResponseWriter, r *http.Request) {
 			dy, err := strconv.ParseFloat(r.URL.Query().Get("dy"), 64)
