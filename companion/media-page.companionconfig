@@ -910,8 +910,8 @@
         }
        },
        {
-        "id": "off",
-        "name": "off",
+        "id": "sun",
+        "name": "sun",
         "usage": "auto",
         "type": "image",
         "pinnedProperties": [
@@ -924,8 +924,8 @@
          "isExpression": false
         },
         "opacity": {
-         "value": "$(custom:power) == \"off\" ? 100 : 0",
-         "isExpression": true
+         "value": 100,
+         "isExpression": false
         },
         "x": {
          "value": 6,
@@ -948,118 +948,8 @@
          "isExpression": false
         },
         "base64Image": {
-         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODA4MDgwIiBzdHJva2Utd2lkdGg9IjIuNSIvPjwvc3ZnPgo=",
-         "isExpression": false
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fillMode": {
-         "value": "fit",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "on",
-        "name": "on",
-        "usage": "auto",
-        "type": "image",
-        "pinnedProperties": [
-         "base64Image",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:power) == \"on\" ? 100 : 0",
+         "value": "$(custom:power_svg)",
          "isExpression": true
-        },
-        "x": {
-         "value": 6,
-         "isExpression": false
-        },
-        "y": {
-         "value": 6,
-         "isExpression": false
-        },
-        "width": {
-         "value": 88,
-         "isExpression": false
-        },
-        "height": {
-         "value": 88,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "base64Image": {
-         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iOC4yNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPgo=",
-         "isExpression": false
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fillMode": {
-         "value": "fit",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "arm",
-        "name": "arm",
-        "usage": "auto",
-        "type": "image",
-        "pinnedProperties": [
-         "base64Image",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": true,
-         "isExpression": false
-        },
-        "opacity": {
-         "value": "$(custom:power) == \"arm\" ? 100 : 0",
-         "isExpression": true
-        },
-        "x": {
-         "value": 6,
-         "isExpression": false
-        },
-        "y": {
-         "value": 6,
-         "isExpression": false
-        },
-        "width": {
-         "value": 88,
-         "isExpression": false
-        },
-        "height": {
-         "value": 88,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "base64Image": {
-         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTI4IDEzYTExIDExIDAgMSAwIDcgMTcgOSA5IDAgMSAxLTctMTd6IiBmaWxsPSIjZmZmIi8+PC9zdmc+Cg==",
-         "isExpression": false
         },
         "halign": {
          "value": "center",

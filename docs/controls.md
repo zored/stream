@@ -66,8 +66,10 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 4 — keep awake / sleep
 
-- shows: hollow gray circle = off, white dot = the display won't sleep, white moon = release now to sleep
-- touch shorter than 1 s: keep-awake on / off
+- shows: hollow white sun = off; filled sun + time left `h:mm` below = the display won't sleep; white moon = release now to sleep
+- touch shorter than 1 s: keep-awake on for 1 h / off
+- right after turning on, крутилка справа, ряд 1 sets the length for 5 s (time turns white): 15 min per detent, 15 min – 12 h;
+  every turn extends the 5 s, then the knob is brightness again
 - hold 1–3 s, then release: keep-awake off, the Mac sleeps; past 3 s the moon goes away and release does nothing
 - no second haptic: the moon is the cue
 
@@ -163,7 +165,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 1 — brightness
 
-- turn: Mac display brightness (built-in display)
+- turn: Mac display brightness (built-in display); for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4)
 - press + turn: the controller's own brightness, never below 10 %
 - shows: the left strip bar for 1 s, white = Mac, gray = controller
 

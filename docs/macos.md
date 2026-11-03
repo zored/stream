@@ -73,7 +73,12 @@ The device has no HID interface, so it can't wake a sleeping Mac (verified: pres
 
 ## zored_stream — keep awake and sleep
 
-`power.go`, `power_darwin.go`, `:47122`: `POST /power/down`, `/power/up` from тайл ряд 1, колонка 4; variable `power` = `off` / `on` / `arm`.
+`power.go`, `power_darwin.go`, `:47122`: `POST /power/down`, `/power/up` from тайл ряд 1, колонка 4; variable `power_svg` = the whole tile
+(sun hollow / filled, time left in JetBrains Mono, moon while armed).
+
+- Session: 1 h by default, released when it runs out (checked every second). For 5 s after turning on, `/brightness/up|down`
+  (`:47118`) go to the session length instead: ±15 min with the knob acceleration, 15 min – 12 h, each turn restarts the 5 s
+  (verified: 1:00 → 1:30, then brightness again).
 
 - keep-awake = an IOKit assertion `PreventUserIdleDisplaySleep` named `zored_stream keep-awake`, held by the daemon; it also blocks
   idle system sleep. Check: `pmset -g assertions | grep zored` (verified: appears on, gone off).

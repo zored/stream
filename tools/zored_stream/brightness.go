@@ -60,6 +60,12 @@ func (b *brightness) turn(direction int) (int, error) {
 	return b.ctl, nil
 }
 
+func (b *brightness) level() int {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.ctl
+}
+
 func (b *brightness) hold() (int, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()

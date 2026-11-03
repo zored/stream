@@ -224,13 +224,25 @@ func main() {
 	vol.publish()
 	vol.bar.publish()
 	go vol.bar.animate()
+	pw := newPower(v)
+	pw.publish()
 	br, err := newBrightness(vol.bar, *companionDB)
 	if err != nil {
 		log.Fatal(err)
 	}
 	go serve(*brightnessAddr, func(mux *http.ServeMux) {
-		handleValue(mux, "/brightness/up", func() (int, error) { return br.turn(1) })
-		handleValue(mux, "/brightness/down", func() (int, error) { return br.turn(-1) })
+		handleValue(mux, "/brightness/up", func() (int, error) {
+			if pw.turn(1) {
+				return br.level(), nil
+			}
+			return br.turn(1)
+		})
+		handleValue(mux, "/brightness/down", func() (int, error) {
+			if pw.turn(-1) {
+				return br.level(), nil
+			}
+			return br.turn(-1)
+		})
 		handleValue(mux, "/brightness/hold", br.hold)
 		handleValue(mux, "/brightness/release", br.release)
 	})
@@ -247,8 +259,7 @@ func main() {
 		handle(mux, "/scroll/forward", func() error { return sc.turn(1) })
 		handle(mux, "/scroll/back", func() error { return sc.turn(-1) })
 	})
-	pw := newPower(v)
-	pw.publish()
+	go every(time.Second, pw.tick)
 	go serve(*powerAddr, func(mux *http.ServeMux) {
 		handle(mux, "/power/down", pw.down)
 		handle(mux, "/power/up", pw.up)
