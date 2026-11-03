@@ -23,10 +23,10 @@ func TestCalKeepAndNext(t *testing.T) {
 	if want := "day late soon far"; strings.Join(got, " ") != want {
 		t.Fatalf("kept %v, want %s", got, want)
 	}
-	if i := calNext(items, now); items[i].title != "late" || calColor(items[i], now) != amber {
+	if i := calNext(items, now); items[i].title != "late" || calColor(items[i], now) != amberRGB {
 		t.Errorf("next %d", i)
 	}
-	if calColor(items[2], now) != amber || calColor(items[3], now) != "" {
+	if calColor(items[2], now) != amberRGB || calColor(items[3], now) != 0 {
 		t.Error("soon amber, far plain")
 	}
 	if calNext(items[2:3], now.Add(-13*time.Hour)) != -1 {

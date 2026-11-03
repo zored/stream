@@ -3,8 +3,6 @@ package main
 import (
 	"cmp"
 	"errors"
-	"fmt"
-	"html"
 	"log"
 	"slices"
 	"strings"
@@ -19,10 +17,9 @@ const (
 	calHorizon   = 7 * 24 * time.Hour
 	calAhead     = 12 * time.Hour
 	calSoon      = 5 * time.Minute
-	calLineRune  = 9
-	calTitleRune = 9
-	calRows      = 4
-	amber        = "#FFB000"
+	amberRGB     = 0xFFB000
+	grayRGB      = 0x808080
+	whiteRGB     = 0xFFFFFF
 )
 
 type calItem struct {
@@ -75,7 +72,7 @@ func calKeep(items []calItem, now time.Time) []calItem {
 }
 
 func calNext(items []calItem, now time.Time) int {
-	return slices.IndexFunc(items, func(it calItem) bool { return !it.allDay && !it.start.After(now.Add(calAhead)) })
+	return slices.IndexFunc(items, func(it calItem) bool { return !it.allDay && !it.done && !it.start.After(now.Add(calAhead)) })
 }
 
 func (c *calendar) publish() {
@@ -88,13 +85,13 @@ func (c *calendar) publishLocked() {
 	now := time.Now()
 	if c.browsing() {
 		c.vars.set("cal_browse", "1")
-		c.vars.set("cal_svg", calBrowseSVG(c.items, c.pick, now))
+		c.vars.set("cal_svg", calBrowseImage(c.items, c.pick, now))
 		return
 	}
 	c.vars.set("cal_browse", "0")
 	line := ""
 	if i := calNext(c.items, now); i >= 0 {
-		line = calLineSVG(c.items[i], now)
+		line = calLineImage(c.items[i])
 	}
 	c.vars.set("cal_line", line)
 }
@@ -177,14 +174,14 @@ func (c *calendar) act(i int) error {
 	it := c.items[i]
 	c.browseTill = time.Time{}
 	if it.reminder {
-		c.items[i].done = true
+		c.items[i].done = !it.done
 	}
 	c.publishLocked()
 	c.mu.Unlock()
 	var err error
 	if it.reminder {
-		log.Printf("calendar: complete %q", it.title)
-		err = calComplete(it.id)
+		log.Printf("calendar: done=%v %q", !it.done, it.title)
+		err = calSetDone(it.id, !it.done)
 	} else {
 		log.Printf("calendar: open %q", it.title)
 		err = calOpen(it)
@@ -193,116 +190,59 @@ func (c *calendar) act(i int) error {
 	return err
 }
 
-const calFont = `font-family="JetBrains Mono, Apple Color Emoji"`
-
-func calTitle(s string) string {
-	s = strings.ToLower(strings.Join(strings.Fields(s), " "))
+func calTitle(it calItem) string {
+	s := strings.ToLower(strings.Join(strings.Fields(it.title), " "))
 	if s == "" {
-		return "·"
+		s = "·"
 	}
-	return s
-}
-
-func calCut(s string, n int) string {
-	if r := []rune(s); len(r) > n {
-		return strings.TrimSpace(string(r[:n]))
+	switch {
+	case !it.reminder:
+		return s
+	case it.done:
+		return "● " + s
+	default:
+		return "○ " + s
 	}
-	return s
 }
 
 func calTime(it calItem) string {
 	if it.allDay {
 		return ""
 	}
-	return it.start.Format("15:04")
+	return it.start.Format("15:04 ")
 }
 
-func calColor(it calItem, now time.Time) string {
+func calColor(it calItem, now time.Time) uint32 {
 	if it.done {
-		return ""
+		return 0
 	}
 	if it.reminder && !it.allDay && it.start.Before(now) {
-		return amber
+		return amberRGB
 	}
 	if !it.reminder && it.start.After(now) && it.start.Sub(now) <= calSoon {
-		return amber
+		return amberRGB
 	}
-	return ""
+	return 0
 }
 
-func calGlyph(it calItem, x, y, r float64, color string) string {
-	if !it.reminder {
-		return ""
+func calImage(w, h float64, texts ...calText) string {
+	uri, err := calPNG(w, h, texts)
+	if err != nil {
+		log.Print(err)
 	}
-	if it.done {
-		return fmt.Sprintf(`<circle cx="%g" cy="%g" r="%g" fill="%s"/>`, x, y, r, color)
-	}
-	return fmt.Sprintf(`<circle cx="%g" cy="%g" r="%g" fill="none" stroke="%s" stroke-width="1.5"/>`, x, y, r-0.75, color)
+	return uri
 }
 
-func calLineSVG(it calItem, now time.Time) string {
-	color := gray
-	n := calLineRune
-	if it.reminder {
-		n -= 2
-	}
-	title := calCut(calTitle(it.title), n)
-	var b strings.Builder
-	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 22">`)
-	anchor, x := "middle", 44.0
-	if it.reminder {
-		start := 44 - (float64(len([]rune(title)))*16*0.6+12)/2
-		b.WriteString(calGlyph(it, start+4.5, 11, 4.5, color))
-		anchor, x = "start", start+12
-	}
-	fmt.Fprintf(&b, `<text x="%g" y="16.5" text-anchor="%s" %s font-size="16" fill="%s">%s</text>`, x, anchor, calFont, color,
-		html.EscapeString(title))
-	b.WriteString(`</svg>`)
-	return dataURI(b.String())
+func calLineImage(it calItem) string {
+	return calImage(88, 24, calText{text: calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
 }
 
-func calWrap(s string, width, rows int) []string {
-	var lines []string
-	line := ""
-	for _, w := range strings.Fields(s) {
-		switch {
-		case line == "":
-			line = w
-		case len([]rune(line))+1+len([]rune(w)) <= width:
-			line += " " + w
-		default:
-			lines, line = append(lines, line), w
-		}
-	}
-	lines = append(lines, line)
-	if len(lines) > rows {
-		lines = append(lines[:rows-1], strings.Join(lines[rows-1:], " "))
-	}
-	for i := range lines {
-		lines[i] = calCut(lines[i], width)
-	}
-	return lines
-}
-
-func calBrowseSVG(items []calItem, pick int, now time.Time) string {
-	var b strings.Builder
-	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
+func calBrowseImage(items []calItem, pick int, now time.Time) string {
 	if pick >= len(items) {
-		fmt.Fprintf(&b, `<circle cx="50" cy="50" r="4" fill="%s"/>`, gray)
-		b.WriteString(`</svg>`)
-		return dataURI(b.String())
+		return calImage(100, 100, calText{text: "·", y: 40, w: 100, h: 20, size: 16, rgb: grayRGB, center: true})
 	}
 	it := items[pick]
-	color := cmp.Or(calColor(it, now), "#fff")
-	head := it.start.Format("02.01")
-	if t := calTime(it); t != "" {
-		head = t + " " + head
-	}
-	fmt.Fprintf(&b, `<text x="6" y="18" font-family="JetBrains Mono" font-size="12" fill="%s">%s</text>`, color, head)
-	b.WriteString(calGlyph(it, 90, 14, 4.5, color))
-	for i, line := range calWrap(calTitle(it.title), calTitleRune, calRows) {
-		fmt.Fprintf(&b, `<text x="6" y="%d" %s font-size="16" fill="%s">%s</text>`, 42+i*17, calFont, gray, html.EscapeString(line))
-	}
-	b.WriteString(`</svg>`)
-	return dataURI(b.String())
+	return calImage(100, 100,
+		calText{text: calTime(it) + it.start.Format("02.01"), x: 6, y: 6, w: 88, h: 17, size: 13, rgb: cmp.Or(calColor(it, now), whiteRGB)},
+		calText{text: calTitle(it), x: 6, y: 27, w: 88, h: 67, size: 16, rgb: grayRGB})
 }

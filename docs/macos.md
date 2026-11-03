@@ -192,5 +192,6 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
 
 - EventKit in-process (`calendar_darwin.m`): events ±7 days (cancelled dropped) and incomplete reminders with a due date up to +7 days, polled every minute; past events drop out, overdue reminders stay.
 - Access: `requestFullAccessTo{Events,Reminders}` (macOS 14+), usage strings in the embedded `Info.plist`; the first poll blocks until the prompt is answered.
-- Done: `EKReminder.completed = YES` + `saveReminder:commit:`. Open: `open ical://ekevent/<eventIdentifier>?method=show&options=more`.
+- Done toggles `EKReminder.completed` + `saveReminder:commit:`; reminders completed since midnight are listed too.
+- Text is drawn by CoreText (`cal_canvas_*`, JetBrains Mono, system emoji fallback, char wrap) into a 4× PNG: Companion's SVG text has no emoji. The frame path is taller than the box and clipped, otherwise a line taller than the box (emoji ascent) is dropped. Open: `open ical://ekevent/<eventIdentifier>?method=show&options=more`.
 - Knob capture: `/scroll/*` ask `calendar` first (`knob`, `turn`); entering the list releases Ctrl (S1).
