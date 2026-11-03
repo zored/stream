@@ -143,7 +143,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 
 | Button | Does | LED |
 |---|---|---|
-| кнопка 1 | KVM → Windows: press = monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu | off, white 0.3 s on press |
+| кнопка 1 | KVM → Windows: press = Wake-on-LAN to the PC, then monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu. Hold = toggle PIP | pink, white 0.3 s on press |
 | кнопка 2 | mic: tap toggles, hold = push-to-talk | green (dims 1 s every 4 s) = on, dim red = off, yellow = switching, blinking yellow = unknown, off = no call |
 | кнопка 3 | camera toggle | as кнопка 2 |
 | кнопка 4 | hang up | white while in a call |

@@ -342,7 +342,7 @@ def wifi_tile():
 
 
 def kvm_led():
-    return button([canvas(), box("box0", expr("$(custom:kvm_led)"))], down=[post(KVM + "/kvm/windows")])
+    return button([canvas(), box("box0", expr("$(custom:kvm_led)"))], up=[post(KVM + "/kvm/windows")], held=[post(KVM + "/kvm/pip")])
 
 
 def choice_gated(b, control):

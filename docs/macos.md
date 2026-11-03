@@ -90,10 +90,13 @@ headphones = the default output is any Bluetooth CoreAudio device; a press then 
 
 ## zored_stream — KVM
 
-`kvm.go`, `:47125`: `POST /kvm/windows` from кнопка 1 (choice-gated); variable `kvm_led` = white for 0.3 s on press.
-Runs `/opt/homebrew/bin/m1ddc set input 15` (MSI MPG 321URX, VCP 60: 15 = DisplayPort = Windows; USB-C 27, HDMI 17/18);
+`kvm.go`, `:47125`: `POST /kvm/windows` (tap) and `/kvm/pip` (hold) from кнопка 1 (choice-gated); variable `kvm_led` = pink, white for 0.3 s on press.
+Tap sends a Wake-on-LAN magic packet to `ec:3a:56:fa:39:ac` (PC at 192.168.4.211) via `192.168.4.255:9`, then
+runs `/opt/homebrew/bin/m1ddc set input 15` (MSI MPG 321URX, VCP 60: 15 = DisplayPort = Windows; USB-C 27, HDMI 17/18);
 the monitor's KVM then moves USB, the controller included. No way back from the Mac side. `m1ddc get input` returns `0`
 on this monitor (verified), so the button shows no state.
+Hold toggles PIP with `m1ddc set pbp 33` / `0` (Dell VCP E9; DDC write succeeds on the MSI, effect not confirmed); the daemon
+keeps the on/off state itself, so a change from the monitor menu puts it out of step.
 
 ## zored_stream — keep awake and sleep
 

@@ -122,6 +122,8 @@ func main() {
 	wifiAddr := flag.String("wifi", "127.0.0.1:47124", "wi-fi power + network picker HTTP address")
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
+	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
+	kvmWOL := flag.String("kvm-wol", "192.168.4.255:9", "Wake-on-LAN broadcast address")
 	wifiApp := flag.String("wifi-app", filepath.Join(home, ".local/share/zored-stream/zored_wifi.app"), "helper app that scans Wi-Fi with Location permission")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
@@ -241,7 +243,10 @@ func main() {
 	pw.publish()
 	hp := newHeadphones(v)
 	hp.publish()
-	kv := newKVM(v, *m1ddc)
+	kv, err := newKVM(v, *m1ddc, *kvmMAC, *kvmWOL)
+	if err != nil {
+		log.Fatal(err)
+	}
 	wf := newWifi(v, *wifiApp, us.say)
 	wf.poll()
 	br, err := newBrightness(vol.bar, *companionDB)
@@ -299,6 +304,7 @@ func main() {
 	})
 	go serve(*kvmAddr, func(mux *http.ServeMux) {
 		handle(mux, "/kvm/windows", kv.windows)
+		handle(mux, "/kvm/pip", kv.togglePIP)
 	})
 	go every(wifiPollEvery, wf.poll)
 	go every(wifiProbeEvery, wf.probe)
@@ -323,6 +329,7 @@ func main() {
 		pw.publish()
 		hp.publish()
 		wf.publish()
+		kv.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })
