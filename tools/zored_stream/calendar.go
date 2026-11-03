@@ -23,6 +23,7 @@ const (
 
 type calItem struct {
 	id, ext, title string
+	notes          string
 	start, end     time.Time
 	allDay         bool
 	reminder       bool
@@ -85,19 +86,19 @@ func (c *calendar) publishLocked() {
 	now := time.Now()
 	if c.browsing() {
 		c.covered = true
-		c.strip(calStripImage(c.items, c.pick, now))
-		c.vars.set("cal_icon", calIcon(c.items, c.pick))
+		c.strip(calStripImage(c.items, c.pick))
+		c.vars.set("cal_icon", calTileImage(c.items, c.pick))
 		c.vars.set("cal_browse", "1")
 	} else if c.covered {
 		c.covered = false
 		c.strip("")
 		c.vars.set("cal_browse", "0")
 	}
-	line := ""
+	var next *calItem
 	if i := calNext(c.items, now); i >= 0 {
-		line = calCardImage(c.items[i], now)
+		next = &c.items[i]
 	}
-	c.vars.set("cal_card", line)
+	c.vars.set("cal_card", calCardImage(now, next))
 }
 
 func (c *calendar) browsing() bool {
@@ -243,43 +244,56 @@ func calWhen(it calItem, now time.Time) string {
 	return calIn(it.start.Sub(now))
 }
 
-func calCardImage(it calItem, now time.Time) string {
-	return calImage(88, 66, false,
-		calText{text: calTime(it) + calWhen(it, now), w: 88, h: 22, size: 16, rgb: whiteRGB, center: true},
-		calText{text: calTitle(it), y: 24, w: 88, h: 42, size: 15, rgb: grayRGB, center: true})
+var calMonths = [...]string{"янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"}
+
+func calDate(t time.Time) string {
+	return fmt.Sprintf("%d %s", t.Day(), calMonths[t.Month()-1])
+}
+
+func calCardImage(now time.Time, it *calItem) string {
+	texts := []calText{{text: calDate(now), w: 88, h: 22, size: 16, rgb: whiteRGB}}
+	if it != nil {
+		texts = append(texts, calText{text: calWhen(*it, now) + " " + calTitle(*it), y: 26, w: 88, h: 62, size: 15, rgb: whiteRGB})
+	}
+	return calImage(88, 88, false, texts...)
 }
 
 var calWeekdays = [...]string{"вс", "пн", "вт", "ср", "чт", "пт", "сб"}
 
-func calStripImage(items []calItem, pick int, now time.Time) string {
+func calStripImage(items []calItem, pick int) string {
 	const w, h = stripDrawH, stripDrawW
 	if pick >= len(items) {
 		return calImage(w, h, true, calText{text: "·", y: 12, w: w, h: 24, size: 16, rgb: grayRGB, center: true})
 	}
 	it := items[pick]
-	when := calTime(it)
-	if y, m, d := it.start.Date(); y != now.Year() || m != now.Month() || d != now.Day() {
-		when = calWeekdays[it.start.Weekday()] + " " + it.start.Format("02.01") + " " + when
+	notes := strings.Join(strings.Fields(it.notes), " ")
+	if notes == "" {
+		return calImage(w, h, true, calText{text: calTitle(it), x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB})
 	}
-	pad := strings.Repeat(" ", len([]rune(when)))
 	return calImage(w, h, true,
-		calText{text: when, x: 4, y: 3, w: w - 8, h: 22, size: 15, rgb: cmp.Or(calColor(it, now), grayRGB)},
-		calText{text: pad + calTitle(it), x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB})
+		calText{text: calTitle(it), x: 4, y: 3, w: w - 8, h: 22, size: 15, rgb: whiteRGB},
+		calText{text: notes, x: 4, y: 25, w: w - 8, h: 22, size: 13, rgb: grayRGB})
 }
 
-func calIcon(items []calItem, pick int) string {
-	var body string
-	switch {
-	case pick >= len(items):
-		body = fmt.Sprintf(`<circle cx="50" cy="50" r="5" fill="%s"/>`, gray)
-	case !items[pick].reminder:
-		body = `<rect x="18" y="24" width="64" height="58" rx="8" fill="none" stroke="#fff" stroke-width="6"/>` +
-			`<path d="M18 42h64M36 16v16M64 16v16" stroke="#fff" stroke-width="6" stroke-linecap="round"/>`
-	case items[pick].done:
-		body = `<rect x="20" y="20" width="60" height="60" rx="10" fill="#fff"/>` +
-			`<path d="M34 51l11 11 21-24" fill="none" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`
-	default:
-		body = `<rect x="23" y="23" width="54" height="54" rx="8" fill="none" stroke="#fff" stroke-width="6"/>`
+func calTileImage(items []calItem, pick int) string {
+	if pick >= len(items) {
+		return calImage(88, 88, false, calText{text: "·", y: 33, w: 88, h: 22, size: 16, rgb: grayRGB, center: true})
 	}
-	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + body + `</svg>`)
+	it := items[pick]
+	when := calWeekdays[it.start.Weekday()]
+	if !it.allDay {
+		when += " " + it.start.Format("15:04")
+	}
+	texts := []calText{
+		{text: calDate(it.start), w: 88, h: 22, size: 16, rgb: whiteRGB},
+		{text: when, y: 24, w: 88, h: 22, size: 16, rgb: cmp.Or(calColor(it, time.Now()), whiteRGB)},
+	}
+	if it.reminder {
+		box := "○"
+		if it.done {
+			box = "●"
+		}
+		texts = append(texts, calText{text: box, y: 52, w: 88, h: 34, size: 28, rgb: whiteRGB})
+	}
+	return calImage(88, 88, false, texts...)
 }

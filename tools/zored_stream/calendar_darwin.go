@@ -23,6 +23,7 @@ type calRaw struct {
 	ID       string  `json:"id"`
 	Ext      string  `json:"ext"`
 	Title    string  `json:"title"`
+	Notes    string  `json:"notes"`
 	Start    float64 `json:"start"`
 	End      float64 `json:"end"`
 	AllDay   bool    `json:"allDay"`
@@ -44,7 +45,7 @@ func calFetch(from, to time.Time) ([]calItem, error) {
 	}
 	items := make([]calItem, len(raw))
 	for i, r := range raw {
-		items[i] = calItem{id: r.ID, ext: r.Ext, title: r.Title, start: unixFloat(r.Start), end: unixFloat(r.End),
+		items[i] = calItem{id: r.ID, ext: r.Ext, title: r.Title, notes: r.Notes, start: unixFloat(r.Start), end: unixFloat(r.End),
 			allDay: r.AllDay, reminder: r.Reminder, done: r.Done}
 	}
 	return items, nil

@@ -5751,61 +5751,6 @@
         }
        },
        {
-        "id": "date",
-        "name": "date",
-        "usage": "auto",
-        "type": "image",
-        "pinnedProperties": [
-         "base64Image",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": "$(custom:tile_24) == \"cal\" && $(custom:cal_browse) != 1",
-         "isExpression": true
-        },
-        "opacity": {
-         "value": 100,
-         "isExpression": false
-        },
-        "x": {
-         "value": 6,
-         "isExpression": false
-        },
-        "y": {
-         "value": 6,
-         "isExpression": false
-        },
-        "width": {
-         "value": 88,
-         "isExpression": false
-        },
-        "height": {
-         "value": 17,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "base64Image": {
-         "value": "concat(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjYgLTc0IDI4OSA3NSI+PHRleHQgZm9udC1mYW1pbHk9IkpldEJyYWlucyBNb25vIiBmb250LXNpemU9IjEwMCIgZmlsbD0iIzgwODA4MCI+\", substr(\"MDAuMDEuMDIuMDMuMDQuMDUuMDYuMDcuMDguMDkuMTAuMTEuMTIuMTMuMTQuMTUuMTYuMTcuMTguMTkuMjAuMjEuMjIuMjMuMjQuMjUuMjYuMjcuMjguMjkuMzAuMzEu\", $(internal:date_d) * 4, $(internal:date_d) * 4 + 4), substr(\"MDA8MDE8MDI8MDM8MDQ8MDU8MDY8MDc8MDg8MDk8MTA8MTE8MTI8\", $(internal:date_m) * 4, $(internal:date_m) * 4 + 4), \"L3RleHQ+PC9zdmc+\")",
-         "isExpression": true
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fillMode": {
-         "value": "fit",
-         "isExpression": false
-        }
-       },
-       {
         "id": "card",
         "name": "card",
         "usage": "auto",
@@ -5828,7 +5773,7 @@
          "isExpression": false
         },
         "y": {
-         "value": 28,
+         "value": 6,
          "isExpression": false
         },
         "width": {
@@ -5836,7 +5781,7 @@
          "isExpression": false
         },
         "height": {
-         "value": 66,
+         "value": 88,
          "isExpression": false
         },
         "rotation": {
@@ -6117,8 +6062,8 @@
          "isExpression": false
         },
         "y": {
-         "value": 6,
-         "isExpression": false
+         "value": "$(custom:timer_svg) == \"\" ? 21 : 6",
+         "isExpression": true
         },
         "width": {
          "value": 88,

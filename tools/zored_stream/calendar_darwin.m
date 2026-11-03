@@ -48,7 +48,7 @@ char *cal_items(double from, double to, char **err) {
         for (EKEvent *e in [store eventsMatchingPredicate:ep]) {
             if (e.status == EKEventStatusCanceled) continue;
             [out addObject:@{@"id": e.calendarItemIdentifier, @"ext": e.eventIdentifier ?: @"",
-                             @"title": e.title ?: @"", @"start": @(e.startDate.timeIntervalSince1970),
+                             @"title": e.title ?: @"", @"notes": e.notes ?: @"", @"start": @(e.startDate.timeIntervalSince1970),
                              @"end": @(e.endDate.timeIntervalSince1970), @"allDay": @(e.allDay), @"reminder": @NO}];
         }
         NSCalendar *cal = [NSCalendar currentCalendar];
@@ -69,7 +69,7 @@ char *cal_items(double from, double to, char **err) {
                 NSDate *due = c ? [cal dateFromComponents:c] : r.completionDate;
                 if (!due) continue;
                 BOOL allDay = !c || c.hour == NSDateComponentUndefined;
-                [out addObject:@{@"id": r.calendarItemIdentifier, @"ext": @"", @"title": r.title ?: @"",
+                [out addObject:@{@"id": r.calendarItemIdentifier, @"ext": @"", @"title": r.title ?: @"", @"notes": r.notes ?: @"",
                                  @"start": @(due.timeIntervalSince1970), @"end": @(due.timeIntervalSince1970),
                                  @"allDay": @(allDay), @"reminder": @YES, @"done": @(r.completed)}];
             }

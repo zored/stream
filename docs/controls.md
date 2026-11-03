@@ -145,15 +145,15 @@ Same as кнопка 3. [vkcall.md](vkcall.md)
 
 - one tile, two layers, top active wins: a VK WorkSpace call > the day; the daemon picks the layer (`tile_24`) and routes the tap to it
 - call: hang-up icon, tap ends the call. Same as кнопка 4. [vkcall.md](vkcall.md)
-- day: `DD.MM` gray; below the next event or reminder within 12 h: start time + `+40m` / `+5h` / `+1d` until it (for a running event: `25m` until its end) white, the title gray, lowercase, two lines, centered (reminders get `○`, events nothing)
+- day: all white, left-aligned: the date `3 ноя`; below `+40m` / `+5h` / `+1d` until the next event or reminder within 12 h (for a running event: `25m` until its end) and its title, lowercase, wrapped (reminders get `○`)
 - titles keep emoji (drawn by CoreText into a PNG, the SVG renderer had none) and wrap by character; a recurring event is listed once, at its next occurrence
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
-- touch: 5 s list on the right strip (over model + effort), one item at a time, rotated like the strip, one run of text: `ср 05.11 12:00` gray (no weekday and date for today; amber for an event in ≤ 5 min or an overdue reminder), then the title white; крутилка справа, ряд 3 scrolls it
-- while the list is open the tile shows the action: an empty / checked box for a reminder, a calendar for an event; touch (or the knob press) toggles the reminder (list stays open) or opens the event in Calendar
+- touch: 5 s list, one item at a time; крутилка справа, ряд 3 scrolls it. The right strip (over model + effort) shows only the title white and the notes gray. The tile shows the item: its date `5 ноя`, below the weekday and time `ср 12:00` (amber for an event in ≤ 5 min or an overdue reminder), below `○` / `●` for a reminder
+- in the list a touch (or the knob press) toggles the reminder (list stays open) or opens the event in Calendar
 
 ### тайл ряд 3, колонка 4 — clock + timers
 
-- shows: `HH:MM` white; below it the nearest timer gray, to the minute: `12m`, `1h05`, an alarm `07:30`; more pending = ` +2`
+- shows: `HH:MM` white, vertically centered when no timer; below it the nearest timer gray, to the minute: `12m`, `1h05`, an alarm `07:30`; more pending = ` +2`
 - tap: set a timer for 5 s, крутилка слева, ряд 3 sets it (1 / 5 / 15 / 60 min per detent by speed), the value white; a second tap or 5 s idle starts it, 0 = nothing
 - turn left from 0: an alarm instead, time of day from the next 5 min, 5 min per detent
 - hold ≥ 400 ms: cancel the nearest timer
