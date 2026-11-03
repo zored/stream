@@ -9,7 +9,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ```
           left                         tiles                           right
         knob strip   колонка 1   колонка 2   колонка 3   колонка 4   strip knob
-ряд 1   VOL   ┐      ·           ·           ·           ·           ┐     SUN
+ряд 1   VOL   ┐      ·           ·           ·           awake       ┐     SUN
 ряд 2   TRACK ├trk   play/cover  ·           ·           agents      ├ai   AI
 ряд 3   SEEK  ┘      mic         camera      hang up     clock       ┘     SCROLL
 
@@ -62,7 +62,16 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ## Tiles
 
-### тайлы ряд 1 — free
+### тайлы ряд 1, колонки 1–3 — free
+
+### тайл ряд 1, колонка 4 — keep awake / sleep
+
+- shows: hollow gray circle = off, white dot = the display won't sleep, white moon = release now to sleep
+- touch shorter than 1 s: keep-awake on / off
+- hold 1–3 s, then release: keep-awake off, the Mac sleeps; past 3 s the moon goes away and release does nothing
+- no second haptic: the moon is the cue
+
+[macos.md](macos.md)
 
 ### тайл ряд 2, колонка 1 — play
 

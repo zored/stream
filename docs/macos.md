@@ -71,6 +71,19 @@ Auto mode blocks these; ask the user to run them:
 
 The device has no HID interface, so it can't wake a sleeping Mac (verified: presses do nothing while asleep, the status LED stays on).
 
+## zored_stream — keep awake and sleep
+
+`power.go`, `power_darwin.go`, `:47122`: `POST /power/down`, `/power/up` from тайл ряд 1, колонка 4; variable `power` = `off` / `on` / `arm`.
+
+- keep-awake = an IOKit assertion `PreventUserIdleDisplaySleep` named `zored_stream keep-awake`, held by the daemon; it also blocks
+  idle system sleep. Check: `pmset -g assertions | grep zored` (verified: appears on, gone off).
+- Here `pmset -g` shows `sleep 0` (idle system sleep already off), `displaysleep 15`, so in practice it keeps the display on.
+- The assertion dies with the process: a daemon restart = keep-awake off, on purpose (no state on disk).
+- Closing the lid sleeps the Mac anyway, unless clamshell (power + external display); macOS rule *(assumed)*.
+- Sleep = `IOPMSleepSystem`, no root, no `pmset sleepnow` *(assumed: not triggered during development)*. Keep-awake is released first.
+- Timing lives in the daemon (press 1 s → `arm`, 3 s → cancel), not in Companion's 400 ms hold, so no second haptic.
+- `/location/…/press` over the API sends down and up at once and they race; test with `/down` + `/up`.
+
 ## zored_stream — brightness
 
 `brightness.go`, `display_darwin.go`; HTTP on `127.0.0.1:47118` (`-brightness`). Крутилка справа, ряд 1 (was слева, ряд 3):

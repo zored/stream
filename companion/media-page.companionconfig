@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "1w6V81qLrUqm_Yq0eB7DV",
+  "id": "tNM4h_30k5rzbNPfAccl7",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -908,6 +908,171 @@
          "value": "inside",
          "isExpression": false
         }
+       },
+       {
+        "id": "off",
+        "name": "off",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:power) == \"off\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 88,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODA4MDgwIiBzdHJva2Utd2lkdGg9IjIuNSIvPjwvc3ZnPgo=",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "on",
+        "name": "on",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:power) == \"on\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 88,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iOC4yNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPgo=",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "arm",
+        "name": "arm",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:power) == \"arm\" ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 6,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 88,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZD0iTTI4IDEzYTExIDExIDAgMSAwIDcgMTcgOSA5IDAgMSAxLTctMTd6IiBmaWxsPSIjZmZmIi8+PC9zdmc+Cg==",
+         "isExpression": false
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -915,8 +1080,60 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": []
+        "down": [
+         {
+          "type": "action",
+          "id": "70QJio7ZU4gUmPVkoWjtL",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47122/power/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "gVJ02FKOioexkUL1trMIr",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47122/power/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -5567,7 +5784,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Xt1tCZjj-h_-NVOAg_rJt",
+          "id": "p7tPRLhAAiH2GRmhC0EeE",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5594,7 +5811,7 @@
         "up": [
          {
           "type": "action",
-          "id": "UQzGzTBQQRpPvhT6NZntI",
+          "id": "8zzxhcugey0pICBLd8xFu",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5717,7 +5934,7 @@
         "down": [
          {
           "type": "action",
-          "id": "p7tPRLhAAiH2GRmhC0EeE",
+          "id": "Nf0DcLFWsgyZA9Nw5X72Q",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5744,7 +5961,7 @@
         "up": [
          {
           "type": "action",
-          "id": "8zzxhcugey0pICBLd8xFu",
+          "id": "FteBe65k3gRJx5wTKagZH",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5867,7 +6084,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Nf0DcLFWsgyZA9Nw5X72Q",
+          "id": "fgtYKjY2dKocGBnIUhREX",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5894,7 +6111,7 @@
         "up": [
          {
           "type": "action",
-          "id": "FteBe65k3gRJx5wTKagZH",
+          "id": "zWJ9etlHd7DIR87cjEYAL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6017,7 +6234,7 @@
         "down": [
          {
           "type": "action",
-          "id": "fgtYKjY2dKocGBnIUhREX",
+          "id": "THHDtRXTLqrLLqy3503At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6044,7 +6261,7 @@
         "up": [
          {
           "type": "action",
-          "id": "zWJ9etlHd7DIR87cjEYAL",
+          "id": "ESuVqKMtiIJ0obGKB2_QC",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6167,7 +6384,7 @@
         "down": [
          {
           "type": "action",
-          "id": "THHDtRXTLqrLLqy3503At",
+          "id": "6QY0HC0aFZLhiO6LA6ecA",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6194,7 +6411,7 @@
         "up": [
          {
           "type": "action",
-          "id": "ESuVqKMtiIJ0obGKB2_QC",
+          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6317,7 +6534,7 @@
         "down": [
          {
           "type": "action",
-          "id": "6QY0HC0aFZLhiO6LA6ecA",
+          "id": "UUuaZkswN9ud5PAPapMpW",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6344,7 +6561,7 @@
         "up": [
          {
           "type": "action",
-          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
+          "id": "mw6Aoeumb4cqbejYVNQd0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6371,7 +6588,7 @@
         "400": [
          {
           "type": "action",
-          "id": "UUuaZkswN9ud5PAPapMpW",
+          "id": "4bjSxODAm1Fnx1nEN90-6",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6496,7 +6713,7 @@
         "down": [
          {
           "type": "action",
-          "id": "mw6Aoeumb4cqbejYVNQd0",
+          "id": "8jmrkllUzNPJY6CS8ZsyP",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6523,7 +6740,7 @@
         "up": [
          {
           "type": "action",
-          "id": "4bjSxODAm1Fnx1nEN90-6",
+          "id": "f7k9xQwOdXw1Qb3tafqaL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6646,7 +6863,7 @@
         "down": [
          {
           "type": "action",
-          "id": "8jmrkllUzNPJY6CS8ZsyP",
+          "id": "1w6V81qLrUqm_Yq0eB7DV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6673,7 +6890,7 @@
         "up": [
          {
           "type": "action",
-          "id": "f7k9xQwOdXw1Qb3tafqaL",
+          "id": "BoJoXiNj-b0uo0jRSctp5",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

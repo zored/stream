@@ -114,6 +114,7 @@ func main() {
 	agentsTTL := flag.Duration("agents-ttl", 4*time.Hour, "forget a waiting agent after this long")
 	brightnessAddr := flag.String("brightness", "127.0.0.1:47118", "display + controller brightness HTTP address")
 	scrollAddr := flag.String("scroll", "127.0.0.1:47121", "mouse wheel scroll HTTP address")
+	powerAddr := flag.String("power", "127.0.0.1:47122", "keep-awake + sleep HTTP address")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
@@ -246,6 +247,12 @@ func main() {
 		handle(mux, "/scroll/forward", func() error { return sc.turn(1) })
 		handle(mux, "/scroll/back", func() error { return sc.turn(-1) })
 	})
+	pw := newPower(v)
+	pw.publish()
+	go serve(*powerAddr, func(mux *http.ServeMux) {
+		handle(mux, "/power/down", pw.down)
+		handle(mux, "/power/up", pw.up)
+	})
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {
 			log.Fatal(err)
@@ -260,6 +267,7 @@ func main() {
 		np.tint.publish()
 		us.publish()
 		ag.publish()
+		pw.publish()
 	})
 	serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error { return vol.step(1) })
