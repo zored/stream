@@ -89,16 +89,23 @@ const wifiMenuJoin = `on run argv
 			error "no wi-fi tile in Control Center"
 		end if
 		perform (first action of tile whose name contains "show details")
-		delay 0.8
-		repeat with e in (entire contents of window 1)
-			try
-				if value of attribute "AXIdentifier" of e is target then
-					click e
-					delay 0.3
-					key code 53
-					return "ok"
-				end if
-			end try
+		repeat 15 times
+			delay 0.2
+			set nodes to entire contents of window 1
+			repeat with e in nodes
+				try
+					if value of attribute "AXIdentifier" of e is target then
+						if item 2 of argv is "find" then
+							key code 53
+							return "found"
+						end if
+						click e
+						delay 0.3
+						key code 53
+						return "ok"
+					end if
+				end try
+			end repeat
 		end repeat
 		key code 53
 		error "not in the Wi-Fi menu: " & item 1 of argv
@@ -106,7 +113,7 @@ const wifiMenuJoin = `on run argv
 end run`
 
 func wifiJoin(ssid string) error {
-	out, err := exec.Command("/usr/bin/osascript", "-e", wifiMenuJoin, ssid).CombinedOutput()
+	out, err := exec.Command("/usr/bin/osascript", "-e", wifiMenuJoin, ssid, "click").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("wi-fi join %q: %w: %s", ssid, err, strings.TrimSpace(string(out)))
 	}
