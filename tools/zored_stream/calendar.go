@@ -255,11 +255,14 @@ func calStripImage(items []calItem, pick int, now time.Time) string {
 		return calImage(w, h, true, calText{text: "·", y: 12, w: w, h: 24, size: 16, rgb: grayRGB, center: true})
 	}
 	it := items[pick]
-	date := calWeekdays[it.start.Weekday()] + " " + it.start.Format("02.01") + " "
-	pad := strings.Repeat(" ", len([]rune(date)))
+	when := calTime(it)
+	if y, m, d := it.start.Date(); y != now.Year() || m != now.Month() || d != now.Day() {
+		when = calWeekdays[it.start.Weekday()] + " " + it.start.Format("02.01") + " " + when
+	}
+	pad := strings.Repeat(" ", len([]rune(when)))
 	return calImage(w, h, true,
-		calText{text: date, x: 4, y: 3, w: w - 8, h: 22, size: 15, rgb: grayRGB},
-		calText{text: pad + calTime(it) + calTitle(it), x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: cmp.Or(calColor(it, now), whiteRGB)})
+		calText{text: when, x: 4, y: 3, w: w - 8, h: 22, size: 15, rgb: cmp.Or(calColor(it, now), grayRGB)},
+		calText{text: pad + calTitle(it), x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB})
 }
 
 func calIcon(items []calItem, pick int) string {

@@ -142,9 +142,17 @@ void cal_canvas_text(void *c, const char *text, double x, double y, double w, do
         CGRect box = CGRectMake(x, H - y - h, w, h);
         CGPathRef path = CGPathCreateWithRect(CGRectMake(x, box.origin.y - H, w, h + H), NULL);
         CTFrameRef frame = CTFramesetterCreateFrame(fs, CFRangeMake(0, 0), path, NULL);
+        CFArrayRef lines = CTFrameGetLines(frame);
+        CFIndex n = CFArrayGetCount(lines);
+        CGPoint origins[n];
+        CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins);
+        double top = box.origin.y + h, ascent = CTFontGetAscent(font);
         CGContextSaveGState(ctx);
         CGContextClipToRect(ctx, box);
-        CTFrameDraw(frame, ctx);
+        for (CFIndex i = 0; i < n; i++) {
+            CGContextSetTextPosition(ctx, x + origins[i].x, top - ascent - i * lh);
+            CTLineDraw(CFArrayGetValueAtIndex(lines, i), ctx);
+        }
         CGContextRestoreGState(ctx);
         CFRelease(frame);
         CGPathRelease(path);
