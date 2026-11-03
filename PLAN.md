@@ -41,7 +41,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   wi-fi join by clicking the network in Control Center's Wi-Fi details (no password prompts), then Viscosity `Barbos_SE` reconnect
   (`-wifi-vpn`), VPN dot on the tile, hotspot icon, no-internet dot; keep-awake: a tap that turns it off blanked the display
   (idle > `displaysleep`, not a real sleep) → idle reset via `IOPMAssertionDeclareUserActivity` (`4c9311f`);
-  KVM module `kvm.go` on 47125 (кнопка 1, `m1ddc`), PIP under discussion
+  KVM module `kvm.go` on 47125 (кнопка 1, `m1ddc`), PIP under discussion; limits: after a Mac sleep the fetch timer stood still,
+  the session `resets_at` expired and the bar was cleared → refetch on wake / expiry (`250f73d`)
 
 ## Next
 
