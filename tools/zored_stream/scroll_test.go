@@ -204,3 +204,27 @@ func TestScrollAppWindowsAfterSwitch(t *testing.T) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
 }
+
+func TestScrollPressDuringAppWindowsSwitchesApp(t *testing.T) {
+	s, k := fakeScroller(t, true)
+	for _, step := range []func() error{
+		func() error { return s.hold(true) },
+		func() error { return s.turn(1) },
+		func() error { return s.hold(false) },
+		func() error { return s.turn(1) },
+		func() error { return s.hold(true) },
+		func() error { return s.turn(1) },
+		func() error { return s.hold(false) },
+	} {
+		if err := step(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	want := []string{"cmd true", "cmd-tab false", "cmd false", "cmd true", "cmd-grave false", "cmd false", "cmd true", "cmd-tab false", "cmd false"}
+	if got := k.get(); !slices.Equal(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	if !s.tab {
+		t.Fatal("press + turn switched the mode")
+	}
+}
