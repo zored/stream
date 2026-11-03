@@ -2,47 +2,33 @@ package main
 
 import (
 	"fmt"
-	"html"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"unicode"
-	"unicode/utf8"
 )
 
-const (
-	unreadPollEvery = 2 * time.Second
-	unreadAttribute = 5 * time.Second
-	unreadMaxChats  = 9
-)
+const unreadPollEvery = 2 * time.Second
 
 type unreadApp struct {
-	dock, bundle, letter string
-	badge                int
-	roseAt               time.Time
-	chats                []string
-}
-
-type unreadItem struct {
-	app  *unreadApp
-	text string
+	dock, bundle, fill string
+	badge              int
+	lastAt             time.Time
 }
 
 type unread struct {
-	mu      sync.Mutex
-	vars    *vars
-	apps    []*unreadApp
-	seen    map[string]bool
-	cursor  int
-	pressed time.Time
-	shown   string
+	mu     sync.Mutex
+	vars   *vars
+	apps   []*unreadApp
+	cursor int
+	shown  string
+	primed bool
 }
 
 func newUnread(v *vars) *unread {
-	return &unread{vars: v, seen: map[string]bool{}, apps: []*unreadApp{
-		{dock: "Telegram", bundle: "ru.keepcoder.Telegram", letter: "t"},
-		{dock: "VK WorkSpace Beta", bundle: "ru.mail.messenger-biz-avocado-desktop.beta", letter: "w"},
+	return &unread{vars: v, apps: []*unreadApp{
+		{dock: "Telegram", bundle: "ru.keepcoder.Telegram", fill: "#2AABEE"},
+		{dock: "VK WorkSpace Beta", bundle: "ru.mail.messenger-biz-avocado-desktop.beta", fill: "#1A3A8F"},
 	}}
 }
 
@@ -58,150 +44,83 @@ func badgeCount(label string) int {
 }
 
 func (u *unread) poll() {
-	badges, banners := unreadScan()
-	u.update(time.Now(), badges, banners)
+	u.update(time.Now(), unreadBadges())
 }
 
-func (u *unread) update(now time.Time, badges map[string]string, banners [][2]string) {
+func (u *unread) update(now time.Time, badges map[string]string) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	for _, a := range u.apps {
 		n := badgeCount(badges[a.dock])
-		if n > a.badge {
-			a.roseAt = now
-		}
-		if n == 0 {
-			a.chats = nil
+		if n > a.badge && u.primed {
+			a.lastAt = now
 		}
 		a.badge = n
 	}
-	seen := map[string]bool{}
-	for _, b := range banners {
-		seen[b[0]] = true
-		if u.seen[b[0]] {
-			continue
-		}
-		if a := u.owner(now); a != nil {
-			a.add(b[1])
-		}
-	}
-	u.seen = seen
-	u.publishLocked()
-}
-
-func (u *unread) owner(now time.Time) *unreadApp {
-	var best *unreadApp
-	for _, a := range u.apps {
-		if a.badge > 0 && now.Sub(a.roseAt) <= unreadAttribute && (best == nil || a.roseAt.After(best.roseAt)) {
-			best = a
-		}
-	}
-	return best
-}
-
-func (a *unreadApp) add(chat string) {
-	out := []string{chat}
-	for _, c := range a.chats {
-		if c != chat && len(out) < unreadMaxChats {
-			out = append(out, c)
-		}
-	}
-	a.chats = out
-}
-
-func (u *unread) items() []unreadItem {
-	var out []unreadItem
-	for _, a := range u.apps {
-		if a.badge == 0 {
-			continue
-		}
-		if len(a.chats) == 0 {
-			out = append(out, unreadItem{a, a.letter})
-		}
-		for _, c := range a.chats {
-			out = append(out, unreadItem{a, c})
-		}
-	}
-	return out
-}
-
-func (u *unread) current() (unreadItem, int, int, bool) {
-	items := u.items()
-	if len(items) == 0 {
-		return unreadItem{}, 0, 0, false
-	}
-	i := u.cursor % len(items)
-	return items[i], i, len(items), true
-}
-
-func (u *unread) publishLocked() {
-	svg := ""
-	if it, i, n, ok := u.current(); ok {
-		svg = unreadSVG(initial(it.text), it.app.badge, i, n)
-	}
+	u.primed = true
+	svg := unreadSVG(u.waiting(), now)
 	if svg != u.shown {
 		u.shown = svg
 		u.vars.set("unread_svg", svg)
 	}
 }
 
-func initial(s string) string {
-	for _, r := range s {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			return string(unicode.ToLower(r))
+func (u *unread) waiting() []*unreadApp {
+	var out []*unreadApp
+	for _, a := range u.apps {
+		if a.badge > 0 {
+			out = append(out, a)
 		}
 	}
-	r, _ := utf8.DecodeRuneInString(s)
-	return string(r)
+	return out
 }
 
-func unreadSVG(letter string, count, index, total int) string {
-	var dots strings.Builder
-	if total > 1 {
-		x0 := 50 - float64(total-1)*5
-		for i := range total {
-			fill := "#808080"
-			if i == index {
-				fill = "#fff"
-			}
-			fmt.Fprintf(&dots, `<circle cx="%.1f" cy="88" r="2.5" fill="%s"/>`, x0+float64(i)*10, fill)
-		}
+func capped(n, max int) string {
+	if n > max {
+		return fmt.Sprintf("%d+", max)
 	}
-	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`+
-		`<text x="50" y="44" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="52" fill="#fff">%s</text>`+
-		`<text x="94" y="14" text-anchor="end" font-family="JetBrains Mono" font-size="16" fill="#808080">%d</text>%s</svg>`,
-		html.EscapeString(letter), count, dots.String()))
+	return strconv.Itoa(n)
 }
 
-func (u *unread) active() bool {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-	return len(u.items()) > 0
+func ago(at, now time.Time) string {
+	d := now.Sub(at)
+	switch {
+	case at.IsZero():
+		return ""
+	case d < time.Hour:
+		return capped(int(d.Minutes()), 59) + "m"
+	case d < 24*time.Hour:
+		return capped(int(d.Hours()), 23) + "h"
+	default:
+		return capped(int(d.Hours()/24), 9) + "d"
+	}
 }
 
-func (u *unread) down() error {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-	u.pressed = time.Now()
-	return nil
+func unreadSVG(apps []*unreadApp, now time.Time) string {
+	if len(apps) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	step := 88.0 / float64(len(apps))
+	for i, a := range apps {
+		cx := 6 + step*(float64(i)+0.5)
+		fmt.Fprintf(&b, `<circle cx="%.1f" cy="40" r="20" fill="%s"/>`+
+			`<text x="%.1f" y="40" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="#fff">%s</text>`+
+			`<text x="%.1f" y="76" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#808080">%s</text>`,
+			cx, a.fill, cx, capped(a.badge, 99), cx, ago(a.lastAt, now))
+	}
+	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + b.String() + `</svg>`)
 }
 
-func (u *unread) up() error {
+func (u *unread) press() error {
 	u.mu.Lock()
-	if u.pressed.IsZero() {
+	apps := u.waiting()
+	if len(apps) == 0 {
 		u.mu.Unlock()
 		return nil
 	}
-	held := time.Since(u.pressed) >= holdMin
-	u.pressed = time.Time{}
-	it, _, _, ok := u.current()
-	if !held {
-		u.cursor++
-		u.publishLocked()
-	}
+	a := apps[u.cursor%len(apps)]
+	u.cursor++
 	u.mu.Unlock()
-	if held && ok {
-		return unreadOpen(it.app.bundle)
-	}
-	return nil
+	return unreadOpen(a.bundle)
 }

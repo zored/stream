@@ -1,1 +1,1 @@
-char *unread_scan(void);
+char *unread_badges(void);

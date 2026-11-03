@@ -14,22 +14,16 @@ import (
 	"unsafe"
 )
 
-func unreadScan() (badges map[string]string, banners [][2]string) {
-	s := C.unread_scan()
+func unreadBadges() map[string]string {
+	s := C.unread_badges()
 	defer C.free(unsafe.Pointer(s))
-	badges = map[string]string{}
+	badges := map[string]string{}
 	for line := range strings.SplitSeq(C.GoString(s), "\n") {
-		f := strings.SplitN(line, "\t", 3)
-		if len(f) != 3 {
-			continue
-		}
-		if f[0] == "badge" {
-			badges[f[1]] = f[2]
-		} else {
-			banners = append(banners, [2]string{f[1], f[2]})
+		if name, badge, ok := strings.Cut(line, "\t"); ok {
+			badges[name] = badge
 		}
 	}
-	return badges, banners
+	return badges
 }
 
 func unreadOpen(bundle string) error {

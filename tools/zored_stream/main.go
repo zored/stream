@@ -33,6 +33,7 @@ type vars struct {
 }
 
 func (v *vars) set(name, value string) {
+	tmpCount(&tmpSets, name)
 	v.mu.Lock()
 	if v.sent[name] == value {
 		v.mu.Unlock()
@@ -366,7 +367,7 @@ func main() {
 	go every(unreadPollEvery, ur.poll)
 	tile22 := &slot{vars: v, name: "tile_22", layers: []layer{
 		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
-		{name: "unread", press: ur.down, up: ur.up},
+		{name: "unread", press: ur.press},
 	}}
 	go every(pollEvery, tile22.publish)
 	go serve(*unreadAddr, func(mux *http.ServeMux) {

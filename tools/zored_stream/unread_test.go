@@ -5,29 +5,39 @@ import (
 	"time"
 )
 
-func TestUnreadAttribution(t *testing.T) {
+func TestUnreadTiles(t *testing.T) {
 	postVar = func(string, string) error { return nil }
 	u := newUnread(&vars{sent: map[string]string{}})
 	now := time.Now()
-	u.update(now, map[string]string{"Telegram": "1"}, [][2]string{{"a", "Мама"}})
-	u.update(now.Add(time.Second), map[string]string{"Telegram": "2"}, [][2]string{{"a", "Мама"}, {"b", "Работа"}})
-	u.update(now.Add(time.Minute), map[string]string{"Telegram": "2"}, [][2]string{{"c", "Чужое"}})
-	got := u.items()
-	if len(got) != 2 || got[0].text != "Работа" || got[1].text != "Мама" {
-		t.Fatalf("items: %+v", got)
+	u.update(now.Add(-time.Hour), map[string]string{})
+	u.update(now, map[string]string{"Telegram": "1"})
+	u.update(now.Add(time.Minute), map[string]string{"Telegram": "1", "VK WorkSpace Beta": "•"})
+	got := u.waiting()
+	fresh := newUnread(&vars{sent: map[string]string{}})
+	fresh.update(now, map[string]string{"Telegram": "3"})
+	if !fresh.apps[0].lastAt.IsZero() {
+		t.Fatal("badges present at start have no known age")
 	}
-	u.update(now.Add(2*time.Minute), map[string]string{}, nil)
-	if u.active() || u.vars.sent["unread_svg"] != "" {
-		t.Fatal("zero badge must clear the tile")
+	if len(got) != 2 || got[1].badge != 1 || !got[0].lastAt.Equal(now) {
+		t.Fatalf("waiting: %+v", got)
+	}
+	u.update(now.Add(2*time.Minute), map[string]string{})
+	if u.vars.sent["unread_svg"] != "" {
+		t.Fatal("no badges must clear the tile")
 	}
 }
 
-func TestUnreadLetterFallback(t *testing.T) {
-	postVar = func(string, string) error { return nil }
-	u := newUnread(&vars{sent: map[string]string{}})
-	u.update(time.Now(), map[string]string{"VK WorkSpace Beta": "•"}, nil)
-	it, _, _, ok := u.current()
-	if !ok || it.text != "w" || it.app.badge != 1 {
-		t.Fatalf("got %+v", it)
+func TestUnreadLabels(t *testing.T) {
+	now := time.Now()
+	for _, c := range []struct{ got, want string }{
+		{capped(150, 99), "99+"},
+		{ago(now.Add(-5*time.Minute), now), "5m"},
+		{ago(now.Add(-3*time.Hour), now), "3h"},
+		{ago(now.Add(-30*24*time.Hour), now), "9+d"},
+		{ago(time.Time{}, now), ""},
+	} {
+		if c.got != c.want {
+			t.Errorf("got %q, want %q", c.got, c.want)
+		}
 	}
 }
