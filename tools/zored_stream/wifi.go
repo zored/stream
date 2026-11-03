@@ -31,6 +31,8 @@ type wifi struct {
 	vars     *vars
 	strip    func(note stripNote, d time.Duration)
 	loading  bool
+	cache    []string
+	waitJoin bool
 	phone    bool
 	joining  string
 	joinTill time.Time
@@ -142,10 +144,11 @@ func (w *wifi) up() error {
 		w.mu.Unlock()
 		return nil
 	}
-	w.list, w.pick = nil, -1
-	if w.ssid != "" {
-		w.list, w.pick = []string{w.ssid}, 0
+	w.list = slices.Clone(w.cache)
+	if w.ssid != "" && !slices.Contains(w.list, w.ssid) {
+		w.list = append([]string{w.ssid}, w.list...)
 	}
+	w.pick, w.waitJoin = slices.Index(w.list, w.ssid), false
 	w.pickTill = time.Now().Add(wifiPickFor)
 	w.loading, w.turned = true, false
 	w.showLocked()
@@ -173,19 +176,17 @@ func (w *wifi) scan() {
 func (w *wifi) setList(list []string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+	w.cache = list
 	if !w.picking() {
 		return
 	}
-	current := ""
-	if w.pick >= 0 {
-		current = w.list[w.pick]
-	}
-	if current != "" && !slices.Contains(list, current) {
-		list = append([]string{current}, list...)
-	}
-	w.list, w.pick = list, slices.Index(list, current)
+	w.list, w.pick = list, keepPick(w.list, w.pick, list)
 	w.loading = false
 	w.showLocked()
+	if w.waitJoin {
+		w.waitJoin = false
+		w.join = time.AfterFunc(wifiJoinAfter, w.joinPick)
+	}
 }
 
 func (w *wifi) picking() bool {
@@ -226,6 +227,11 @@ func (w *wifi) showLocked() {
 func (w *wifi) joinPick() {
 	w.mu.Lock()
 	w.join = nil
+	if w.loading {
+		w.waitJoin = true
+		w.mu.Unlock()
+		return
+	}
 	if w.pick < 0 || w.list[w.pick] == w.ssid {
 		w.mu.Unlock()
 		return
@@ -293,6 +299,18 @@ func ipconfigLink(summary string) (wifiLink, error) {
 		}
 	}
 	return l, nil
+}
+
+func keepPick(old []string, pick int, list []string) int {
+	if pick >= 0 {
+		if i := slices.Index(list, old[pick]); i >= 0 {
+			return i
+		}
+	}
+	if len(list) == 0 {
+		return -1
+	}
+	return 0
 }
 
 func wifiLabel(name string) string {

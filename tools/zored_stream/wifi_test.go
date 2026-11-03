@@ -23,3 +23,23 @@ func TestIpconfigLink(t *testing.T) {
 		t.Error("redacted SSID must fail")
 	}
 }
+
+func TestKeepPick(t *testing.T) {
+	list := []string{"a", "b", "c"}
+	for _, c := range []struct {
+		old  []string
+		pick int
+		want int
+	}{
+		{[]string{"x", "c"}, 1, 2},
+		{[]string{"x", "gone"}, 1, 0},
+		{nil, -1, 0},
+	} {
+		if got := keepPick(c.old, c.pick, list); got != c.want {
+			t.Errorf("keepPick(%v, %d) = %d, want %d", c.old, c.pick, got, c.want)
+		}
+	}
+	if got := keepPick([]string{"a"}, 0, nil); got != -1 {
+		t.Errorf("empty list: %d", got)
+	}
+}
