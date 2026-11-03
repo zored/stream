@@ -49,10 +49,10 @@ func emojiPNG(glyphs []emojiGlyph, ring bool) (string, error) {
 	return canvasPNG(c)
 }
 
-func emojiTilePNG(text string) (string, error) {
+func emojiTilePNG(text string, size float64) (string, error) {
 	c := C.cal_canvas_new(100, 100, 1, 0)
 	s := C.CString(text)
-	C.cal_canvas_glyph(c, s, 50, 50, 64, 1)
+	C.cal_canvas_glyph(c, s, 50, 50, C.double(size), 1)
 	C.free(unsafe.Pointer(s))
 	return canvasPNG(c)
 }

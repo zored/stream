@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/rand/v2"
 	"slices"
 	"sync"
 	"time"
@@ -15,6 +16,8 @@ const (
 	emojiRing     = 22
 	emojiPitch    = 43
 	emojiSize     = 30
+	emojiTileSize = 64
+	emojiIdleSize = 44
 	emojiTapPx    = 6
 	emojiFriction = 0.94
 	emojiFling    = 2.0
@@ -47,6 +50,7 @@ type emoji struct {
 	strips   [2]*emojiStrip
 	active   int
 	starts   []int
+	idle     string
 	tileText string
 	wake     chan struct{}
 	recents  func() ([]string, error)
@@ -55,7 +59,8 @@ type emoji struct {
 }
 
 func newEmoji(v *vars) *emoji {
-	return &emoji{vars: v, wake: make(chan struct{}, 1), recents: emojiRecents, send: emojiType, render: emojiPNG,
+	all := slices.Concat(emojiGroups...)
+	return &emoji{vars: v, idle: emojiTileImage(all[rand.IntN(len(all))], emojiIdleSize), wake: make(chan struct{}, 1), recents: emojiRecents, send: emojiType, render: emojiPNG,
 		strips: [2]*emojiStrip{{}, {}}}
 }
 
@@ -318,7 +323,7 @@ func (e *emoji) publish() {
 	defer e.mu.Unlock()
 	if !e.open() {
 		e.vars.set("emoji_on", "0")
-		e.vars.set("emoji_tile", emojiIdle)
+		e.vars.set("emoji_tile", e.idle)
 		return
 	}
 	for side, s := range e.strips {
@@ -340,7 +345,7 @@ func (e *emoji) publish() {
 	}
 	if text := e.top(emojiLeft); text != e.tileText {
 		e.tileText = text
-		e.vars.set("emoji_tile", emojiTileImage(text))
+		e.vars.set("emoji_tile", emojiTileImage(text, emojiTileSize))
 	}
 	e.vars.set("emoji_on", "1")
 }
@@ -363,16 +368,10 @@ func emojiColumn(list []string, offset float64) []emojiGlyph {
 
 var emojiCategories = []string{"🕘", "😀", "👋", "🐻", "🍔", "⚽", "🚗", "💡", "🔣", "🏁"}
 
-var emojiIdle = dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
-	`<circle cx="50" cy="50" r="32" fill="#fff"/>` +
-	`<ellipse cx="39" cy="41" rx="4" ry="6" fill="#000"/><ellipse cx="61" cy="41" rx="4" ry="6" fill="#000"/>` +
-	`<path d="M34 56q16 18 32 0z" fill="#000"/></svg>`)
-
-func emojiTileImage(text string) string {
-	uri, err := emojiTilePNG(text)
+func emojiTileImage(text string, size float64) string {
+	uri, err := emojiTilePNG(text, size)
 	if err != nil {
 		log.Print(err)
-		return emojiIdle
 	}
 	return uri
 }
