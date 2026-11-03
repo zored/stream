@@ -12,7 +12,7 @@ Module `unread` of `zored_stream`, port 47130 (`/tile/22/down`, `/tile/22/up`). 
 
 - `unread_svg`: one circle per app with unread, Telegram `#2AABEE`, VK WorkSpace `#1A3A8F`; white count centered, black outline, capped `99+`; gray age below: `Nm` (`59+m`), `Nh` (`23+h`), `Nd` (`9+d`).
 - Tap: opens the next app with unread (`open -b <bundle>`), round robin.
-- Nothing unread: a gray eye.
+- Nothing unread: a small white eye.
 
 ## Dead ends
 
