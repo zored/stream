@@ -23,10 +23,13 @@ type scroller struct {
 	turned  bool
 	ctrl    bool
 	timer   *time.Timer
+	wheel   func(vertical, horizontal int) error
+	ctrlKey func(down bool) error
+	tabKey  func(shift bool) error
 }
 
 func newScroller(file string) (*scroller, error) {
-	s := &scroller{file: file}
+	s := &scroller{file: file, wheel: postScroll, ctrlKey: postCtrl, tabKey: postTab}
 	data, err := os.ReadFile(file)
 	switch {
 	case os.IsNotExist(err):
@@ -41,7 +44,7 @@ func newScroller(file string) (*scroller, error) {
 			return nil, fmt.Errorf("%s: unknown mode %q", file, mode)
 		}
 	}
-	return s, postCtrl(false)
+	return s, s.ctrlKey(false)
 }
 
 func (s *scroller) hold(down bool) error {
@@ -75,13 +78,13 @@ func (s *scroller) turn(direction int) error {
 	defer s.mu.Unlock()
 	if s.pressed {
 		s.turned = true
-		return postScroll(0, s.lines(direction))
+		return s.wheel(0, s.lines(direction))
 	}
 	if !s.tab {
-		return postScroll(s.lines(direction), 0)
+		return s.wheel(s.lines(direction), 0)
 	}
 	if !s.ctrl {
-		if err := postCtrl(true); err != nil {
+		if err := s.ctrlKey(true); err != nil {
 			return err
 		}
 		s.ctrl = true
@@ -91,7 +94,7 @@ func (s *scroller) turn(direction int) error {
 	} else {
 		s.timer.Reset(tabRelease)
 	}
-	return postTab(direction < 0)
+	return s.tabKey(direction < 0)
 }
 
 func (s *scroller) lines(direction int) int {
@@ -114,5 +117,5 @@ func (s *scroller) releaseLocked() error {
 		return nil
 	}
 	s.ctrl = false
-	return postCtrl(false)
+	return s.ctrlKey(false)
 }

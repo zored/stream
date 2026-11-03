@@ -25,7 +25,7 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
   the strip is the HUD.
 - Pushes Companion custom variables (must exist: `make deploy` creates them from `companion/custom-variables.json`):
   - `volume` (text, `MUTE` when muted; not shown on the strip, the white bar is the HUD)
-  - the left-strip bar, shared with brightness (`bar.go`): `bar_value` (eased 30 fps), `bar_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s), `bar_mode` (`volume`, `mac`, `ctl`, `seek`: who moved it last; a hidden bar jumps to the new mode's value instead of easing from the old one)
+  - the left-strip bar, shared with brightness (`bar.go`): `bar_value` (eased at 60 fps), `bar_alpha` (0–100, fade in fast, out slow; any change incl. keyboard + 1 s), `bar_mode` (`volume`, `mac`, `ctl`, `seek`: who moved it last; a hidden bar jumps to the new mode's value instead of easing from the old one)
   - `np_playing` (`1`/`0`), `np_title`, `np_artist`, `np_track` (`artist — title`), `np_app` (bundle id of the Now Playing app),
     `np_svg` (base64 SVG data URI for the track strip: like mark (a heart as wide as the strip, 6% inset), lowercase gray artist `|` bold title, each cut to 30 characters with `…`, split into two lines when one line would be tiny; the heart is an SVG path (skia has no emoji fallback), reset on track change; an empty title is held back for 3 s; an image layer can't take raw SVG,
     Companion cuts data at the first `=`),
@@ -42,12 +42,12 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
   - `np_art` — cover of the current track as a JPEG data URI (empty = no cover): the perl child takes
     `kMRMediaRemoteNowPlayingInfoArtworkData`, thumbnails it to ≤160 px JPEG with ImageIO once per new image. Yandex Music gives 150×150 JPEG (verified);
     Chrome/YouTube and Music.app not checked yet.
-  - `np_glyph` (0–100, `cover.go`) — opacity of the play/pause glyph over the cover on тайл ряд 2, колонка 3: paused → ▶ stays at 100;
+  - `np_glyph` (0–100, `cover.go`) — opacity of the play/pause glyph over the cover on тайл ряд 2, колонка 1: paused → ▶ stays at 100;
     playing → ⏸ fades in on a state change or touch (`POST /nowplaying/show` on `:47113`, the tile's `down`), holds 1.5 s, fades out.
     60 Hz ticker only while it moves; the glyph also grows 80 → 100 % with it. Glyphs are `tools/icons/{play,pause}-glow.svg`
     (two `feGaussianBlur`-ed black copies under a white path; Skia renders SVG filters). No cover → the old text glyph.
     Cost per frame in Companion's Skia: ~0.4–0.6 ms for cover + glyph (measured with `@napi-rs/canvas` from the app bundle).
-- Idle CPU ~0 % (measured on the Go daemon): the 30 fps ticker runs only while the volume changes; audio polled every 0.25 s.
+- Idle CPU ~0 % (measured on the Go daemon): the 60 fps ticker runs only while the bar moves; audio polled every 0.25 s.
 - Every 10 s it re-sends all variables, so a Companion restart heals itself.
 
 ### Why perl
@@ -61,11 +61,12 @@ Same trick as [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote
 
 ## Things that need the user
 
-Auto mode blocks these; ask the user to run them:
+Everything else (`make zored_stream`, `make module`, `make deploy`) sessions run themselves. These need the user:
 
 - `make zored_stream-cert` (keychain password)
 - `make companion` (adds a login item)
-- granting Accessibility to Companion
+- `make agent-hooks` (writes `~/.claude/settings.json`)
+- granting Accessibility to Companion and `zored_stream`, Automation for Amphetamine and iTerm2
 
 ## Sleep
 
@@ -143,5 +144,5 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
   (the volume acceleration), posted to `kCGHIDEventTap`, so it lands in the window under the cursor, as a mouse wheel does.
 - Direction is fixed: clockwise = further down / right through the document, regardless of natural scrolling
   (synthetic events skip the HID inversion; assumed). Natural scrolling here is off (`com.apple.swipescrolldirection` = 0).
-- Permission: `CGPreflightPostEventAccess` is true for the signed binary, the Accessibility grant from ymusic covers it (verified).
+- Permission: `CGPreflightPostEventAccess` is true for the signed binary, the daemon's Accessibility grant covers it (verified).
   Without it the turn returns `409` with `no permission to post events`.

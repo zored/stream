@@ -58,3 +58,24 @@ func TestChoiceLEDs(t *testing.T) {
 		t.Errorf("single: got %x, want %x", got, want)
 	}
 }
+
+func TestChoiceGate(t *testing.T) {
+	c := newChoice(nil, nil)
+	if err := c.down(2); err == nil {
+		t.Fatal("down without a card must fail so the button runs its own action")
+	}
+	if err := c.up(2); err == nil {
+		t.Fatal("up after an unconsumed down must fail")
+	}
+	c.card = &choiceCard{Options: options(2), Index: 1, Count: 1}
+	if err := c.down(2); err != nil {
+		t.Fatal(err)
+	}
+	c.card = nil
+	if err := c.up(2); err != nil {
+		t.Fatalf("release of a consumed press must stay consumed after the card is gone: %v", err)
+	}
+	if err := c.up(2); err == nil {
+		t.Fatal("second up must not be consumed")
+	}
+}

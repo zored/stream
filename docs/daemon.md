@@ -1,6 +1,7 @@
 # One daemon: `zored_stream`
 
-Decision record for merging `streamd`, `vkcall`, `ymusic` (and later `mediakey`) into one binary.
+Decision record for merging `streamd`, `vkcall`, `ymusic` (and later `mediakey`) into one binary. Done 2026-11-02:
+the old helpers are gone, only `mediakey` stays separate. Current modules: [zored_stream today](#zored_stream-today).
 **Verified** = observed on this Mac on 2026-11-02, **assumed** = read or recalled, not checked.
 
 ## Decision
@@ -8,7 +9,7 @@ Decision record for merging `streamd`, `vkcall`, `ymusic` (and later `mediakey`)
 Go. Grow the spike `tools/zored_stream/` into the daemon: copy `vkcall` in as-is, call macOS C APIs through cgo,
 keep MediaRemote in a `/usr/bin/perl` child. Rust is the runner-up and only wins on the Windows port.
 
-## Today
+## Before the merge (2026-11-02)
 
 | Helper | Language | Runs as | HTTP | Companion variables | Permissions |
 |---|---|---|---|---|---|
@@ -66,7 +67,11 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Yandex Music like | `ymusic_darwin.go`, `ax_darwin.m` (AX in C, BFS with a 20 000-node cap) | `127.0.0.1:47115` (`-ymusic`) | verified: `ym_like` read, like/unlike pressed, `409` on a press within 1.5 s, grant kept after a rebuild |
 | Brightness | `brightness.go`, `display_darwin.go` (DisplayServices via cgo), [macos.md](macos.md) | `127.0.0.1:47118` (`-brightness`) | verified: turns move the Mac display, controller value goes to `ctl_brightness`; device brightness: user |
 | Claude usage | `usage.go`, [ai.md](ai.md) | `127.0.0.1:47116` (`-usage`) | verified: fetch through the proxy, tile, `GET /usage` |
-| Claude Desktop model + effort | `ai_darwin.go`, `ax_darwin.m`, [ai-switch.md](ai-switch.md) | `127.0.0.1:47117` (`-ai`) | verified: knob turns switch the new-chat pickers, read-back every second |
+| Claude Desktop model + effort, dictation | `ai_darwin.go`, `dictate_darwin.go`, `ax_darwin.m`, [ai-switch.md](ai-switch.md), [agents.md](agents.md#dictation) | `127.0.0.1:47117` (`-ai`) | verified: knob turns switch the new-chat pickers, read-back every second; dictation gestures |
+| Seek | `seek.go`, [macos.md](macos.md) | `127.0.0.1:47119` (`-seek`) | verified with Yandex Music |
+| Agents waiting, choice mode | `agents.go`, `agents_desktop.go`, `choice.go`, `choice_darwin.go`, [agents.md](agents.md) | `127.0.0.1:47120` (`-agents`) | verified on the device |
+| Scroll, Ctrl+Tab | `scroll.go`, `scroll_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47121` (`-scroll`) | verified on the device |
+| Keep-awake, sleep | `power.go`, `power_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47122` (`-power`) | keep-awake verified; sleep not triggered |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain
@@ -100,4 +105,4 @@ Each step keeps the old helper until the new path is verified on the device. Mod
 
 - Go, Windows included: the Windows side is written in Go too.
 - Signing: a self-signed code-signing certificate in the login keychain.
-- The user runs `make zored_stream`, the LaunchAgent install and every helper uninstall (auto mode blocks them); sessions ask when a step needs it.
+- ~~The user runs `make zored_stream`~~ superseded the same day: sessions run `make` targets themselves; permission grants stay with the user.

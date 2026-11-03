@@ -4,16 +4,16 @@ Config-as-code for stream controllers. First device: **Razer Stream Controller**
 driven by [Bitfocus Companion](https://github.com/bitfocus/companion).
 
 What the MEDIA page does today (macOS), every control in detail: [docs/controls.md](docs/controls.md).
+Rules that must keep holding: [docs/invariants.md](docs/invariants.md).
 
-- left knob 1 — volume with acceleration, press = mute; left knob 2 — previous/next track, press = play/pause
-- left touch strip — current track rotated 90°, turns into an animated volume bar while the volume changes; swipe it to change the volume
-- play tile — big ⏸/▶ from the OS playback state
-- VK WorkSpace calls — bottom button 2 toggles the microphone (hold = push-to-talk), button 3 the camera, button 4 hangs up;
-  LEDs and tiles show the real state from the client, mouse clicks included ([vkcall.md](docs/vkcall.md))
-- Yandex Music — hold the play tile or knob 2 to like/unlike the track; 💖/💔 before the track on the strip
-  ([ymusic.md](docs/ymusic.md))
-- clock tile, haptic tap on presses (and a second one at 400 ms hold), soft haptic ticks while sliding along a strip,
-  black tiles without Companion decorations
+- left knobs: volume (press = mute), previous / next track (press = play/pause, hold = Yandex Music like), seek
+- left strip: the current track rotated 90° with a progress bar tinted by the cover; a bar for volume, brightness and seek; swipe = volume
+- tiles: keep-awake (hold = sleep), track cover with ▶/⏸, Claude Code agents waiting, VK WorkSpace mic / camera / hang-up, clock
+- buttons: VK WorkSpace mic (hold = push-to-talk), camera, hang-up; agents; dictation into Claude Desktop;
+  in choice mode кнопки 1–8 answer Claude's question, permission and next-step cards
+- right strip: Claude usage limits + the model and effort; right knobs: Mac / controller brightness, Claude Desktop model + effort,
+  mouse wheel or Ctrl+Tab
+- haptic tap on presses, a second one at 400 ms on the track knob, soft ticks while sliding along a strip
 
 ## Setup (macOS)
 
@@ -30,11 +30,14 @@ make companion
 make agent-hooks
 ```
 
+`make test` checks pages against the daemon and runs the Go tests (CI runs the same).
 `make module` clones and builds the [Loupedeck module fork](https://github.com/zored/companion-surface-loupedeck/tree/zored_stream)
 next to this repo, points Companion's developer modules path at it, restarts Companion, switches the Loupedeck integration
-to the `dev` version and sets the haptics (`HAPTIC`, `HAPTIC_HOLD_MS`, `HAPTIC_SLIDE`, `HAPTIC_STEP`).
+to the `dev` version and sets the haptics (`HAPTIC`, `HAPTIC_HOLD_MS`, `HAPTIC_HOLD_CONTROLS`, `HAPTIC_SLIDE`, `HAPTIC_STEP`).
 `make companion` starts Companion at login with no window (`start_minimised` + a login item).
 `make agent-hooks` adds the Claude Code hooks for [agents waiting for me](docs/agents.md) to `~/.claude/settings.json`; rerunning replaces them.
+
+Yandex Music: `make ymusic-launcher` builds a launcher that keeps its Accessibility tree live while hidden ([ymusic.md](docs/ymusic.md)).
 
 Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `corepack`, Python 3.
 
@@ -42,15 +45,17 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `c
 
 | Path | What |
 |---|---|
-| `tools/gen_pages.py` | Page definitions → `companion/*.companionconfig` |
-| `tools/deploy.mjs` | Imports pages into a running Companion over its internal tRPC API |
-| `tools/mediakey/` | Media key helper (Swift) |
-| `tools/zored_stream/` | one daemon replacing the helpers ([daemon.md](docs/daemon.md)); VK WorkSpace call mic/camera, volume, Now Playing (perl child), Yandex Music like (Accessibility) |
+| `tools/gen_pages.py` | Page definitions → `companion/*` (mac) and `companion/windows/*` |
+| `tools/deploy.mjs`, `tools/trpc.mjs` | Imports pages and creates custom variables in a running Companion over its internal tRPC API |
+| `tools/check_contract.py` | CI check: page URLs hit daemon routes, variables match, кнопки gated by choice mode, hooks fail-safe |
+| `tools/mediakey/` | Media key helper (Swift), run by Companion `exec` |
+| `tools/zored_stream/` | the one daemon ([daemon.md](docs/daemon.md)): calls, volume, Now Playing (perl child), seek, Yandex Music like, brightness, Claude limits + model, agents, choice mode, dictation, scroll, keep-awake |
+| `tools/agent_hooks.py` | Adds the Claude Code hooks for agents waiting to `~/.claude/settings.json` |
 | `tools/icons/` | SVG icons embedded into pages |
 | `tools/surface.mjs` | Switches the Loupedeck integration to a module version and sets surface config over tRPC |
 | `tools/companion_config.py` | Edits the Companion launcher's `config.json` |
 | `tools/sniff.py` | Raw device event sniffer |
-| `docs/` | [Controls](docs/controls.md), [Companion](docs/companion.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Yandex Music](docs/ymusic.md), [Windows port](docs/windows.md), [device](docs/device.md) |
+| `docs/` | [Invariants](docs/invariants.md), [Controls](docs/controls.md), [Companion](docs/companion.md), [daemon](docs/daemon.md), [macOS helpers](docs/macos.md), [VK WorkSpace calls](docs/vkcall.md), [Yandex Music](docs/ymusic.md), [AI limits](docs/ai.md), [AI model switch](docs/ai-switch.md), [agents + dictation + choice mode](docs/agents.md), [Windows port](docs/windows.md), [device](docs/device.md) |
 
 ## Other ways to drive the device
 

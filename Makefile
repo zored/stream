@@ -25,7 +25,7 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages deploy agent-hooks
+.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages check test deploy agent-hooks
 
 build:
 	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey zored_stream-bin
@@ -85,6 +85,12 @@ agent-hooks:
 pages:
 	python3 -I tools/gen_pages.py companion
 	python3 -I tools/gen_pages.py companion/windows windows
+
+check: pages
+	python3 -I tools/check_contract.py
+
+test: check
+	cd tools/zored_stream && GOWORK=off go vet ./... && GOWORK=off go test ./...
 
 deploy: pages
 	node tools/deploy.mjs --vars companion/custom-variables.json companion/media-page.companionconfig:1 companion/test-page.companionconfig:2

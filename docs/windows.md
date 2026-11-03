@@ -30,10 +30,12 @@ Names as in [companion.md](companion.md): тайл ряд R, колонка C; �
 | right strip: AI limits | Claude OAuth usage API | repurpose: Codex | Codex `rate_limits` from its session logs (below) |
 | right knob 2: AI model + effort | Claude Desktop AX | repurpose: Codex (later) | rewrite `model` / `model_reasoning_effort` in `config.toml` for new sessions (idea, assumed) |
 | right knob 1: brightness, press+turn = controller | DisplayServices | keep | external monitor: DDC/CI via `dxva2` (`GetPhysicalMonitorsFromHMONITOR`, `Get/SetMonitorBrightness`, slow, coalesce turns); laptop panel: WMI `WmiMonitorBrightnessMethods` (assumed) |
-| right knob 3: scroll, press+turn = horizontal | CGEvent | keep | `SendInput` `MOUSEEVENTF_WHEEL` / `MOUSEEVENTF_HWHEEL`, 120 per line (assumed) |
+| right knob 3: scroll, press+turn = horizontal, click = Ctrl+Tab mode | CGEvent | keep | `SendInput` `MOUSEEVENTF_WHEEL` / `MOUSEEVENTF_HWHEEL`, 120 per line; Ctrl+Tab via `SendInput` keys with the same release rules (assumed) |
+| тайл ряд 1, колонка 4: keep-awake, hold = sleep | Amphetamine, IOKit | drop for now (freed) | `SetThreadExecutionState`, `SetSuspendState` later |
+| choice mode on кнопки 1–8 | Claude Desktop / iTerm2 AX | off | no Claude Desktop; buttons are not gated |
 | haptics, strip ticks, touch | module fork | keep | OS-independent JS (assumed) |
 
-Freed on Windows: тайл ряд 3, колонки 2–3, кнопки 3, 4, 7, plus the free ones from `PLAN.md`. Candidates: `Win+Alt+K`
+Freed on Windows: тайл ряд 1, колонка 4, тайл ряд 3, колонки 2–3, кнопки 3, 4, 7, plus the free ones from `PLAN.md`. Candidates: `Win+Alt+K`
 (Windows 11 "mute in call", assumed), keystrokes, a Codex "new session" button.
 
 ### Codex limits (verified shape, on the Mac)
@@ -62,10 +64,13 @@ and `companion/windows/` (verified generated). The windows profile:
 
 - media keys: `curl … :47113/key/<name>` instead of `$HOME/.local/bin/mediakey`;
 - `exec` goes through `cmd.exe` there (assumed), so URLs with `?` are double-quoted instead of single-quoted;
-- no Yandex Music hold, no camera, hang-up, dictation controls; no `call_cam`, `ym_like`, `dictation` variables;
+- no Yandex Music hold, no keep-awake, camera, hang-up, dictation controls; no `call_cam`, `ym_like`, `dictation`, `power_svg` variables;
+- no choice-mode gate on the buttons;
+- the AI knob (`1/7`) is still there and posts to `:47117`, which the Windows daemon doesn't serve: drop it or give it the Codex switch (open);
 - everything else, ports and variables identical.
 
-CI checks both through the existing `git diff --exit-code companion`.
+CI checks both through `git diff --exit-code companion`; `tools/check_contract.py` checks the Windows profile uses no mac-only port
+(calls except `/mic`, Yandex Music, keep-awake) and allows the planned `:47113/key/*` routes.
 
 ### Daemon
 
@@ -77,11 +82,11 @@ Same binary name, same ports, same endpoints, same variables. Shared files stay 
 | volume + media keys | 47113 | `audio_darwin.go` | `audio_windows.go`, `keys_windows.go` | on |
 | mic | 47114 | `call.go` (VK gRPC) | `mic_windows.go` (capture endpoint mute) | on |
 | Yandex Music like | 47115 | `ymusic_darwin.go` | — | off |
-| AI limits | 47116 | `usage_darwin.go` (keychain) | `codex.go` (portable, could feed the Mac too) | on |
+| AI limits | 47116 | `usage.go` + `claude_token.go` (keychain via `/usr/bin/security`) | `codex.go` (portable, could feed the Mac too) | on |
 | AI model / dictation | 47117 | `ai_darwin.go`, `dictate_darwin.go` | — (Codex model later) | off |
 | brightness | 47118 | `display_darwin.go` | `display_windows.go` (DDC/CI) | on |
 | Now Playing + seek | 47119 | perl child + dylib | PowerShell child (below) | on |
-| agents | 47120 | `agents_darwin.go` (focus, pid) | `agents_windows.go` | on, Codex source |
+| agents | 47120 | `agents.go` (focus via `open`/`osascript`, pid), `agents_desktop.go`, `choice*.go` | `agents_windows.go` | on, Codex source |
 | scroll | 47121 | `scroll_darwin.go` | `scroll_windows.go` | on |
 | keep awake + sleep | 47122 | `power_darwin.go` (Amphetamine, IOKit sleep) | `power_windows.go` (`SetThreadExecutionState`, `SetSuspendState`) | off |
 
@@ -125,7 +130,7 @@ Once steps 5–8 work by hand, fold them into `tools/windows/setup.ps1` with the
 
 ### CI
 
-A `windows-latest` job: `go vet ./...`, `go test ./...`, `go build -ldflags=-H=windowsgui` in `tools/zored_stream`. It lands
+The macOS job already runs `go vet` + `go test`. A `windows-latest` job: `go vet ./...`, `go test ./...`, `go build -ldflags=-H=windowsgui` in `tools/zored_stream`. It lands
 together with the per-OS module split (step 3 below); before it the Windows build fails on the mac-only symbols.
 
 ## Steps

@@ -279,13 +279,17 @@ func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 	w.Write(body)
 }
 
+func limitsStale(failed bool, fetched *time.Time, now time.Time, every time.Duration) bool {
+	return failed || fetched == nil || now.Sub(*fetched) > 2*every
+}
+
 func (u *usage) publish() {
 	u.mu.Lock()
 	limits, failed, label, mode := u.limits, u.snap.Error != "", u.label, u.stripMode
 	fetched := u.snap.FetchedAt
 	u.mu.Unlock()
 	now := time.Now()
-	stale := failed || fetched == nil || now.Sub(*fetched) > 2*u.every
+	stale := limitsStale(failed, fetched, now, u.every)
 	week := scopedFor(limits, label.model)
 	if week == nil {
 		week = findLimit(limits, "weekly_all")

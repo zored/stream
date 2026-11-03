@@ -100,3 +100,23 @@ func TestStripValueAfterReset(t *testing.T) {
 		t.Errorf("week reset passed: got %q %v", text, pct)
 	}
 }
+
+func TestLimitsStale(t *testing.T) {
+	now := at(19, 12)
+	every := 15 * time.Minute
+	for name, c := range map[string]struct {
+		failed  bool
+		fetched *time.Time
+		want    bool
+	}{
+		"fresh":         {false, ptr(now.Add(-every)), false},
+		"two periods":   {false, ptr(now.Add(-2 * every)), false},
+		"old":           {false, ptr(now.Add(-2*every - time.Second)), true},
+		"failed":        {true, ptr(now), true},
+		"never fetched": {false, nil, true},
+	} {
+		if got := limitsStale(c.failed, c.fetched, now, every); got != c.want {
+			t.Errorf("%s: got %v want %v", name, got, c.want)
+		}
+	}
+}

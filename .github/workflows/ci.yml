@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - run: make pages
+      - run: make check
       - run: git diff --exit-code companion
 
   build:
@@ -29,3 +29,4 @@ jobs:
           go-version-file: tools/zored_stream/go.mod
           cache-dependency-path: tools/zored_stream/go.sum
       - run: make build
+      - run: cd tools/zored_stream && GOWORK=off go vet ./... && GOWORK=off go test ./...

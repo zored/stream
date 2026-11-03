@@ -56,8 +56,7 @@ text inverts where the bar is under it (verified in the web preview: full bar â†
 | after the switch: while the label is in `preview`, or 5 s after an applied switch | whole days left in the week, `3d` (`h:mm` under a day) | `w` of the selected model |
 
 The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
-Bars over 100 % stay full. The bar and the effort dots ease to new values at 30 fps (`animateStrip`, step 0.5 â€”
-faster than the volume bar's 0.3), so a change takes ~0.2 s. A red dot in the corner means the last fetch failed.
+Bars over 100 % stay full. The bar and the effort dots ease to new values at 60 fps (`animateStrip`, `stripHz`), so a change takes ~0.2 s. A red dot in the corner means the last fetch failed.
 Stale data is never shown as current: once a limit's `resets_at` has passed, its value and bar are cleared; when the last fetch
 failed or is older than 2 intervals, the bar is gray instead of white.
 

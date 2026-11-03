@@ -156,7 +156,7 @@ unless the track or player changed or playback was started meanwhile.
   the model rotated (reads bottom-up), effort as gray dots (low 1 … max 5); a red dot in the corner = the last fetch failed
 - while switching the model: the word `day` and the bar = workday-scaled weekly usage of the selected model;
   right after: days left in the week (`3d`) and the bar = weekly usage
-- model color: white = applied, gray = preview, amber = outside the knob's list, red = switch failed
+- model white, gray while previewing; effort dots gray, amber = outside the knob's list, red = switch failed
 - slide: picks the model + effort by position, bottom Sonnet·Low → top Fable·High *(on the device: assumed)*
 - tap: nothing
 
@@ -223,7 +223,7 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 |---|---|
 | volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold; brightness = monitor over DDC/CI |
 | mic tile + кнопка 2 | system mic mute (proposal) |
-| camera, hang-up tiles, кнопки 3, 4, 7 | dropped, free |
+| keep-awake, camera, hang-up tiles, кнопки 3, 4, 7 | dropped, free |
 | agents tile + кнопка 6 | Codex sessions |
-| right strip, крутилка справа, ряд 2 | Codex limits; model switch later |
+| right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |
