@@ -67,7 +67,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   Notification Center via AX, eye icon, press opens the app, port 47130 ([unread.md](docs/unread.md)); docs refreshed against the
   code — `controls.md` layout, `invariants.md` A2/A6/P2 + 8 manual checks, `daemon.md` module table, `README.md` setup (no `swiftc`,
   `m1ddc`, permissions), `macos.md`, `windows.md`, `ymusic.md` (`9180ee6`); note: `zored_wifi.app` was dropped earlier, SSID comes from
-  `ipconfig` and the network list from Control Center; кнопка 1 (KVM) is mac-only in the Windows profile
+  `ipconfig` and the network list from Control Center; кнопка 1 (KVM) is mac-only in the Windows profile; timer knob: 1 min per
+  detent, fast turning grows the step 2 → 5 → 10 → 15 → 30 → 60 min (`c43b2a1`, verified live); calendar descriptions: `<br>` =
+  newline, other HTML stripped, entities decoded (`3ef3b32`); perf total at idle: CPU ~17 % → ~3 %, forks 9/s → 0, unchanged
+  renders ~1000/min → 0
 
 ## Next
 
@@ -84,7 +87,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Tab mode: press + turn крутилка справа, ряд 3 cycles windows (checked over HTTP only)
 - [ ] Emoji picker on the device: look, swipe + inertia, typing into a field, haptics (checked over the API only)
 - [ ] Unread tile on the device; choice cards and Yandex Music like after the perf round 2 (not run live)
-- [ ] Clock timers and the date tile on the device (an alarm at 00:05 appeared once — created by a turn at 0? check)
+- [ ] Date tile on the device; the 00:05 alarm seen once = a turn below 0 at the clock tile (assumed)
 
 ### More buttons and actions
 
