@@ -18,6 +18,7 @@ const (
 	awakeEditFor     = 5 * time.Second
 	awakeApplyAfter  = 500 * time.Millisecond
 	awakePollEvery   = 2 * time.Second
+	awakeRereadEvery = 30 * time.Second
 )
 
 var (
@@ -31,6 +32,7 @@ type power struct {
 	mu       sync.Mutex
 	vars     *vars
 	session  amphSession
+	readAt   time.Time
 	until    time.Time
 	editTill time.Time
 	accel    accel
@@ -70,6 +72,17 @@ func (p *power) poll() {
 	if busy {
 		return
 	}
+	asserted, err := amphetamineAsserted()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	p.mu.Lock()
+	fresh := !p.readAt.IsZero() && asserted == p.session.active && (!asserted || time.Since(p.readAt) < awakeRereadEvery)
+	p.mu.Unlock()
+	if fresh {
+		return
+	}
 	s, err := readAmphetamine()
 	if err != nil {
 		log.Print(err)
@@ -80,7 +93,7 @@ func (p *power) poll() {
 	if p.apply != nil || time.Now().Before(p.editTill) {
 		return
 	}
-	p.session = s
+	p.session, p.readAt = s, time.Now()
 	p.until = time.Now().Add(s.left)
 	p.publishLocked()
 }

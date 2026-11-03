@@ -18,10 +18,31 @@ static IOReturn userActive(void) {
 	IOPMAssertionID id;
 	return IOPMAssertionDeclareUserActivity(CFSTR("zored_stream keep-awake off"), kIOPMUserActiveLocal, &id);
 }
+
+static int amphAsserted(void) {
+	CFDictionaryRef byPid = NULL;
+	if (IOPMCopyAssertionsByProcess(&byPid) != kIOReturnSuccess || !byPid) {
+		return -1;
+	}
+	CFIndex n = CFDictionaryGetCount(byPid);
+	const void *lists[n];
+	CFDictionaryGetKeysAndValues(byPid, NULL, lists);
+	int found = 0;
+	for (CFIndex i = 0; i < n && !found; i++) {
+		CFArrayRef list = lists[i];
+		for (CFIndex j = 0; j < CFArrayGetCount(list) && !found; j++) {
+			CFStringRef name = CFDictionaryGetValue(CFArrayGetValueAtIndex(list, j), kIOPMAssertionNameKey);
+			found = name && CFStringHasPrefix(name, CFSTR("Amphetamine"));
+		}
+	}
+	CFRelease(byPid);
+	return found;
+}
 */
 import "C"
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -55,6 +76,16 @@ type amphSession struct {
 	active bool
 	left   time.Duration
 	timed  bool
+}
+
+func amphetamineAsserted() (bool, error) {
+	switch C.amphAsserted() {
+	case 1:
+		return true, nil
+	case 0:
+		return false, nil
+	}
+	return false, errors.New("IOPMCopyAssertionsByProcess failed")
 }
 
 func readAmphetamine() (amphSession, error) {

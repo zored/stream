@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"net"
 	"net/http"
 	"net/netip"
 	"slices"
@@ -18,6 +19,7 @@ const (
 	wifiJoinAfter   = time.Second
 	wifiJoinFor     = 15 * time.Second
 	vpnAfter        = time.Second
+	vpnRereadEvery  = 30 * time.Second
 	wifiPollEvery   = 3 * time.Second
 	wifiProbeEvery  = 15 * time.Second
 	wifiProbeURL    = "http://captive.apple.com/hotspot-detect.html"
@@ -34,6 +36,8 @@ type wifi struct {
 	loading  bool
 	cache    []string
 	vpn      string
+	tunnel   bool
+	vpnAt    time.Time
 	vpnName  string
 	waitJoin bool
 	phone    bool
@@ -90,12 +94,23 @@ func (w *wifi) poll() {
 			log.Print(err)
 		}
 	}
-	vpn, err := vpnStatus()
+	tunnel, err := vpnTunnel()
 	if err != nil {
 		log.Print(err)
 	}
 	w.mu.Lock()
-	w.vpn = vpn
+	stale := tunnel != w.tunnel || w.vpn == "busy" || time.Since(w.vpnAt) >= vpnRereadEvery
+	w.mu.Unlock()
+	vpn := ""
+	if stale {
+		if vpn, err = vpnStatus(); err != nil {
+			log.Print(err)
+		}
+	}
+	w.mu.Lock()
+	if stale {
+		w.vpn, w.tunnel, w.vpnAt = vpn, tunnel, time.Now()
+	}
 	changed := link.ssid != w.ssid
 	w.on, w.ssid, w.phone = on, link.ssid, link.phone()
 	if link.ssid != "" && link.ssid == w.joining {
@@ -337,6 +352,29 @@ func (w *wifi) restoreVPN(ssid string) {
 		log.Printf("viscosity: %s not connected after attempt %d", w.vpnName, attempt)
 	}
 	w.poll()
+}
+
+// vpnTunnel is a fork-free hint: a Viscosity (OpenVPN) link is a utun with IPv4, system utuns carry only IPv6.
+func vpnTunnel() (bool, error) {
+	ifs, err := net.Interfaces()
+	if err != nil {
+		return false, fmt.Errorf("vpn tunnel: %w", err)
+	}
+	for _, i := range ifs {
+		if !strings.HasPrefix(i.Name, "utun") {
+			continue
+		}
+		addrs, err := i.Addrs()
+		if err != nil {
+			return false, fmt.Errorf("vpn tunnel %s: %w", i.Name, err)
+		}
+		for _, a := range addrs {
+			if n, ok := a.(*net.IPNet); ok && n.IP.To4() != nil {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 func vpnStatus() (string, error) {
