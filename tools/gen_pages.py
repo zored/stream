@@ -23,13 +23,14 @@ AGENTS = "http://127.0.0.1:47120"
 POWER = "http://127.0.0.1:47122"
 HEADPHONES = "http://127.0.0.1:47123"
 WIFI = "http://127.0.0.1:47124"
+KVM = "http://127.0.0.1:47125"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg"))}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -340,6 +341,10 @@ def wifi_tile():
                   down=[post(WIFI + "/wifi/down")], up=[post(WIFI + "/wifi/up")])
 
 
+def kvm_led():
+    return button([canvas(), box("box0", expr("$(custom:kvm_led)"))], down=[post(KVM + "/kvm/windows")])
+
+
 def choice_gated(b, control):
     sets = control["steps"]["0"]["action_sets"]
     for key, edge in (("down", "down"), ("up", "up"), (str(HOLD_MS), "up")):
@@ -399,9 +404,10 @@ def media_page():
         (3, 1): call_led("call_mic"),
         (3, 2): call_led("call_cam"),
         (3, 3): hangup_led(),
+        (3, 0): kvm_led(),
     }
     if WINDOWS:
-        for cell in ((0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
+        for cell in ((3, 0), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
             del grid[cell]
     else:
         for c in range(8):

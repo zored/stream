@@ -143,7 +143,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 
 | Button | Does | LED |
 |---|---|---|
-| кнопка 1 | free | off |
+| кнопка 1 | KVM → Windows: press = monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu | off, white 0.3 s on press |
 | кнопка 2 | mic: tap toggles, hold = push-to-talk | green (dims 1 s every 4 s) = on, dim red = off, yellow = switching, blinking yellow = unknown, off = no call |
 | кнопка 3 | camera toggle | as кнопка 2 |
 | кнопка 4 | hang up | white while in a call |
@@ -239,7 +239,7 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 |---|---|
 | volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold; brightness = monitor over DDC/CI |
 | mic tile + кнопка 2 | system mic mute (proposal) |
-| wi-fi, headphones, keep-awake, camera, hang-up tiles, кнопки 3, 4, 7 | dropped, free |
+| wi-fi, headphones, keep-awake, camera, hang-up tiles, кнопки 1, 3, 4, 7 | dropped, free |
 | agents tile + кнопка 6 | Codex sessions |
 | right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |

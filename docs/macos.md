@@ -88,6 +88,13 @@ headphones = the default output is any Bluetooth CoreAudio device; a press then 
   First press: macOS asks to allow Bluetooth for `zored_stream`; until then the tile stays yellow.
 - No `blueutil` / `SwitchAudioSource`: all in-process.
 
+## zored_stream — KVM
+
+`kvm.go`, `:47125`: `POST /kvm/windows` from кнопка 1 (choice-gated); variable `kvm_led` = white for 0.3 s on press.
+Runs `/opt/homebrew/bin/m1ddc set input 15` (MSI MPG 321URX, VCP 60: 15 = DisplayPort = Windows; USB-C 27, HDMI 17/18);
+the monitor's KVM then moves USB, the controller included. No way back from the Mac side. `m1ddc get input` returns `0`
+on this monitor (verified), so the button shows no state.
+
 ## zored_stream — keep awake and sleep
 
 `power.go`, `power_darwin.go`, `:47122`: `POST /power/down`, `/power/up` from тайл ряд 1, колонка 4; variable `power_svg` = the whole tile
