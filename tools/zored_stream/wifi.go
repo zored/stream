@@ -319,17 +319,8 @@ func switchNetwork(ssid string) error {
 			restore = append(restore, name)
 		}
 	}
-	wifiDisassociate()
 	if len(restore) > 0 {
-		if err := vpnDisconnectAll(); err != nil {
-			return err
-		}
-	}
-	if err := wifiJoin(ssid); err != nil {
-		return err
-	}
-	if len(restore) > 0 {
-		time.AfterFunc(vpnAfter, func() {
+		defer time.AfterFunc(vpnAfter, func() {
 			for _, name := range restore {
 				if err := vpnConnect(name); err != nil {
 					log.Print(err)
@@ -337,7 +328,13 @@ func switchNetwork(ssid string) error {
 			}
 		})
 	}
-	return nil
+	wifiDisassociate()
+	if len(restore) > 0 {
+		if err := vpnDisconnectAll(); err != nil {
+			return err
+		}
+	}
+	return wifiJoin(ssid)
 }
 
 func vpnStatus() (string, error) {
@@ -432,8 +429,8 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 		b.WriteString(`<circle cx="80" cy="74" r="6" fill="#FFB000"/>`)
 	}
 	b.WriteString(`</g>`)
-	if c, ok := map[string]string{"up": "#30C030", "busy": "#FFB000", "down": "#FF3030"}[vpn]; ok {
-		fmt.Fprintf(&b, `<circle cx="88" cy="12" r="6" fill="%s"/>`, c)
+	if c, ok := map[string]string{"up": "#fff", "busy": "#FFB000", "down": "#FF3030"}[vpn]; ok {
+		fmt.Fprintf(&b, `<circle cx="84" cy="16" r="10" fill="%s"/>`, c)
 	}
 	if ssid != "" {
 		fmt.Fprintf(&b, `<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, text, html.EscapeString(clip(ssid, wifiTileRune)))
