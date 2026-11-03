@@ -67,7 +67,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Yandex Music like | `ymusic_darwin.go`, `ax_darwin.m` (AX in C, BFS with a 20 000-node cap) | `127.0.0.1:47115` (`-ymusic`) | verified: `ym_like` read, like/unlike pressed, `409` on a press within 1.5 s, grant kept after a rebuild |
 | Brightness | `brightness.go`, `display_darwin.go` (DisplayServices via cgo), [macos.md](macos.md) | `127.0.0.1:47118` (`-brightness`) | verified: turns move the Mac display, controller value goes to `ctl_brightness`; device brightness: user |
 | Claude usage | `usage.go`, [ai.md](ai.md) | `127.0.0.1:47116` (`-usage`) | verified: fetch through the proxy, tile, `GET /usage` |
-| Claude Desktop model + effort, dictation | `ai_darwin.go`, `dictate_darwin.go`, `ax_darwin.m`, [ai-switch.md](ai-switch.md), [agents.md](agents.md#dictation) | `127.0.0.1:47117` (`-ai`) | verified: knob turns switch the new-chat pickers, read-back every second; dictation gestures |
+| Claude Desktop model + effort, dictation | `ai_darwin.go`, `dictate_darwin.go`, `ax_darwin.m`, [ai-switch.md](ai-switch.md), [agents.md](agents.md#dictation) | `127.0.0.1:47117` (`-ai`) | verified: knob turns switch the new-chat pickers, read-back every second; dictation gestures; frontmost pid from `NSWorkspace` notification |
 | Seek | `seek.go`, [macos.md](macos.md) | `127.0.0.1:47119` (`-seek`) | verified with Yandex Music |
 | Agents waiting, choice mode | `agents.go`, `agents_desktop.go`, `choice.go`, `choice_darwin.go`, [agents.md](agents.md) | `127.0.0.1:47120` (`-agents`) | verified on the device |
 | Scroll, Ctrl+Tab | `scroll.go`, `scroll_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47121` (`-scroll`) | verified on the device |

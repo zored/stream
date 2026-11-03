@@ -57,7 +57,7 @@ nothing automatic, **doc** = a written rule only. *(unconfirmed)* = taken from a
 | # | Rule | Why | Enforced | Breaks if violated |
 |---|---|---|---|---|
 | P1 | Animations run at 60 Hz at most (`animationHz`, `stripHz`), easing rescaled per frame | Companion's per-button debounce (10/20 ms) is the ceiling: above 60 Hz fewer frames come out | code `bar.go`, `usage.go`; measurements in [companion.md](companion.md) | choppier animations, more CPU |
-| P2 | Idle CPU ~0: animation tickers run only while something moves; polls stay rare (audio, Yandex Music 0.25 s; choice 0.5 s; AI model, dictation 1 s; calls rescan, power, Yandex Music rescan 2 s; progress 3 s; agents 10 s; limits 15 min). A new poll needs a reason in its doc | the daemon runs all day on a laptop | code constants; manual `top -pid $(pgrep zored_stream)` | battery drain, fan |
+| P2 | Idle CPU ~0: animation tickers run only while something moves; polls stay rare (audio, Yandex Music 0.25 s; choice 0.5 s; AI model, dictation 1 s; calls rescan, power, Yandex Music rescan 2 s; progress 3 s; agents 10 s; limits 15 min). Frontmost app is a notification, not a poll. A new poll needs a reason in its doc | the daemon runs all day on a laptop | code constants; manual `top -pid $(pgrep zored_stream)` | battery drain, fan |
 | P3 | A strip picture spanning 3 cells costs 3 renders and draws per frame; keep static parts in separate layers or cells | serial queue is shared by the whole device | doc [companion.md](companion.md) | other controls lag while a strip animates |
 
 ## Safety

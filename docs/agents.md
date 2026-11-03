@@ -150,10 +150,10 @@ Picking the only choice of the last question submits the card.
   background layer only, an extra overlay layer did not light it (verified on the device).
 - Detection every 500 ms, only while Claude Desktop or iTerm2 is frontmost (`choice.go`, `choice_darwin.go`);
   `GET :47120/choice` shows what the daemon sees and why choice mode is off.
-- Frontmost app: `lsappinfo front` + `lsappinfo info -only pid` (~13 ms). Verified 2026-11-03 that the alternatives fail in the
-  LaunchAgent: `NSWorkspace.frontmostApplication` never updates without an AppKit run loop (stayed on Claude), the system-wide
-  `AXFocusedApplication` returns nothing, and the first layer-0 window of `CGWindowListCopyWindowInfo` belongs to
-  Stage Manager (`WindowManager`) or another app's window (Preview) rather than the frontmost app.
+- Frontmost app: `NSWorkspaceDidActivateApplicationNotification` on the main queue caches the pid (`ax_front_watch`,
+  no fork; verified 2026-11-03 in the LaunchAgent, the main thread runs `CFRunLoopRun` for `input`). Replaced `lsappinfo front`
+  + `lsappinfo info` (2 forks per call, ~8 forks/s from `ai`, `choice`, dictation). Without the notification
+  `NSWorkspace.frontmostApplication` stays stale; `AXFocusedApplication` and `CGWindowListCopyWindowInfo` give the wrong app.
 - Claude Desktop (verified 2026-11-03 on live cards, pressed through Companion): `ax_card` finds the `Skip` button, walks up to the
   card and reads options (`AXCheckBox`/`AXToggleButton` with a title and no description, `AXValue` 1 = picked), `N of M`,
   `N selected` (only on multiple choice), `Next`/`Submit`, `Show previous question`. An option of a single-choice question

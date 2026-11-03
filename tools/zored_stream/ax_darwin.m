@@ -305,3 +305,26 @@ int ax_card_press(AXUIElementRef window, int kind, const char *text) {
         return err;
     }
 }
+
+static _Atomic pid_t front_pid;
+
+int ax_front_watch(void) {
+    @autoreleasepool {
+        NSWorkspace *ws = NSWorkspace.sharedWorkspace;
+        NSRunningApplication *app = ws.frontmostApplication;
+        if (!app) return -1;
+        front_pid = app.processIdentifier;
+        id token = [ws.notificationCenter addObserverForName:NSWorkspaceDidActivateApplicationNotification
+                                                      object:nil
+                                                       queue:NSOperationQueue.mainQueue
+                                                  usingBlock:^(NSNotification *n) {
+            NSRunningApplication *a = n.userInfo[NSWorkspaceApplicationKey];
+            if (a) front_pid = a.processIdentifier;
+        }];
+        return token ? 0 : -1;
+    }
+}
+
+pid_t ax_front_pid(void) {
+    return front_pid;
+}

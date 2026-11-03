@@ -20,3 +20,5 @@ enum { AX_CARD_QUESTION, AX_CARD_BOX, AX_CARD_PERMISSION };
 char *ax_card(AXUIElementRef window, int kind);
 int ax_card_press(AXUIElementRef window, int kind, const char *text);
 void ax_release(AXUIElementRef element);
+int ax_front_watch(void);
+pid_t ax_front_pid(void);
