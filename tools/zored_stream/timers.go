@@ -35,6 +35,7 @@ type timerItem struct {
 
 type timers struct {
 	mu       sync.Mutex
+	frame    frame
 	vars     *vars
 	release  func()
 	knobDown bool
@@ -215,7 +216,8 @@ func (t *timers) publishLocked(now time.Time) {
 		ring = "1"
 	}
 	t.vars.set("timer_ring", ring)
-	t.vars.set("timer_svg", timerSVG(t.line(now)))
+	text, color := t.line(now)
+	t.vars.set("timer_svg", t.frame.render(text+"\n"+color, func() string { return timerSVG(text, color) }))
 }
 
 func (t *timers) line(now time.Time) (string, string) {

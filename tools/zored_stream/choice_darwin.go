@@ -72,10 +72,26 @@ func desktopDump(pid C.pid_t, kind C.int) string {
 }
 
 func readDesktopCard(pid C.pid_t) (*choiceCard, choiceTarget, error) {
-	dump := desktopDump(pid, C.AX_CARD_QUESTION)
+	var kinds C.int
+	if err := inClaudeWindow(pid, func(w C.AXUIElementRef) error {
+		kinds = C.ax_card_kinds(w)
+		return nil
+	}); err != nil {
+		return nil, nil, nil
+	}
+	has := func(kind C.int) bool { return kinds&(1<<kind) != 0 }
+	dump := ""
+	if has(C.AX_CARD_QUESTION) {
+		dump = desktopDump(pid, C.AX_CARD_QUESTION)
+	}
 	if dump == "" {
-		if card, target, err := readDesktopPermission(pid); card != nil || err != nil {
-			return card, target, err
+		if has(C.AX_CARD_PERMISSION) {
+			if card, target, err := readDesktopPermission(pid); card != nil || err != nil {
+				return card, target, err
+			}
+		}
+		if !has(C.AX_CARD_BOX) {
+			return nil, nil, nil
 		}
 		return readDesktopBox(pid)
 	}

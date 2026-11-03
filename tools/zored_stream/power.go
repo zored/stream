@@ -30,6 +30,7 @@ var (
 
 type power struct {
 	mu       sync.Mutex
+	frame    frame
 	vars     *vars
 	session  amphSession
 	readAt   time.Time
@@ -53,16 +54,16 @@ func (p *power) publish() {
 
 func (p *power) publishLocked() {
 	held := time.Since(p.downAt)
+	state, left := "on", ""
 	switch {
 	case !p.downAt.IsZero() && held >= sleepArmAfter && held < sleepCancelAfter:
-		p.vars.set("power_svg", powerSVG("arm", ""))
+		state = "arm"
 	case !p.session.active:
-		p.vars.set("power_svg", powerSVG("off", ""))
+		state = "off"
 	case p.session.timed:
-		p.vars.set("power_svg", powerSVG("on", awakeLeft(max(0, time.Until(p.until)), time.Now().Before(p.editTill))))
-	default:
-		p.vars.set("power_svg", powerSVG("on", ""))
+		left = awakeLeft(max(0, time.Until(p.until)), time.Now().Before(p.editTill))
 	}
+	p.vars.set("power_svg", p.frame.render(state+"\n"+left, func() string { return powerSVG(state, left) }))
 }
 
 func (p *power) poll() {

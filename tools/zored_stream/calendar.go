@@ -32,6 +32,7 @@ type calItem struct {
 
 type calendar struct {
 	mu         sync.Mutex
+	card       frame
 	vars       *vars
 	release    func()
 	strip      func(uri string)
@@ -95,10 +96,12 @@ func (c *calendar) publishLocked() {
 		c.vars.set("cal_browse", "0")
 	}
 	var next *calItem
+	key := calDate(now)
 	if i := calNext(c.items, now); i >= 0 {
 		next = &c.items[i]
+		key += "\n" + calWhen(*next, now) + " " + calTitle(*next)
 	}
-	c.vars.set("cal_card", calCardImage(now, next))
+	c.vars.set("cal_card", c.card.render(key, func() string { return calCardImage(now, next) }))
 }
 
 func (c *calendar) browsing() bool {

@@ -148,7 +148,7 @@ Picking the only choice of the last question submits the card.
   on screen (and for the matching release), `409` otherwise, so with the daemon down the buttons work as before.
   LEDs come from `choice_on` and `choice_1`…`choice_8` through the `box0` colour of each button: the LED follows the
   background layer only, an extra overlay layer did not light it (verified on the device).
-- Detection every 500 ms, only while Claude Desktop or iTerm2 is frontmost (`choice.go`, `choice_darwin.go`). Full rate only while Claude is "hot" (`claude_gate_darwin.go`): 20 s after a frontmost change, an agent `input`/`done` hook, a device press, a visible card or running dictation; otherwise every 3 s. Profiled 2026-11-03: these AX walks were ~90 % of idle CPU.
+- Detection every 500 ms, only while Claude Desktop or iTerm2 is frontmost (`choice.go`, `choice_darwin.go`). Full rate only while Claude is "hot" (`claude_gate_darwin.go`): 20 s after a frontmost change, an agent `input`/`done` hook, a device press, a visible card or running dictation; otherwise every 3 s. One AX walk (`ax_card_kinds`) finds which of the three cards is on screen; only that card is dumped. Profiled 2026-11-03: these AX walks were ~90 % of idle CPU.
   `GET :47120/choice` shows what the daemon sees and why choice mode is off.
 - Frontmost app: `NSWorkspaceDidActivateApplicationNotification` on the main queue caches the pid (`ax_front_watch`,
   no fork; verified 2026-11-03 in the LaunchAgent, the main thread runs `CFRunLoopRun` for `input`). Replaced `lsappinfo front`

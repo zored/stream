@@ -57,7 +57,7 @@ Log: `~/Library/Logs/zored-stream/zored_stream.log`, lines prefixed `ymusic:`.
   (`tccd`: `Failed to match existing code requirement`).
 - HTTP on `127.0.0.1:47115`: `POST /like`, `/dislike` → `204`; `409` (reason in the log) when Now Playing is another app,
   the button isn't in the bar, or the previous press was < 1.5 s ago. Checks `np_app` in memory before pressing.
-- Pushes `ym_like` every 0.25 s on change, re-sent every 10 s: `liked`, `disliked`, `none`, `off` (app not running),
+- Pushes `ym_like` every 0.25 s on change (full rate for 3 s after a track change or a press and while Yandex Music is frontmost, otherwise the AX read runs every 3 s), re-sent every 10 s: `liked`, `disliked`, `none`, `off` (app not running),
   `unknown` (no Accessibility, no player bar or button).
 - `np_app` comes from the Now Playing module (`MRMediaRemoteGetNowPlayingClient` + `MRNowPlayingClientGetBundleIdentifier`).
 

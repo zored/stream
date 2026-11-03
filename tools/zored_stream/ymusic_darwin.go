@@ -20,6 +20,8 @@ import (
 const (
 	ymBundle      = "ru.yandex.desktop.music"
 	ymRescanEvery = 2 * time.Second
+	ymHotFor      = 3 * time.Second
+	ymColdEvery   = 3 * time.Second
 	ymPressGap    = 1500 * time.Millisecond
 	ymTrackPrefix = "Трек "
 	axMaxNodes    = 20000
@@ -32,6 +34,9 @@ type ymusic struct {
 	bar       C.AXUIElementRef
 	lastScan  time.Time
 	lastPress time.Time
+	polled    time.Time
+	hotTill   time.Time
+	seenTitle string
 	trusted   bool
 	np        *nowPlaying
 	vars      *vars
@@ -151,7 +156,18 @@ func (y *ymusic) stateLocked() (string, string) {
 }
 
 func (y *ymusic) poll() {
+	title := y.np.snapshot().Title
 	y.mu.Lock()
+	now := time.Now()
+	if title != y.seenTitle {
+		y.seenTitle, y.hotTill = title, now.Add(ymHotFor)
+	}
+	hot := now.Before(y.hotTill) || now.Sub(y.lastPress) < ymHotFor || (y.pid != 0 && frontPid() == y.pid)
+	if !hot && now.Sub(y.polled) < ymColdEvery {
+		y.mu.Unlock()
+		return
+	}
+	y.polled = now
 	state, title := y.stateLocked()
 	y.mu.Unlock()
 	y.vars.set("ym_like", state)
