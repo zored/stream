@@ -36,7 +36,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   verified by the user: calls reconnect after a VK WorkSpace restart, seek + cover with Chrome, keep-awake hold → sleep;
   headphones tile `0/4` — Accentum BT toggle, output icon (speaker/headphones, yellow while connecting, red on error), KVM auto route
   Logi + USB camera, port 47123 ([macos.md](docs/macos.md)); wi-fi tile `0/3` — hold toggles power, touch = 5 s network pick on
-  крутилка справа, ряд 1, name on the right strip and tile, scan via `zored_wifi.app` (Location permission), port 47124; invariant F21
+  крутилка справа, ряд 1, name on the right strip and tile, scan via `zored_wifi.app` (Location permission), port 47124; invariant F21;
+  [architecture.html](docs/architecture.html) — layers, pages pipeline, daemon modules, mechanisms, invariants (11 diagrams)
 
 ## Next
 
@@ -63,8 +64,8 @@ Desk and display:
 - [ ] Monitor brightness, input switch (KVM), PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Display off (`pmset displaysleepnow`), lock
 - [ ] Wi-fi join: macOS refuses to join even a known network without a password (`networksetup`, CoreWLAN `associate(password:nil)` → `tmpErr`);
-  needs a password source — System keychain via `security find-generic-password` (admin prompt once per network, "Always allow")
-  or a copy in the login keychain; `join` mode in `tools/zored_wifi/main.swift` is drafted, uncommitted, waiting for the user's choice
+  `b7f643d` joins with the password from the System keychain, which asks for an admin password — the user wants no prompts;
+  next option under discussion: click the network in the menu-bar Wi-Fi menu via Accessibility (child session, waiting for the user)
 - [ ] Performance pass over `zored_stream` and helpers: measure CPU/wakeups, replace polling with CoreAudio/notification listeners,
   cut redundant Companion variable sets
 
