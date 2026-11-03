@@ -14,6 +14,19 @@ A rebranded Loupedeck Live: 12 touch tiles, 6 knobs (turn + press), 8 RGB button
 
 `tools/sniff.py /dev/cu.usbmodemXXXX <seconds>` prints raw events. Close Companion and Loupedeck first.
 
+## Touch
+
+One touch surface across strips and tiles (verified, sniff 2026-11-03):
+
+- `0x4d`/`0x6d` payload: `?? xH xL yH yL id`; raw x 0..480 (left strip <60, center 60..420, right ≥420), y 0..270, tile ≈90 px.
+- No touchstart: the first `0x4d` of an id is the start (`@loupedeck/core` emits `touchstart`). A tap is one `0x4d` + `0x6d`.
+- Move events every 10–20 ms (~70/s) while the finger moves, none while it rests; pixel resolution.
+- A drag across tiles or onto a strip stays one touch id, so tile swipes are possible.
+
+The module fork ignores center `touchmove` and resolves `touch.target.control` per event: dragging tile A → B sends
+keyDown A, keyUp B (A sticks); releasing in a gap sends no keyUp. A tile swipe needs the control pinned at touchstart,
+a direction check at touchend (~40 px), one POST to the daemon per swipe, and a rule for tap/hold conflicts.
+
 ## Firmware
 
 0.2.14 (Loupedeck 6.4.1 reports "up to date"). Custom firmware is parked:
