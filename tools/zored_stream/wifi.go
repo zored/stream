@@ -18,6 +18,7 @@ const (
 	wifiPickFor     = 5 * time.Second
 	wifiJoinAfter   = time.Second
 	wifiJoinFor     = 15 * time.Second
+	vpnAfter        = time.Second
 	wifiPollEvery   = 3 * time.Second
 	wifiProbeEvery  = 15 * time.Second
 	wifiProbeURL    = "http://captive.apple.com/hotspot-detect.html"
@@ -32,6 +33,7 @@ type wifi struct {
 	strip    func(note stripNote, d time.Duration)
 	loading  bool
 	cache    []string
+	vpn      string
 	waitJoin bool
 	phone    bool
 	joining  string
@@ -73,7 +75,7 @@ func (w *wifi) publishLocked() {
 	default:
 		state = "joined"
 	}
-	w.vars.set("wifi_svg", wifiSVG(state, name, phone))
+	w.vars.set("wifi_svg", wifiSVG(state, name, phone, w.vpn))
 }
 
 func (w *wifi) poll() {
@@ -88,7 +90,12 @@ func (w *wifi) poll() {
 			log.Print(err)
 		}
 	}
+	vpn, err := vpnStatus()
+	if err != nil {
+		log.Print(err)
+	}
 	w.mu.Lock()
+	w.vpn = vpn
 	changed := link.ssid != w.ssid
 	w.on, w.ssid, w.phone = on, link.ssid, link.phone()
 	if link.ssid != "" && link.ssid == w.joining {
@@ -241,7 +248,7 @@ func (w *wifi) joinPick() {
 	w.publishLocked()
 	w.mu.Unlock()
 	time.AfterFunc(wifiJoinFor, w.publish)
-	if err := wifiJoin(ssid); err != nil {
+	if err := switchNetwork(ssid); err != nil {
 		log.Print(err)
 		w.mu.Lock()
 		w.joining = ""
@@ -301,6 +308,78 @@ func ipconfigLink(summary string) (wifiLink, error) {
 	return l, nil
 }
 
+func switchNetwork(ssid string) error {
+	vpns, err := vpnConnections()
+	if err != nil {
+		return err
+	}
+	var restore []string
+	for name, state := range vpns {
+		if state != "Disconnected" {
+			restore = append(restore, name)
+		}
+	}
+	wifiDisassociate()
+	if len(restore) > 0 {
+		if err := vpnDisconnectAll(); err != nil {
+			return err
+		}
+	}
+	if err := wifiJoin(ssid); err != nil {
+		return err
+	}
+	if len(restore) > 0 {
+		time.AfterFunc(vpnAfter, func() {
+			for _, name := range restore {
+				if err := vpnConnect(name); err != nil {
+					log.Print(err)
+				}
+			}
+		})
+	}
+	return nil
+}
+
+func vpnStatus() (string, error) {
+	vpns, err := vpnConnections()
+	if err != nil || vpns == nil {
+		return "", err
+	}
+	return vpnSummary(vpns), nil
+}
+
+func vpnSummary(vpns map[string]string) string {
+	summary := "down"
+	for _, state := range vpns {
+		switch state {
+		case "Connected":
+			return "up"
+		case "Disconnected":
+		default:
+			summary = "busy"
+		}
+	}
+	return summary
+}
+
+func parseVPN(out string) (map[string]string, error) {
+	if strings.TrimSpace(out) == "off" {
+		return nil, nil
+	}
+	vpns := map[string]string{}
+	for line := range strings.Lines(out) {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		name, state, ok := strings.Cut(strings.TrimSuffix(line, "\n"), "\t")
+		if !ok {
+			return nil, fmt.Errorf("viscosity line %q", line)
+		}
+		vpns[name] = state
+	}
+	return vpns, nil
+}
+
 func keepPick(old []string, pick int, list []string) int {
 	if pick >= 0 {
 		if i := slices.Index(list, old[pick]); i >= 0 {
@@ -325,7 +404,7 @@ func clip(s string, n int) string {
 	return string(r)
 }
 
-func wifiSVG(state, ssid string, phone bool) string {
+func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	color, fill, text := "#fff", "none", "#fff"
 	switch state {
 	case "off":
@@ -353,6 +432,9 @@ func wifiSVG(state, ssid string, phone bool) string {
 		b.WriteString(`<circle cx="80" cy="74" r="6" fill="#FFB000"/>`)
 	}
 	b.WriteString(`</g>`)
+	if c, ok := map[string]string{"up": "#30C030", "busy": "#FFB000", "down": "#FF3030"}[vpn]; ok {
+		fmt.Fprintf(&b, `<circle cx="88" cy="12" r="6" fill="%s"/>`, c)
+	}
 	if ssid != "" {
 		fmt.Fprintf(&b, `<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, text, html.EscapeString(clip(ssid, wifiTileRune)))
 	}

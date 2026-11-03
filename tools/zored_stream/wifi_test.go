@@ -43,3 +43,19 @@ func TestKeepPick(t *testing.T) {
 		t.Errorf("empty list: %d", got)
 	}
 }
+
+func TestVPN(t *testing.T) {
+	vpns, err := parseVPN("barbos-100-5\tConnected\nBarbos_SE\tDisconnected\n\n")
+	if err != nil || vpnSummary(vpns) != "up" {
+		t.Errorf("up: %v %v", vpns, err)
+	}
+	if got := vpnSummary(map[string]string{"a": "Disconnected", "b": "Connecting"}); got != "busy" {
+		t.Errorf("busy: %s", got)
+	}
+	if got := vpnSummary(map[string]string{"a": "Disconnected"}); got != "down" {
+		t.Errorf("down: %s", got)
+	}
+	if vpns, err := parseVPN("off\n"); err != nil || vpns != nil {
+		t.Errorf("off: %v %v", vpns, err)
+	}
+}

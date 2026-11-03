@@ -114,3 +114,42 @@ func wifiJoin(ssid string) error {
 	_, err := wifiMenuRun("join", ssid)
 	return err
 }
+
+func wifiDisassociate() {
+	C.wifi_disassociate()
+}
+
+const viscosityState = `if application "Viscosity" is running then
+	tell application "Viscosity"
+		set out to ""
+		repeat with c in connections
+			set out to out & (name of c) & tab & (state of c) & linefeed
+		end repeat
+		return out
+	end tell
+end if
+return "off"`
+
+func vpnConnections() (map[string]string, error) {
+	out, err := exec.Command("/usr/bin/osascript", "-e", viscosityState).Output()
+	if err != nil {
+		return nil, fmt.Errorf("viscosity state: %w", err)
+	}
+	return parseVPN(string(out))
+}
+
+func vpnRun(script string, args ...string) error {
+	out, err := exec.Command("/usr/bin/osascript", append([]string{"-e", script}, args...)...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("viscosity: %w: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+func vpnDisconnectAll() error {
+	return vpnRun(`tell application "Viscosity" to disconnectall`)
+}
+
+func vpnConnect(name string) error {
+	return vpnRun("on run argv\n\ttell application \"Viscosity\" to connect (item 1 of argv)\nend run", name)
+}
