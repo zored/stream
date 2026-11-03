@@ -16,7 +16,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/4` hang up / date + calendar (in progress), `2/5` clock + timers (in progress) | tile `1/4` |
+| tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like, swipes in progress), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats (in progress), `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
 | buttons `3/0` KVM (in progress), `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/4`, `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
@@ -52,7 +52,11 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   tile `1/3` ([emoji.md](docs/emoji.md)): tap opens it for 4 s, left strip recent then all, right strip one category, top emoji in a gray
   ring, swipe with inertia (computed in the daemon, the fork only reports touch start/end — fork `54d3abb`), крутилки ряд 1 scroll +
   press types it via `CGEventKeyboardSetUnicodeString`, volume/brightness paused meanwhile; port 47128, F22 (`d043aae`); idle tile =
-  a random emoji picked at daemon start (`44e37ce`); no haptic ticks while sliding on a strip — fork `e013f66`, stream `cb9de4e`
+  a random emoji picked at daemon start (`44e37ce`); no haptic ticks while sliding on a strip — fork `e013f66`, stream `cb9de4e`,
+  verified on the device; tab mode press + turn reworked to a real Cmd+Tab (Cmd held until release, Contexts shows the window list,
+  F6/F7 updated, `5751ece`); tile layers in the daemon (`layers.go`, F23): date + calendar moved to `2/4` under the call layer,
+  clock `2/5` keeps `HH:MM` + timers (tap captures крутилка слева, ряд 3, persisted in `~/.config/zored-stream/timers`, F24, port
+  47129, `d42c1a8`)
 
 ## Next
 
@@ -73,10 +77,12 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 
 New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
 
-- [ ] Mic, camera and hang-up tiles do something else outside a call
+- [ ] Camera tile does something else outside a call (layers, F23)
+- [ ] In progress (child session): unread chats on tile `2/2` outside a call: Dock badge via AX for Telegram + VK WorkSpace, slide through
+  the unread chats' avatars/letters, press opens the app
 - [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` already reads it via `lsappinfo` and can push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
-- [ ] `mediakey` into the daemon as `POST /key/<name>` (drops the `exec` and Companion's Accessibility; Windows needs the route anyway)
+- [ ] In progress (child session): `mediakey` into the daemon as `POST /key/<name>` (drops the `exec` and Companion's Accessibility)
 
 ### Ideas (mechanisms assumed, not checked)
 
@@ -84,14 +90,12 @@ Desk and display:
 - [ ] In progress (child session): KVM switch to Windows on кнопка 1 — `m1ddc set input 15` (MSI 321URX, from `~/switch_to_windows.command`)
 - [ ] Monitor brightness, PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] Performance pass over `zored_stream` and helpers: measure CPU/wakeups, replace polling with CoreAudio/notification listeners,
+- [ ] In progress (child session): performance pass over `zored_stream` and helpers: measure CPU/wakeups, replace polling with CoreAudio/notification listeners,
   cut redundant Companion variable sets
 
 Windows and apps:
-- [ ] In progress (child session): clock tile `2/5` keeps `HH:MM` + active timers/alarms to the minute, press → крутилка слева, ряд 3
-  sets a new timer; date + calendar move to `2/4`, shared with hang-up during a call (priority layer mechanism for any tile); port 47129
 - [ ] Frontmost app icon on a tile, press cycles its windows
-- [ ] Tile swipes (researched 2026-11-03, sniffed: one touch surface, ~70 move events/s, see [device.md](docs/device.md#touch)): `@loupedeck/core` `onTouch` delivers `touchmove` for the center
+- [ ] In progress (child session, experiment on the play tile `1/2`: left/right = track, up/down = like/dislike). Tile swipes (researched 2026-11-03, sniffed: one touch surface, ~70 move events/s, see [device.md](docs/device.md#touch)): `@loupedeck/core` `onTouch` delivers `touchmove` for the center
   with per-tile x/y and multitouch ids, the fork's `instance.ts` drops it (`continue`); patch = `src/tile-swipe.ts` beside
   `strip-drag.ts`: remember x/y on `touchstart`, on `touchend` with ≥ 40 px and ≤ 400 ms post `/tile/swipe?from=<id>&dir=l|r|u|d`;
   fix first: the fork recomputes `touch.target.control` per event, so a drag from tile A to B sends `keyDown(A)` + `keyUp(B)` and A
