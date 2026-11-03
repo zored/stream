@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	wifiHoldFor     = 400 * time.Millisecond
 	wifiPickFor     = 5 * time.Second
 	wifiJoinAfter   = time.Second
 	wifiJoinFor     = 15 * time.Second
@@ -44,7 +43,6 @@ type wifi struct {
 	on       bool
 	ssid     string
 	online   bool
-	downAt   time.Time
 	pickTill time.Time
 	list     []string
 	pick     int
@@ -123,32 +121,21 @@ func (w *wifi) probe() {
 	w.mu.Unlock()
 }
 
-func (w *wifi) down() error {
+func (w *wifi) power() error {
 	w.mu.Lock()
-	defer w.mu.Unlock()
-	w.downAt = time.Now()
+	on := !w.on
+	w.closePick()
+	w.mu.Unlock()
+	if err := wifiSetPower(on); err != nil {
+		w.fail()
+		return err
+	}
+	w.poll()
 	return nil
 }
 
-func (w *wifi) up() error {
+func (w *wifi) touch() error {
 	w.mu.Lock()
-	if w.downAt.IsZero() {
-		w.mu.Unlock()
-		return errors.New("release without press")
-	}
-	held := time.Since(w.downAt)
-	w.downAt = time.Time{}
-	if held >= wifiHoldFor {
-		on := !w.on
-		w.closePick()
-		w.mu.Unlock()
-		if err := wifiSetPower(on); err != nil {
-			w.fail()
-			return err
-		}
-		w.poll()
-		return nil
-	}
 	if !w.on {
 		w.mu.Unlock()
 		return nil

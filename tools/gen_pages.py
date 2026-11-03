@@ -356,7 +356,7 @@ def input_tile():
 def wifi_tile():
     return button([canvas(), box("box0", 0x000000),
                    image("wifi", expr("$(custom:wifi_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
-                  down=[post(WIFI + "/wifi/down")], up=[post(WIFI + "/wifi/up")])
+                  up=[post(WIFI + "/wifi/touch")], held=[post(WIFI + "/wifi/power")])
 
 
 def kvm_led():
@@ -463,6 +463,17 @@ def export(name, grid):
     }
 
 
+def control_id(r, c):
+    if r == 3:
+        return f"button-{c + 1}"
+    return f"encoder-{r}-{c}" if c in (0, 7) else f"button-{r}-{c}"
+
+
+def hold_controls(grid):
+    return sorted(control_id(r, c) for (r, c), b in grid.items()
+                  if str(HOLD_MS) in b["steps"]["0"]["action_sets"])
+
+
 def write(path, data):
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
@@ -473,4 +484,7 @@ for build in (test_page, media_page):
     rng.seed(build.__name__)
     name, grid = build()
     write(os.path.join(out, f"{name.lower()}-page.companionconfig"), export(name, grid))
+    if build is media_page:
+        with open(os.path.join(out, "hold-controls.txt"), "w") as f:
+            f.write(",".join(hold_controls(grid)) + "\n")
 write(os.path.join(out, "custom-variables.json"), CUSTOM_VARIABLES)

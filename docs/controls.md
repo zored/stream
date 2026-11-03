@@ -21,7 +21,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ([companion.md](companion.md)).
 
 Everywhere: a short haptic tap on every press of a knob, tile or button; soft ticks every 10 px while sliding along a strip.
-Hold = 400 ms; the second haptic at 400 ms fires only on крутилка слева, ряд 2 (`HAPTIC_HOLD_CONTROLS` in the `Makefile`).
+Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed; the release after it does nothing. The haptic list (`companion/hold-controls.txt`) is generated from every control with a hold. Exceptions timed on release: keep-awake sleep, push-to-talk, dictation.
 
 ## Left knobs
 
@@ -70,7 +70,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 ### тайл ряд 1, колонка 2 — wi-fi
 
 - shows: the current network name under the fan (white, cut to 10 chars); while joining, hollow fan + the target name in gray (up to 15 s); a phone instead of the fan on an iPhone hotspot (router in 172.20.10.0/28); gray hollow fan = wi-fi off; white hollow = on, not joined; white filled = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; a dot top-right = Viscosity VPN: white connected, yellow connecting, red all down, none when Viscosity is not running
-- hold ≥ 400 ms, release: wi-fi on / off
+- hold 400 ms: wi-fi on / off
 - touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`) instead of the model, yellow while the list loads, with a small `›` toward the knob until the first turn. Each turn extends the 5 s. List: what the Wi-Fi details of Control Center show (iPhone hotspots, then known networks in range); Control Center flashes and the list loads in ~3 s; meanwhile the strip is yellow and the knob already turns through the previous list. If the pick is gone from the fresh list, the first network is picked; a pause on a yellow pick joins after the load. Names keep their case (`zored_5G` ≠ `zored_5g`) A 1 s pause switches: drop the current Wi-Fi, disconnect Viscosity, join the pick, wait for its link, 1 s later connect `Barbos_SE` (flag `-wifi-vpn`; one retry if not connected in 20 s). The join itself: the daemon clicks it in the Wi-Fi details of Control Center (it flashes for ~1.5 s), macOS fills the password itself
 
 ### тайл ряд 1, колонка 3 — headphones
@@ -98,7 +98,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 - shows: the track cover; ▶ stays while paused; ⏸ appears on a state change or a touch, holds 1.5 s, fades. No cover → a big ▶/⏸
 - touch: shows the glyph; release: play / pause
-- hold: Yandex Music like, as on крутилка слева, ряд 2 (no second haptic here)
+- hold: Yandex Music like, as on крутилка слева, ряд 2
 
 [macos.md](macos.md), [ymusic.md](ymusic.md)
 

@@ -144,7 +144,7 @@ branch `zored_stream`, cloned next to this repo. `make module` builds it and loa
 Fork commits (surface settings, `plugin_cfg_*`):
 
 - `hapticPressPattern`, `hapticHoldMs`: haptic on button/knob/tile press and a second one after the hold time (400 ms here,
-  matches the long-press in `gen_pages.py`). `hapticHoldControls` limits the second one to listed control ids
+  matches the long-press in `gen_pages.py`). `hapticHoldControls` limits the second one to listed control ids (generated `companion/hold-controls.txt`)
   (Makefile `HAPTIC_HOLD_CONTROLS`, now `encoder-1-0` = the TRACK knob; knob ids: `encoder-<row>-<0|7>`, buttons `button-1…8`). The driver has `vibrate(pattern)`, upstream never calls it. Patterns: `LoupedeckVibratePattern` in `@loupedeck/core`.
 - touch position in buttons mode: sliding a strip updates the fader value variables, upstream only did that in slider mode.
 - `hapticSlidePattern`, `hapticSlideStep`: a tick each time a touch crosses a `step`-px line on a strip (270 px tall), at most one per 30 ms.

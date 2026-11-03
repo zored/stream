@@ -855,7 +855,8 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [
+        "down": [],
+        "up": [
          {
           "type": "action",
           "id": "loUSyX7da2SaAIlfUShy1",
@@ -863,7 +864,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47124/wifi/down",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47124/wifi/touch",
             "isExpression": false
            },
            "cwd": {
@@ -882,7 +883,7 @@
           "upgradeIndex": null
          }
         ],
-        "up": [
+        "400": [
          {
           "type": "action",
           "id": "suZT4K48nLo9xH_aWsX1n",
@@ -890,7 +891,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47124/wifi/up",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47124/wifi/power",
             "isExpression": false
            },
            "cwd": {
@@ -911,7 +912,9 @@
         ]
        },
        "options": {
-        "runWhileHeld": []
+        "runWhileHeld": [
+         400
+        ]
        }
       }
      },

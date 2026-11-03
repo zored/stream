@@ -341,8 +341,8 @@ func main() {
 	go every(wifiPollEvery, wf.poll)
 	go every(wifiProbeEvery, wf.probe)
 	go serve(*wifiAddr, func(mux *http.ServeMux) {
-		handle(mux, "/wifi/down", wf.down)
-		handle(mux, "/wifi/up", wf.up)
+		handle(mux, "/wifi/touch", wf.touch)
+		handle(mux, "/wifi/power", wf.power)
 	})
 	go every(pollEvery, func() {
 		if err := vol.poll(); err != nil {
