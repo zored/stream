@@ -280,10 +280,11 @@ func calStripImage(items []calItem, pick int) string {
 var (
 	calLink  = regexp.MustCompile(`<?(?:https?://|www\.)[^\s<>()\[\]]+>?`)
 	calEmpty = regexp.MustCompile(`\(\s*\)|\[\s*\]`)
+	calJunk  = regexp.MustCompile(`(?im)^\s*(?:[-=_*~]{3,}|(?:id звонка|код доступа|пароль|meeting id|passcode)\s*:.*)\s*$`)
 )
 
 func calNotes(s string) string {
-	return strings.Join(strings.Fields(calEmpty.ReplaceAllString(calLink.ReplaceAllString(s, ""), " ")), " ")
+	return strings.Join(strings.Fields(calEmpty.ReplaceAllString(calLink.ReplaceAllString(calJunk.ReplaceAllString(s, ""), ""), " ")), " ")
 }
 
 func calTileImage(items []calItem, pick int) string {
