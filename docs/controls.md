@@ -68,7 +68,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 - shows: gray hollow fan = wi-fi off; white hollow = on, not joined; white filled = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed
 - hold ≥ 400 ms, release: wi-fi on / off
-- touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`), then the picked one instead of the model. Each turn extends the 5 s. List: known networks in range, macOS preferred order; they appear within a few seconds as the per-name scans finish (unknown ones need Location, see `docs/macos.md`). A 2 s pause joins the pick (password from the keychain)
+- touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`), then the picked one instead of the model. Each turn extends the 5 s. List: networks in range, known ones (saved in the System keychain) first, each group by signal; it fills in ~2 s after the touch. Names keep their case (`zored_5G` ≠ `zored_5g`) A 2 s pause joins the pick (password from the keychain)
 
 ### тайл ряд 1, колонка 3 — headphones
 

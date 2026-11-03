@@ -2,7 +2,6 @@ package main
 
 /*
 #cgo LDFLAGS: -framework CoreWLAN -framework Foundation
-#include <stdlib.h>
 #include "wifi_darwin.h"
 */
 import "C"
@@ -10,10 +9,9 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
-	"time"
-	"unsafe"
 )
 
 func wifiPower() (bool, error) {
@@ -45,30 +43,29 @@ func wifiSSID() (string, error) {
 	return ipconfigSSID(string(out))
 }
 
-func wifiPreferred() ([]string, error) {
-	out, err := exec.Command("/usr/sbin/networksetup", "-listpreferredwirelessnetworks", "en0").Output()
+func wifiKnown() ([]string, error) {
+	out, err := exec.Command("/usr/bin/security", "dump-keychain", "/Library/Keychains/System.keychain").Output()
 	if err != nil {
-		return nil, fmt.Errorf("networksetup preferred: %w", err)
+		return nil, fmt.Errorf("security dump-keychain: %w", err)
 	}
-	return preferredNetworks(string(out)), nil
+	return keychainNetworks(string(out))
 }
 
-func wifiVisible(ssid string) (bool, error) {
-	s := C.CString(ssid)
-	defer C.free(unsafe.Pointer(s))
-	for range 10 {
-		switch C.wifi_visible(s) {
-		case 1:
-			return true, nil
-		case 0:
-			return false, nil
-		case -2:
-			time.Sleep(300 * time.Millisecond)
-			continue
-		}
-		return false, fmt.Errorf("wi-fi scan %q failed", ssid)
+func wifiScan(app string) ([]wifiNetwork, error) {
+	f, err := os.CreateTemp("", "zored_wifi-*.tsv")
+	if err != nil {
+		return nil, err
 	}
-	return false, fmt.Errorf("wi-fi scan %q: busy", ssid)
+	f.Close()
+	defer os.Remove(f.Name())
+	if out, err := exec.Command("/usr/bin/open", "-g", "-n", "-W", app, "--args", f.Name()).CombinedOutput(); err != nil {
+		return nil, fmt.Errorf("open %s: %w: %s", app, err, out)
+	}
+	data, err := os.ReadFile(f.Name())
+	if err != nil {
+		return nil, err
+	}
+	return scanNetworks(string(data))
 }
 
 func wifiJoin(ssid string) error {

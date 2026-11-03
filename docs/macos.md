@@ -163,8 +163,11 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
 - Permission: `CGPreflightPostEventAccess` is true for the signed binary, the daemon's Accessibility grant covers it (verified).
   Without it the turn returns `409` with `no permission to post events`.
 
-## Wi-fi (`wifi.go`, :47124)
+## Wi-fi (`wifi.go`, :47124, helper `zored_wifi.app`)
 
-- Power: CoreWLAN. Pick list: `networksetup -listpreferredwirelessnetworks en0`; scan results (CoreWLAN, `system_profiler`) have every name redacted without Location (verified), so unknown networks are not offered. A directed scan (`scanForNetworksWithName:`) still answers "in range or not" per known name (verified); back-to-back scans return `EBUSY`, retried every 300 ms. Join: `networksetup -setairportnetwork en0 <ssid>`, password from the keychain *(assumed)*.
-- SSID: macOS redacts it without Location permission (`ipconfig`, `system_profiler`, `wdutil`, CoreWLAN, verified). A bare binary with `NSLocation*UsageDescription` in the embedded `Info.plist` gets an `#AuthPrompt` in the `locationd` log but no window (verified).
-- Working path: `sudo ipconfig setverbose 1` once, then `ipconfig getsummary en0` prints the SSID (verified). Without it the daemon logs the hint and shows "on, not joined". Survives a reboot *(unknown)*.
+- Power: CoreWLAN. Join: `networksetup -setairportnetwork en0 <ssid>`, password from the keychain *(assumed)*.
+- Every SSID source is redacted without Location: `ipconfig`, `system_profiler`, `wdutil`, CoreWLAN scan (verified). A bare binary with `NSLocation*UsageDescription` in the embedded `Info.plist` gets an `#AuthPrompt` in the `locationd` log but no window (verified).
+- Current SSID: `sudo ipconfig setverbose 1` once, then `ipconfig getsummary en0` prints it (verified). Survives a reboot *(unknown)*.
+- Scan: `tools/zored_wifi` is an `LSUIElement` app with its own Location grant (window shown, verified). The daemon runs `open -g -n -W zored_wifi.app --args <file>`; it scans once and writes `ssid\trssi` lines or `error\t…` (~2.3 s, verified). Run as a child process it would inherit the daemon's (missing) grant, hence `open`. `make zored_wifi` builds and signs it into `~/.local/share/zored-stream/`; `make zored_stream` depends on it.
+- Known networks: `security dump-keychain /Library/Keychains/System.keychain`, items with `svce` `AirPort`, `acct` = SSID (hex for non-ASCII); no root needed (verified, ~40 vs 4 from `networksetup -listpreferredwirelessnetworks`).
+- Instant Hotspot (iPhone over Continuity) shows only while the phone broadcasts.

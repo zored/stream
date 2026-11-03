@@ -120,6 +120,7 @@ func main() {
 	powerAddr := flag.String("power", "127.0.0.1:47122", "keep-awake + sleep HTTP address")
 	headphonesAddr := flag.String("headphones", "127.0.0.1:47123", "headphones toggle HTTP address")
 	wifiAddr := flag.String("wifi", "127.0.0.1:47124", "wi-fi power + network picker HTTP address")
+	wifiApp := flag.String("wifi-app", filepath.Join(home, ".local/share/zored-stream/zored_wifi.app"), "helper app that scans Wi-Fi with Location permission")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
@@ -238,7 +239,7 @@ func main() {
 	pw.publish()
 	hp := newHeadphones(v)
 	hp.publish()
-	wf := newWifi(v, us.say)
+	wf := newWifi(v, *wifiApp, us.say)
 	wf.poll()
 	br, err := newBrightness(vol.bar, *companionDB)
 	if err != nil {
