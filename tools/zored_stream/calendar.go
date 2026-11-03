@@ -20,8 +20,8 @@ const (
 	calHorizon   = 7 * 24 * time.Hour
 	calAhead     = 12 * time.Hour
 	calSoon      = 5 * time.Minute
-	calLineRune  = 11
-	calTitleRune = 11
+	calLineRune  = 9
+	calTitleRune = 9
 	calRows      = 3
 	amber        = "#FFB000"
 )
@@ -231,15 +231,21 @@ func calGlyph(it calItem, x, y, r float64, color string) string {
 
 func calLineSVG(it calItem, now time.Time) string {
 	color := cmp.Or(calColor(it, now), gray)
-	x, n := 0.0, calLineRune
-	var b strings.Builder
-	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 17">`)
+	n := calLineRune
 	if it.reminder {
-		b.WriteString(calGlyph(it, 5, 9, 4, color))
-		x, n = 13, calLineRune-1
+		n--
 	}
-	fmt.Fprintf(&b, `<text x="%g" y="13.5" font-family="JetBrains Mono" font-size="13" fill="%s">%s</text>`, x, color,
-		html.EscapeString(clip(calTitle(it.title), n)))
+	title := clip(calTitle(it.title), n)
+	x := 44.0
+	var b strings.Builder
+	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 22">`)
+	if it.reminder {
+		half := float64(len([]rune(title)))*16*0.6/2 + 6
+		b.WriteString(calGlyph(it, 44-half+1, 11, 4.5, color))
+		x += 6
+	}
+	fmt.Fprintf(&b, `<text x="%g" y="16.5" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, x, color,
+		html.EscapeString(title))
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
 }
@@ -278,17 +284,15 @@ func calBrowseSVG(items []calItem, pick int, now time.Time) string {
 	it := items[pick]
 	color := cmp.Or(calColor(it, now), "#fff")
 	x := 6.0
-	if it.reminder {
-		b.WriteString(calGlyph(it, 12, 17, 6, color))
-		x = 24
-	}
 	if t := calTime(it); t != "" {
-		fmt.Fprintf(&b, `<text x="%g" y="24" font-family="JetBrains Mono" font-size="20" fill="%s">%s</text>`, x, color, t)
+		fmt.Fprintf(&b, `<text x="6" y="24" font-family="JetBrains Mono" font-size="20" fill="%s">%s</text>`, color, t)
+		x = 6 + 5*12 + 4
 	}
+	b.WriteString(calGlyph(it, x+7, 17, 7, color))
 	for i, line := range calWrap(calTitle(it.title), calTitleRune, calRows) {
-		fmt.Fprintf(&b, `<text x="6" y="%d" font-family="JetBrains Mono" font-size="13" fill="%s">%s</text>`, 44+i*15, gray, html.EscapeString(line))
+		fmt.Fprintf(&b, `<text x="6" y="%d" font-family="JetBrains Mono" font-size="16" fill="#fff">%s</text>`, 45+i*16, html.EscapeString(line))
 	}
-	fmt.Fprintf(&b, `<text x="6" y="92" font-family="JetBrains Mono" font-size="13" fill="%s">%s</text>`, gray, it.start.Format("02.01"))
+	fmt.Fprintf(&b, `<text x="6" y="94" font-family="JetBrains Mono" font-size="13" fill="%s">%s</text>`, gray, it.start.Format("02.01"))
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
 }
