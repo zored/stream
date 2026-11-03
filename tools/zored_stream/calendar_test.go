@@ -58,3 +58,11 @@ func TestCalIn(t *testing.T) {
 		}
 	}
 }
+
+func TestCalWhenOngoing(t *testing.T) {
+	now := time.Now()
+	it := calItem{start: now.Add(-10 * time.Minute), end: now.Add(25*time.Minute + 30*time.Second)}
+	if got := calWhen(it, now); got != "25m" {
+		t.Errorf("ongoing = %q, want 25m", got)
+	}
+}

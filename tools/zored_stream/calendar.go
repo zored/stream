@@ -236,8 +236,15 @@ func calIn(d time.Duration) string {
 	}
 }
 
+func calWhen(it calItem, now time.Time) string {
+	if !it.reminder && !it.start.After(now) {
+		return strings.TrimPrefix(calIn(it.end.Sub(now)), "+")
+	}
+	return calIn(it.start.Sub(now))
+}
+
 func calLineImage(it calItem, now time.Time) string {
-	return calImage(88, 24, false, calText{text: calIn(it.start.Sub(now)) + " " + calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
+	return calImage(88, 24, false, calText{text: calWhen(it, now) + " " + calTitle(it), y: 0, w: 88, h: 24, size: 16, rgb: grayRGB, center: true})
 }
 
 var calWeekdays = [...]string{"вс", "пн", "вт", "ср", "чт", "пт", "сб"}
@@ -248,8 +255,11 @@ func calStripImage(items []calItem, pick int, now time.Time) string {
 		return calImage(w, h, true, calText{text: "·", y: 12, w: w, h: 24, size: 16, rgb: grayRGB, center: true})
 	}
 	it := items[pick]
-	text := calWeekdays[it.start.Weekday()] + " " + it.start.Format("02.01") + " " + calTime(it) + calIn(it.start.Sub(now)) + " " + calTitle(it)
-	return calImage(w, h, true, calText{text: text, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: cmp.Or(calColor(it, now), whiteRGB)})
+	date := calWeekdays[it.start.Weekday()] + " " + it.start.Format("02.01") + " "
+	pad := strings.Repeat(" ", len([]rune(date)))
+	return calImage(w, h, true,
+		calText{text: date, x: 4, y: 3, w: w - 8, h: 22, size: 15, rgb: grayRGB},
+		calText{text: pad + calTime(it) + calTitle(it), x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: cmp.Or(calColor(it, now), whiteRGB)})
 }
 
 func calIcon(items []calItem, pick int) string {

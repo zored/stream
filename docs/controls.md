@@ -137,10 +137,10 @@ Same as кнопка 4. [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 4 — clock
 
-- shows three rows: `HH:MM` white; `+40m` / `+5h` / `+1d` until it and the title of the next event or reminder within 12 h gray, lowercase, cut without `…`, centered between them (reminders get `○`, events nothing); `DD.MM` gray
+- shows three rows: `HH:MM` white; `+40m` / `+5h` / `+1d` until it (for a running event: `25m` until its end) and the title of the next event or reminder within 12 h gray, lowercase, cut without `…`, centered between them (reminders get `○`, events nothing); `DD.MM` gray
 - titles keep emoji (drawn by CoreText into a PNG, the SVG renderer had none) and wrap by character; a recurring event is listed once, at its next occurrence
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
-- touch: 5 s list on the right strip (over model + effort), one item at a time, rotated like the strip, one run of text: `ср 05.11 12:00 +1d title` (white, amber for an event in ≤ 5 min or an overdue reminder); крутилка справа, ряд 3 scrolls it
+- touch: 5 s list on the right strip (over model + effort), one item at a time, rotated like the strip, one run of text: `ср 05.11` gray, then `12:00 title` (white, amber for an event in ≤ 5 min or an overdue reminder); крутилка справа, ряд 3 scrolls it
 - while the list is open the tile shows the action: an empty / checked box for a reminder, a calendar for an event; touch (or the knob press) toggles the reminder (list stays open) or opens the event in Calendar
 
 ## Buttons
