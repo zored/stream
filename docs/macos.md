@@ -169,11 +169,9 @@ Ctrl is also released on knob press, SIGINT/SIGTERM, and posted up once at start
   and a listen-only event tap gets nothing without Input Monitoring, so there's no local check. Ctrl+Tab does nothing
   at the macOS level; app switching is Cmd+Tab.
 
-Window cycling (`windows_darwin.m`): in tab mode, press + turn raises windows one by one instead of the horizontal wheel.
-The first detent of a press snapshots on-screen layer-0 windows of all apps front to back (`CGWindowListCopyWindowInfo`,
-no Screen Recording needed for pid and id); clockwise steps deeper, counter-clockwise back, wrapping. Each step finds the
-AX window by id (private `_AXUIElementGetWindow`), sets `AXMain`, `AXRaise`, then activates the app. No modifier is held,
-so nothing can stick. Minimised windows and other Spaces are out by design. Needs Accessibility.
+Window switching: in tab mode, press + turn holds Cmd instead and taps Tab (+ Shift counter-clockwise), so the installed
+window switcher (Contexts, bound to Cmd+Tab) shows its list and steps through it. Cmd goes up on knob release, which picks
+the window; a 5 s timer, SIGINT/SIGTERM and the start release it too. A turn without the press swaps Cmd for Ctrl.
 
 - `CGEventCreateScrollWheelEvent` in line units (like a real wheel detent), 1 / 2 / 4 / 8 lines per detent by tick interval
   (the volume acceleration), posted to `kCGHIDEventTap`, so it lands in the window under the cursor, as a mouse wheel does.

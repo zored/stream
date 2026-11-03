@@ -10,9 +10,20 @@ import (
 	"time"
 )
 
-const tabRelease = 500 * time.Millisecond
+const (
+	tabRelease = 500 * time.Millisecond
+	cmdRelease = 5 * time.Second
+)
 
 var scrollLines = [...]int{1, 2, 4, 8}
+
+type modifier int
+
+const (
+	modNone modifier = iota
+	modCtrl
+	modCmd
+)
 
 type scroller struct {
 	mu      sync.Mutex
@@ -21,24 +32,15 @@ type scroller struct {
 	tab     bool
 	pressed bool
 	turned  bool
-	ctrl    bool
+	held    modifier
 	timer   *time.Timer
-	cycle   []window
-	at      int
 	wheel   func(vertical, horizontal int) error
-	ctrlKey func(down bool) error
-	tabKey  func(shift bool) error
-	windows func() ([]window, error)
-	raise   func(window) error
-}
-
-type window struct {
-	pid int
-	id  uint32
+	modKey  func(m modifier, down bool) error
+	tabKey  func(m modifier, shift bool) error
 }
 
 func newScroller(file string) (*scroller, error) {
-	s := &scroller{file: file, wheel: postScroll, ctrlKey: postCtrl, tabKey: postTab, windows: listWindows, raise: raiseWindow}
+	s := &scroller{file: file, wheel: postScroll, modKey: postModifier, tabKey: postTab}
 	data, err := os.ReadFile(file)
 	switch {
 	case os.IsNotExist(err):
@@ -53,20 +55,26 @@ func newScroller(file string) (*scroller, error) {
 			return nil, fmt.Errorf("%s: unknown mode %q", file, mode)
 		}
 	}
-	return s, s.ctrlKey(false)
+	if err := s.modKey(modCtrl, false); err != nil {
+		return nil, err
+	}
+	return s, s.modKey(modCmd, false)
 }
 
 func (s *scroller) hold(down bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if err := s.releaseLocked(); err != nil {
+		return err
+	}
 	if down {
-		s.pressed, s.turned, s.cycle = true, false, nil
-		return s.releaseLocked()
+		s.pressed, s.turned = true, false
+		return nil
 	}
 	if !s.pressed {
 		return nil
 	}
-	s.pressed, s.cycle = false, nil
+	s.pressed = false
 	if s.turned {
 		return nil
 	}
@@ -87,42 +95,33 @@ func (s *scroller) turn(direction int) error {
 	defer s.mu.Unlock()
 	if s.pressed {
 		s.turned = true
-		if s.tab {
-			return s.nextWindow(direction)
+		if !s.tab {
+			return s.wheel(0, s.lines(direction))
 		}
-		return s.wheel(0, s.lines(direction))
+		return s.tabLocked(modCmd, cmdRelease, direction)
 	}
 	if !s.tab {
 		return s.wheel(s.lines(direction), 0)
 	}
-	if !s.ctrl {
-		if err := s.ctrlKey(true); err != nil {
-			return err
-		}
-		s.ctrl = true
-	}
-	if s.timer == nil {
-		s.timer = time.AfterFunc(tabRelease, s.release)
-	} else {
-		s.timer.Reset(tabRelease)
-	}
-	return s.tabKey(direction < 0)
+	return s.tabLocked(modCtrl, tabRelease, direction)
 }
 
-func (s *scroller) nextWindow(direction int) error {
-	if s.cycle == nil {
-		windows, err := s.windows()
-		if err != nil {
+func (s *scroller) tabLocked(m modifier, after time.Duration, direction int) error {
+	if s.held != m {
+		if err := s.releaseLocked(); err != nil {
 			return err
 		}
-		if len(windows) == 0 {
-			return fmt.Errorf("no windows to cycle")
+		if err := s.modKey(m, true); err != nil {
+			return err
 		}
-		s.cycle, s.at = windows, 0
+		s.held = m
 	}
-	n := len(s.cycle)
-	s.at = ((s.at+direction)%n + n) % n
-	return s.raise(s.cycle[s.at])
+	if s.timer == nil {
+		s.timer = time.AfterFunc(after, s.release)
+	} else {
+		s.timer.Reset(after)
+	}
+	return s.tabKey(m, direction < 0)
 }
 
 func (s *scroller) lines(direction int) int {
@@ -133,7 +132,7 @@ func (s *scroller) release() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err := s.releaseLocked(); err != nil {
-		log.Printf("release ctrl: %v", err)
+		log.Printf("release modifier: %v", err)
 	}
 }
 
@@ -141,9 +140,10 @@ func (s *scroller) releaseLocked() error {
 	if s.timer != nil {
 		s.timer.Stop()
 	}
-	if !s.ctrl {
+	if s.held == modNone {
 		return nil
 	}
-	s.ctrl = false
-	return s.ctrlKey(false)
+	m := s.held
+	s.held = modNone
+	return s.modKey(m, false)
 }

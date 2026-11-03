@@ -35,12 +35,8 @@ func fakeScroller(t *testing.T, tab bool) (*scroller, *keyLog) {
 		file:    filepath.Join(t.TempDir(), "scroll-mode"),
 		tab:     tab,
 		wheel:   func(v, h int) error { return k.add(fmt.Sprintf("wheel %d %d", v, h)) },
-		ctrlKey: func(down bool) error { return k.add(fmt.Sprintf("ctrl %v", down)) },
-		tabKey:  func(shift bool) error { return k.add(fmt.Sprintf("tab %v", shift)) },
-		windows: func() ([]window, error) {
-			return []window{{1, 10}, {2, 20}, {1, 11}}, k.add("list")
-		},
-		raise: func(w window) error { return k.add(fmt.Sprintf("raise %d", w.id)) },
+		modKey:  func(m modifier, down bool) error { return k.add(fmt.Sprintf("%s %v", m, down)) },
+		tabKey:  func(m modifier, shift bool) error { return k.add(fmt.Sprintf("%s-tab %v", m, shift)) },
 	}, k
 }
 
@@ -52,7 +48,7 @@ func TestScrollTabReleasesCtrl(t *testing.T) {
 	if err := s.turn(-1); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"ctrl true", "tab false", "tab true"}
+	want := []string{"ctrl true", "ctrl-tab false", "ctrl-tab true"}
 	if got := k.get(); !slices.Equal(got, want) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
@@ -71,7 +67,7 @@ func TestScrollPressReleasesCtrl(t *testing.T) {
 	if err := s.hold(true); err != nil {
 		t.Fatal(err)
 	}
-	if got := k.get(); !slices.Equal(got, []string{"ctrl true", "tab false", "ctrl false"}) {
+	if got := k.get(); !slices.Equal(got, []string{"ctrl true", "ctrl-tab false", "ctrl false"}) {
 		t.Fatalf("got %v", got)
 	}
 	time.Sleep(tabRelease + 200*time.Millisecond)
@@ -87,7 +83,7 @@ func TestScrollSignalReleasesCtrl(t *testing.T) {
 	}
 	s.release()
 	s.release()
-	if got := k.get(); !slices.Equal(got, []string{"ctrl true", "tab false", "ctrl false"}) {
+	if got := k.get(); !slices.Equal(got, []string{"ctrl true", "ctrl-tab false", "ctrl false"}) {
 		t.Fatalf("got %v", got)
 	}
 }
@@ -128,30 +124,57 @@ func TestScrollModes(t *testing.T) {
 	}
 }
 
-func TestScrollTabPressCyclesWindows(t *testing.T) {
+func (m modifier) String() string {
+	return [...]string{"none", "ctrl", "cmd"}[m]
+}
+
+func TestScrollTabPressHoldsCmd(t *testing.T) {
 	s, k := fakeScroller(t, true)
+	if err := s.turn(1); err != nil {
+		t.Fatal(err)
+	}
 	if err := s.hold(true); err != nil {
 		t.Fatal(err)
 	}
-	for _, d := range []int{1, 1, 1, -1} {
+	for _, d := range []int{1, -1} {
 		if err := s.turn(d); err != nil {
 			t.Fatal(err)
 		}
 	}
+	time.Sleep(tabRelease + 200*time.Millisecond)
 	if err := s.hold(false); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.hold(true); err != nil {
-		t.Fatal(err)
-	}
-	if err := s.turn(-1); err != nil {
-		t.Fatal(err)
-	}
-	want := []string{"list", "raise 20", "raise 11", "raise 10", "raise 11", "list", "raise 11"}
+	want := []string{"ctrl true", "ctrl-tab false", "ctrl false", "cmd true", "cmd-tab false", "cmd-tab true", "cmd false"}
 	if got := k.get(); !slices.Equal(got, want) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
 	if !s.tab {
 		t.Fatal("press + turn switched the mode")
+	}
+}
+
+func TestScrollCmdReleasedByTimerAndSignal(t *testing.T) {
+	s, k := fakeScroller(t, true)
+	if err := s.hold(true); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.turn(1); err != nil {
+		t.Fatal(err)
+	}
+	s.release()
+	s.release()
+	want := []string{"cmd true", "cmd-tab false", "cmd false"}
+	if got := k.get(); !slices.Equal(got, want) {
+		t.Fatalf("signal: got %v, want %v", got, want)
+	}
+	if err := s.turn(1); err != nil {
+		t.Fatal(err)
+	}
+	s.timer.Reset(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
+	want = append(want, "cmd true", "cmd-tab false", "cmd false")
+	if got := k.get(); !slices.Equal(got, want) {
+		t.Fatalf("timer: got %v, want %v", got, want)
 	}
 }

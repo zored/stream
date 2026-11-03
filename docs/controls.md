@@ -223,7 +223,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - click (press and release without a turn): switch wheel ↔ tab mode; the mode survives restarts
 - wheel mode, turn: mouse wheel under the cursor, clockwise = down; 1 / 2 / 4 / 8 lines per detent by speed
 - tab mode, turn: Ctrl held, clockwise = Tab, counter-clockwise = Shift+Tab; Ctrl is released 500 ms after the last detent
-- press + turn: wheel mode = horizontal wheel, clockwise = right; tab mode = windows of all apps one by one, front to back, clockwise = deeper; no mode switch
+- press + turn: wheel mode = horizontal wheel, clockwise = right; tab mode = Cmd held while pressed, clockwise = Cmd+Tab, counter-clockwise = Cmd+Shift+Tab (Contexts shows the window list), release picks; no mode switch
 - while the clock list is open: turn scrolls the list, press = clock hold
 
 [macos.md](macos.md)
