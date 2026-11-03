@@ -50,25 +50,23 @@ svg .g{stroke:var(--ok)!important}svg text.g{fill:var(--ok)}
 </nav>
 
 <h2 id="top">1. Верхний уровень</h2>
-<p>Три слоя, у каждого одна роль (инвариант <code>A1</code>): Companion рисует и запускает действия, <code>zored_stream</code> владеет состоянием и всеми вызовами ОС, <code>mediakey</code> шлёт медиаклавиши. Связь только двумя способами: Companion → демон <code>curl -fsS -m 1 -X POST http://127.0.0.1:&lt;port&gt;/…</code> в <code>exec</code>; демон → Companion <code>POST :8000/api/custom-variable/&lt;name&gt;/value</code>. <span class="v">verified</span></p>
+<p>Три слоя, у каждого одна роль (инвариант <code>A1</code>): Companion рисует и запускает действия, <code>zored_stream</code> владеет состоянием и всеми вызовами ОС, медиаклавиши тоже (<code>:47113/key/*</code>). Связь только двумя способами: Companion → демон <code>curl -fsS -m 1 -X POST http://127.0.0.1:&lt;port&gt;/…</code> в <code>exec</code>; демон → Companion <code>POST :8000/api/custom-variable/&lt;name&gt;/value</code>. <span class="v">verified</span></p>
 <div class="wrap"><svg viewBox="0 0 980 360" width="980">
 <rect class="b" x="10" y="120" width="150" height="110" rx="8"/><text class="t" x="20" y="142">Stream Controller</text><text x="20" y="162">12 тайлов, 6 крутилок</text><text x="20" y="178">8 RGB-кнопок, 2 стрипа</text><text class="m" x="20" y="198">USB CDC serial, без HID</text><text class="m" x="20" y="214">haptics 0x1B</text>
 <rect class="k" x="230" y="90" width="230" height="170" rx="8"/><text class="t" x="240" y="112">Bitfocus Companion :8000</text>
 <rect class="w" x="244" y="124" width="202" height="46" rx="6"/><text x="252" y="142">форк surface-loupedeck</text><text class="m" x="252" y="160">haptics, strip touch → POST</text>
-<text x="244" y="192">страницы MEDIA (1), TEST (2)</text><text x="244" y="210">custom variables</text><text x="244" y="228">exec: curl / mediakey</text><text class="m" x="244" y="248">HTTP API, tRPC import</text>
+<text x="244" y="192">страницы MEDIA (1), TEST (2)</text><text x="244" y="210">custom variables</text><text x="244" y="228">exec: curl</text><text class="m" x="244" y="248">HTTP API, tRPC import</text>
 <rect class="k" x="540" y="60" width="200" height="230" rx="8"/><text class="t" x="550" y="82">zored_stream (Go)</text><text class="m" x="550" y="100">LaunchAgent, signed</text>
 <text x="550" y="124">:47113 volume, NP</text><text x="550" y="140">:47114 calls</text><text x="550" y="156">:47115 ymusic</text><text x="550" y="172">:47116 usage</text><text x="550" y="188">:47117 ai + dictation</text><text x="550" y="204">:47118 brightness</text><text x="550" y="220">:47119 seek</text><text x="550" y="236">:47120 agents + choice</text><text x="550" y="252">:47121 scroll  :47122 power</text><text x="550" y="268">:47123 hp  :47124 wifi</text>
 <rect class="b" x="810" y="20" width="160" height="320" rx="8"/><text class="t" x="820" y="42">macOS / приложения</text>
 <text x="820" y="66">CoreAudio, IOBluetooth</text><text x="820" y="84">AX (Claude, YM)</text><text x="820" y="102">CGEvent (keys, wheel)</text><text x="820" y="120">DisplayServices</text><text x="820" y="138">MediaRemote (perl)</text><text x="820" y="156">VK WS gRPC</text><text x="820" y="174">Amphetamine (osascript)</text><text x="820" y="192">CoreWLAN, keychain</text><text x="820" y="210">api.anthropic.com</text><text x="820" y="228">Desktop session files</text><text x="820" y="246">iTerm2 (AppleScript)</text><text x="820" y="264">zored_wifi.app</text>
-<rect class="b" x="230" y="290" width="230" height="50" rx="8"/><text class="t" x="240" y="312">mediakey</text><text class="m" x="240" y="330">play/next/prev, Accessibility Companion</text>
+
 <rect class="b" x="540" y="305" width="200" height="40" rx="8"/><text class="t" x="550" y="330">Claude Code hooks</text>
 <line x1="160" y1="165" x2="228" y2="165" marker-end="url(#ar)"/><line x1="228" y1="190" x2="162" y2="190" marker-end="url(#ar)"/><text class="m" x="166" y="158">events</text><text class="m" x="166" y="206">pixels, LED</text>
 <line x1="460" y1="140" x2="538" y2="140" marker-end="url(#ar)"/><text class="m" x="466" y="132">curl -m 1 POST</text>
 <line x1="538" y1="200" x2="462" y2="200" marker-end="url(#ar)"/><text class="m" x="466" y="216">custom-variable</text>
-<line x1="345" y1="260" x2="345" y2="288" marker-end="url(#ar)"/>
 <line x1="740" y1="170" x2="808" y2="170" marker-end="url(#ar)"/><line x1="808" y1="190" x2="742" y2="190" marker-end="url(#ar)"/>
 <line x1="640" y1="305" x2="640" y2="292" marker-end="url(#ar)"/><text class="m" x="648" y="300">/agent/event</text>
-<line x1="460" y1="315" x2="808" y2="315" marker-end="url(#ar)"/>
 </svg></div>
 <ul>
 <li>Демон шлёт только изменившиеся значения и раз в 10 с (<code>resendEvery</code>) всё заново — Companion после рестарта лечится сам (<code>A4</code>). <span class="v">verified</span></li>
@@ -92,7 +90,7 @@ svg .g{stroke:var(--ok)!important}svg text.g{fill:var(--ok)}
 <li><code>make deploy</code> = <code>make pages</code> → <code>node tools/deploy.mjs --vars companion/custom-variables.json media-page…:1 test-page…:2</code>: чанки по 64 КБ, sha1, <code>importExport.prepareImport.*</code>. Перезаписывает страницы 1 и 2 — деплоит один (<code>A7</code>). <span class="v">verified</span></li>
 <li><code>companion/*</code> — только build output, детерминированный; CI делает <code>make check</code> + <code>git diff --exit-code companion</code> (<code>A5</code>). <span class="v">verified</span></li>
 <li>Кастомные переменные — контракт: каждая <code>$(custom:x)</code> есть в <code>custom-variables.json</code> профиля, всё, что ставит демон, есть в mac-профиле (<code>A3</code>). <span class="a">assumed</span> (проверка в <code>check_contract.py</code>, не читал целиком)</li>
-<li>Профили: <code>gen_pages.py companion</code> (mac) и <code>gen_pages.py companion/windows windows</code>. Windows только выкидывает ячейки/переменные (<code>call_cam</code>, <code>ym_like</code>, <code>dictation</code>, <code>power_svg</code>) и меняет <code>mediakey</code> на <code>:47113/key/*</code>; mac-вывод от этого не меняется (<code>A6</code>). <span class="v">verified</span> профили, детали <span class="a">assumed</span></li>
+<li>Профили: <code>gen_pages.py companion</code> (mac) и <code>gen_pages.py companion/windows windows</code>. Windows только выкидывает ячейки/переменные (<code>call_cam</code>, <code>ym_like</code>, <code>dictation</code>, <code>power_svg</code>) , медиаклавиши в обоих через <code>:47113/key/*</code>; mac-вывод от этого не меняется (<code>A6</code>). <span class="v">verified</span> профили, детали <span class="a">assumed</span></li>
 <li>Кнопка — <code>button-layered</code>: слои <code>canvas/box/text</code>, выражения <code>$(custom:x)</code>, наборы <code>down/up/rotate_left/rotate_right</code>, hold = числовой набор <code>"400"</code> в <code>runWhileHeld</code>. LED RGB-кнопки = фон кнопки. <span class="a">assumed</span></li>
 </ul>
 

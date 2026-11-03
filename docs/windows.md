@@ -17,7 +17,7 @@ Names as in [companion.md](companion.md): тайл ряд R, колонка C; �
 |---|---|---|---|
 | left knob 1: volume, press = mute | CoreAudio | keep | Core Audio `IAudioEndpointVolume` on the default render endpoint (`SetMasterVolumeLevelScalar`, `SetMute`), poll as now (assumed) |
 | left strip: volume bar, swipe | daemon | keep | same `/volume/drag`, bar code shared |
-| left knob 2: prev/next, press = play, hold = like | `mediakey`, Yandex Music AX | keep, hold dropped | `POST :47113/key/{play,next,prev}` → `SendInput` `VK_MEDIA_PLAY_PAUSE` / `VK_MEDIA_NEXT_TRACK` / `VK_MEDIA_PREV_TRACK` (assumed); like: see open questions |
+| left knob 2: prev/next, press = play, hold = like | `:47113/key/*`, Yandex Music AX | keep, hold dropped | `POST :47113/key/{play,next,prev}` → `SendInput` `VK_MEDIA_PLAY_PAUSE` / `VK_MEDIA_NEXT_TRACK` / `VK_MEDIA_PREV_TRACK` (assumed); like: see open questions |
 | left knob 3: seek | MediaRemote | keep | GSMTC `TryChangePlaybackPositionAsync`; works only if the player exposes the timeline (browsers: when the site sets a `seekto` handler, assumed) |
 | тайл ряд 2, колонка 1: cover + ▶/⏸, hold = like | MediaRemote artwork | keep, hold dropped | GSMTC `TryGetMediaPropertiesAsync().Thumbnail` → PNG/JPEG → same `np_art` data URI |
 | strip track text, progress, tint | daemon | keep | same `np_*` variables; `np_app` = `SourceAppUserModelId` |

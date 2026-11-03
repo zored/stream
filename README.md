@@ -24,7 +24,7 @@ Rules that must keep holding: [docs/invariants.md](docs/invariants.md).
 
 ```bash
 make zored_stream-cert
-make mediakey zored_stream deploy
+make zored_stream deploy
 make module
 make companion
 make agent-hooks
@@ -48,7 +48,6 @@ Requirements: Xcode Command Line Tools (`swiftc`, `clang`), Go, Node 22+ with `c
 | `tools/gen_pages.py` | Page definitions → `companion/*` (mac) and `companion/windows/*` |
 | `tools/deploy.mjs`, `tools/trpc.mjs` | Imports pages and creates custom variables in a running Companion over its internal tRPC API |
 | `tools/check_contract.py` | CI check: page URLs hit daemon routes, variables match, кнопки gated by choice mode, hooks fail-safe |
-| `tools/mediakey/` | Media key helper (Swift), run by Companion `exec` |
 | `tools/zored_stream/` | the one daemon ([daemon.md](docs/daemon.md)): calls, volume, Now Playing (perl child), seek, Yandex Music like, brightness, Claude limits + model, agents, choice mode, dictation, scroll, keep-awake |
 | `tools/agent_hooks.py` | Adds the Claude Code hooks for agents waiting to `~/.claude/settings.json` |
 | `tools/icons/` | SVG icons embedded into pages |

@@ -23,14 +23,10 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build mediakey zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages check test deploy agent-hooks
+.PHONY: build zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages check test deploy agent-hooks
 
 build:
-	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- mediakey zored_stream-bin
-
-mediakey:
-	mkdir -p $(BIN)
-	swiftc -O tools/mediakey/main.swift -o $(BIN)/mediakey
+	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- zored_stream-bin
 
 zored_stream-cert:
 	tools/zored_stream/cert.sh

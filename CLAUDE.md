@@ -10,7 +10,7 @@ Status and next steps: `PLAN.md`.
 - `docs/controls.md` — what every control does, user-facing; update it in the same commit when a control changes
 - `docs/companion.md` — grid, button JSON, expressions, internal actions, HTTP/tRPC APIs, debugging, the module fork
 - `docs/daemon.md` — why one Go daemon, modules and ports, signing
-- `docs/macos.md` — `mediakey`; `zored_stream` volume, Now Playing (perl child), seek, brightness, scroll, keep-awake; LaunchAgent
+- `docs/macos.md` — `zored_stream` media keys, volume, Now Playing (perl child), seek, brightness, scroll, keep-awake; LaunchAgent
 - `docs/vkcall.md` — VK WorkSpace call mic/camera: the client's gRPC API, call module of `zored_stream`, buttons
 - `docs/ai.md` — Claude usage limits: `usage` module of `zored_stream`, right strip, Hammerspoon overlay
 - `docs/ai-switch.md` — Claude Desktop model + effort knob via Accessibility
@@ -30,7 +30,7 @@ Status and next steps: `PLAN.md`.
    - state: `GET /api/custom-variable/<name>/value`, `POST /api/location/<p>/<r>/<c>/press`
    - looks: web preview at `http://127.0.0.1:8000/buttons/1`; strips and haptics only on the device — ask the user
 
-Helpers: `make mediakey` (CLI fallback, pages use `:47113/key/*`), `make zored_stream` (LaunchAgent), `make module` (builds the module fork, restarts Companion), `make companion` (autostart).
+Helpers: `make zored_stream` (LaunchAgent), `make module` (builds the module fork, restarts Companion), `make companion` (autostart).
 Run them yourself; hand to the user only what needs them: macOS permission grants, `make zored_stream-cert` (keychain password), `make companion` (login item), `make agent-hooks` (global settings).
 
 ## Rules

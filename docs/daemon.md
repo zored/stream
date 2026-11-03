@@ -1,7 +1,7 @@
 # One daemon: `zored_stream`
 
 Decision record for merging `streamd`, `vkcall`, `ymusic` (and later `mediakey`) into one binary. Done 2026-11-02:
-the old helpers are gone, only `mediakey` stays separate. Current modules: [zored_stream today](#zored_stream-today).
+the old helpers are gone, `mediakey` followed on 2026-11-03 (`:47113/key/*`). Current modules: [zored_stream today](#zored_stream-today).
 **Verified** = observed on this Mac on 2026-11-02, **assumed** = read or recalled, not checked.
 
 ## Decision
@@ -96,7 +96,7 @@ Each step keeps the old helper until the new path is verified on the device. Mod
 5. Now Playing: done, perl child with `libnowplaying.dylib`. `streamd` uninstalled, `tools/streamd/` removed.
 6. `ymusic`: done, AX walk in C (`ax_darwin.m`), `np_app` from memory, on `:47115`. The Accessibility grant survived a rebuild
    with a new cdhash (verified). `tools/ymusic/` removed.
-7. Done 2026-11-03: `mediakey` as `POST :47113/key/<name>`; the CLI stays as a fallback only.
+7. Done 2026-11-03: `mediakey` as `POST :47113/key/<name>`; the CLI is deleted.
 8. New features land as packages: keep-awake (`IOPMAssertion`), headphones (IOBluetooth ObjC + CoreAudio), AI limits, Claude hooks
    (`POST /agent/...`), Dock badges (AX), calendar (EventKit ObjC).
 9. Windows: `*_windows.go` files behind the same endpoints and variables, replaces the C# plan in [windows.md](windows.md) if the

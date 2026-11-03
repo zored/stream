@@ -5,13 +5,13 @@ The `zored_stream` daemon (HTTP) backs the Companion pages.
 ## Media keys — play / next / prev
 
 `POST :47113/key/<play|next|prev|volup|voldown|mute>` in `zored_stream` (`mediakey*.go`, `mediakey_darwin.m`); unknown name → 404.
-The old Swift CLI `tools/mediakey/main.swift` (`make mediakey` → `~/.local/bin/mediakey <name>`) stays as a manual fallback; no page calls it.
+Replaced the Swift CLI `mediakey` (Companion `exec`, deleted 2026-11-03).
 
 - Posts system-defined media key events (`NSEvent` subtype 8 → `CGEvent.post(.cghidEventTap)`): reaches whatever owns
   Now Playing, browser tabs included, like a real media key.
 - Needs Accessibility for the signed daemon (A11); without it the route answers 409 and the log says so.
   Verified 2026-11-03: `POST /api/location/1/1/0/press` toggles Yandex Music play/pause.
-- Gotcha (CLI only): the process must sleep ~100 ms after posting. Exiting right away drops the events silently; the daemon lives on, so it doesn't.
+- Gotcha (old CLI): a process exiting right after posting drops the events silently; the daemon lives on, so it doesn't.
 - Dead end: private `MRMediaRemoteSendCommand` returns true but browsers ignore it.
 
 ## zored_stream — volume and Now Playing
