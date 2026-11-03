@@ -33,7 +33,6 @@ type vars struct {
 }
 
 func (v *vars) set(name, value string) {
-	tmpCount(&tmpSets, name)
 	v.mu.Lock()
 	if v.sent[name] == value {
 		v.mu.Unlock()
