@@ -48,6 +48,10 @@ Idea: mic, camera and hang-up tiles do something else outside a call.
 - Agents waiting: Claude Code hooks → `zored_stream`; button 6 LED breathes amber on input needed, gray when done; dots on tile row 2 col 4; press focuses the session ([agents.md](docs/agents.md))
 - Dictation into Claude Desktop on button 7, red LED while recording
 - Mouse wheel on right knob row 3, press+turn scrolls horizontally
+- Dictation pauses playing music and resumes it after (Yandex Music verified, browser not)
+- Claude Desktop permission cards answered with buttons 1–7; limits token refreshed by the daemon, stale values gray
+- Keep-awake tile drives Amphetamine (1 h per press, brightness knob sets length); hold = sleep (not verified)
+- Controls reference: [controls.md](docs/controls.md); Windows plan: [windows.md](docs/windows.md), `gen_pages.py` profile `mac|windows`
 - CI: concurrency + timeout, GitHub's macOS runner queue was the failure, not the code
 - Animations at 60 fps (the ceiling through Companion variables, [companion.md](docs/companion.md))
 - Yandex Music like: hold play tile / knob 2, second haptic at 400 ms, ♥/💔 on the strip from the app's player bar
