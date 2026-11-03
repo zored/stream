@@ -5235,7 +5235,7 @@
          "isExpression": false
         },
         "height": {
-         "value": 58,
+         "value": 40,
          "isExpression": false
         },
         "rotation": {
@@ -5244,61 +5244,6 @@
         },
         "base64Image": {
          "value": "concat(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjYgLTc0IDI4OSA3NSI+PHRleHQgZm9udC1mYW1pbHk9IkpldEJyYWlucyBNb25vIiBmb250LXNpemU9IjEwMCIgZmlsbD0iI2ZmZiI+\", substr(\"MDA6MDE6MDI6MDM6MDQ6MDU6MDY6MDc6MDg6MDk6MTA6MTE6MTI6MTM6MTQ6MTU6MTY6MTc6MTg6MTk6MjA6MjE6MjI6MjM6\", $(internal:time_h) * 4, $(internal:time_h) * 4 + 4), substr(\"MDA8MDE8MDI8MDM8MDQ8MDU8MDY8MDc8MDg8MDk8MTA8MTE8MTI8MTM8MTQ8MTU8MTY8MTc8MTg8MTk8MjA8MjE8MjI8MjM8MjQ8MjU8MjY8Mjc8Mjg8Mjk8MzA8MzE8MzI8MzM8MzQ8MzU8MzY8Mzc8Mzg8Mzk8NDA8NDE8NDI8NDM8NDQ8NDU8NDY8NDc8NDg8NDk8NTA8NTE8NTI8NTM8NTQ8NTU8NTY8NTc8NTg8NTk8\", $(internal:time_m) * 4, $(internal:time_m) * 4 + 4), \"L3RleHQ+PC9zdmc+\")",
-         "isExpression": true
-        },
-        "halign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "valign": {
-         "value": "center",
-         "isExpression": false
-        },
-        "fillMode": {
-         "value": "fit",
-         "isExpression": false
-        }
-       },
-       {
-        "id": "date",
-        "name": "date",
-        "usage": "auto",
-        "type": "image",
-        "pinnedProperties": [
-         "base64Image",
-         "halign",
-         "valign"
-        ],
-        "enabled": {
-         "value": "$(custom:cal_browse) != 1 && $(custom:cal_line) == \"\"",
-         "isExpression": true
-        },
-        "opacity": {
-         "value": 100,
-         "isExpression": false
-        },
-        "x": {
-         "value": 6,
-         "isExpression": false
-        },
-        "y": {
-         "value": 74,
-         "isExpression": false
-        },
-        "width": {
-         "value": 88,
-         "isExpression": false
-        },
-        "height": {
-         "value": 17,
-         "isExpression": false
-        },
-        "rotation": {
-         "value": 0,
-         "isExpression": false
-        },
-        "base64Image": {
-         "value": "concat(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjYgLTc0IDI4OSA3NSI+PHRleHQgZm9udC1mYW1pbHk9IkpldEJyYWlucyBNb25vIiBmb250LXNpemU9IjEwMCIgZmlsbD0iIzgwODA4MCI+\", substr(\"MDAuMDEuMDIuMDMuMDQuMDUuMDYuMDcuMDguMDkuMTAuMTEuMTIuMTMuMTQuMTUuMTYuMTcuMTguMTkuMjAuMjEuMjIuMjMuMjQuMjUuMjYuMjcuMjguMjkuMzAuMzEu\", $(internal:date_d) * 4, $(internal:date_d) * 4 + 4), substr(\"MDA8MDE8MDI8MDM8MDQ8MDU8MDY8MDc8MDg8MDk8MTA8MTE8MTI8\", $(internal:date_m) * 4, $(internal:date_m) * 4 + 4), \"L3RleHQ+PC9zdmc+\")",
          "isExpression": true
         },
         "halign": {
@@ -5337,7 +5282,7 @@
          "isExpression": false
         },
         "y": {
-         "value": 74,
+         "value": 52,
          "isExpression": false
         },
         "width": {
@@ -5354,6 +5299,61 @@
         },
         "base64Image": {
          "value": "$(custom:cal_line)",
+         "isExpression": true
+        },
+        "halign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "valign": {
+         "value": "center",
+         "isExpression": false
+        },
+        "fillMode": {
+         "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "date",
+        "name": "date",
+        "usage": "auto",
+        "type": "image",
+        "pinnedProperties": [
+         "base64Image",
+         "halign",
+         "valign"
+        ],
+        "enabled": {
+         "value": "$(custom:cal_browse) != 1",
+         "isExpression": true
+        },
+        "opacity": {
+         "value": 100,
+         "isExpression": false
+        },
+        "x": {
+         "value": 6,
+         "isExpression": false
+        },
+        "y": {
+         "value": 74,
+         "isExpression": false
+        },
+        "width": {
+         "value": 88,
+         "isExpression": false
+        },
+        "height": {
+         "value": 17,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "base64Image": {
+         "value": "concat(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjYgLTc0IDI4OSA3NSI+PHRleHQgZm9udC1mYW1pbHk9IkpldEJyYWlucyBNb25vIiBmb250LXNpemU9IjEwMCIgZmlsbD0iIzgwODA4MCI+\", substr(\"MDAuMDEuMDIuMDMuMDQuMDUuMDYuMDcuMDguMDkuMTAuMTEuMTIuMTMuMTQuMTUuMTYuMTcuMTguMTkuMjAuMjEuMjIuMjMuMjQuMjUuMjYuMjcuMjguMjkuMzAuMzEu\", $(internal:date_d) * 4, $(internal:date_d) * 4 + 4), substr(\"MDA8MDE8MDI8MDM8MDQ8MDU8MDY8MDc8MDg8MDk8MTA8MTE8MTI8\", $(internal:date_m) * 4, $(internal:date_m) * 4 + 4), \"L3RleHQ+PC9zdmc+\")",
          "isExpression": true
         },
         "halign": {

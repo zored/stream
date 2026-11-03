@@ -134,9 +134,9 @@ Same as кнопка 4. [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 4 — clock
 
-- shows: `HH:MM` white; below it the next event or reminder within 12 h (`●` event, `○` reminder, time, title) in gray, else `DD.MM` gray
+- shows three rows: `HH:MM` white; the title of the next event or reminder within 12 h gray (reminders get `○`, events nothing; emoji dropped); `DD.MM` gray
 - amber: an event starting in ≤ 5 min, an overdue reminder
-- touch: 5 s list of events and reminders (clock hidden), крутилка справа, ряд 3 scrolls it; touch again closes
+- touch: 5 s list, one item at a time (clock hidden): time white, title gray up to 3 lines, date gray; `●` = just done; крутилка справа, ряд 3 scrolls it; touch again closes
 - hold ≥ 400 ms: reminder → done, event → opens in Calendar (the listed item while the list is open, else the shown one)
 
 ## Buttons

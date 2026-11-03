@@ -298,13 +298,12 @@ def clock():
         return button([canvas(), box("box0", 0x000000),
                        image("time", time_image(), x=v(6), y=v(6), width=v(88), height=v(58)),
                        image("date", date_image(), x=v(6), y=v(74), width=v(88), height=v(17))])
-    idle = expr('$(custom:cal_browse) != 1')
-    no_line = expr('$(custom:cal_browse) != 1 && $(custom:cal_line) == ""')
+    idle = expr("$(custom:cal_browse) != 1")
     line = expr('$(custom:cal_browse) != 1 && $(custom:cal_line) != ""')
     return button([canvas(), box("box0", 0x000000),
-                   image("time", time_image(), enabled=idle, x=v(6), y=v(6), width=v(88), height=v(58)),
-                   image("date", date_image(), enabled=no_line, x=v(6), y=v(74), width=v(88), height=v(17)),
-                   image("next", expr("$(custom:cal_line)"), enabled=line, x=v(6), y=v(74), width=v(88), height=v(17)),
+                   image("time", time_image(), enabled=idle, x=v(6), y=v(6), width=v(88), height=v(40)),
+                   image("next", expr("$(custom:cal_line)"), enabled=line, x=v(6), y=v(52), width=v(88), height=v(17)),
+                   image("date", date_image(), enabled=idle, x=v(6), y=v(74), width=v(88), height=v(17)),
                    image("list", expr("$(custom:cal_svg)"), enabled=expr('$(custom:cal_browse) == 1'),
                          x=v(6), y=v(6), width=v(88), height=v(88))],
                   down=[post(CALENDAR + "/calendar/down")], up=[post(CALENDAR + "/calendar/up")])

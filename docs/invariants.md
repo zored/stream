@@ -46,7 +46,7 @@ nothing automatic, **doc** = a written rule only. *(unconfirmed)* = taken from a
 | F21 | Wi-fi: hold ≥ 400 ms toggles power; a touch opens a 5 s network pick on крутилка справа, ряд 1; join only after a 1 s pause on a network other than the current one; timing lives in the daemon | a passing turn never switches networks | code `wifi.go`, test `TestIpconfigLink` (parsing only) | dropped off the network by a stray turn |
 | F17 | Controller brightness never below 10 % | a dark device looks dead | code `brightness.go` | |
 | F18 | Seek target clamped to 0 … duration − 1 s; live seek at most every 150 ms, the last target always goes out | | code `seek.go` | skipping to the next track |
-| F19 | Clock `HH:MM` white; under it the next event/reminder ≤ 12 h gray (amber ≤ 5 min / overdue), else date `DD.MM` gray; a touch opens a 5 s list that hides the clock and captures крутилка справа, ряд 3 (turn + press), scroll mode resumes after | user decision | code `gen_pages.py` `clock`, tests `TestCalKeepAndNext`, `TestCalBrowse` | the scroll knob stays stolen or the clock vanishes |
+| F19 | Clock rows: `HH:MM` white, next event/reminder title ≤ 12 h gray (amber ≤ 5 min / overdue), date `DD.MM` gray; a touch opens a 5 s list that hides the clock and captures крутилка справа, ряд 3 (turn + press), scroll mode resumes after | user decision | code `gen_pages.py` `clock`, tests `TestCalKeepAndNext`, `TestCalBrowse` | the scroll knob stays stolen or the clock vanishes |
 | F20 | Every changed control is described in `docs/controls.md` in the same commit | the device has no labels | doc | nobody knows what a button does |
 
 ## Performance
