@@ -66,3 +66,10 @@ func TestCalWhenOngoing(t *testing.T) {
 		t.Errorf("ongoing = %q, want 25m", got)
 	}
 }
+
+func TestCalNotes(t *testing.T) {
+	got := calNotes("Ссылка: https://meet.example.com/abc?x=1\nобсудить (<https://a.b/c>) план www.x.ru/y")
+	if want := "Ссылка: обсудить план"; got != want {
+		t.Errorf("calNotes = %q, want %q", got, want)
+	}
+}

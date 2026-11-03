@@ -121,12 +121,16 @@ void *cal_canvas_new(double w, double h, double scale, int rotate) {
     return c;
 }
 
-void cal_canvas_text(void *c, const char *text, double x, double y, double w, double h, double size, unsigned rgb, int center) {
+static CGColorRef rgb_color(unsigned rgb) {
+    return CGColorCreateSRGB(((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
+}
+
+void cal_canvas_text(void *c, const char *text, const char *tail, double x, double y, double w, double h, double size, unsigned rgb, unsigned tail_rgb, int center) {
     @autoreleasepool {
         CGContextRef ctx = ((canvas *)c)->ctx;
         double H = ((canvas *)c)->h;
         CTFontRef font = CTFontCreateWithName(CFSTR("JetBrains Mono"), size, NULL);
-        CGColorRef color = CGColorCreateSRGB(((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
+        CGColorRef color = rgb_color(rgb), tail_color = rgb_color(tail_rgb);
         CTTextAlignment align = center ? kCTTextAlignmentCenter : kCTTextAlignmentLeft;
         CTLineBreakMode wrap = kCTLineBreakByCharWrapping;
         CGFloat lh = size * 1.25;
@@ -137,7 +141,12 @@ void cal_canvas_text(void *c, const char *text, double x, double y, double w, do
         CTParagraphStyleRef style = CTParagraphStyleCreate(ps, 4);
         NSDictionary *attrs = @{(id)kCTFontAttributeName: (__bridge id)font, (id)kCTForegroundColorAttributeName: (__bridge id)color,
                                 (id)kCTParagraphStyleAttributeName: (__bridge id)style};
-        NSAttributedString *as = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:text] attributes:attrs];
+        NSMutableAttributedString *as = [[NSMutableAttributedString alloc] initWithString:[NSString stringWithUTF8String:text] attributes:attrs];
+        if (*tail) {
+            NSMutableDictionary *ta = [attrs mutableCopy];
+            ta[(id)kCTForegroundColorAttributeName] = (__bridge id)tail_color;
+            [as appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:tail] attributes:ta]];
+        }
         CTFramesetterRef fs = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)as);
         CGRect box = CGRectMake(x, H - y - h, w, h);
         CGPathRef path = CGPathCreateWithRect(CGRectMake(x, box.origin.y - H, w, h + H), NULL);
@@ -159,6 +168,7 @@ void cal_canvas_text(void *c, const char *text, double x, double y, double w, do
         CFRelease(fs);
         CFRelease(style);
         CGColorRelease(color);
+        CGColorRelease(tail_color);
         CFRelease(font);
     }
 }

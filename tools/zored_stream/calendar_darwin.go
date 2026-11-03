@@ -66,19 +66,20 @@ func calSetDone(id string, done bool) error {
 }
 
 type calText struct {
-	text       string
-	x, y, w, h float64
-	size       float64
-	rgb        uint32
-	center     bool
+	text, tail   string
+	x, y, w, h   float64
+	size         float64
+	rgb, tailRGB uint32
+	center       bool
 }
 
 func calPNG(w, h float64, rotate bool, texts []calText) (string, error) {
 	c := C.cal_canvas_new(C.double(w), C.double(h), 4, cBool(rotate))
 	for _, t := range texts {
-		s := C.CString(t.text)
-		C.cal_canvas_text(c, s, C.double(t.x), C.double(t.y), C.double(t.w), C.double(t.h), C.double(t.size), C.uint(t.rgb), cBool(t.center))
+		s, tail := C.CString(t.text), C.CString(t.tail)
+		C.cal_canvas_text(c, s, tail, C.double(t.x), C.double(t.y), C.double(t.w), C.double(t.h), C.double(t.size), C.uint(t.rgb), C.uint(t.tailRGB), cBool(t.center))
 		C.free(unsafe.Pointer(s))
+		C.free(unsafe.Pointer(tail))
 	}
 	return canvasPNG(c)
 }

@@ -151,7 +151,7 @@ Same as кнопка 3. [vkcall.md](vkcall.md)
 - day: all white, left-aligned: the date `3 ноя`; below `+40m` / `+5h` / `+1d` until the next event or reminder within 12 h (for a running event: `25m` until its end) and its title, lowercase, wrapped (reminders get `○`)
 - titles keep emoji (drawn by CoreText into a PNG, the SVG renderer had none) and wrap by character; a recurring event is listed once, at its next occurrence
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
-- touch: 5 s list, one item at a time; крутилка справа, ряд 3 scrolls it. The right strip (over model + effort) shows only the title white and the notes gray. The tile shows the item: its date `5 ноя`, below the weekday and time `ср 12:00` (amber for an event in ≤ 5 min or an overdue reminder), below `○` / `●` for a reminder
+- touch: 5 s list, one item at a time; крутилка справа, ряд 3 scrolls it. The right strip (over model + effort) shows the title white with the notes right after it in gray, one run of text, links cut out. The tile shows the item: its date `5 ноя`, below the weekday and time `ср 12:00` (amber for an event in ≤ 5 min or an overdue reminder), below `○` / `●` for a reminder
 - in the list a touch (or the knob press) toggles the reminder (list stays open) or opens the event in Calendar
 
 ### тайл ряд 3, колонка 4 — clock + timers

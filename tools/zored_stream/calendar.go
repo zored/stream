@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"log"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -269,13 +270,20 @@ func calStripImage(items []calItem, pick int) string {
 		return calImage(w, h, true, calText{text: "·", y: 12, w: w, h: 24, size: 16, rgb: grayRGB, center: true})
 	}
 	it := items[pick]
-	notes := strings.Join(strings.Fields(it.notes), " ")
-	if notes == "" {
-		return calImage(w, h, true, calText{text: calTitle(it), x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB})
+	tail := calNotes(it.notes)
+	if tail != "" {
+		tail = " " + tail
 	}
-	return calImage(w, h, true,
-		calText{text: calTitle(it), x: 4, y: 3, w: w - 8, h: 22, size: 15, rgb: whiteRGB},
-		calText{text: notes, x: 4, y: 25, w: w - 8, h: 22, size: 13, rgb: grayRGB})
+	return calImage(w, h, true, calText{text: calTitle(it), tail: tail, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB, tailRGB: grayRGB})
+}
+
+var (
+	calLink  = regexp.MustCompile(`<?(?:https?://|www\.)[^\s<>()\[\]]+>?`)
+	calEmpty = regexp.MustCompile(`\(\s*\)|\[\s*\]`)
+)
+
+func calNotes(s string) string {
+	return strings.Join(strings.Fields(calEmpty.ReplaceAllString(calLink.ReplaceAllString(s, ""), " ")), " ")
 }
 
 func calTileImage(items []calItem, pick int) string {
