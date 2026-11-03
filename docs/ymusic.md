@@ -11,7 +11,9 @@ Only while the Now Playing app is Yandex Music (`np_app`); otherwise the hold do
 | play tile `1/2` | play/pause (on release) | like / remove like |
 | left knob 2 `1/0` press | play/pause (on release) | like / remove like |
 
-- The knob hold vibrates a second time at 400 ms (module fork, only `encoder-1-0` via `HAPTIC_HOLD_CONTROLS`); the tile has no second haptic.
+Play tile swipes (module fork → `:47113/tile/swipe`): up = like, down = dislike, same `pressAndPoll` as the hold; dislike only where the player bar shows it.
+
+- The knob hold vibrates a second time at 400 ms (module fork, `HAPTIC_HOLD_CONTROLS` from `companion/hold-controls.txt`, generated from every control with a hold).
 - The left strip shows a heart before the track from `ym_like`: pink when liked, gray broken when disliked. It is an SVG path in `np_svg`
   (Skia has no colour emoji fallback; emoji in the text came out white or missing, verified in the web preview).
 

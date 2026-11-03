@@ -9,12 +9,12 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ```
           left                         tiles                           right
         knob strip   колонка 1   колонка 2   колонка 3   колонка 4   strip knob
-ряд 1   VOL   ┐      en/ru       ·           ·           awake       ┐     SUN
+ряд 1   VOL   ┐      en/ru       wi-fi       headphones  awake       ┐     SUN
 ряд 2   TRACK ├trk   play/cover  emoji       ·           agents      ├ai   AI
-ряд 3   SEEK  ┘      mic         camera      day / call  clock       ┘     SCROLL
+ряд 3   SEEK  ┘      mic         camera      day / call  clock+timer ┘     SCROLL
 
         кнопка 1  2      3       4        5   6        7          8
-        ·         mic    camera  hang up  ·   agents   dictation  ·
+        KVM       mic    camera  hang up  ·   agents   dictation  ·
 ```
 
 `·` = free. Grid coords for code: `row/col`, knobs `r/0` and `r/7`, strips `r/1` and `r/6`, tiles `r/2–5`, buttons `3/0–7`
@@ -128,10 +128,12 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 Same as кнопка 6. [agents.md](agents.md)
 
-### тайл ряд 3, колонка 1 — microphone (VK WorkSpace call)
+### тайл ряд 3, колонка 1 — microphone in a call, unread chats otherwise
 
-- tap: toggle the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
-- shows: dark green + mic = on, red + crossed = off, amber `…` = switching, amber `?` = unknown, black = no call
+- in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
+- in a call shows: dark green + mic = on, red + crossed = off, amber `…` = switching, amber `?` = unknown
+- no call: first letter of an unread Telegram / VK WorkSpace chat (white), the app's unread count (gray, corner), dots = position; tap: next chat, hold: open the app; black = nothing unread
+- [unread.md](unread.md)
 
 Same as кнопка 2. [vkcall.md](vkcall.md)
 
@@ -263,9 +265,9 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 
 | Control | Windows |
 |---|---|
-| volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold; brightness = monitor over DDC/CI |
+| volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold or swipes up/down; brightness = monitor over DDC/CI |
 | mic tile + кнопка 2 | system mic mute (proposal) |
-| wi-fi, headphones, keep-awake, camera, hang-up tiles, кнопки 1, 3, 4, 7 | dropped, free |
+| keyboard layout, wi-fi, headphones, keep-awake, emoji, camera, day / hang-up tiles, timers, кнопки 1, 3, 4, 7 | dropped, free (the clock stays, no timers) |
 | agents tile + кнопка 6 | Codex sessions |
 | right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |

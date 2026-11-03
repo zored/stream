@@ -68,6 +68,8 @@ Everything else (`make zored_stream`, `make module`, `make deploy`) sessions run
 - `make companion` (adds a login item)
 - `make agent-hooks` (writes `~/.claude/settings.json`)
 - granting Accessibility to Companion and `zored_stream`, Automation for Amphetamine and iTerm2, Calendars + Reminders (full access) to `zored_stream`
+- Bluetooth for `zored_stream` (headphones), Automation for Viscosity and System Events (wi-fi) *(assumed: prompts not recorded)*
+- `sudo ipconfig setverbose 1` once (wi-fi SSID), `brew install m1ddc` (KVM, `/opt/homebrew/bin/m1ddc`)
 
 ## Sleep
 

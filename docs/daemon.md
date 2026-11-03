@@ -73,6 +73,13 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Scroll, Ctrl+Tab | `scroll.go`, `scroll_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47121` (`-scroll`) | verified on the device |
 | Keep-awake, sleep | `power.go`, `power_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47122` (`-power`) | keep-awake verified; sleep not triggered; Amphetamine read on IOPM assertion change |
 | Headphones | `headphones.go`, `headphones_darwin.{go,m,h}`, [macos.md](macos.md) | `127.0.0.1:47123` (`-headphones`) | see macos.md |
+| Media keys, tile swipes | `mediakey*.go`, `tileswipe.go`, `skip.go`, [macos.md](macos.md), [device.md](device.md#touch) | `127.0.0.1:47113` (`/key/*`, `/tile/swipe`) | see macos.md |
+| Wi-fi + Viscosity | `wifi.go`, `wifi_darwin.go` (CoreWLAN, Control Center via `osascript`), [macos.md](macos.md) | `127.0.0.1:47124` (`-wifi`) | see macos.md |
+| KVM | `kvm.go` (Wake-on-LAN, `m1ddc`), [macos.md](macos.md) | `127.0.0.1:47125` (`-kvm`) | see macos.md |
+| Calendar + reminders, tile layers | `calendar.go`, `calendar_darwin.go` (EventKit), `layers.go` (`tile_24`), [macos.md](macos.md) | `127.0.0.1:47126` (`-calendar`, `/tile/24/press`) | see macos.md |
+| Keyboard layout | `input.go`, `input_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47127` (`-input`) | see macos.md |
+| Emoji picker | `emoji.go`, `emoji_darwin.go`, `emoji_data.go`, [emoji.md](emoji.md) | `127.0.0.1:47128` (`-emoji`) | see emoji.md |
+| Timers + alarms | `timers.go`, [macos.md](macos.md) | `127.0.0.1:47129` (`-timers`) | see macos.md |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain

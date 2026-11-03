@@ -33,7 +33,8 @@ Names as in [companion.md](companion.md): тайл ряд R, колонка C; �
 | right knob 3: scroll, press+turn = horizontal, click = Ctrl+Tab mode | CGEvent | keep | `SendInput` `MOUSEEVENTF_WHEEL` / `MOUSEEVENTF_HWHEEL`, 120 per line; Ctrl+Tab via `SendInput` keys with the same release rules (assumed) |
 | тайл ряд 1, колонка 4: keep-awake, hold = sleep | Amphetamine, IOKit | drop for now (freed) | `SetThreadExecutionState`, `SetSuspendState` later |
 | choice mode on кнопки 1–8 | Claude Desktop / iTerm2 AX | off | no Claude Desktop; buttons are not gated |
-| haptics, strip ticks, touch | module fork | keep | OS-independent JS (assumed) |
+| haptics, touch, tile swipes | module fork | keep | OS-independent JS (assumed) |
+| keyboard layout, wi-fi, headphones, emoji, day / calendar tiles, timers, кнопка 1 KVM | daemon (mac-only cgo / AppleScript) | drop (freed) | not in the windows profile (`gen_pages.py` drops their variables) |
 
 Freed on Windows: тайл ряд 1, колонка 4, тайл ряд 3, колонки 2–3, кнопки 3, 4, 7, plus the free ones from `PLAN.md`. Candidates: `Win+Alt+K`
 (Windows 11 "mute in call", assumed), keystrokes, a Codex "new session" button.
@@ -141,7 +142,7 @@ Each step is tried on its own and rolled back on its own; the Mac is untouched e
 |---|---|---|---|---|
 | 0 | Mac | profile in `gen_pages.py`, `companion/windows/`, `companion_config.py` path (done) | mac `companion/` unchanged, CI green | revert |
 | 1 | PC, user | Companion + upstream Loupedeck module, TEST page | every control logs `TEST …`; check wake from sleep | uninstall Companion, re-enable Loupedeck |
-| 2 | PC, user | module fork (install step 5) | haptic ticks on strip slide, hold haptic | `enable_developer=false` |
+| 2 | PC, user | module fork (install step 5) | press haptic, hold haptic, no haptic on strip slide | `enable_developer=false` |
 | 3 | Mac | daemon split: `modules_*.go`, `*_windows.go` for volume + keys + scroll, CI `windows-latest` | `make zored_stream` on the Mac works as before, CI green | revert |
 | 4 | PC, user | daemon by hand (`zored_stream.exe` in a terminal) + windows MEDIA page | volume knob/strip, play/next/prev, scroll | stop it, re-import TEST |
 | 5 | Mac → PC | Now Playing PowerShell child: `np_*`, cover, seek | track, cover, seek on each player | stop the daemon |
