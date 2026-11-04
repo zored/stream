@@ -223,7 +223,7 @@ no AppleScript). The Karabiner VirtualHID route needs a root client and was not 
 - Text is drawn by CoreText (`cal_canvas_*`, JetBrains Mono, system emoji fallback, char wrap) into a 4× PNG: Companion's SVG text has no emoji. The frame path is taller than the box and clipped, otherwise a line taller than the box (emoji ascent) is dropped; lines are drawn one by one at a fixed baseline (font ascent, step = 1.25 × size) so an emoji does not push its line down. Open: `open ical://ekevent/<eventIdentifier>?method=show&options=more`.
 - Knob capture: `/scroll/*` ask `calendar` first (`knob`, `turn`); entering the list releases Ctrl (S1).
 - The tile tap goes to `/tile/24/press`: the `slot` in `layers.go` routes it to hang-up during a call, else to the calendar (F23).
-- кнопка 5 posts `/button/5/press`: ignored during a call, else the same `press`. LED `cal_led`: green while browsing, white when any item would be amber (`calColor`), else 0; the page shows 0 while `tile_24` is `call`.
+- кнопка 5 posts `/button/5/press`: ignored during a call, else the same `press`. LED `cal_led`: green while browsing, else white; the page shows 0 while `tile_24` is `call`.
 
 ## Timers (`timers.go`, :47129)
 

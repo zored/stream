@@ -105,18 +105,15 @@ func (c *calendar) publishLocked() {
 		next = &c.items[i]
 		key += "\n" + calWhen(*next, now) + " " + calTitle(*next)
 	}
-	c.vars.set("cal_led", strconv.Itoa(calLed(c.items, c.browsing(), now)))
+	c.vars.set("cal_led", strconv.Itoa(calLed(c.browsing())))
 	c.vars.set("cal_card", c.card.render(key, func() string { return calCardImage(now, next) }))
 }
 
-func calLed(items []calItem, browsing bool, now time.Time) int {
+func calLed(browsing bool) int {
 	if browsing {
 		return greenRGB
 	}
-	if slices.ContainsFunc(items, func(it calItem) bool { return calColor(it, now) != 0 }) {
-		return whiteRGB
-	}
-	return 0
+	return whiteRGB
 }
 
 func (c *calendar) browsing() bool {
@@ -269,9 +266,9 @@ func calDate(t time.Time) string {
 }
 
 func calCardImage(now time.Time, it *calItem) string {
-	texts := []calText{{text: calDate(now), w: 88, h: 22, size: 16, rgb: whiteRGB}}
+	texts := []calText{{text: calDate(now), y: 68, w: 88, h: 20, size: captionSize, rgb: whiteRGB, center: true}}
 	if it != nil {
-		texts = append(texts, calText{text: calWhen(*it, now) + " " + calTitle(*it), y: 26, w: 88, h: 62, size: 15, rgb: whiteRGB})
+		texts = append(texts, calText{text: calWhen(*it, now) + " " + calTitle(*it), w: 88, h: 64, size: 15, rgb: whiteRGB})
 	}
 	return calImage(88, 88, false, texts...)
 }

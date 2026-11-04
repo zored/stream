@@ -82,24 +82,7 @@ func TestCalNotesHTML(t *testing.T) {
 }
 
 func TestCalLed(t *testing.T) {
-	now := time.Date(2026, 11, 5, 12, 0, 0, 0, time.UTC)
-	soon := calItem{start: now.Add(3 * time.Minute), end: now.Add(time.Hour)}
-	later := calItem{start: now.Add(time.Hour), end: now.Add(2 * time.Hour)}
-	overdue := calItem{reminder: true, start: now.Add(-time.Hour)}
-	done := calItem{reminder: true, done: true, start: now.Add(-time.Hour)}
-	for _, tc := range []struct {
-		items    []calItem
-		browsing bool
-		want     int
-	}{
-		{nil, false, 0},
-		{[]calItem{later, done}, false, 0},
-		{[]calItem{later, soon}, false, whiteRGB},
-		{[]calItem{overdue}, false, whiteRGB},
-		{[]calItem{later}, true, greenRGB},
-	} {
-		if got := calLed(tc.items, tc.browsing, now); got != tc.want {
-			t.Errorf("calLed(%v, %v) = %x, want %x", tc.items, tc.browsing, got, tc.want)
-		}
+	if calLed(false) != whiteRGB || calLed(true) != greenRGB {
+		t.Error("calLed")
 	}
 }
