@@ -94,7 +94,9 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
 
 - [ ] Camera tile does something else outside a call (layers, F23)
-- [ ] Unread tile: slide through the unread chats' avatars/letters (today: badge count + eye icon, press opens the app) — research in a child session (2026-11-04): source, auth, effort, perf
+- [ ] Chats tile `2/2` (child session, 2026-11-04, `22decf8`…`0c09921`): Telegram via `gotd/td` (`tg.go`, session `tg-digest`), 2×2 avatar grid with badges, muted mode, knob scroll with a 150 ms slide, 3 lines on the strip — device check pending (animation smoothness, strip); VK WorkSpace source parked
+- [ ] Now Playing: a race between two publishes fixed (`ea9b8fd`), the stale-track symptom itself never reproduced (4 transitions < 1 s)
+- [ ] BUG (2026-11-04, with perf3): tap on keep-awake (тайл ряд 1, колонка 4) puts the Mac to sleep — suspected regression of `5b8a196`
 - [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` already reads it via `lsappinfo` and can push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
 
