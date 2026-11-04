@@ -449,7 +449,7 @@ def test_page():
 
 def media_page():
     grid = {
-        (0, 0): button(glyph("volume-up"), down=streamd("/volume/mute"),
+        (0, 0): button(glyph("volume-up-fill"), down=streamd("/volume/mute"),
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
         (1, 0): button(glyph("music-note-beamed"), up=[mediakey("play")], held=ymusic("/like"),
                        left=[mediakey("prev"), *streamd("/nowplaying/prev")],
