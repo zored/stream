@@ -80,6 +80,7 @@ nothing automatic, **doc** = a written rule only. *(unconfirmed)* = taken from a
 | D2 | 6 % inset for content on every tile and strip picture | code (`x=v(6) … width=v(88)` in `gen_pages.py`, `inset` in `nowplaying.go`), review |
 | D3 | Text in JetBrains Mono static weights; strip pictures are 48×258 (the drawable area), not 60×270 | doc [companion.md](companion.md) |
 | D4 | Talk and docs name controls "крутилка слева, ряд 1", "тайл ряд 2, колонка 3", "кнопка 1"; grid `row/col` only in code and technical docs | doc |
+| D5 | Icons come from Bootstrap Icons outline (MIT, pinned in `tools/zored_stream/icons/`, refreshed by `fetch.sh`): `iconAt` in the daemon, `bootstrap()` in `gen_pages.py`; a state is the icon color on a black tile, not a colored background | code, review |
 
 ## Process
 

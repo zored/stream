@@ -69,7 +69,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 2 — wi-fi
 
-- shows: the current network name under the fan (white, cut to 10 chars); while joining, hollow fan + the target name in gray (up to 15 s); a phone instead of the fan on an iPhone hotspot (router in 172.20.10.0/28); gray hollow fan = wi-fi off; white hollow = on, not joined; white filled = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; a dot top-right = Viscosity VPN: white connected, yellow connecting, red all down, none when Viscosity is not running
+- shows: the current network name under the fan (white, cut to 10 chars); while joining, the target name in gray (up to 15 s); a phone instead of the wi-fi icon on an iPhone hotspot (router in 172.20.10.0/28, filled when joined); gray crossed wi-fi = off; one white arc = on, not joined; full wi-fi = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; a dot top-right = Viscosity VPN: white connected, yellow connecting, red all down, none when Viscosity is not running
 - hold 400 ms: wi-fi on / off
 - touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`) instead of the model, yellow while the list loads, with a small `›` toward the knob until the first turn. Each turn extends the 5 s. List: what the Wi-Fi details of Control Center show (iPhone hotspots, then known networks in range); Control Center flashes and the list loads in ~3 s; meanwhile the strip is yellow and the knob already turns through the previous list. If the pick is gone from the fresh list, the first network is picked; a pause on a yellow pick joins after the load. Names keep their case (`zored_5G` ≠ `zored_5g`) A 1 s pause switches: drop the current Wi-Fi, disconnect Viscosity, join the pick, wait for its link, 1 s later connect `Barbos_SE` (flag `-wifi-vpn`; one retry if not connected in 20 s). The join itself: the daemon clicks it in the Wi-Fi details of Control Center (it flashes for ~1.5 s), macOS fills the password itself
 
@@ -85,7 +85,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 4 — keep awake / sleep
 
-- shows: hollow white sun = off; filled sun + time left `h:mm` below = an Amphetamine session, the display won't sleep; white moon = release now to sleep
+- shows: outline sun = off; filled sun + time left `h:mm` below = an Amphetamine session, the display won't sleep; white moon = release now to sleep
 - touch shorter than 1 s: keep-awake on for 1 h / off
 - right after turning on, крутилка справа, ряд 1 sets the length for 5 s (time turns white): 15 min per detent, 15 min – 12 h;
   every turn extends the 5 s, then the knob is brightness again
@@ -131,7 +131,7 @@ Same as кнопка 6. [agents.md](agents.md)
 ### тайл ряд 3, колонка 1 — microphone in a call, unread chats otherwise
 
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
-- in a call shows: dark green + mic = on, red + crossed = off, amber `…` = switching, amber `?` = unknown
+- in a call shows: black tile, the icon is colored: green mic = on, red crossed mic = off, amber `…` = switching, amber `?` = unknown
 - no call: up to 4 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push); one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid: avatar or initial in a circle, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
 - tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (newest first) with a slide animation; the tile shows the chat's avatar over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - hold ≥ 400 ms: switch to muted chats (muted or archived in Telegram, muted in VK WorkSpace), count badges gray, a gray closed eye when none; hold again to switch back

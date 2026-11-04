@@ -30,6 +30,7 @@ TIMERS = "http://127.0.0.1:47129"
 UNREAD = "http://127.0.0.1:47130"
 HOLD_MS = 400
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
@@ -90,6 +91,12 @@ def image(layer_id, data, fill="fit", **geo):
 def icon(name):
     with open(os.path.join(ICONS, f"{name}.svg"), "rb") as f:
         return "data:image/svg+xml;base64," + base64.b64encode(f.read()).decode()
+
+
+def bootstrap(name, color):
+    with open(os.path.join(BOOTSTRAP, f"{name}.svg")) as f:
+        svg = f.read().replace("currentColor", color)
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
 def labelled(label, bg=0x000000, fg=0xFFFFFF):
@@ -241,14 +248,17 @@ def call_led(var):
     }))], **call_actions(var))
 
 
+CALL_OFF = {"mic": "mic-mute", "camera-video": "camera-video-off"}
+
+
 def call_layers(var, name):
     state = f"$(custom:{var})"
     return [
         canvas(),
-        box("box0", by_state(var, {"on": 0x1B5E20, "off": 0xB3261E, "pending": 0x8A6100, "unknown": 0x8A6100})),
-        image("on", icon(name), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
-        image("off", icon(f"{name}-off"), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
-        text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60,
+        box("box0", 0x000000),
+        image("on", bootstrap(name, "#30D158"), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
+        image("off", bootstrap(CALL_OFF[name], "#FF3030"), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
+        text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60, color=0xFFB000,
              opacity=expr(f'{state} == "unknown" || {state} == "pending" ? 100 : 0')),
     ]
 
@@ -324,7 +334,7 @@ def day_tile():
                    image("card", expr("$(custom:cal_card)"), enabled=idle, x=v(6), y=v(6), width=v(88), height=v(88)),
                    image("act", expr("$(custom:cal_icon)"), enabled=expr(f"{CAL} && $(custom:cal_browse) == 1"),
                          x=v(6), y=v(6), width=v(88), height=v(88)),
-                   image("hangup", icon("hangup"), enabled=expr('$(custom:tile_24) == "call"'),
+                   image("hangup", bootstrap("telephone-x", "#FF3030"), enabled=expr('$(custom:tile_24) == "call"'),
                          x=v(15), y=v(15), width=v(70), height=v(70))],
                   down=[post(CALENDAR + "/tile/24/press")])
 
@@ -440,7 +450,7 @@ def media_page():
         **{(r, 1): volume_cell(r) for r in range(3)},
         (1, 2): play_pause(),
         (2, 2): mic_tile(),
-        (2, 3): call_tile("call_cam", "cam"),
+        (2, 3): call_tile("call_cam", "camera-video"),
         (2, 4): day_tile(),
         (2, 5): clock(),
         **{(r, 6): ai_strip(r) for r in range(3)},

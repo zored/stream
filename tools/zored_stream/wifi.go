@@ -26,7 +26,7 @@ const (
 	wifiOffline     = "offline"
 	wifiNameMaxRune = 14
 	wifiTileRune    = 10
-	wifiIconScale   = 0.6
+	wifiIconSize    = 52.0
 )
 
 type wifi struct {
@@ -459,16 +459,22 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	if ssid != "" {
 		dy = -12
 	}
-	fmt.Fprintf(&b, `<g transform="translate(50 %d) scale(%g) translate(-50 -52)">`, 52+dy, wifiIconScale)
-	if phone {
-		fmt.Fprintf(&b, `<rect x="38" y="30" width="24" height="44" rx="5" fill="%s" stroke="%s" stroke-width="4"/>`, fill, color)
-	} else {
-		fmt.Fprintf(&b, `<path d="M50 74 L22.4 46.4 A39 39 0 0 1 77.6 46.4 Z" fill="%s" stroke="%s" stroke-width="4" stroke-linejoin="round"/>`, fill, color)
+	name := "wifi-1"
+	switch {
+	case phone && fill != "none":
+		name = "phone-fill"
+	case phone:
+		name = "phone"
+	case state == "off" || state == "error":
+		name = "wifi-off"
+	case fill != "none":
+		name = "wifi"
 	}
+	cy := 50.0 + float64(dy)
+	b.WriteString(iconAt(name, color, 50, cy, wifiIconSize))
 	if state == "nonet" {
-		b.WriteString(`<circle cx="80" cy="74" r="6" fill="#FFB000"/>`)
+		fmt.Fprintf(&b, `<circle cx="78" cy="%g" r="5" fill="#FFB000"/>`, cy+22)
 	}
-	b.WriteString(`</g>`)
 	if c, ok := map[string]string{"up": "#fff", "busy": "#FFB000", "down": "#FF3030"}[vpn]; ok {
 		fmt.Fprintf(&b, `<circle cx="84" cy="16" r="10" fill="%s"/>`, c)
 	}

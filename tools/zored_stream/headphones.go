@@ -241,10 +241,9 @@ func findDevice(devices []audioDevice, match func(audioDevice) bool) (audioDevic
 }
 
 func headphonesSVG(on bool, stroke string) string {
-	glyph := `<rect x="30" y="18" width="40" height="64" rx="6"/><circle cx="50" cy="60" r="11"/><circle cx="50" cy="35" r="5"/>`
+	name := "speaker"
 	if on {
-		glyph = `<path d="M24 62V50a26 26 0 0 1 52 0v12"/><rect x="20" y="58" width="14" height="22" rx="5"/><rect x="66" y="58" width="14" height="22" rx="5"/>`
+		name = "headphones"
 	}
-	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`+
-		`<g stroke="%s" stroke-width="4" stroke-linejoin="round" fill="none">%s</g></svg>`, stroke, glyph))
+	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt(name, stroke, 50, 50, 60) + `</svg>`)
 }

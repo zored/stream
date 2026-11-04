@@ -298,8 +298,7 @@ func chatsFace(e chatEntry, cx, cy, r float64, square bool) (chatsDisc, []calTex
 
 func chatsEmpty(now time.Time, muted bool) string {
 	if muted {
-		return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="none" stroke="#808080" stroke-width="3" stroke-linecap="round">` +
-			`<path d="M33 48Q50 62 67 48"/><path d="M38 53L34 59M50 56L50 63M62 53L66 59"/></g></svg>`)
+		return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt("eye-slash", gray, 50, 50, 44) + `</svg>`)
 	}
 	return unreadSVG(nil, now)
 }

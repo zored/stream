@@ -250,21 +250,11 @@ func powerSVG(state, below string) string {
 	if below != "" {
 		cy = 40
 	}
-	switch state {
-	case "arm":
-		b.WriteString(`<path d="M58 27a23 23 0 1 0 15 36 19 19 0 1 1-15-36z" fill="#fff"/>`)
-	default:
-		fill := "none"
-		if state == "on" {
-			fill = "#fff"
-		}
-		fmt.Fprintf(&b, `<g transform="translate(50 %d)" stroke="#fff" stroke-width="4" stroke-linecap="round">`, cy)
-		fmt.Fprintf(&b, `<circle r="11" fill="%s"/>`, fill)
-		for i := range 8 {
-			fmt.Fprintf(&b, `<line y1="-18" y2="-26" transform="rotate(%d)"/>`, i*45)
-		}
-		b.WriteString(`</g>`)
+	name := map[string]string{"arm": "moon-fill", "on": "sun-fill"}[state]
+	if name == "" {
+		name = "sun"
 	}
+	b.WriteString(iconAt(name, "#fff", 50, float64(cy), 56))
 	b.WriteString(below)
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
