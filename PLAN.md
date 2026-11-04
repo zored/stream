@@ -17,7 +17,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
 | tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
-| buttons `3/0` KVM (in progress), `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/4`, `3/7` (outside choice mode) |
+| buttons `3/0` KVM, `3/1` mic, `3/2` camera, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/4`, `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
 ## Done
@@ -94,17 +94,16 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
 
 - [ ] Camera tile does something else outside a call (layers, F23)
-- [ ] Unread tile: slide through the unread chats' avatars/letters (today: badge count + eye icon, press opens the app)
+- [ ] Unread tile: slide through the unread chats' avatars/letters (today: badge count + eye icon, press opens the app) — research in a child session (2026-11-04): source, auth, effort, perf
 - [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` already reads it via `lsappinfo` and can push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
 
 ### Ideas (mechanisms assumed, not checked)
 
 Desk and display:
-- [ ] In progress (child session): KVM switch to Windows on кнопка 1 — `m1ddc set input 15` (MSI 321URX, from `~/switch_to_windows.command`)
-- [ ] Monitor brightness, PiP: DDC/CI via `m1ddc` or BetterDisplay CLI
+- [ ] Monitor brightness: DDC/CI via `m1ddc` or BetterDisplay CLI. PIP dropped (2026-11-04, user's call); KVM on кнопка 1 is done (`kvm.go`)
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] Perf, next round: volume via CoreAudio listeners instead of the 0.25 s poll; target P2 "idle ~0" (now ~3 % of one core)
+- [ ] In progress (child session, 2026-11-04): perf round 3 — volume via CoreAudio listeners instead of the 0.25 s poll, target P2 "idle ~0" (now ~3 %); stale `np_*` after a track change; any controller input resets display idle
 
 Windows and apps:
 - [ ] Frontmost app icon on a tile, press cycles its windows
