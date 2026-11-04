@@ -28,6 +28,29 @@ var (
 	systemSleep  = sleepSystem
 )
 
+const touchEvery = 5 * time.Second
+
+var touched = &activity{}
+
+type activity struct {
+	mu   sync.Mutex
+	last time.Time
+}
+
+func (a *activity) touch() {
+	a.mu.Lock()
+	due := time.Since(a.last) >= touchEvery
+	if due {
+		a.last = time.Now()
+	}
+	a.mu.Unlock()
+	if due {
+		if err := userActivity(); err != nil {
+			log.Print(err)
+		}
+	}
+}
+
 type power struct {
 	mu       sync.Mutex
 	frame    frame

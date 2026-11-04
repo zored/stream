@@ -48,7 +48,9 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
     60 Hz ticker only while it moves; the glyph also grows 80 → 100 % with it. Glyphs are `tools/icons/{play,pause}-glow.svg`
     (two `feGaussianBlur`-ed black copies under a white path; Skia renders SVG filters). No cover → the old text glyph.
     Cost per frame in Companion's Skia: ~0.4–0.6 ms for cover + glyph (measured with `@napi-rs/canvas` from the app bundle).
-- Idle CPU ~0 % (measured on the Go daemon): the 60 fps ticker runs only while the bar moves; audio polled every 0.25 s.
+- Idle CPU ~0 % (measured on the Go daemon): the 60 fps ticker runs only while the bar moves; no audio poll: CoreAudio listeners
+  (`AudioObjectAddPropertyListenerBlock`, `audio_darwin.c`) on the default output device's volume and mute, plus one on the default
+  device itself that moves them to the new device (verified 2026-11-04: `osascript` volume/mute changes reach `volume` in < 0.3 s).
 - Every 10 s it re-sends all variables, so a Companion restart heals itself.
 
 ### Why perl
@@ -119,6 +121,10 @@ keeps the on/off state itself, so a change from the monitor menu puts it out of 
 - Tap off also calls `IOPMAssertionDeclareUserActivity`: the session's display assertion hid the idle timer, so with no keyboard
   or mouse input for longer than `displaysleep` the screen went dark the moment the session ended and looked like sleep
   (verified in `pmset -g log`: Amphetamine release and "Display is turned off" in the same second, no system sleep).
+- Any controller input keeps the Mac awake: every `POST` to any daemon port (except `/agent/event`, the Claude hooks) calls
+  `IOPMAssertionDeclareUserActivity` (`kIOPMUserActiveLocal`, one reused assertion "zored_stream controller"), at most once per 5 s
+  (`power.go` `touched`; verified in `pmset -g assertions`). Every control posts (`curl` or the fork's `fetch`) except a bare tap on a
+  strip cell (cols 1, 6) without a drag.
 - Closing the lid sleeps the Mac anyway unless Amphetamine's closed-display mode is on; not set here.
 - Sleep = end the session, then `IOPMSleepSystem` (cgo), no root, no `pmset sleepnow` *(assumed: not triggered during development)*.
 - Timing lives in the daemon (press 1 s → `arm`, 3 s → cancel), not in Companion's 400 ms hold, so no second haptic.

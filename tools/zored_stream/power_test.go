@@ -42,3 +42,20 @@ func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
 		t.Errorf("calls = %s, want start,end,active", got)
 	}
 }
+
+func TestTouchRateLimited(t *testing.T) {
+	calls := 0
+	userActivity = func() error { calls++; return nil }
+	defer func() { userActivity = declareUserActivity }()
+	a := &activity{}
+	a.touch()
+	a.touch()
+	if calls != 1 {
+		t.Fatalf("calls = %d, want 1", calls)
+	}
+	a.last = time.Now().Add(-touchEvery)
+	a.touch()
+	if calls != 2 {
+		t.Fatalf("calls = %d, want 2", calls)
+	}
+}

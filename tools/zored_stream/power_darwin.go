@@ -14,9 +14,10 @@ static IOReturn sleepNow(void) {
 	return r;
 }
 
+static IOPMAssertionID activityID = kIOPMNullAssertionID;
+
 static IOReturn userActive(void) {
-	IOPMAssertionID id;
-	return IOPMAssertionDeclareUserActivity(CFSTR("zored_stream keep-awake off"), kIOPMUserActiveLocal, &id);
+	return IOPMAssertionDeclareUserActivity(CFSTR("zored_stream controller"), kIOPMUserActiveLocal, &activityID);
 }
 
 static int amphAsserted(void) {

@@ -100,7 +100,12 @@ func serve(addr string, register func(*http.ServeMux)) {
 	mux := http.NewServeMux()
 	register(mux)
 	log.Printf("listening on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
+	log.Fatal(http.ListenAndServe(addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.URL.Path != "/agent/event" {
+			touched.touch()
+		}
+		mux.ServeHTTP(w, r)
+	})))
 }
 
 func main() {
@@ -430,11 +435,13 @@ func main() {
 		handle(mux, "/wifi/touch", wf.touch)
 		handle(mux, "/wifi/power", wf.power)
 	})
-	go every(pollEvery, func() {
+	if err := watchAudio(func() {
 		if err := vol.poll(); err != nil {
 			log.Fatal(err)
 		}
-	})
+	}); err != nil {
+		log.Fatal(err)
+	}
 	go every(resendEvery, func() {
 		v.forget()
 		vol.publish()
