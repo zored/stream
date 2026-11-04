@@ -45,7 +45,6 @@ type chats struct {
 	covered    bool
 	pick       int
 	knobDown   bool
-	shown      string
 	opener     func(url string) error
 	muted      bool
 	hold       *time.Timer
@@ -119,10 +118,7 @@ func (c *chats) publishLocked() {
 		}
 		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], len(c.list) > chatsOnTile, now, c.muted)
 	}
-	if svg != c.shown {
-		c.shown = svg
-		c.vars.set("unread_svg", svg)
-	}
+	c.vars.set("unread_svg", svg)
 }
 
 func (c *chats) down() error {
@@ -209,7 +205,6 @@ func (c *chats) slide(gen int, from, to chatEntry, direction int) {
 		if i < chatsFrames {
 			t := float64(i) / chatsFrames
 			img := chatsSlideImage(from, to, 1-(1-t)*(1-t), direction, time.Now(), c.muted)
-			c.shown = img
 			c.vars.set("unread_svg", img)
 		} else {
 			c.sliding = false

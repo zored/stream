@@ -200,15 +200,15 @@ void cal_canvas_ring(void *c, double cx, double cy, double r, double width, unsi
     CGContextStrokeEllipseInRect(ctx, CGRectMake(cx - r, H - cy - r, 2 * r, 2 * r));
 }
 
-void *cal_canvas_png(void *c, int *len) {
+void *cal_canvas_png(void *c, int *len, int jpeg) {
     @autoreleasepool {
         CGContextRef ctx = ((canvas *)c)->ctx;
         free(c);
         CGImageRef img = CGBitmapContextCreateImage(ctx);
         CGContextRelease(ctx);
         NSMutableData *data = [NSMutableData data];
-        CGImageDestinationRef dst = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)data, CFSTR("public.png"), 1, NULL);
-        CGImageDestinationAddImage(dst, img, NULL);
+        CGImageDestinationRef dst = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)data, jpeg ? CFSTR("public.jpeg") : CFSTR("public.png"), 1, NULL);
+        CGImageDestinationAddImage(dst, img, (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGImageDestinationLossyCompressionQuality: @0.8});
         BOOL ok = CGImageDestinationFinalize(dst);
         CFRelease(dst);
         CGImageRelease(img);

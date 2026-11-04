@@ -12,6 +12,8 @@ import (
 	"unsafe"
 )
 
+const chatsScale = 2
+
 type chatsDisc struct {
 	avatar    []byte
 	cx, cy, r float64
@@ -20,7 +22,7 @@ type chatsDisc struct {
 }
 
 func chatsPNG(w, h float64, discs []chatsDisc, texts []calText) string {
-	c := C.cal_canvas_new(C.double(w), C.double(h), 4, 0)
+	c := C.cal_canvas_new(C.double(w), C.double(h), chatsScale, 0)
 	for _, d := range discs {
 		var p unsafe.Pointer
 		if len(d.avatar) > 0 {
@@ -37,7 +39,7 @@ func chatsPNG(w, h float64, discs []chatsDisc, texts []calText) string {
 		C.free(unsafe.Pointer(s))
 		C.free(unsafe.Pointer(tail))
 	}
-	uri, err := canvasPNG(c)
+	uri, err := canvasEncode(c, true)
 	if err != nil {
 		log.Print(err)
 	}

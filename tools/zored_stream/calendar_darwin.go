@@ -85,13 +85,21 @@ func calPNG(w, h float64, rotate bool, texts []calText) (string, error) {
 }
 
 func canvasPNG(c unsafe.Pointer) (string, error) {
+	return canvasEncode(c, false)
+}
+
+func canvasEncode(c unsafe.Pointer, jpeg bool) (string, error) {
 	var n C.int
-	p := C.cal_canvas_png(c, &n)
+	p := C.cal_canvas_png(c, &n, cBool(jpeg))
 	if p == nil {
 		return "", errors.New("canvas png: encode failed")
 	}
 	defer C.free(p)
-	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(C.GoBytes(p, n)), nil
+	mime := "png"
+	if jpeg {
+		mime = "jpeg"
+	}
+	return "data:image/" + mime + ";base64," + base64.StdEncoding.EncodeToString(C.GoBytes(p, n)), nil
 }
 
 func calOpen(it calItem) error {

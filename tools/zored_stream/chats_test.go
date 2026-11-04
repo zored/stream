@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -61,5 +62,26 @@ func TestChatsHoldTogglesMutedWithoutPress(t *testing.T) {
 	c.up()
 	if !c.browsing() {
 		t.Fatal("short press must browse")
+	}
+}
+
+func TestChatsRepublishesAfterFailedPost(t *testing.T) {
+	var posts []string
+	fail := true
+	postVar = func(_, value string) error {
+		posts = append(posts, value)
+		if fail {
+			return fmt.Errorf("413")
+		}
+		return nil
+	}
+	t.Cleanup(func() { postVar = post })
+	c := newChats(&vars{sent: map[string]string{}}, func() {}, func(string) {})
+	c.publish()
+	fail = false
+	c.publish()
+	c.publish()
+	if len(posts) != 2 || posts[0] != posts[1] {
+		t.Fatalf("posts %d", len(posts))
 	}
 }
