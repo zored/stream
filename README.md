@@ -51,7 +51,7 @@ Requirements: Xcode Command Line Tools (`clang`), `m1ddc` (KVM), Go, Node 22+ wi
 | `tools/check_contract.py` | CI check: page URLs hit daemon routes, variables match, кнопки gated by choice mode, hooks fail-safe |
 | `tools/zored_stream/` | the one daemon ([daemon.md](docs/daemon.md)): calls, volume, Now Playing (perl child), seek, Yandex Music like, brightness, Claude limits + model, agents, choice mode, dictation, scroll, keep-awake, media keys, headphones, wi-fi, KVM, calendar, keyboard layout, emoji, timers |
 | `tools/agent_hooks.py` | Adds the Claude Code hooks for agents waiting to `~/.claude/settings.json` |
-| `tools/icons/` | SVG icons embedded into pages |
+| `tools/zored_stream/icons/` | Bootstrap Icons (pinned, MIT) for pages and the daemon |
 | `tools/surface.mjs` | Switches the Loupedeck integration to a module version and sets surface config over tRPC |
 | `tools/companion_config.py` | Edits the Companion launcher's `config.json` |
 | `tools/sniff.py` | Raw device event sniffer |

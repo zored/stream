@@ -29,7 +29,6 @@ EMOJI = "http://127.0.0.1:47128"
 TIMERS = "http://127.0.0.1:47129"
 UNREAD = "http://127.0.0.1:47130"
 HOLD_MS = 400
-ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
@@ -88,14 +87,19 @@ def image(layer_id, data, fill="fit", **geo):
             "halign": v("center"), "valign": v("center"), "fillMode": v(fill)}
 
 
-def icon(name):
-    with open(os.path.join(ICONS, f"{name}.svg"), "rb") as f:
-        return "data:image/svg+xml;base64," + base64.b64encode(f.read()).decode()
-
-
 def bootstrap(name, color):
     with open(os.path.join(BOOTSTRAP, f"{name}.svg")) as f:
         svg = f.read().replace("currentColor", color)
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+
+def glow(name, box, blur, strokes):
+    with open(os.path.join(BOOTSTRAP, f"{name}.svg")) as f:
+        body = f.read()
+    body = body[body.index(">") + 1:body.rindex("</svg>")].strip()
+    shadows = "".join(f'<g stroke="#000" stroke-width="{w}" stroke-linejoin="round" filter="url(#g)">{body}</g>' for w in strokes)
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{box}"><defs><filter id="g" x="-1" y="-1" width="3" height="3">'
+           f'<feGaussianBlur stdDeviation="{blur}"/></filter></defs>{shadows}<g fill="#fff">{body}</g></svg>')
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
@@ -208,10 +212,10 @@ def volume_cell(row):
 
 
 def skip_arrows():
-    return [image(f"skip-{name}", icon(f"skip-{name}"), "fit",
+    return [image(f"skip-{name}", glow(name, "-1.5 0 19 16", 1.35, (2,)), "fit",
                   opacity=expr(f"$(custom:np_skip) == {direction} ? 100 : 0"),
                   x=expr("$(custom:np_skip_x)"), y=v(44), width=v(88), height=v(50))
-            for name, direction in (("forward", 1), ("back", -1))]
+            for name, direction in (("fast-forward-fill", 1), ("rewind-fill", -1))]
 
 
 def play_pause():
@@ -219,9 +223,11 @@ def play_pause():
     return button([
         canvas(),
         box("box0", 0x000000),
-        text("icon", expr(f'{PLAYING} ? "⏸" : "▶"'), fontsize=110, opacity=expr(f"{NO_ART} ? 100 : 0")),
+        *(image(f"{name}-bare", bootstrap(f"{name}-fill", "#fff"), opacity=expr(f"{NO_ART} && ({PLAYING}) == {shown} ? 100 : 0"),
+                x=v(6), y=v(6), width=v(88), height=v(88))
+          for name, shown in (("play", "false"), ("pause", "true"))),
         image("cover", expr("$(custom:np_art)"), "crop", x=v(6), y=v(6), width=v(88), height=v(88)),
-        *(image(name, icon(f"{name}-glow"), "fill",
+        *(image(name, glow(f"{name}-fill", "-5 -5 26 26", 1.6, (2, 0.65)), "fill",
                 opacity=expr(f"{NO_ART} || ({PLAYING}) != {shown} ? 0 : $(custom:np_glyph)"),
                 x=expr(f"(100 - {size}) / 2"), y=expr(f"(100 - {size}) / 2"), width=expr(size), height=expr(size))
           for name, shown in (("play", "false"), ("pause", "true"))),

@@ -39,13 +39,13 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
     without a cover or for a gray one; eases to the new color at 60 Hz (~1 s) on a cover change.
   - `np_skip` (`1`/`-1`/`0`), `np_skip_x` (`skip.go`) — a ⏩/⏪ that flies across the bottom cell of the left strip in 800 ms (88 % wide)
     (left → right for next, right → left for prev); the TRACK knob posts `/nowplaying/next`, `/nowplaying/prev` on `:47113` with the media key.
-    Icons `tools/icons/skip-{forward,back}.svg`.
+    Icons: Bootstrap `fast-forward-fill` / `rewind-fill` with a blurred black outline (`glow()` in `gen_pages.py`).
   - `np_art` — cover of the current track as a JPEG data URI (empty = no cover): the perl child takes
     `kMRMediaRemoteNowPlayingInfoArtworkData`, thumbnails it to ≤160 px JPEG with ImageIO once per new image. Yandex Music gives 150×150 JPEG (verified);
     Chrome/YouTube and Music.app not checked yet.
   - `np_glyph` (0–100, `cover.go`) — opacity of the play/pause glyph over the cover on тайл ряд 2, колонка 1: paused → ▶ stays at 100;
     playing → ⏸ fades in on a state change or touch (`POST /nowplaying/show` on `:47113`, the tile's `down`), holds 1.5 s, fades out.
-    60 Hz ticker only while it moves; the glyph also grows 80 → 100 % with it. Glyphs are `tools/icons/{play,pause}-glow.svg`
+    60 Hz ticker only while it moves; the glyph also grows 80 → 100 % with it. Glyphs are Bootstrap `play-fill` / `pause-fill` through `glow()`
     (two `feGaussianBlur`-ed black copies under a white path; Skia renders SVG filters). No cover → the old text glyph.
     Cost per frame in Companion's Skia: ~0.4–0.6 ms for cover + glyph (measured with `@napi-rs/canvas` from the app bundle).
 - Idle CPU ~0 % (measured on the Go daemon): the 60 fps ticker runs only while the bar moves; no audio poll: CoreAudio listeners
