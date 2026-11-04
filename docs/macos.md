@@ -122,7 +122,7 @@ keeps the on/off state itself, so a change from the monitor menu puts it out of 
   or mouse input for longer than `displaysleep` the screen went dark the moment the session ended and looked like sleep
   (verified in `pmset -g log`: Amphetamine release and "Display is turned off" in the same second, no system sleep).
 - Any controller input keeps the Mac awake: every `POST` to any daemon port (except `/agent/event`, the Claude hooks) calls
-  `IOPMAssertionDeclareUserActivity` (`kIOPMUserActiveLocal`, one reused assertion "zored_stream controller"), at most once per 5 s
+  `IOPMAssertionDeclareUserActivity` (`kIOPMUserActiveLocal`, a fresh assertion "zored_stream controller" each time, the previous one released: re-declaring a live ID did not reset the idle timer, the screen still went dark on an Amphetamine restart, 2026-11-04 22:25), at most once per 5 s
   (`power.go` `touched`; verified in `pmset -g assertions`). Every control posts (`curl` or the fork's `fetch`) except a bare tap on a
   strip cell (cols 1, 6) without a drag.
 - Every session start or length change also declares user activity first: "start new session" releases the old display

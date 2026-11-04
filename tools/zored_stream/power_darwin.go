@@ -17,7 +17,11 @@ static IOReturn sleepNow(void) {
 static IOPMAssertionID activityID = kIOPMNullAssertionID;
 
 static IOReturn userActive(void) {
-	return IOPMAssertionDeclareUserActivity(CFSTR("zored_stream controller"), kIOPMUserActiveLocal, &activityID);
+	IOPMAssertionID previous = activityID;
+	activityID = kIOPMNullAssertionID;
+	IOReturn r = IOPMAssertionDeclareUserActivity(CFSTR("zored_stream controller"), kIOPMUserActiveLocal, &activityID);
+	if (previous != kIOPMNullAssertionID) IOPMAssertionRelease(previous);
+	return r;
 }
 
 static int amphAsserted(void) {
