@@ -156,6 +156,7 @@ Same as кнопка 3 in a call. [vkcall.md](vkcall.md)
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
 - touch: 5 s list, one item at a time; крутилка справа, ряд 3 scrolls it. The right strip (over model + effort) shows the title white with the notes right after it in gray, one run of text, HTML (`<br/>` = line break) and links, separator lines and call ID / access code lines cut out. The tile shows the item: its date `5 ноя`, below the weekday and time `ср 12:00` (amber for an event in ≤ 5 min or an overdue reminder), below `○` / `●` for a reminder
 - in the list a touch (or the knob press) toggles the reminder (list stays open) or opens the event in Calendar
+- кнопка 5 does the same tap outside a call
 
 ### тайл ряд 3, колонка 4 — clock + timers
 
@@ -176,7 +177,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | кнопка 2 | mic: tap toggles, hold = push-to-talk | green (dims 1 s every 4 s) = on, dim red = off, yellow = switching, blinking yellow = unknown, off = no call |
 | кнопка 3 | in a call: camera toggle; otherwise the unread chats of тайл ряд 3, колонка 1: tap = browse / open, hold = muted chats ↔ unread | in a call as кнопка 2; otherwise white = unread chats, green = browsing, gray = muted chats |
 | кнопка 4 | hang up | white while in a call |
-| кнопка 5 | free | off |
+| кнопка 5 | outside a call: the calendar of тайл ряд 3, колонка 3, tap = open the list / act on the item; in a call: nothing | white = an event in ≤ 5 min or an overdue reminder, green = browsing, off otherwise and in a call |
 | кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, white = none |
 | кнопка 7 | dictation into Claude Desktop (below) | white = ready, blinking green = recording, off = no Claude window with a record button |
 | кнопка 8 | free | off |

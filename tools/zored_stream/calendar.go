@@ -7,6 +7,7 @@ import (
 	"log"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +22,7 @@ const (
 	amberRGB     = 0xFFD60A
 	grayRGB      = 0x808080
 	whiteRGB     = 0xFFFFFF
+	greenRGB     = 0x00FF00
 )
 
 type calItem struct {
@@ -103,7 +105,18 @@ func (c *calendar) publishLocked() {
 		next = &c.items[i]
 		key += "\n" + calWhen(*next, now) + " " + calTitle(*next)
 	}
+	c.vars.set("cal_led", strconv.Itoa(calLed(c.items, c.browsing(), now)))
 	c.vars.set("cal_card", c.card.render(key, func() string { return calCardImage(now, next) }))
+}
+
+func calLed(items []calItem, browsing bool, now time.Time) int {
+	if browsing {
+		return greenRGB
+	}
+	if slices.ContainsFunc(items, func(it calItem) bool { return calColor(it, now) != 0 }) {
+		return whiteRGB
+	}
+	return 0
 }
 
 func (c *calendar) browsing() bool {

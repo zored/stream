@@ -367,6 +367,12 @@ func main() {
 	go every(pollEvery, tile24.publish)
 	go serve(*calendarAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/24/press", tile24.press)
+		handle(mux, "/button/5/press", func() error {
+			if c.inCall() {
+				return nil
+			}
+			return cal.press()
+		})
 	})
 	cs := newChats(v, sc.release, us.cover)
 	go cs.run(context.Background(), "tg", tgChats)

@@ -33,8 +33,8 @@ BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stre
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -308,6 +308,11 @@ def chats_led():
     return button([canvas(), box("box0", color)], down=[post(UNREAD + "/button/3/down")], up=[post(UNREAD + "/button/3/up")])
 
 
+def cal_led():
+    return button([canvas(), box("box0", expr('$(custom:tile_24) == "call" ? 0 : $(custom:cal_led)'))],
+                  down=[post(CALENDAR + "/button/5/press")])
+
+
 def hangup_led():
     return button([canvas(), box("box0", expr(f"{IN_CALL} ? {0xFFFFFF} : 0"))], down=vkcall("/call/end"))
 
@@ -497,10 +502,11 @@ def media_page():
         (3, 1): call_led("call_mic"),
         (3, 2): chats_led(),
         (3, 3): hangup_led(),
+        (3, 4): cal_led(),
         (3, 0): kvm_led(),
     }
     if WINDOWS:
-        for cell in ((3, 0), (1, 3), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 6)):
+        for cell in ((3, 0), (1, 3), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 4), (3, 6)):
             del grid[cell]
     else:
         for c in range(8):
