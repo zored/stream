@@ -103,7 +103,7 @@ New features go on the MEDIA page as buttons; separate pages only once it runs o
 Desk and display:
 - [ ] Monitor brightness: DDC/CI via `m1ddc` or BetterDisplay CLI. PIP dropped (2026-11-04, user's call); KVM on кнопка 1 is done (`kvm.go`)
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] In progress (child session, 2026-11-04): perf round 3 — volume via CoreAudio listeners instead of the 0.25 s poll, target P2 "idle ~0" (now ~3 %); stale `np_*` after a track change; any controller input resets display idle
+- [ ] Perf round 3 (child session, 2026-11-04): volume on CoreAudio listeners, any controller POST = `IOPMAssertionDeclareUserActivity` ≤ 1/5 s (`5b8a196`); idle still ~3 % (master measured 20 s `top`); next by CPU: dictation AX search in the Claude window (46 %), choice (10 %), agents scan (8 %), Yandex Music AX (5 %); log spam `ymusic: player bar not found` every 3 s since 11-02; stale `np_*` on a natural track change not reproduced yet (manual next = 1–1.5 s); a bare strip tap never reaches the daemon (fork hook, not done)
 
 Windows and apps:
 - [ ] Frontmost app icon on a tile, press cycles its windows
