@@ -24,6 +24,10 @@ static IOReturn userActive(void) {
 	return r;
 }
 
+static IOReturn holdDisplay(IOPMAssertionID *id) {
+	return IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleDisplaySleep, kIOPMAssertionLevelOn, CFSTR("zored_stream keep-awake restart"), id);
+}
+
 static int amphAsserted(void) {
 	CFDictionaryRef byPid = NULL;
 	if (IOPMCopyAssertionsByProcess(&byPid) != kIOReturnSuccess || !byPid) {
@@ -66,6 +70,15 @@ func declareUserActivity() error {
 	if r := C.userActive(); r != C.kIOReturnSuccess {
 		return fmt.Errorf("IOPMAssertionDeclareUserActivity: 0x%x", uint32(r))
 	}
+	return nil
+}
+
+func bridgeDisplay(d time.Duration) error {
+	var id C.IOPMAssertionID
+	if r := C.holdDisplay(&id); r != C.kIOReturnSuccess {
+		return fmt.Errorf("IOPMAssertionCreateWithName: 0x%x", uint32(r))
+	}
+	time.AfterFunc(d, func() { C.IOPMAssertionRelease(id) })
 	return nil
 }
 

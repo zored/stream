@@ -19,12 +19,14 @@ const (
 	awakeApplyAfter  = 500 * time.Millisecond
 	awakePollEvery   = 2 * time.Second
 	awakeRereadEvery = 30 * time.Second
+	amphBridgeFor    = 5 * time.Second
 )
 
 var (
 	amphStart    = startAmphetamine
 	amphEnd      = endAmphetamine
 	userActivity = declareUserActivity
+	displayHold  = bridgeDisplay
 	systemSleep  = sleepSystem
 )
 
@@ -218,9 +220,9 @@ func (p *power) applyLength() {
 	}
 }
 
-// restartAmphetamine resets the idle timer first: Amphetamine drops the old display assertion before the new one, and with HID idle past displaysleep the screen goes dark in that gap.
+// restartAmphetamine bridges the gap: Amphetamine drops the old display assertion before the new one, and with HID idle past displaysleep the screen goes dark in it.
 func restartAmphetamine(d time.Duration) error {
-	if err := userActivity(); err != nil {
+	if err := displayHold(amphBridgeFor); err != nil {
 		return err
 	}
 	return amphStart(d)

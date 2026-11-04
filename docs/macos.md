@@ -125,9 +125,11 @@ keeps the on/off state itself, so a change from the monitor menu puts it out of 
   `IOPMAssertionDeclareUserActivity` (`kIOPMUserActiveLocal`, a fresh assertion "zored_stream controller" each time, the previous one released: re-declaring a live ID did not reset the idle timer, the screen still went dark on an Amphetamine restart, 2026-11-04 22:25), at most once per 5 s
   (`power.go` `touched`; verified in `pmset -g assertions`). Every control posts (`curl` or the fork's `fetch`) except a bare tap on a
   strip cell (cols 1, 6) without a drag.
-- Every session start or length change also declares user activity first: "start new session" releases the old display
-  assertion before creating the new one, and with HID idle past `displaysleep` the screen went dark in that gap (seen 2026-11-04
-  22:20:37 in `pmset -g log`: Amphetamine Released → "Display is turned off" in the same second, back on 2 s later, no system sleep).
+- Every session start or length change first takes its own `PreventUserIdleDisplaySleep` ("zored_stream keep-awake restart",
+  released after 5 s): "start new session" releases the old display assertion before creating the new one, and with HID idle past
+  `displaysleep` the screen went dark in that gap (`pmset -g log` 2026-11-04 22:20, 22:25, 2026-11-05 00:30: Amphetamine Released →
+  "Display is turned off" in the same second, back on 2–4 s later, no system sleep). A fresh `UserIsActive` declared right before did
+  not stop it (00:30:56).
 - Closing the lid sleeps the Mac anyway unless Amphetamine's closed-display mode is on; not set here.
 - Sleep = end the session, then `IOPMSleepSystem` (cgo), no root, no `pmset sleepnow` *(assumed: not triggered during development)*.
 - Timing lives in the daemon (press 1 s → `arm`, 3 s → cancel), not in Companion's 400 ms hold, so no second haptic.

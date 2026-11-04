@@ -24,10 +24,11 @@ func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
 	amphEnd = func() error { calls = append(calls, "end"); return nil }
 	userActivity = func() error { calls = append(calls, "active"); return nil }
 	systemSleep = func() error { calls = append(calls, "sleep"); return nil }
+	displayHold = func(time.Duration) error { calls = append(calls, "hold"); return nil }
 	postVar = func(string, string) error { return nil }
 	t.Cleanup(func() {
 		postVar = post
-		amphStart, amphEnd, userActivity, systemSleep = startAmphetamine, endAmphetamine, declareUserActivity, sleepSystem
+		amphStart, amphEnd, userActivity, systemSleep, displayHold = startAmphetamine, endAmphetamine, declareUserActivity, sleepSystem, bridgeDisplay
 	})
 	p := newPower(&vars{sent: map[string]string{}})
 	for range 2 {
@@ -38,8 +39,8 @@ func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if got := strings.Join(calls, ","); got != "active,start,end,active" {
-		t.Errorf("calls = %s, want active,start,end,active", got)
+	if got := strings.Join(calls, ","); got != "hold,start,end,active" {
+		t.Errorf("calls = %s, want hold,start,end,active", got)
 	}
 }
 
