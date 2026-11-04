@@ -220,13 +220,13 @@ void *cal_canvas_png(void *c, int *len) {
     }
 }
 
-int cal_canvas_avatar(void *c, const void *bytes, int len, double cx, double cy, double r, unsigned rgb) {
+int cal_canvas_avatar(void *c, const void *bytes, int len, double cx, double cy, double r, unsigned rgb, int square) {
     @autoreleasepool {
         CGContextRef ctx = ((canvas *)c)->ctx;
         double H = ((canvas *)c)->h;
         CGRect box = CGRectMake(cx - r, H - cy - r, 2 * r, 2 * r);
         CGContextSaveGState(ctx);
-        CGContextAddEllipseInRect(ctx, box);
+        if (square) CGContextAddRect(ctx, box); else CGContextAddEllipseInRect(ctx, box);
         CGContextClip(ctx);
         CGContextSetRGBFillColor(ctx, ((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
         CGContextFillRect(ctx, box);

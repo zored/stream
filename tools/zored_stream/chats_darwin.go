@@ -7,6 +7,7 @@ package main
 import "C"
 
 import (
+	"cmp"
 	"log"
 	"unsafe"
 )
@@ -14,6 +15,8 @@ import (
 type chatsDisc struct {
 	avatar    []byte
 	cx, cy, r float64
+	rgb       uint32
+	square    bool
 }
 
 func chatsPNG(w, h float64, discs []chatsDisc, texts []calText) string {
@@ -23,7 +26,7 @@ func chatsPNG(w, h float64, discs []chatsDisc, texts []calText) string {
 		if len(d.avatar) > 0 {
 			p = C.CBytes(d.avatar)
 		}
-		if C.cal_canvas_avatar(c, p, C.int(len(d.avatar)), C.double(d.cx), C.double(d.cy), C.double(d.r), C.uint(0x333333)) == 0 {
+		if C.cal_canvas_avatar(c, p, C.int(len(d.avatar)), C.double(d.cx), C.double(d.cy), C.double(d.r), C.uint(cmp.Or(d.rgb, 0x333333)), cBool(d.square)) == 0 {
 			log.Printf("chats: avatar decode failed (%d bytes)", len(d.avatar))
 		}
 		C.free(p)
