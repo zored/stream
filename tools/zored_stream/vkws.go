@@ -154,6 +154,9 @@ func parseVkwsHistory(sn string, b []byte) (vkwsDialog, error) {
 				Outgoing bool   `json:"outgoing"`
 				Text     string `json:"text"`
 				Class    string `json:"class"`
+				Parts    []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
 			} `json:"messages"`
 			Persons []struct {
 				SN       string `json:"sn"`
@@ -189,7 +192,13 @@ func parseVkwsHistory(sn string, b []byte) (vkwsDialog, error) {
 			}
 		}
 		d.at = time.Unix(last.Time, 0)
-		d.text = strings.Join(strings.Fields(last.Text), " ")
+		text := last.Text
+		if text == "" {
+			for _, p := range last.Parts {
+				text += " " + p.Text
+			}
+		}
+		d.text = strings.Join(strings.Fields(text), " ")
 	}
 	for _, p := range res.Persons {
 		if p.SN == sn {

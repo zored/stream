@@ -85,3 +85,10 @@ func TestVkwsLive(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestVkwsHistoryTextFromParts(t *testing.T) {
+	d, err := parseVkwsHistory("bot", []byte(`{"status":{"code":20000},"results":{"messages":[{"msgId":2,"time":5,"parts":[{"mediaType":"text","text":"VKDOC-1\ndone"},{"text":"ok"}]}]}}`))
+	if err != nil || d.text != "VKDOC-1 done ok" {
+		t.Fatalf("got %q, %v", d.text, err)
+	}
+}

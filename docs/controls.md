@@ -132,7 +132,7 @@ Same as кнопка 6. [agents.md](agents.md)
 
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
 - in a call shows: dark green + mic = on, red + crossed = off, amber `…` = switching, amber `?` = unknown
-- no call: up to 4 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push) in a 2×2 grid: avatar or initial in a circle, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
+- no call: up to 4 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push); one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid: avatar or initial in a circle, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
 - tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (newest first) with a slide animation; the tile shows the chat's avatar over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - hold ≥ 400 ms: switch to muted chats (muted or archived in Telegram, muted in VK WorkSpace), count badges gray, a gray closed eye when none; hold again to switch back
 - [unread.md](unread.md)

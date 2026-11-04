@@ -308,6 +308,21 @@ func chatsTileImage(list []chatEntry, more bool, now time.Time, muted bool) stri
 	if len(list) == 0 {
 		return chatsEmpty(now, muted)
 	}
+	if len(list) == 1 {
+		d, t := chatsCard(list[0], 0, now, muted)
+		return chatsPNG(88, 88, d, t)
+	}
+	if len(list) == 2 {
+		var discs []chatsDisc
+		var texts []calText
+		for i, e := range list {
+			o := 40 * float64(i)
+			d, t := chatsFace(e, o+22, o+26, 21, false)
+			bd, bt := chatsBadges(e, o, o, 48, 9, 9, muted, now)
+			discs, texts = append(append(discs, d), bd...), append(append(texts, t...), bt...)
+		}
+		return chatsPNG(88, 88, discs, texts)
+	}
 	grid := 88.0
 	var texts []calText
 	if more {
