@@ -38,8 +38,8 @@ func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if got := strings.Join(calls, ","); got != "start,end,active" {
-		t.Errorf("calls = %s, want start,end,active", got)
+	if got := strings.Join(calls, ","); got != "active,start,end,active" {
+		t.Errorf("calls = %s, want active,start,end,active", got)
 	}
 }
 

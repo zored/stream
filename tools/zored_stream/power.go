@@ -164,7 +164,7 @@ func (p *power) up() error {
 }
 
 func (p *power) start() error {
-	if err := amphStart(awakeDefault); err != nil {
+	if err := restartAmphetamine(awakeDefault); err != nil {
 		return err
 	}
 	p.session = amphSession{active: true, left: awakeDefault, timed: true}
@@ -213,9 +213,17 @@ func (p *power) applyLength() {
 	if !p.session.active {
 		return
 	}
-	if err := amphStart(time.Until(p.until).Round(time.Minute)); err != nil {
+	if err := restartAmphetamine(time.Until(p.until).Round(time.Minute)); err != nil {
 		log.Print(err)
 	}
+}
+
+// restartAmphetamine resets the idle timer first: Amphetamine drops the old display assertion before the new one, and with HID idle past displaysleep the screen goes dark in that gap.
+func restartAmphetamine(d time.Duration) error {
+	if err := userActivity(); err != nil {
+		return err
+	}
+	return amphStart(d)
 }
 
 func (p *power) stopTimers() {
