@@ -17,6 +17,7 @@ const (
 	chatsBrowseFor = 5 * time.Second
 	chatsOnTile    = 3
 	chatsRetry     = 30 * time.Second
+	chatsHold      = 400 * time.Millisecond
 )
 
 type chatEntry struct {
@@ -28,6 +29,7 @@ type chatEntry struct {
 	text   string
 	avatar []byte
 	open   string
+	muted  bool
 }
 
 type chatSource func(ctx context.Context, push func([]chatEntry)) error
@@ -45,6 +47,9 @@ type chats struct {
 	knobDown   bool
 	shown      string
 	opener     func(url string) error
+	muted      bool
+	hold       *time.Timer
+	held       bool
 }
 
 func newChats(v *vars, release func(), strip func(string)) *chats {
@@ -67,16 +72,16 @@ func (c *chats) set(app string, list []chatEntry) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.byApp[app] = list
-	c.list = chatsMerge(c.byApp)
+	c.list = chatsMerge(c.byApp, c.muted)
 	c.pick = min(c.pick, max(len(c.list)-1, 0))
 	c.publishLocked()
 }
 
-func chatsMerge(byApp map[string][]chatEntry) []chatEntry {
+func chatsMerge(byApp map[string][]chatEntry, muted bool) []chatEntry {
 	var out []chatEntry
 	for _, l := range byApp {
 		for _, e := range l {
-			if e.unread > 0 {
+			if e.unread > 0 && e.muted == muted {
 				out = append(out, e)
 			}
 		}
@@ -100,19 +105,52 @@ func (c *chats) publishLocked() {
 	var svg string
 	if c.browsing() {
 		c.covered = true
-		svg = chatsPickImage(c.list, c.pick, now)
+		svg = chatsPickImage(c.list, c.pick, now, c.muted)
 		c.strip(chatsStripImage(c.list, c.pick))
 	} else {
 		if c.covered {
 			c.covered = false
 			c.strip("")
 		}
-		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], now)
+		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], now, c.muted)
 	}
 	if svg != c.shown {
 		c.shown = svg
 		c.vars.set("unread_svg", svg)
 	}
+}
+
+func (c *chats) down() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.held = false
+	c.hold = time.AfterFunc(chatsHold, c.toggleMuted)
+	return nil
+}
+
+func (c *chats) up() error {
+	c.mu.Lock()
+	if c.hold != nil {
+		c.hold.Stop()
+		c.hold = nil
+	}
+	held := c.held
+	c.mu.Unlock()
+	if held {
+		return nil
+	}
+	return c.press()
+}
+
+func (c *chats) toggleMuted() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.held = true
+	c.muted = !c.muted
+	c.list = chatsMerge(c.byApp, c.muted)
+	c.pick, c.browseTill = 0, time.Time{}
+	log.Printf("chats: muted=%v", c.muted)
+	c.publishLocked()
 }
 
 func (c *chats) press() error {
@@ -202,9 +240,23 @@ func chatsDraw(e chatEntry, cx, cy, r float64) (chatsDisc, []calText) {
 	return d, []calText{{text: chatsInitial(e.title), x: cx - r, y: cy - r*0.7, w: 2 * r, h: 1.4 * r, size: r, rgb: whiteRGB, center: true}}
 }
 
-func chatsTileImage(list []chatEntry, now time.Time) string {
+func chatsCountRGB(muted bool) uint32 {
+	if muted {
+		return grayRGB
+	}
+	return whiteRGB
+}
+
+func chatsEmpty(now time.Time, muted bool) string {
+	if muted {
+		return chatsPNG(88, 88, nil, []calText{{text: "·", y: 33, w: 88, h: 22, size: 16, rgb: grayRGB, center: true}})
+	}
+	return unreadSVG(nil, now)
+}
+
+func chatsTileImage(list []chatEntry, now time.Time, muted bool) string {
 	if len(list) == 0 {
-		return unreadSVG(nil, now)
+		return chatsEmpty(now, muted)
 	}
 	var discs []chatsDisc
 	var texts []calText
@@ -214,20 +266,20 @@ func chatsTileImage(list []chatEntry, now time.Time) string {
 		d, t := chatsDraw(e, x+step/2, 24, 13)
 		discs, texts = append(discs, d), append(texts, t...)
 		texts = append(texts,
-			calText{text: capped(e.unread, 99), x: x, y: 42, w: step, h: 20, size: 15, rgb: whiteRGB, center: true},
+			calText{text: capped(e.unread, 99), x: x, y: 42, w: step, h: 20, size: 15, rgb: chatsCountRGB(muted), center: true},
 			calText{text: ago(e.at, now), x: x, y: 64, w: step, h: 18, size: 13, rgb: grayRGB, center: true})
 	}
 	return chatsPNG(88, 88, discs, texts)
 }
 
-func chatsPickImage(list []chatEntry, pick int, now time.Time) string {
+func chatsPickImage(list []chatEntry, pick int, now time.Time, muted bool) string {
 	if pick >= len(list) {
-		return unreadSVG(nil, now)
+		return chatsEmpty(now, muted)
 	}
 	e := list[pick]
 	d, texts := chatsDraw(e, 44, 30, 28)
 	texts = append(texts,
-		calText{text: capped(e.unread, 99), y: 64, w: 44, h: 22, size: 15, rgb: whiteRGB, center: true},
+		calText{text: capped(e.unread, 99), y: 64, w: 44, h: 22, size: 15, rgb: chatsCountRGB(muted), center: true},
 		calText{text: ago(e.at, now), x: 44, y: 64, w: 44, h: 22, size: 15, rgb: grayRGB, center: true})
 	return chatsPNG(88, 88, []chatsDisc{d}, texts)
 }

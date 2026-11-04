@@ -134,6 +134,7 @@ Same as кнопка 6. [agents.md](agents.md)
 - in a call shows: dark green + mic = on, red + crossed = off, amber `…` = switching, amber `?` = unknown
 - no call: the 3 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push): avatar or initial in a gray circle, white unread count below (`99+` cap), gray age of the last message (`5m`, `3h`, `2d`); small white eye = nothing unread
 - tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (newest first); the tile shows the chat's big avatar, count and age, the right strip its name gray and last message white; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
+- hold ≥ 400 ms: switch to muted chats (muted or archived in Telegram, muted in VK WorkSpace), counts gray, a gray dot when none; hold again to switch back
 - [unread.md](unread.md)
 
 Same as кнопка 2. [vkcall.md](vkcall.md)

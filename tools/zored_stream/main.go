@@ -374,7 +374,7 @@ func main() {
 	go every(time.Second, cs.publish)
 	tile22 := &slot{vars: v, name: "tile_22", layers: []layer{
 		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
-		{name: "unread", press: cs.press},
+		{name: "unread", press: cs.down, up: cs.up},
 	}}
 	go every(pollEvery, tile22.publish)
 	go serve(*unreadAddr, func(mux *http.ServeMux) {

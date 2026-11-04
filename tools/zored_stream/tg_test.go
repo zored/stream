@@ -72,17 +72,19 @@ func TestTGEntries(t *testing.T) {
 		{app: "tg", id: "c3", title: "group", unread: 5, at: time.Unix(200, 0), text: "g", open: "tg://openmessage?chat_id=3"},
 		{app: "tg", id: "u1", title: "Ann B", unread: 2, at: time.Unix(100, 0), text: "hi there", open: "tg://resolve?domain=ann"},
 		{app: "tg", id: "ch4", title: "chan", unread: 1, at: time.Unix(50, 0), text: "c", open: "tg://privatepost?channel=4&post=13"},
+		{app: "tg", id: "ch5", title: "muted", unread: 9, open: "tg://privatepost?channel=5&post=14", muted: true},
+		{app: "tg", id: "u6", title: "Arch", unread: 3, open: "tg://user?id=6", muted: true},
 	}
 	if len(got) != len(want) {
 		t.Fatalf("got %d entries: %+v", len(got), got)
 	}
 	for i := range want {
 		if got[i].id != want[i].id || got[i].title != want[i].title || got[i].unread != want[i].unread ||
-			!got[i].at.Equal(want[i].at) || got[i].text != want[i].text || got[i].open != want[i].open {
+			!got[i].at.Equal(want[i].at) || got[i].text != want[i].text || got[i].open != want[i].open || got[i].muted != want[i].muted {
 			t.Errorf("%d: got %+v want %+v", i, got[i], want[i])
 		}
 	}
-	if !muted["ch5"] || len(muted) != 1 {
+	if !muted["ch5"] || muted["u1"] {
 		t.Errorf("muted %v", muted)
 	}
 	if tgRelevant(&tg.UpdateShort{Update: &tg.UpdateNewChannelMessage{Message: &tg.Message{PeerID: &tg.PeerChannel{ChannelID: 5}}}}, muted) {

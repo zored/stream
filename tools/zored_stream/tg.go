@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gotd/td/session"
@@ -55,13 +54,8 @@ func tgClient(ctx context.Context, h telegram.UpdateHandler) (*telegram.Client, 
 // tgChats keeps no state on disk: dialogs are refetched on any pushed update, debounced.
 func tgChats(ctx context.Context, push func([]chatEntry)) error {
 	kick := make(chan struct{}, 1)
-	var mu sync.Mutex
-	muted := map[string]bool{}
 	h := telegram.UpdateHandlerFunc(func(ctx context.Context, u tg.UpdatesClass) error {
-		mu.Lock()
-		relevant := tgRelevant(u, muted)
-		mu.Unlock()
-		if relevant {
+		if tgRelevant(u, nil) {
 			select {
 			case kick <- struct{}{}:
 			default:
@@ -84,10 +78,7 @@ func tgChats(ctx context.Context, push func([]chatEntry)) error {
 			if err != nil {
 				return fmt.Errorf("tg getDialogs: %w", err)
 			}
-			entries, m := tgEntries(d, time.Now())
-			mu.Lock()
-			muted = m
-			mu.Unlock()
+			entries, _ := tgEntries(d, time.Now())
 			for i := range entries {
 				entries[i].avatar = av.get(ctx, d, entries[i].id)
 			}
@@ -173,7 +164,7 @@ type tgDialogs interface {
 	GetUsers() []tg.UserClass
 }
 
-// tgEntries maps unread, unmuted, unarchived dialogs to entries, newest first; also returns muted chat keys.
+// tgEntries maps unread dialogs; muted or archived ones are flagged muted to entries, newest first; also returns muted chat keys.
 func tgEntries(d tg.MessagesDialogsClass, now time.Time) ([]chatEntry, map[string]bool) {
 	ds, ok := d.(tgDialogs)
 	if !ok {
@@ -203,14 +194,13 @@ func tgEntries(d tg.MessagesDialogsClass, now time.Time) ([]chatEntry, map[strin
 			continue
 		}
 		key := tgKey(dl.Peer)
-		if mu, ok := dl.NotifySettings.GetMuteUntil(); ok && int64(mu) > now.Unix() {
-			muted[key] = true
+		mute, ok := dl.NotifySettings.GetMuteUntil()
+		isMuted := ok && int64(mute) > now.Unix() || dl.FolderID == 1
+		muted[key] = isMuted
+		if dl.UnreadCount == 0 && !dl.UnreadMark {
 			continue
 		}
-		if dl.FolderID == 1 || (dl.UnreadCount == 0 && !dl.UnreadMark) {
-			continue
-		}
-		e := chatEntry{app: "tg", id: key, unread: dl.UnreadCount}
+		e := chatEntry{app: "tg", id: key, unread: dl.UnreadCount, muted: isMuted}
 		if e.unread == 0 {
 			e.unread = 1
 		}

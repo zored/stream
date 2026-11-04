@@ -321,6 +321,7 @@ type vkwsState struct {
 	names   map[string]string
 	dialogs map[string]vkwsDialog
 	avatars map[string][]byte
+	muted   map[string]bool
 }
 
 func (st *vkwsState) refresh(ctx context.Context, sns []string) error {
@@ -390,7 +391,7 @@ func (st *vkwsState) entries(ctx context.Context) []chatEntry {
 				st.avatars[sn] = av
 			}
 		}
-		es = append(es, chatEntry{app: "vkws", id: sn, title: title, unread: d.unread, at: d.at, text: d.text, avatar: av, open: vkwsOpenURL(st.c.s.BaseURL, sn)})
+		es = append(es, chatEntry{app: "vkws", id: sn, title: title, unread: d.unread, at: d.at, text: d.text, avatar: av, muted: st.muted[sn], open: vkwsOpenURL(st.c.s.BaseURL, sn)})
 	}
 	sort.Slice(es, func(i, j int) bool { return es[i].at.After(es[j].at) })
 	return es
@@ -406,15 +407,12 @@ func vkwsChats(ctx context.Context, push func([]chatEntry)) error {
 	if err != nil {
 		return err
 	}
-	st := &vkwsState{c: c, names: map[string]string{}, dialogs: map[string]vkwsDialog{}, avatars: map[string][]byte{}}
-	muted := map[string]bool{}
+	st := &vkwsState{c: c, names: map[string]string{}, muted: map[string]bool{}, dialogs: map[string]vkwsDialog{}, avatars: map[string][]byte{}}
 	var scan []string
 	for _, b := range ev.buddies {
 		st.names[b.sn] = b.name
-		muted[b.sn] = b.muted
-		if !b.muted {
-			scan = append(scan, b.sn)
-		}
+		st.muted[b.sn] = b.muted
+		scan = append(scan, b.sn)
 	}
 	if err := st.refresh(ctx, scan); err != nil {
 		return err
@@ -424,7 +422,7 @@ func vkwsChats(ctx context.Context, push func([]chatEntry)) error {
 		es := st.entries(ctx)
 		key := fmt.Sprint(len(es))
 		for _, e := range es {
-			key += fmt.Sprintf("|%s:%d:%d:%s", e.id, e.unread, e.at.Unix(), e.text)
+			key += fmt.Sprintf("|%s:%d:%d:%v:%s", e.id, e.unread, e.at.Unix(), e.muted, e.text)
 		}
 		if key != shown {
 			shown = key
@@ -446,12 +444,12 @@ func vkwsChats(ctx context.Context, push func([]chatEntry)) error {
 		next, wait = ev.next, ev.wait
 		for _, b := range ev.buddies {
 			st.names[b.sn] = b.name
-			muted[b.sn] = b.muted
+			st.muted[b.sn] = b.muted
 		}
 		var todo []string
 		seen := map[string]bool{}
 		for _, sn := range ev.changed {
-			if !seen[sn] && !muted[sn] {
+			if !seen[sn] {
 				seen[sn] = true
 				todo = append(todo, sn)
 			}
