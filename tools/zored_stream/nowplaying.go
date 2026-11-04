@@ -58,6 +58,7 @@ func (t track) position(now time.Time) float64 {
 type nowPlaying struct {
 	script, lib string
 	mu          sync.Mutex
+	publishMu   sync.Mutex
 	current     track
 	last        track
 	heldUntil   time.Time
@@ -133,6 +134,8 @@ func (n *nowPlaying) update(t track) {
 }
 
 func (n *nowPlaying) publish() {
+	n.publishMu.Lock()
+	defer n.publishMu.Unlock()
 	n.mu.Lock()
 	t, like := n.current, n.like
 	if t.Title == "" && time.Now().Before(n.heldUntil) {
