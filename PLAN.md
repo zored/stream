@@ -96,8 +96,8 @@ New features go on the MEDIA page as buttons; separate pages only once it runs o
 - [ ] Camera tile does something else outside a call (layers, F23)
 - [ ] Chats tile `2/2` (child session, 2026-11-04, `22decf8`…`0c09921`): Telegram via `gotd/td` (`tg.go`, session `tg-digest`), 2×2 avatar grid with badges, muted mode, knob scroll with a 150 ms slide, 3 lines on the strip — device check pending (animation smoothness, strip); VK WorkSpace source parked
 - [ ] Now Playing: a race between two publishes fixed (`ea9b8fd`), the stale-track symptom itself never reproduced (4 transitions < 1 s)
-- [ ] Keep-awake tap blanked the display for 2 s while Amphetamine restarted its session (not a real sleep); idle timer reset before every start / length change (`b98926f`, deployed, device check pending)
-- [ ] Icon set for tiles (child session, 2026-11-04): research + comparison, discussion first
+- [x] Keep-awake tap blanked the display for 2 s while Amphetamine restarted its session (regression of `5b8a196`: one reused activity assertion); idle reset before every start / length change (`b98926f`, `1527646`, verified on the device)
+- [ ] Icon set (research done 2026-11-04, nothing changed): today 9 SVGs in `tools/icons/` (grid 48, stroke 3.5) + ~11 inline in the daemon; candidates Lucide (ISC) / Tabler (MIT) / Phosphor (MIT), SF Symbols out by license; recommendation Lucide, stroke 1.75 on 24, 60 px in a 90 px tile, vendored in `tools/icons/lucide/` with a pinned version + `go:embed`; off state = same icon in gray; migration: call tiles → media → wifi/headphones/sun → timers/agents/chats/layout — waiting for the user's pick
 - [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` already reads it via `lsappinfo` and can push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
 
