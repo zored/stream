@@ -262,7 +262,7 @@ func chatsInitial(title string) string {
 }
 
 const (
-	chatsRed     = 0xE53935
+	chatsRed     = redRGB
 	chatsDark    = 0x333333
 	chatsFrames  = 6
 	chatsFrameAt = 25 * time.Millisecond

@@ -32,7 +32,7 @@ const (
 
 var hearts = map[string]string{
 	"liked":    `<path fill="#ff3b6b" d="` + heartPath + `"/>`,
-	"disliked": `<path fill="#888" d="` + heartPath + `"/><path fill="none" stroke="#000" stroke-width="1.5" d="M12 5l-2 5 4 3-3 8"/>`,
+	"disliked": `<path fill="` + gray + `" d="` + heartPath + `"/><path fill="none" stroke="#000" stroke-width="1.5" d="M12 5l-2 5 4 3-3 8"/>`,
 }
 
 type track struct {
@@ -256,11 +256,11 @@ func trackSVG(t track, like string) string {
 }
 
 func stripSVG(gray, bold, fill, heart string) string {
-	artist := span(`fill="#888"`, shorten(strings.ToLower(gray)))
+	artist := span(`fill="`+gray+`"`, shorten(strings.ToLower(gray)))
 	title := span(`font-weight="bold"`, shorten(strings.ToLower(bold)))
 	lines := []svgLine{join(artist, title)}
 	if gray != "" && bold != "" {
-		lines = []svgLine{join(artist, span(`fill="#888"`, " | "), title)}
+		lines = []svgLine{join(artist, span(`fill="`+gray+`"`, " | "), title)}
 		if lineWidth(lines[0]) > svgMinWidth {
 			lines = []svgLine{artist, title}
 		}

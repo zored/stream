@@ -18,7 +18,7 @@ const (
 	calHorizon   = 7 * 24 * time.Hour
 	calAhead     = 12 * time.Hour
 	calSoon      = 5 * time.Minute
-	amberRGB     = 0xFFB000
+	amberRGB     = 0xFFD60A
 	grayRGB      = 0x808080
 	whiteRGB     = 0xFFFFFF
 )

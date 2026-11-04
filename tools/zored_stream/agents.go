@@ -381,7 +381,7 @@ func agentsSVG(kinds []string, current int) string {
 	case n > agentMaxDots:
 		fill := "#fff"
 		if kinds[0] == agentInput {
-			fill = "#FFB000"
+			fill = amber
 		}
 		fmt.Fprintf(&b, `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="56" fill="%s">%d</text>`, fill, n)
 	default:
@@ -392,7 +392,7 @@ func agentsSVG(kinds []string, current int) string {
 			x, y := 50+(float64(col)-float64(inRow-1)/2)*22, 50+(float64(row)-float64(rows-1)/2)*22
 			switch kind {
 			case agentInput:
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="#FFB000"/>`, x, y)
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="%s"/>`, x, y, amber)
 			case agentDone:
 				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="#fff"/>`, x, y)
 			default:

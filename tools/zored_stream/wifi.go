@@ -230,7 +230,7 @@ func (w *wifi) showLocked() {
 	}
 	color := "#fff"
 	if w.loading {
-		color = "#FFB000"
+		color = amber
 	}
 	w.strip(stripNote{text: wifiLabel(name), color: color, arrow: !w.turned}, time.Until(w.pickTill))
 }
@@ -449,7 +449,7 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	case "joining":
 		text = gray
 	case "error":
-		color = "#FF3030"
+		color = red
 	case "joined", "nonet":
 		fill = "#fff"
 	}
@@ -473,9 +473,9 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	cy := 50.0 + float64(dy)
 	b.WriteString(iconAt(name, color, 50, cy, wifiIconSize))
 	if state == "nonet" {
-		fmt.Fprintf(&b, `<circle cx="78" cy="%g" r="5" fill="#FFB000"/>`, cy+22)
+		fmt.Fprintf(&b, `<circle cx="78" cy="%g" r="5" fill="%s"/>`, cy+22, amber)
 	}
-	if c, ok := map[string]string{"up": "#fff", "busy": "#FFB000", "down": "#FF3030"}[vpn]; ok {
+	if c, ok := map[string]string{"up": "#fff", "busy": amber, "down": red}[vpn]; ok {
 		fmt.Fprintf(&b, `<circle cx="84" cy="16" r="10" fill="%s"/>`, c)
 	}
 	if ssid != "" {

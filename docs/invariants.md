@@ -76,7 +76,7 @@ nothing automatic, **doc** = a written rule only. *(unconfirmed)* = taken from a
 
 | # | Rule | Enforced |
 |---|---|---|
-| D1 | Minimal: no labels or units, dots over words, lowercase text, white values, gray `#808080` secondary, color only for warnings or a transient state; offer the sparest variant first | doc, review |
+| D1 | Minimal: no labels or units, dots over words, lowercase text, white values, gray `#8E8E93` secondary, palette green `#30D158` / amber `#FFD60A` / red `#FF453A` (`palette.go`, top of `gen_pages.py`), color only for warnings or a transient state; offer the sparest variant first | doc, review |
 | D2 | 6 % inset for content on every tile and strip picture | code (`x=v(6) … width=v(88)` in `gen_pages.py`, `inset` in `nowplaying.go`), review |
 | D3 | Text in JetBrains Mono static weights; strip pictures are 48×258 (the drawable area), not 60×270 | doc [companion.md](companion.md) |
 | D4 | Talk and docs name controls "крутилка слева, ряд 1", "тайл ряд 2, колонка 3", "кнопка 1"; grid `row/col` only in code and technical docs | doc |

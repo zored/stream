@@ -41,7 +41,7 @@ Run them yourself; hand to the user only what needs them: macOS permission grant
 - One process owns the serial port: Companion, Loupedeck or `sniff.py`.
 - Firmware: flash or send update commands only after explicit confirmation in chat (bricking risk). Vendor binaries stay out of git.
 - Mark findings verified (observed) or assumed (read).
-- Device style is minimalist: no labels or units (`%`), dots over words, lowercase text, white values, gray (#808080) secondary,
+- Device style is minimalist: no labels or units (`%`), dots over words, lowercase text, white values, gray (#8E8E93) secondary,
   color only for warnings or a transient state; 6% inset. Offer the sparest variant first.
 - Secrets stay out of the repo: the Companion REST key lives in `~/.config/zored-stream/companion-token`.
 - `gh`: run as `env -u GITHUB_TOKEN gh …` (the env token is stale, the keyring login works).

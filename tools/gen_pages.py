@@ -87,18 +87,24 @@ def image(layer_id, data, fill="fit", **geo):
             "halign": v("center"), "valign": v("center"), "fillMode": v(fill)}
 
 
+RASTER = 256
+GRAY, GREEN, AMBER, RED = "#8E8E93", "#30D158", "#FFD60A", "#FF453A"
+
+
 def bootstrap(name, color):
     with open(os.path.join(BOOTSTRAP, f"{name}.svg")) as f:
-        svg = f.read().replace("currentColor", color)
+        svg = f.read().replace("currentColor", color).replace('width="16" height="16"', 'width="256" height="256"')
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
 def glow(name, box, blur, strokes):
+    _, _, w, h = map(float, box.split())
+    ratio = h / w
     with open(os.path.join(BOOTSTRAP, f"{name}.svg")) as f:
         body = f.read()
     body = body[body.index(">") + 1:body.rindex("</svg>")].strip()
     shadows = "".join(f'<g stroke="#000" stroke-width="{w}" stroke-linejoin="round" filter="url(#g)">{body}</g>' for w in strokes)
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{box}"><defs><filter id="g" x="-1" y="-1" width="3" height="3">'
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{RASTER}" height="{round(RASTER * ratio)}" viewBox="{box}"><defs><filter id="g" x="-1" y="-1" width="3" height="3">'
            f'<feGaussianBlur stdDeviation="{blur}"/></filter></defs>{shadows}<g fill="#fff">{body}</g></svg>')
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
@@ -203,7 +209,7 @@ def volume_cell(row):
     progress = cell_fill("np_progress", row)
     visible = expr(BAR_ALPHA)
     hidden = expr(f"100 - {BAR_ALPHA}")
-    color = expr(f'$(custom:bar_mode) == "ctl" ? {0x808080} : {0xFFFFFF}')
+    color = expr(f'$(custom:bar_mode) == "ctl" ? {0x8E8E93} : {0xFFFFFF}')
     return button([
         canvas(),
         box("progress", expr("$(custom:np_tint)"), opacity=hidden, y=expr(f"100 - {progress}"), height=expr(progress)),
@@ -253,8 +259,8 @@ def call_led(var):
     return button([canvas(), box("box0", by_state(var, {
         "on": f"$(internal:time_unix) % 4 == 0 ? {0x003300} : {0x00FF00}",
         "off": 0x400000,
-        "pending": 0xFFB000,
-        "unknown": f"$(internal:time_unix) % 2 == 0 ? {0xFFB000} : 0",
+        "pending": 0xFFD60A,
+        "unknown": f"$(internal:time_unix) % 2 == 0 ? {0xFFD60A} : 0",
     }))], **call_actions(var))
 
 
@@ -266,9 +272,9 @@ def call_layers(var, name):
     return [
         canvas(),
         box("box0", 0x000000),
-        image("on", bootstrap(name, "#30D158"), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
-        image("off", bootstrap(CALL_OFF[name], "#FF3030"), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
-        text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60, color=0xFFB000,
+        image("on", bootstrap(name, GREEN), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
+        image("off", bootstrap(CALL_OFF[name], RED), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
+        text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60, color=int(AMBER[1:], 16),
              opacity=expr(f'{state} == "unknown" || {state} == "pending" ? 100 : 0')),
     ]
 
@@ -318,7 +324,7 @@ def time_image():
 
 
 def date_image():
-    return digits_image("#808080", lookup([f"{d:02d}." for d in range(32)], "$(internal:date_d)"),
+    return digits_image(GRAY, lookup([f"{d:02d}." for d in range(32)], "$(internal:date_d)"),
                         lookup([f"{m:02d}<" for m in range(13)], "$(internal:date_m)"))
 
 
@@ -344,7 +350,7 @@ def day_tile():
                    image("card", expr("$(custom:cal_card)"), enabled=idle, x=v(6), y=v(6), width=v(88), height=v(88)),
                    image("act", expr("$(custom:cal_icon)"), enabled=expr(f"{CAL} && $(custom:cal_browse) == 1"),
                          x=v(6), y=v(6), width=v(88), height=v(88)),
-                   image("hangup", bootstrap("telephone-x", "#FF3030"), enabled=expr('$(custom:tile_24) == "call"'),
+                   image("hangup", bootstrap("telephone-x", RED), enabled=expr('$(custom:tile_24) == "call"'),
                          x=v(15), y=v(15), width=v(70), height=v(70))],
                   down=[post(CALENDAR + "/tile/24/press")])
 

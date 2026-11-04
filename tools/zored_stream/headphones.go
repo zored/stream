@@ -49,9 +49,9 @@ func (h *headphones) publish() {
 	stroke := "#fff"
 	switch {
 	case time.Now().Before(h.errorTil):
-		stroke = "#f00"
+		stroke = red
 	case h.busy:
-		stroke = "#FFB000"
+		stroke = amber
 	}
 	h.vars.set("headphones_svg", headphonesSVG(h.on, stroke))
 }

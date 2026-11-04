@@ -28,7 +28,6 @@ const (
 	workdays           = 5
 	day                = 24 * time.Hour
 	sessionHours       = 5
-	gray               = "#808080"
 	weekShowFor        = 5 * time.Second
 	weekHoldMax        = 15 * time.Second
 	stripHz            = 60
@@ -39,11 +38,11 @@ const (
 )
 
 var (
-	aiStateColors = map[string]string{"ok": gray, "pending": gray, "preview": gray, "idle": gray, "other": "#FFB000", "error": "#FF3030"}
+	aiStateColors = map[string]string{"ok": gray, "pending": gray, "preview": gray, "idle": gray, "other": amber, "error": red}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
 )
 
-var levelColors = map[string]string{"low": "#fff", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
+var levelColors = map[string]string{"low": "#fff", "normal": "#fff", "high": amber, "critical": red}
 
 type limit struct {
 	Kind     string      `json:"kind"`
@@ -492,7 +491,7 @@ func aiStripSVG(f stripFrame) string {
 		dot = fmt.Sprintf(`<path d="M%d 24l6 6-6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`, w/2-3)
 	}
 	if f.failed {
-		dot += fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="#FF6666"/>`, w-4)
+		dot += fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="%s"/>`, w-4, red)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
