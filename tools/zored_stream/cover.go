@@ -7,13 +7,17 @@ import (
 	"time"
 )
 
-const glyphHold = 1500 * time.Millisecond
+const (
+	glyphHold = 1500 * time.Millisecond
+	pauseBlip = 600 * time.Millisecond
+)
 
 type glyph struct {
 	mu           sync.Mutex
 	playing      bool
 	alpha        float64
 	visibleUntil time.Time
+	pausedAt     time.Time
 	wake         chan struct{}
 	vars         *vars
 }
@@ -31,10 +35,21 @@ func coverURI(t track) string {
 
 func (g *glyph) setPlaying(playing bool) {
 	g.mu.Lock()
-	changed := g.playing != playing
+	if g.playing == playing {
+		g.mu.Unlock()
+		return
+	}
 	g.playing = playing
+	now := time.Now()
+	if !playing {
+		g.pausedAt = now
+		g.mu.Unlock()
+		time.AfterFunc(pauseBlip, g.wakeUp)
+		return
+	}
+	blip := now.Sub(g.pausedAt) < pauseBlip
 	g.mu.Unlock()
-	if changed {
+	if !blip {
 		g.show()
 	}
 }
@@ -43,6 +58,10 @@ func (g *glyph) show() {
 	g.mu.Lock()
 	g.visibleUntil = time.Now().Add(glyphHold)
 	g.mu.Unlock()
+	g.wakeUp()
+}
+
+func (g *glyph) wakeUp() {
 	select {
 	case g.wake <- struct{}{}:
 	default:
@@ -63,7 +82,7 @@ func (g *glyph) animate() {
 
 func (g *glyph) frame() bool {
 	g.mu.Lock()
-	visible := !g.playing || time.Now().Before(g.visibleUntil)
+	visible := !g.playing && time.Since(g.pausedAt) >= pauseBlip || time.Now().Before(g.visibleUntil)
 	target := 0.0
 	if visible {
 		target = 100
