@@ -20,6 +20,7 @@ const (
 	dictateRecording  = "Stop dictation"
 	dictatePrompt     = "Prompt"
 	dictatePollEvery  = time.Second
+	dictateMissEvery  = 10 * time.Second
 	dictateHold       = 400 * time.Millisecond
 	dictateMusicGrace = 2 * time.Second
 	dictateSettle     = 700 * time.Millisecond
@@ -48,6 +49,8 @@ type dictation struct {
 	was     bool
 	polled  time.Time
 	paused  *track
+	button  C.AXUIElementRef
+	missAt  time.Time
 	pauseAt time.Time
 }
 
@@ -156,17 +159,35 @@ func findDictation(w C.AXUIElementRef) (C.AXUIElementRef, bool) {
 	return findAttr(w, "AXCheckBox", "AXDescription", dictateIdle, false), false
 }
 
+func (d *dictation) cached() (on, ok bool) {
+	if d.button == 0 {
+		return false, false
+	}
+	switch axString(d.button, "AXDescription") {
+	case dictateRecording:
+		return true, true
+	case dictateIdle:
+		return false, true
+	}
+	C.ax_release(d.button)
+	d.button = 0
+	return false, false
+}
+
 func (d *dictation) recording() (bool, error) {
-	on := false
-	err := withDictation(func(_ C.pid_t, w C.AXUIElementRef) error {
-		e, rec := findDictation(w)
-		if e == 0 {
-			return errNoDictation
-		}
-		C.ax_release(e)
-		on = rec
-		return nil
-	})
+	on, ok := d.cached()
+	var err error
+	if !ok {
+		err = withDictation(func(_ C.pid_t, w C.AXUIElementRef) error {
+			e, rec := findDictation(w)
+			if e == 0 {
+				d.missAt = time.Now()
+				return errNoDictation
+			}
+			d.button, on = e, rec
+			return nil
+		})
+	}
 	state := map[bool]string{true: "on", false: "off"}[on]
 	if err != nil {
 		state = "none"
@@ -243,7 +264,7 @@ func (d *dictation) poll() {
 	if d.was {
 		claude.wake()
 	}
-	if !claude.due(&d.polled) {
+	if !claude.due(&d.polled) || (d.button == 0 && time.Since(d.missAt) < dictateMissEvery) {
 		return
 	}
 	if _, err := d.recording(); err != nil && !errors.Is(err, errNoWindow) && !errors.Is(err, errNoDictation) &&

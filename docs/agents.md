@@ -119,7 +119,8 @@ Verified 2026-11-03 with `say` into the mic: all four, the sent ones arrived as 
   (4 s cap), focus the prompt (`AXFocused`), post Return to Claude, check the prompt emptied. An empty transcript is not sent.
   Errors go to the log.
 - Claude is activated first when it is in the background. `dictation` (`on`/`off`) is read every second, so dictation
-  started with the mouse lights the LED too.
+  started with the mouse lights the LED too. The found checkbox is kept and only its `AXDescription` is re-read; a full window
+  walk runs only when it is gone, and after a miss (no dictation button in this view) the poll walks at most every 10 s.
 - Music: on the off→on edge of `dictation` (any start: кнопка 7, mouse) the daemon pauses Now Playing if it plays and remembers
   app + title; on the on→off edge (stop, send, cancel, error, Claude window gone) it resumes only that same app + title,
   only if it is still paused and nothing played meanwhile (checked from 2 s after the pause, while the helper catches up).

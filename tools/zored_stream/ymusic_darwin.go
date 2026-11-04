@@ -20,6 +20,7 @@ import (
 const (
 	ymBundle      = "ru.yandex.desktop.music"
 	ymRescanEvery = 2 * time.Second
+	ymRescanMax   = time.Minute
 	ymHotFor      = 3 * time.Second
 	ymColdEvery   = 3 * time.Second
 	ymPressGap    = 1500 * time.Millisecond
@@ -33,6 +34,7 @@ type ymusic struct {
 	app       C.AXUIElementRef
 	bar       C.AXUIElementRef
 	lastScan  time.Time
+	backoff   time.Duration
 	lastPress time.Time
 	polled    time.Time
 	hotTill   time.Time
@@ -82,7 +84,7 @@ func (y *ymusic) connect() bool {
 		}
 		y.pid = pid
 		y.app = C.ax_app(pid)
-		y.lastScan = time.Time{}
+		y.lastScan, y.backoff = time.Time{}, 0
 		log.Printf("ymusic: found %s pid %d", ymBundle, pid)
 	}
 	return true
@@ -93,13 +95,21 @@ func (y *ymusic) playerBar() C.AXUIElementRef {
 		return y.bar
 	}
 	y.dropBar()
-	if y.app == 0 || time.Since(y.lastScan) < ymRescanEvery {
+	if y.app == 0 || time.Since(y.lastScan) < max(ymRescanEvery, y.backoff) {
 		return 0
 	}
 	y.lastScan = time.Now()
 	y.bar = find(y.app, C.AX_BAR)
+	switch {
+	case y.bar == 0 && y.backoff == 0:
+		log.Print("ymusic: player bar not found, rescanning with backoff")
+	case y.bar != 0 && y.backoff != 0:
+		log.Print("ymusic: player bar found")
+	}
 	if y.bar == 0 {
-		log.Print("ymusic: player bar not found")
+		y.backoff = min(ymRescanMax, max(ymRescanEvery, 2*y.backoff))
+	} else {
+		y.backoff = 0
 	}
 	return y.bar
 }
@@ -186,6 +196,7 @@ func (y *ymusic) press(like bool) error {
 	if !y.connect() {
 		return errors.New("app is not running")
 	}
+	y.lastScan = time.Time{}
 	bar := y.playerBar()
 	if bar == 0 {
 		return errors.New("no player bar")
