@@ -103,6 +103,10 @@ def glow(name, box, blur, strokes):
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
+def glyph(name):
+    return [canvas(), box("box0", 0x000000), image("icon", bootstrap(name, "#fff"), x=v(20), y=v(20), width=v(60), height=v(60))]
+
+
 def labelled(label, bg=0x000000, fg=0xFFFFFF):
     return [canvas(), box("box0", bg), text("text0", label, fg)]
 
@@ -346,7 +350,7 @@ def day_tile():
 
 
 def ai_switch():
-    return button(labelled("AI"), down=ai("/ai/down"), up=ai("/ai/up"), left=ai("/ai/turn?d=-1"), right=ai("/ai/turn?d=1"))
+    return button(glyph("robot"), down=ai("/ai/down"), up=ai("/ai/up"), left=ai("/ai/turn?d=-1"), right=ai("/ai/turn?d=1"))
 
 
 def ai_strip(row):
@@ -445,13 +449,13 @@ def test_page():
 
 def media_page():
     grid = {
-        (0, 0): button(labelled("VOL"), down=streamd("/volume/mute"),
+        (0, 0): button(glyph("volume-up"), down=streamd("/volume/mute"),
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
-        (1, 0): button(labelled("TRACK"), up=[mediakey("play")], held=ymusic("/like"),
+        (1, 0): button(glyph("music-note-beamed"), up=[mediakey("play")], held=ymusic("/like"),
                        left=[mediakey("prev"), *streamd("/nowplaying/prev")],
                        right=[mediakey("next"), *streamd("/nowplaying/next")]),
-        (2, 0): button(labelled("SEEK"), left=[post(SEEK + "/seek/back")], right=[post(SEEK + "/seek/forward")]),
-        (0, 7): button(labelled("SUN"), down=brightness("/brightness/hold"), up=brightness("/brightness/release"),
+        (2, 0): button(glyph("arrow-left-right"), left=[post(SEEK + "/seek/back")], right=[post(SEEK + "/seek/forward")]),
+        (0, 7): button(glyph("brightness-high"), down=brightness("/brightness/hold"), up=brightness("/brightness/release"),
                        left=brightness("/brightness/down"), right=brightness("/brightness/up")),
         **{(r, 1): volume_cell(r) for r in range(3)},
         (1, 2): play_pause(),
@@ -461,7 +465,7 @@ def media_page():
         (2, 5): clock(),
         **{(r, 6): ai_strip(r) for r in range(3)},
         (1, 7): ai_switch(),
-        (2, 7): button(labelled("SCROLL"), down=[post(SCROLL + "/scroll/down")], up=[post(SCROLL + "/scroll/up")],
+        (2, 7): button(glyph("mouse"), down=[post(SCROLL + "/scroll/down")], up=[post(SCROLL + "/scroll/up")],
                        left=[post(SCROLL + "/scroll/back")], right=[post(SCROLL + "/scroll/forward")]),
         (1, 5): agents_tile(),
         (0, 2): input_tile(),

@@ -89,15 +89,12 @@
         }
        },
        {
-        "id": "text0",
-        "name": "text0",
+        "id": "icon",
+        "name": "icon",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -110,31 +107,27 @@
          "isExpression": false
         },
         "x": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "y": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "width": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "height": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "rotation": {
          "value": 0,
          "isExpression": false
         },
-        "text": {
-         "value": "VOL",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2ZmZiIgY2xhc3M9ImJpIGJpLXZvbHVtZS11cCIgdmlld0JveD0iMCAwIDE2IDE2Ij4KICA8cGF0aCBkPSJNMTEuNTM2IDE0LjAxQTguNDcgOC40NyAwIDAgMCAxNC4wMjYgOGE4LjQ3IDguNDcgMCAwIDAtMi40OS02LjAxbC0uNzA4LjcwN0E3LjQ4IDcuNDggMCAwIDEgMTMuMDI1IDhjMCAyLjA3MS0uODQgMy45NDYtMi4xOTcgNS4zMDN6Ii8+CiAgPHBhdGggZD0iTTEwLjEyMSAxMi41OTZBNi40OCA2LjQ4IDAgMCAwIDEyLjAyNSA4YTYuNDggNi40OCAwIDAgMC0xLjkwNC00LjU5NmwtLjcwNy43MDdBNS40OCA1LjQ4IDAgMCAxIDExLjAyNSA4YTUuNDggNS40OCAwIDAgMS0xLjYxIDMuODl6Ii8+CiAgPHBhdGggZD0iTTEwLjAyNSA4YTQuNSA0LjUgMCAwIDEtMS4zMTggMy4xODJMOCAxMC40NzVBMy41IDMuNSAwIDAgMCA5LjAyNSA4YzAtLjk2Ni0uMzkyLTEuODQxLTEuMDI1LTIuNDc1bC43MDctLjcwN0E0LjUgNC41IDAgMCAxIDEwLjAyNSA4TTcgNGEuNS41IDAgMCAwLS44MTItLjM5TDMuODI1IDUuNUgxLjVBLjUuNSAwIDAgMCAxIDZ2NGEuNS41IDAgMCAwIC41LjVoMi4zMjVsMi4zNjMgMS44OUEuNS41IDAgMCAwIDcgMTJ6TTQuMzEyIDYuMzkgNiA1LjA0djUuOTJMNC4zMTIgOS42MUEuNS41IDAgMCAwIDQgOS41SDJ2LTNoMmEuNS41IDAgMCAwIC4zMTItLjExIi8+Cjwvc3ZnPg==",
          "isExpression": false
         },
         "halign": {
@@ -145,28 +138,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -1764,15 +1737,12 @@
         }
        },
        {
-        "id": "text0",
-        "name": "text0",
+        "id": "icon",
+        "name": "icon",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -1785,31 +1755,27 @@
          "isExpression": false
         },
         "x": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "y": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "width": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "height": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "rotation": {
          "value": 0,
          "isExpression": false
         },
-        "text": {
-         "value": "SUN",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2ZmZiIgY2xhc3M9ImJpIGJpLWJyaWdodG5lc3MtaGlnaCIgdmlld0JveD0iMCAwIDE2IDE2Ij4KICA8cGF0aCBkPSJNOCAxMWEzIDMgMCAxIDEgMC02IDMgMyAwIDAgMSAwIDZtMCAxYTQgNCAwIDEgMCAwLTggNCA0IDAgMCAwIDAgOE04IDBhLjUuNSAwIDAgMSAuNS41djJhLjUuNSAwIDAgMS0xIDB2LTJBLjUuNSAwIDAgMSA4IDBtMCAxM2EuNS41IDAgMCAxIC41LjV2MmEuNS41IDAgMCAxLTEgMHYtMkEuNS41IDAgMCAxIDggMTNtOC01YS41LjUgMCAwIDEtLjUuNWgtMmEuNS41IDAgMCAxIDAtMWgyYS41LjUgMCAwIDEgLjUuNU0zIDhhLjUuNSAwIDAgMS0uNS41aC0yYS41LjUgMCAwIDEgMC0xaDJBLjUuNSAwIDAgMSAzIDhtMTAuNjU3LTUuNjU3YS41LjUgMCAwIDEgMCAuNzA3bC0xLjQxNCAxLjQxNWEuNS41IDAgMSAxLS43MDctLjcwOGwxLjQxNC0xLjQxNGEuNS41IDAgMCAxIC43MDcgMG0tOS4xOTMgOS4xOTNhLjUuNSAwIDAgMSAwIC43MDdMMy4wNSAxMy42NTdhLjUuNSAwIDAgMS0uNzA3LS43MDdsMS40MTQtMS40MTRhLjUuNSAwIDAgMSAuNzA3IDBtOS4xOTMgMi4xMjFhLjUuNSAwIDAgMS0uNzA3IDBsLTEuNDE0LTEuNDE0YS41LjUgMCAwIDEgLjcwNy0uNzA3bDEuNDE0IDEuNDE0YS41LjUgMCAwIDEgMCAuNzA3TTQuNDY0IDQuNDY1YS41LjUgMCAwIDEtLjcwNyAwTDIuMzQzIDMuMDVhLjUuNSAwIDEgMSAuNzA3LS43MDdsMS40MTQgMS40MTRhLjUuNSAwIDAgMSAwIC43MDgiLz4KPC9zdmc+",
          "isExpression": false
         },
         "halign": {
@@ -1820,28 +1786,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -2188,15 +2134,12 @@
         }
        },
        {
-        "id": "text0",
-        "name": "text0",
+        "id": "icon",
+        "name": "icon",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -2209,31 +2152,27 @@
          "isExpression": false
         },
         "x": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "y": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "width": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "height": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "rotation": {
          "value": 0,
          "isExpression": false
         },
-        "text": {
-         "value": "TRACK",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2ZmZiIgY2xhc3M9ImJpIGJpLW11c2ljLW5vdGUtYmVhbWVkIiB2aWV3Qm94PSIwIDAgMTYgMTYiPgogIDxwYXRoIGQ9Ik02IDEzYzAgMS4xMDUtMS4xMiAyLTIuNSAyUzEgMTQuMTA1IDEgMTNzMS4xMi0yIDIuNS0yIDIuNS44OTYgMi41IDJtOS0yYzAgMS4xMDUtMS4xMiAyLTIuNSAycy0yLjUtLjg5NS0yLjUtMiAxLjEyLTIgMi41LTIgMi41Ljg5NSAyLjUgMiIvPgogIDxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTE0IDExVjJoMXY5ek02IDN2MTBINVYzeiIvPgogIDxwYXRoIGQ9Ik01IDIuOTA1YTEgMSAwIDAgMSAuOS0uOTk1bDgtLjhhMSAxIDAgMCAxIDEuMS45OTVWM0w1IDR6Ii8+Cjwvc3ZnPg==",
          "isExpression": false
         },
         "halign": {
@@ -2244,28 +2183,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -4110,15 +4029,12 @@
         }
        },
        {
-        "id": "text0",
-        "name": "text0",
+        "id": "icon",
+        "name": "icon",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -4131,31 +4047,27 @@
          "isExpression": false
         },
         "x": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "y": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "width": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "height": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "rotation": {
          "value": 0,
          "isExpression": false
         },
-        "text": {
-         "value": "AI",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2ZmZiIgY2xhc3M9ImJpIGJpLXJvYm90IiB2aWV3Qm94PSIwIDAgMTYgMTYiPgogIDxwYXRoIGQ9Ik02IDEyLjVhLjUuNSAwIDAgMSAuNS0uNWgzYS41LjUgMCAwIDEgMCAxaC0zYS41LjUgMCAwIDEtLjUtLjVNMyA4LjA2MkMzIDYuNzYgNC4yMzUgNS43NjUgNS41MyA1Ljg4NmEyNi42IDI2LjYgMCAwIDAgNC45NCAwQzExLjc2NSA1Ljc2NSAxMyA2Ljc2IDEzIDguMDYydjEuMTU3YS45My45MyAwIDAgMS0uNzY1LjkzNWMtLjg0NS4xNDctMi4zNC4zNDYtNC4yMzUuMzQ2cy0zLjM5LS4yLTQuMjM1LS4zNDZBLjkzLjkzIDAgMCAxIDMgOS4yMTl6bTQuNTQyLS44MjdhLjI1LjI1IDAgMCAwLS4yMTcuMDY4bC0uOTIuOWEyNSAyNSAwIDAgMS0xLjg3MS0uMTgzLjI1LjI1IDAgMCAwLS4wNjguNDk1Yy41NS4wNzYgMS4yMzIuMTQ5IDIuMDIuMTkzYS4yNS4yNSAwIDAgMCAuMTg5LS4wNzFsLjc1NC0uNzM2Ljg0NyAxLjcxYS4yNS4yNSAwIDAgMCAuNDA0LjA2MmwuOTMyLS45N2EyNSAyNSAwIDAgMCAxLjkyMi0uMTg4LjI1LjI1IDAgMCAwLS4wNjgtLjQ5NWMtLjUzOC4wNzQtMS4yMDcuMTQ1LTEuOTguMTg5YS4yNS4yNSAwIDAgMC0uMTY2LjA3NmwtLjc1NC43ODUtLjg0Mi0xLjdhLjI1LjI1IDAgMCAwLS4xODItLjEzNSIvPgogIDxwYXRoIGQ9Ik04LjUgMS44NjZhMSAxIDAgMSAwLTEgMFYzaC0yQTQuNSA0LjUgMCAwIDAgMSA3LjVWOGExIDEgMCAwIDAtMSAxdjJhMSAxIDAgMCAwIDEgMXYxYTIgMiAwIDAgMCAyIDJoMTBhMiAyIDAgMCAwIDItMnYtMWExIDEgMCAwIDAgMS0xVjlhMSAxIDAgMCAwLTEtMXYtLjVBNC41IDQuNSAwIDAgMCAxMC41IDNoLTJ6TTE0IDcuNVYxM2ExIDEgMCAwIDEtMSAxSDNhMSAxIDAgMCAxLTEtMVY3LjVBMy41IDMuNSAwIDAgMSA1LjUgNGg1QTMuNSAzLjUgMCAwIDEgMTQgNy41Ii8+Cjwvc3ZnPg==",
          "isExpression": false
         },
         "halign": {
@@ -4166,28 +4078,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -4398,15 +4290,12 @@
         }
        },
        {
-        "id": "text0",
-        "name": "text0",
+        "id": "icon",
+        "name": "icon",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -4419,31 +4308,27 @@
          "isExpression": false
         },
         "x": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "y": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "width": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "height": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "rotation": {
          "value": 0,
          "isExpression": false
         },
-        "text": {
-         "value": "SEEK",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2ZmZiIgY2xhc3M9ImJpIGJpLWFycm93LWxlZnQtcmlnaHQiIHZpZXdCb3g9IjAgMCAxNiAxNiI+CiAgPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMSAxMS41YS41LjUgMCAwIDAgLjUuNWgxMS43OTNsLTMuMTQ3IDMuMTQ2YS41LjUgMCAwIDAgLjcwOC43MDhsNC00YS41LjUgMCAwIDAgMC0uNzA4bC00LTRhLjUuNSAwIDAgMC0uNzA4LjcwOEwxMy4yOTMgMTFIMS41YS41LjUgMCAwIDAtLjUuNW0xNC03YS41LjUgMCAwIDEtLjUuNUgyLjcwN2wzLjE0NyAzLjE0NmEuNS41IDAgMSAxLS43MDguNzA4bC00LTRhLjUuNSAwIDAgMSAwLS43MDhsNC00YS41LjUgMCAxIDEgLjcwOC43MDhMMi43MDcgNEgxNC41YS41LjUgMCAwIDEgLjUuNSIvPgo8L3N2Zz4=",
          "isExpression": false
         },
         "halign": {
@@ -4454,28 +4339,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
@@ -6648,15 +6513,12 @@
         }
        },
        {
-        "id": "text0",
-        "name": "text0",
+        "id": "icon",
+        "name": "icon",
         "usage": "auto",
-        "type": "text",
+        "type": "image",
         "pinnedProperties": [
-         "text",
-         "fontsize",
-         "fontsizeAllowShrink",
-         "color",
+         "base64Image",
          "halign",
          "valign"
         ],
@@ -6669,31 +6531,27 @@
          "isExpression": false
         },
         "x": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "y": {
-         "value": 0,
+         "value": 20,
          "isExpression": false
         },
         "width": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "height": {
-         "value": 100,
+         "value": 60,
          "isExpression": false
         },
         "rotation": {
          "value": 0,
          "isExpression": false
         },
-        "text": {
-         "value": "SCROLL",
-         "isExpression": false
-        },
-        "color": {
-         "value": 16777215,
+        "base64Image": {
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2ZmZiIgY2xhc3M9ImJpIGJpLW1vdXNlIiB2aWV3Qm94PSIwIDAgMTYgMTYiPgogIDxwYXRoIGQ9Ik04IDNhLjUuNSAwIDAgMSAuNS41djJhLjUuNSAwIDAgMS0xIDB2LTJBLjUuNSAwIDAgMSA4IDNtNCA4YTQgNCAwIDAgMS04IDBWNWE0IDQgMCAxIDEgOCAwek04IDBhNSA1IDAgMCAwLTUgNXY2YTUgNSAwIDAgMCAxMCAwVjVhNSA1IDAgMCAwLTUtNSIvPgo8L3N2Zz4=",
          "isExpression": false
         },
         "halign": {
@@ -6704,28 +6562,8 @@
          "value": "center",
          "isExpression": false
         },
-        "fontsize": {
-         "value": 100,
-         "isExpression": false
-        },
-        "fontsizeAllowShrink": {
-         "value": true,
-         "isExpression": false
-        },
-        "font": {
-         "value": "companion-sans",
-         "isExpression": false
-        },
-        "weight": {
-         "value": "normal",
-         "isExpression": false
-        },
-        "styles": {
-         "value": [],
-         "isExpression": false
-        },
-        "outlineColor": {
-         "value": 4278190080,
+        "fillMode": {
+         "value": "fit",
          "isExpression": false
         }
        }
