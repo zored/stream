@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -66,11 +67,32 @@ func TestChatsHoldTogglesMutedWithoutPress(t *testing.T) {
 	}
 }
 
+func TestChatsLed(t *testing.T) {
+	postVar = func(string, string) error { return nil }
+	t.Cleanup(func() { postVar = post })
+	c := newChats(&vars{sent: map[string]string{}}, func() {}, func(string) {})
+	led := func() string { return c.vars.sent["chats_led"] }
+	c.set("tg", []chatEntry{{id: "loud", unread: 1}, {id: "quiet", unread: 1, muted: true}})
+	if led() != strconv.Itoa(chatsLedIdle) {
+		t.Fatalf("idle led = %s", led())
+	}
+	c.press()
+	if led() != strconv.Itoa(chatsLedBrowse) {
+		t.Fatalf("browse led = %s", led())
+	}
+	c.toggleMuted()
+	if led() != strconv.Itoa(chatsLedMuted) {
+		t.Fatalf("muted led = %s", led())
+	}
+}
+
 func TestChatsRepublishesAfterFailedPost(t *testing.T) {
 	var posts []string
 	fail := true
-	postVar = func(_, value string) error {
-		posts = append(posts, value)
+	postVar = func(name, value string) error {
+		if name == "unread_svg" {
+			posts = append(posts, value)
+		}
 		if fail {
 			return fmt.Errorf("413")
 		}

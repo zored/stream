@@ -6,6 +6,7 @@ import (
 	"log"
 	"os/exec"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,6 +19,9 @@ const (
 	chatsOnTile    = 4
 	chatsRetry     = 30 * time.Second
 	chatsHold      = 400 * time.Millisecond
+	chatsLedIdle   = 0xFFFFFF
+	chatsLedBrowse = 0x00FF00
+	chatsLedMuted  = 0x404040
 )
 
 type chatEntry struct {
@@ -119,6 +123,17 @@ func (c *chats) publishLocked() {
 		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], len(c.list) > chatsOnTile, now, c.muted)
 	}
 	c.vars.set("unread_svg", svg)
+	c.vars.set("chats_led", strconv.Itoa(chatsLed(c.browsing(), c.muted)))
+}
+
+func chatsLed(browsing, muted bool) int {
+	switch {
+	case browsing:
+		return chatsLedBrowse
+	case muted:
+		return chatsLedMuted
+	}
+	return chatsLedIdle
 }
 
 func (c *chats) down() error {

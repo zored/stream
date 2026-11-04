@@ -376,10 +376,17 @@ func main() {
 		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
+	button3 := &slot{vars: v, name: "button_3", layers: []layer{
+		{name: "call", active: c.inCall, press: c.camDown},
+		{name: "unread", press: cs.down, up: cs.up},
+	}}
 	go every(pollEvery, tile22.publish)
+	go every(pollEvery, button3.publish)
 	go serve(*unreadAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/22/down", tile22.press)
 		handle(mux, "/tile/22/up", tile22.up)
+		handle(mux, "/button/3/down", button3.press)
+		handle(mux, "/button/3/up", button3.up)
 	})
 	go func() {
 		stop := make(chan os.Signal, 1)

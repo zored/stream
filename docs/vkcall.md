@@ -7,7 +7,7 @@ macOS only. Verified on VK WorkSpace Beta 27.1.0.144826 (calls SDK 26.2.0), macO
 | Control | Action | Look |
 |---|---|---|
 | button 2 (`3/1`) | tap = toggle mic; hold ≥ 300 ms = push-to-talk (mic was on → mute while held) | LED |
-| button 3 (`3/2`) | toggle camera | LED |
+| button 3 (`3/2`) | toggle camera in a call (layer `button_3` = `call`); outside a call the unread chats | LED |
 | button 4 (`3/3`), tile `2/4` | hang up | white LED / red icon on black while in a call |
 | tile `2/2` / `2/3` | same as button 2 / 3 | mic / camera icon |
 

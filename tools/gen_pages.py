@@ -33,8 +33,8 @@ BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stre
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
+    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -257,13 +257,16 @@ def call_actions(var):
     return {"down": vkcall("/mic/down"), "up": vkcall("/mic/up")} if var == "call_mic" else {"down": vkcall("/cam/down")}
 
 
+CALL_LED = {
+    "on": f"$(internal:time_unix) % 4 == 0 ? {0x003300} : {0x00FF00}",
+    "off": 0x400000,
+    "pending": 0xFFD60A,
+    "unknown": f"$(internal:time_unix) % 2 == 0 ? {0xFFD60A} : 0",
+}
+
+
 def call_led(var):
-    return button([canvas(), box("box0", by_state(var, {
-        "on": f"$(internal:time_unix) % 4 == 0 ? {0x003300} : {0x00FF00}",
-        "off": 0x400000,
-        "pending": 0xFFD60A,
-        "unknown": f"$(internal:time_unix) % 2 == 0 ? {0xFFD60A} : 0",
-    }))], **call_actions(var))
+    return button([canvas(), box("box0", by_state(var, CALL_LED))], **call_actions(var))
 
 
 CALL_OFF = {"mic": "mic-mute", "camera-video": "camera-video-off"}
@@ -295,6 +298,14 @@ def mic_tile():
                    image("unread", expr("$(custom:unread_svg)"), enabled=expr('$(custom:tile_22) == "unread"'),
                          x=v(6), y=v(6), width=v(88), height=v(88))],
                   down=[post(UNREAD + "/tile/22/down")], up=[post(UNREAD + "/tile/22/up")])
+
+
+def chats_led():
+    if WINDOWS:
+        return call_led("call_cam")
+    call = by_state("call_cam", CALL_LED)
+    color = expr(f'$(custom:button_3) == "call" ? ({call["value"]}) : $(custom:chats_led)')
+    return button([canvas(), box("box0", color)], down=[post(UNREAD + "/button/3/down")], up=[post(UNREAD + "/button/3/up")])
 
 
 def hangup_led():
@@ -484,7 +495,7 @@ def media_page():
         (3, 5): agents_led(),
         (3, 6): dictation_led(),
         (3, 1): call_led("call_mic"),
-        (3, 2): call_led("call_cam"),
+        (3, 2): chats_led(),
         (3, 3): hangup_led(),
         (3, 0): kvm_led(),
     }

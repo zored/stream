@@ -2,7 +2,7 @@
 
 > Superseded on the device by the `chats` module (`chats.go`, `tg.go`, `vkws.go`): Telegram via MTProto (`gotd/td`, session from Keychain service `tg-digest`), VK WorkSpace via the WIM long-poll on the `vkworkspace` MCP session. The Dock-badge code below stays in the tree but is not wired.
 
-Module `unread` of `zored_stream`, port 47130 (`/tile/22/down`, `/tile/22/up`). Shares the mic tile through the `tile_22` slot (F23): a live call wins, otherwise the tile shows unread apps.
+Module `unread` of `zored_stream`, port 47130 (`/tile/22/down`, `/tile/22/up`). Shares the mic tile through the `tile_22` slot (F23): a live call wins, otherwise the tile shows unread apps. Кнопка 3 (`/button/3/down`, `/button/3/up`, slot `button_3`) repeats the tile's tap and hold outside a call, the camera wins in a call; its LED `chats_led`: white, green while browsing, gray in muted mode.
 
 ## Source
 

@@ -135,6 +135,7 @@ Same as кнопка 6. [agents.md](agents.md)
 - no call: up to 4 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push); one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid: avatar, or without one the first words of the name in 2–3 lowercase lines on black, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
 - tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (newest first) with a slide animation; the tile shows the chat's avatar over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - hold ≥ 400 ms: switch to muted chats (muted or archived in Telegram, muted in VK WorkSpace), count badges gray, a gray closed eye when none; hold again to switch back
+- кнопка 3 does the same tap and hold outside a call
 - [unread.md](unread.md)
 
 Same as кнопка 2. [vkcall.md](vkcall.md)
@@ -144,7 +145,7 @@ Same as кнопка 2. [vkcall.md](vkcall.md)
 - tap: toggle the camera (takes 1–3 s, amber `…` meanwhile)
 - shows: same colors as the mic tile
 
-Same as кнопка 3. [vkcall.md](vkcall.md)
+Same as кнопка 3 in a call. [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 3 — day / hang up
 
@@ -173,7 +174,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 |---|---|---|
 | кнопка 1 | KVM → Windows: press = Wake-on-LAN to the PC, then monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu. Hold = toggle PIP | pink, white 0.3 s on press |
 | кнопка 2 | mic: tap toggles, hold = push-to-talk | green (dims 1 s every 4 s) = on, dim red = off, yellow = switching, blinking yellow = unknown, off = no call |
-| кнопка 3 | camera toggle | as кнопка 2 |
+| кнопка 3 | in a call: camera toggle; otherwise the unread chats of тайл ряд 3, колонка 1: tap = browse / open, hold = muted chats ↔ unread | in a call as кнопка 2; otherwise white = unread chats, green = browsing, gray = muted chats |
 | кнопка 4 | hang up | white while in a call |
 | кнопка 5 | free | off |
 | кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, white = none |
