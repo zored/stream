@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"testing"
 	"time"
 )
@@ -41,9 +40,8 @@ func TestChatsBrowseThenOpenPick(t *testing.T) {
 	}
 }
 
-func TestChatsTileUsesInitialWithoutAvatar(t *testing.T) {
-	svg := chatsAvatar(chatEntry{title: "  Робот"}, 10, 10, 5, "x")
-	if !strings.Contains(svg, ">р<") {
-		t.Fatalf("got %s", svg)
+func TestChatsInitialSkipsSpaceAndLowercases(t *testing.T) {
+	if got := chatsInitial("  Робот"); got != "р" {
+		t.Fatalf("got %q", got)
 	}
 }

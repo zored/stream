@@ -2,11 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
-	"html"
 	"log"
-	"net/http"
 	"os/exec"
 	"slices"
 	"strings"
@@ -103,14 +100,14 @@ func (c *chats) publishLocked() {
 	var svg string
 	if c.browsing() {
 		c.covered = true
-		svg = chatsPickSVG(c.list, c.pick, now)
+		svg = chatsPickImage(c.list, c.pick, now)
 		c.strip(chatsStripImage(c.list, c.pick))
 	} else {
 		if c.covered {
 			c.covered = false
 			c.strip("")
 		}
-		svg = chatsTileSVG(c.list[:min(len(c.list), chatsOnTile)], now)
+		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], now)
 	}
 	if svg != c.shown {
 		c.shown = svg
@@ -197,47 +194,42 @@ func chatsInitial(title string) string {
 	return "·"
 }
 
-func chatsAvatar(e chatEntry, cx, cy, r float64, id string) string {
-	if len(e.avatar) == 0 {
-		return fmt.Sprintf(`<circle cx="%.1f" cy="%.1f" r="%.1f" fill="#333"/>`+
-			`<text x="%.1f" y="%.1f" text-anchor="middle" font-family="JetBrains Mono" font-size="%.1f" fill="#fff">%s</text>`,
-			cx, cy, r, cx, cy+r*0.35, r, html.EscapeString(chatsInitial(e.title)))
+func chatsDraw(e chatEntry, cx, cy, r float64) (chatsDisc, []calText) {
+	d := chatsDisc{avatar: e.avatar, cx: cx, cy: cy, r: r}
+	if len(e.avatar) > 0 {
+		return d, nil
 	}
-	mime := http.DetectContentType(e.avatar)
-	return fmt.Sprintf(`<clipPath id="%s"><circle cx="%.1f" cy="%.1f" r="%.1f"/></clipPath>`+
-		`<image href="data:%s;base64,%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f" clip-path="url(#%s)" preserveAspectRatio="xMidYMid slice"/>`,
-		id, cx, cy, r, mime, base64.StdEncoding.EncodeToString(e.avatar), cx-r, cy-r, 2*r, 2*r, id)
+	return d, []calText{{text: chatsInitial(e.title), x: cx - r, y: cy - r*0.7, w: 2 * r, h: 1.4 * r, size: r, rgb: whiteRGB, center: true}}
 }
 
-func chatsLabel(x, y, size float64, rgb, s string) string {
-	return fmt.Sprintf(`<text x="%.1f" y="%.1f" text-anchor="middle" font-family="JetBrains Mono" font-size="%.1f" fill="%s">%s</text>`, x, y, size, rgb, s)
-}
-
-func chatsTileSVG(list []chatEntry, now time.Time) string {
+func chatsTileImage(list []chatEntry, now time.Time) string {
 	if len(list) == 0 {
 		return unreadSVG(nil, now)
 	}
-	var b strings.Builder
+	var discs []chatsDisc
+	var texts []calText
 	step := 88.0 / float64(len(list))
 	for i, e := range list {
-		cx := 6 + step*(float64(i)+0.5)
-		b.WriteString(chatsAvatar(e, cx, 32, 13, fmt.Sprintf("a%d", i)))
-		b.WriteString(chatsLabel(cx, 64, 15, "#fff", capped(e.unread, 99)))
-		b.WriteString(chatsLabel(cx, 84, 13, "#808080", ago(e.at, now)))
+		x := step * float64(i)
+		d, t := chatsDraw(e, x+step/2, 24, 13)
+		discs, texts = append(discs, d), append(texts, t...)
+		texts = append(texts,
+			calText{text: capped(e.unread, 99), x: x, y: 42, w: step, h: 20, size: 15, rgb: whiteRGB, center: true},
+			calText{text: ago(e.at, now), x: x, y: 64, w: step, h: 18, size: 13, rgb: grayRGB, center: true})
 	}
-	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + b.String() + `</svg>`)
+	return chatsPNG(88, 88, discs, texts)
 }
 
-func chatsPickSVG(list []chatEntry, pick int, now time.Time) string {
+func chatsPickImage(list []chatEntry, pick int, now time.Time) string {
 	if pick >= len(list) {
 		return unreadSVG(nil, now)
 	}
 	e := list[pick]
-	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
-		chatsAvatar(e, 50, 36, 28, "p") +
-		chatsLabel(30, 88, 15, "#fff", capped(e.unread, 99)) +
-		chatsLabel(70, 88, 15, "#808080", ago(e.at, now)) +
-		`</svg>`)
+	d, texts := chatsDraw(e, 44, 30, 28)
+	texts = append(texts,
+		calText{text: capped(e.unread, 99), y: 64, w: 44, h: 22, size: 15, rgb: whiteRGB, center: true},
+		calText{text: ago(e.at, now), x: 44, y: 64, w: 44, h: 22, size: 15, rgb: grayRGB, center: true})
+	return chatsPNG(88, 88, []chatsDisc{d}, texts)
 }
 
 func chatsLine(s string) string {
