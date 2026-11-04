@@ -264,6 +264,7 @@ func chatsInitial(title string) string {
 const (
 	chatsRed     = redRGB
 	chatsDark    = 0x333333
+	chatsBlack   = 0x000001
 	chatsFrames  = 6
 	chatsFrameAt = 25 * time.Millisecond
 )
@@ -288,12 +289,42 @@ func chatsFace(e chatEntry, cx, cy, r float64, square bool) (chatsDisc, []calTex
 	if len(e.avatar) > 0 {
 		return d, nil
 	}
-	return d, []calText{chatsLabel(chatsInitial(e.title), cx, cy, r, whiteRGB)}
+	d.rgb = chatsBlack
+	n := 2
+	if r >= 40 {
+		n = 3
+	}
+	size := 2 * r * 0.8 / float64(n) / 1.25
+	lines := chatsLines(e.title, n, int(2*r*0.9/(size*0.6)))
+	top := cy - float64(len(lines)-1)*size*1.25/2
+	texts := make([]calText, len(lines))
+	for i, l := range lines {
+		texts[i] = chatsLabel(l, cx, top+float64(i)*size*1.25, size, whiteRGB)
+		texts[i].x, texts[i].w = cx-r, 2*r
+	}
+	return d, texts
+}
+
+func chatsLines(title string, n, width int) []string {
+	var lines []string
+	for _, w := range strings.FieldsFunc(strings.ToLower(title), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) }) {
+		if len(lines) == n {
+			break
+		}
+		if rs := []rune(w); len(rs) > width {
+			w = string(rs[:width])
+		}
+		lines = append(lines, w)
+	}
+	if len(lines) == 0 {
+		return []string{chatsInitial(title)}
+	}
+	return lines
 }
 
 func chatsEmpty(now time.Time, muted bool) string {
 	if muted {
-		return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt("eye-slash", gray, 50, 50, 44) + `</svg>`)
+		return tileIcon("eye-slash", gray)
 	}
 	return unreadSVG(nil, now)
 }

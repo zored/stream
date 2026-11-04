@@ -528,11 +528,23 @@ func labelMarkup(l stripLabel, note stripNote, dots [5]float64, ink string) stri
 		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="%s" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
 			anchor+2*gap, y, stripFont, svgFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
 	}
-	for i, alpha := range dots {
-		if alpha > 0 {
-			fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s" opacity="%.2f"/>`,
-				anchor+2*gap+r+i*(2*r+gap), svgHeight/2, r, dotColor, alpha)
+	var xs [len(dots)]float64
+	x := float64(anchor + 2*gap + r)
+	for i, p := range dots {
+		if i > 0 {
+			x += p * (2*r + gap)
 		}
+		xs[i] = x
+	}
+	for i := len(dots) - 1; i >= 0; i-- {
+		if dots[i] <= 0.01 {
+			continue
+		}
+		radius := float64(r)
+		if i == 0 {
+			radius *= dots[0]
+		}
+		fmt.Fprintf(&b, `<circle cx="%.1f" cy="%d" r="%.1f" fill="%s"/>`, xs[i], svgHeight/2, radius, dotColor)
 	}
 	return b.String()
 }

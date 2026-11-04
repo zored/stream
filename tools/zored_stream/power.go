@@ -246,15 +246,15 @@ func awakeLeft(left time.Duration, editing bool) string {
 func powerSVG(state, below string) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
-	cy := 50
+	cy := iconCY
 	if below != "" {
-		cy = 40
+		cy = iconCaptionY
 	}
 	name := map[string]string{"arm": "moon-fill", "on": "sun-fill"}[state]
 	if name == "" {
 		name = "sun"
 	}
-	b.WriteString(iconAt(name, "#fff", 50, float64(cy), 56))
+	b.WriteString(iconAt(name, "#fff", 50, cy, iconSize))
 	b.WriteString(below)
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())

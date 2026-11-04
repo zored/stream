@@ -51,7 +51,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ## Left strip — track
 
-- default: current track rotated 90°, gray artist | bold title; ♥ when liked in Yandex Music;
+- default: current track rotated 90°, gray artist | bold title; a white ♥ when liked in Yandex Music, a white broken heart for 2 s after a dislike;
   a dim progress bar behind it, bottom-up, tinted with the cover's color
 - while volume / brightness / seek moves: a bar over the whole strip, fades out ~1 s after:
   white = volume or Mac brightness or seek, gray = the controller's own brightness
@@ -69,7 +69,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 2 — wi-fi
 
-- shows: the current network name under the fan (white, cut to 10 chars); while joining, the target name in gray (up to 15 s); a phone instead of the wi-fi icon on an iPhone hotspot (router in 172.20.10.0/28, filled when joined); gray crossed wi-fi = off; one white arc = on, not joined; full wi-fi = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; a dot top-right = Viscosity VPN: white connected, yellow connecting, red all down, none when Viscosity is not running
+- shows: the current network name under the fan (white, cut to 10 chars); while joining, the target name in gray (up to 15 s); a phone instead of the wi-fi icon on an iPhone hotspot (router in 172.20.10.0/28, filled when joined); gray crossed wi-fi = off; one white arc = on, not joined; full wi-fi = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; an eye top-right = Viscosity VPN: white eye connected, yellow eye connecting, red crossed eye all down, none when Viscosity is not running
 - hold 400 ms: wi-fi on / off
 - touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`) instead of the model, yellow while the list loads, with a small `›` toward the knob until the first turn. Each turn extends the 5 s. List: what the Wi-Fi details of Control Center show (iPhone hotspots, then known networks in range); Control Center flashes and the list loads in ~3 s; meanwhile the strip is yellow and the knob already turns through the previous list. If the pick is gone from the fresh list, the first network is picked; a pause on a yellow pick joins after the load. Names keep their case (`zored_5G` ≠ `zored_5g`) A 1 s pause switches: drop the current Wi-Fi, disconnect Viscosity, join the pick, wait for its link, 1 s later connect `Barbos_SE` (flag `-wifi-vpn`; one retry if not connected in 20 s). The join itself: the daemon clicks it in the Wi-Fi details of Control Center (it flashes for ~1.5 s), macOS fills the password itself
 
@@ -96,7 +96,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 2, колонка 1 — play
 
-- shows: the track cover; ▶ stays while paused; ⏸ appears on a state change or a touch, holds 1.5 s, fades. No cover → a big ▶/⏸
+- shows: the track cover; ▶ stays while paused; ⏸ appears on a state change or a touch, holds 1.5 s, fades. No cover → a big ▶/⏸. On a track change the cover and the track strip fade out and in (150 ms each)
 - touch: shows the glyph; release: play / pause
 - hold: Yandex Music like, as on крутилка слева, ряд 2
 - swipe left / right (≥ 40 px within 400 ms): previous / next track; up / down: Yandex Music like / dislike.
@@ -106,7 +106,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 2, колонка 2 — emoji picker
 
-- idle: a white line face, sized like the keep-awake sun
+- idle: Bootstrap `emoji-smile`, the same size as every tile icon
 - touch: opens the picker for 4 s, every action below extends it; shows the highlighted emoji of the last used strip
 - touch while open: types that emoji into the focused field
 - while open: the top item of each strip sits in a gray ring;
@@ -132,7 +132,7 @@ Same as кнопка 6. [agents.md](agents.md)
 
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
 - in a call shows: black tile, the icon is colored: green mic = on, red crossed mic = off, amber `…` = switching, amber `?` = unknown
-- no call: up to 4 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push); one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid: avatar or initial in a circle, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
+- no call: up to 4 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push); one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid: avatar, or without one the first words of the name in 2–3 lowercase lines on black, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
 - tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (newest first) with a slide animation; the tile shows the chat's avatar over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - hold ≥ 400 ms: switch to muted chats (muted or archived in Telegram, muted in VK WorkSpace), count badges gray, a gray closed eye when none; hold again to switch back
 - [unread.md](unread.md)
@@ -177,7 +177,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | кнопка 4 | hang up | white while in a call |
 | кнопка 5 | free | off |
 | кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, white = none |
-| кнопка 7 | dictation into Claude Desktop (below) | red = ready, blinking green = recording, off = no Claude window with a record button |
+| кнопка 7 | dictation into Claude Desktop (below) | white = ready, blinking green = recording, off = no Claude window with a record button |
 | кнопка 8 | free | off |
 
 ### кнопка 7 — dictation
@@ -197,7 +197,7 @@ unless the track or player changed or playback was started meanwhile.
 ## Right strip — AI limits + model
 
 - shows: a white bar bottom-up = Claude 5h session usage, time left in the session near the bottom (`1:42`);
-  the model rotated (reads bottom-up), effort as gray dots (low 1 … max 5); a red dot in the corner = the last fetch failed
+  the model rotated (reads bottom-up), effort as gray dots (low 1 … max 5), on a change new dots slide out of the previous one and slide back in; a red dot in the corner = the last fetch failed
 - while switching the model: the word `day` and the bar = workday-scaled weekly usage of the selected model;
   right after: days left in the week (`3d`) and the bar = weekly usage
 - model white, gray while previewing; effort dots gray, amber = outside the knob's list, red = switch failed

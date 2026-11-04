@@ -68,7 +68,7 @@ func inputCode(lang string) string {
 
 func inputLayer(code string, opacity float64) string {
 	if body, ok := inputFlags[code]; ok {
-		return fmt.Sprintf(`<g opacity="%.2f" clip-path="url(#c)"><g transform="translate(20 30)">%s</g></g>`, opacity, body)
+		return fmt.Sprintf(`<g opacity="%.2f" clip-path="url(#c)"><g transform="translate(26 34) scale(0.8)">%s</g></g>`, opacity, body)
 	}
 	return fmt.Sprintf(`<text opacity="%.2f" x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="32" fill="#fff">%s</text>`,
 		opacity, html.EscapeString(code))
@@ -79,6 +79,6 @@ func inputSVG(from, to string, t float64) string {
 	if from != to && t < 1 {
 		layers = inputLayer(from, 1-t) + layers
 	}
-	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><rect x="20" y="30" width="60" height="40" rx="3"/></clipPath>` +
+	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><rect x="26" y="34" width="48" height="32" rx="3"/></clipPath>` +
 		layers + `</svg>`)
 }

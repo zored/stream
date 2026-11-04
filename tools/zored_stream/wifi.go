@@ -26,7 +26,6 @@ const (
 	wifiOffline     = "offline"
 	wifiNameMaxRune = 14
 	wifiTileRune    = 10
-	wifiIconSize    = 52.0
 )
 
 type wifi struct {
@@ -455,9 +454,9 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	}
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
-	dy := 0
+	cy := iconCY
 	if ssid != "" {
-		dy = -12
+		cy = iconCaptionY
 	}
 	name := "wifi-1"
 	switch {
@@ -470,13 +469,16 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	case fill != "none":
 		name = "wifi"
 	}
-	cy := 50.0 + float64(dy)
-	b.WriteString(iconAt(name, color, 50, cy, wifiIconSize))
+	b.WriteString(iconAt(name, color, 50, cy, iconSize))
 	if state == "nonet" {
 		fmt.Fprintf(&b, `<circle cx="78" cy="%g" r="5" fill="%s"/>`, cy+22, amber)
 	}
 	if c, ok := map[string]string{"up": "#fff", "busy": amber, "down": red}[vpn]; ok {
-		fmt.Fprintf(&b, `<circle cx="84" cy="16" r="10" fill="%s"/>`, c)
+		eye := "eye-fill"
+		if vpn == "down" {
+			eye = "eye-slash-fill"
+		}
+		b.WriteString(iconAt(eye, c, 84, 14, 22))
 	}
 	if ssid != "" {
 		fmt.Fprintf(&b, `<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, text, html.EscapeString(clip(ssid, wifiTileRune)))

@@ -31,13 +31,14 @@ UNREAD = "http://127.0.0.1:47130"
 HOLD_MS = 400
 BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "ym_like", "call_mic", "call_cam",
+    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
     if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
+FADE = '($(custom:np_fade) == "" ? 100 : $(custom:np_fade))'
 rng = random.Random()
 
 
@@ -88,6 +89,7 @@ def image(layer_id, data, fill="fit", **geo):
 
 
 RASTER = 256
+ICON_BOX = {"x": v(22), "y": v(22), "width": v(56), "height": v(56)}
 GRAY, GREEN, AMBER, RED = "#8E8E93", "#30D158", "#FFD60A", "#FF453A"
 
 
@@ -110,7 +112,7 @@ def glow(name, box, blur, strokes):
 
 
 def glyph(name):
-    return [canvas(), box("box0", 0x000000), image("icon", bootstrap(name, "#fff"), x=v(20), y=v(20), width=v(60), height=v(60))]
+    return [canvas(), box("box0", 0x000000), image("icon", bootstrap(name, "#fff"), **ICON_BOX)]
 
 
 def labelled(label, bg=0x000000, fg=0xFFFFFF):
@@ -213,7 +215,7 @@ def volume_cell(row):
     return button([
         canvas(),
         box("progress", expr("$(custom:np_tint)"), opacity=hidden, y=expr(f"100 - {progress}"), height=expr(progress)),
-        strip_image("np", "np_svg", row, 90, hidden),
+        strip_image("np", "np_svg", row, 90, expr(f"(100 - {BAR_ALPHA}) * {FADE} / 100")),
         box("track", 0x000000, opacity=visible),
         box("fill", color, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
         *(skip_arrows() if row == 2 else ()),
@@ -236,7 +238,7 @@ def play_pause():
         *(image(f"{name}-bare", bootstrap(f"{name}-fill", "#fff"), opacity=expr(f"{NO_ART} && ({PLAYING}) == {shown} ? 100 : 0"),
                 x=v(6), y=v(6), width=v(88), height=v(88))
           for name, shown in (("play", "false"), ("pause", "true"))),
-        image("cover", expr("$(custom:np_art)"), "crop", x=v(6), y=v(6), width=v(88), height=v(88)),
+        image("cover", expr("$(custom:np_art)"), "crop", opacity=expr(FADE), x=v(6), y=v(6), width=v(88), height=v(88)),
         *(image(name, glow(f"{name}-fill", "-5 -5 26 26", 1.6, (2, 0.65)), "fill",
                 opacity=expr(f"{NO_ART} || ({PLAYING}) != {shown} ? 0 : $(custom:np_glyph)"),
                 x=expr(f"(100 - {size}) / 2"), y=expr(f"(100 - {size}) / 2"), width=expr(size), height=expr(size))
@@ -272,8 +274,8 @@ def call_layers(var, name):
     return [
         canvas(),
         box("box0", 0x000000),
-        image("on", bootstrap(name, GREEN), opacity=expr(f'{state} == "on" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
-        image("off", bootstrap(CALL_OFF[name], RED), opacity=expr(f'{state} == "off" ? 100 : 0'), x=v(20), y=v(20), width=v(60), height=v(60)),
+        image("on", bootstrap(name, GREEN), opacity=expr(f'{state} == "on" ? 100 : 0'), **ICON_BOX),
+        image("off", bootstrap(CALL_OFF[name], RED), opacity=expr(f'{state} == "off" ? 100 : 0'), **ICON_BOX),
         text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60, color=int(AMBER[1:], 16),
              opacity=expr(f'{state} == "unknown" || {state} == "pending" ? 100 : 0')),
     ]
@@ -351,7 +353,7 @@ def day_tile():
                    image("act", expr("$(custom:cal_icon)"), enabled=expr(f"{CAL} && $(custom:cal_browse) == 1"),
                          x=v(6), y=v(6), width=v(88), height=v(88)),
                    image("hangup", bootstrap("telephone-x", RED), enabled=expr('$(custom:tile_24) == "call"'),
-                         x=v(15), y=v(15), width=v(70), height=v(70))],
+                         **ICON_BOX)],
                   down=[post(CALENDAR + "/tile/24/press")])
 
 
@@ -391,7 +393,7 @@ def agents_tile():
 
 
 def dictation_led():
-    color = by_state("dictation", {"on": f"$(internal:time_unix) % 2 == 0 ? {0x00FF00} : 0", "off": 0xFF0000})
+    color = by_state("dictation", {"on": f"$(internal:time_unix) % 2 == 0 ? {0x00FF00} : 0", "off": 0xFFFFFF})
     return button([canvas(), box("box0", color)], down=ai("/dictation/down"), up=ai("/dictation/up"))
 
 

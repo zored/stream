@@ -107,19 +107,19 @@
          "isExpression": false
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -336,7 +336,7 @@
          "isExpression": false
         },
         "opacity": {
-         "value": "100 - $(custom:bar_alpha)",
+         "value": "(100 - $(custom:bar_alpha)) * ($(custom:np_fade) == \"\" ? 100 : $(custom:np_fade)) / 100",
          "isExpression": true
         },
         "x": {
@@ -1755,19 +1755,19 @@
          "isExpression": false
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -2152,19 +2152,19 @@
          "isExpression": false
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -2460,7 +2460,7 @@
          "isExpression": false
         },
         "opacity": {
-         "value": "100 - $(custom:bar_alpha)",
+         "value": "(100 - $(custom:bar_alpha)) * ($(custom:np_fade) == \"\" ? 100 : $(custom:np_fade)) / 100",
          "isExpression": true
         },
         "x": {
@@ -2949,8 +2949,8 @@
          "isExpression": false
         },
         "opacity": {
-         "value": 100,
-         "isExpression": false
+         "value": "($(custom:np_fade) == \"\" ? 100 : $(custom:np_fade))",
+         "isExpression": true
         },
         "x": {
          "value": 6,
@@ -4047,19 +4047,19 @@
          "isExpression": false
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -4308,19 +4308,19 @@
          "isExpression": false
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -4511,7 +4511,7 @@
          "isExpression": false
         },
         "opacity": {
-         "value": "100 - $(custom:bar_alpha)",
+         "value": "(100 - $(custom:bar_alpha)) * ($(custom:np_fade) == \"\" ? 100 : $(custom:np_fade)) / 100",
          "isExpression": true
         },
         "x": {
@@ -5004,19 +5004,19 @@
          "isExpression": true
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -5059,19 +5059,19 @@
          "isExpression": true
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -5401,19 +5401,19 @@
          "isExpression": true
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -5456,19 +5456,19 @@
          "isExpression": true
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -5827,19 +5827,19 @@
          "isExpression": false
         },
         "x": {
-         "value": 15,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 15,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 70,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 70,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -6531,19 +6531,19 @@
          "isExpression": false
         },
         "x": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "y": {
-         "value": 20,
+         "value": 22,
          "isExpression": false
         },
         "width": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "height": {
-         "value": 60,
+         "value": 56,
          "isExpression": false
         },
         "rotation": {
@@ -7711,7 +7711,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_7) : ($(custom:dictation) == \"on\" ? ($(internal:time_unix) % 2 == 0 ? 65280 : 0) : ($(custom:dictation) == \"off\" ? (16711680) : (0)))",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_7) : ($(custom:dictation) == \"on\" ? ($(internal:time_unix) % 2 == 0 ? 65280 : 0) : ($(custom:dictation) == \"off\" ? (16777215) : (0)))",
          "isExpression": true
         },
         "cornerRadius": {

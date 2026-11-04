@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,13 +28,17 @@ const (
 	svgHeight         = 250
 	svgMinWidth       = svgHeight * 270 / 60
 	stripMaxRunes     = 23
-	heartPath         = "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
 )
 
 var hearts = map[string]string{
-	"liked":    `<path fill="#ff3b6b" d="` + heartPath + `"/>`,
-	"disliked": `<path fill="` + gray + `" d="` + heartPath + `"/><path fill="none" stroke="#000" stroke-width="1.5" d="M12 5l-2 5 4 3-3 8"/>`,
+	"liked":    `<g transform="scale(1.5)" fill="#fff">` + iconBody("heart-fill") + `</g>`,
+	"disliked": `<g transform="scale(1.5)" fill="#fff">` + iconBody("heartbreak-fill") + `</g>`,
 }
+
+const (
+	dislikeShown = 2 * time.Second
+	trackFadeFor = 150 * time.Millisecond
+)
 
 type track struct {
 	Title    string  `json:"title"`
@@ -64,6 +69,8 @@ type nowPlaying struct {
 	heldUntil   time.Time
 	like        string
 	likeTitle   string
+	dislikedAt  time.Time
+	shownKey    string
 	vars        *vars
 	glyph       *glyph
 	tint        *tint
@@ -141,10 +148,16 @@ func (n *nowPlaying) publish() {
 	if t.Title == "" && time.Now().Before(n.heldUntil) {
 		t.Title, t.Artist = n.last.Title, n.last.Artist
 	}
-	if !sameTitle(t.Title, n.likeTitle) {
+	if !sameTitle(t.Title, n.likeTitle) || like == "disliked" && time.Since(n.dislikedAt) >= dislikeShown {
 		like = ""
 	}
+	key := t.Artist + "\x00" + t.Title
+	fade := n.shownKey != "" && key != n.shownKey
+	n.shownKey = key
 	n.mu.Unlock()
+	if fade {
+		n.fade(100, 0)
+	}
 	playing := "0"
 	if t.Playing {
 		playing = "1"
@@ -160,6 +173,9 @@ func (n *nowPlaying) publish() {
 	n.vars.set("np_playing", playing)
 	n.vars.set("np_app", t.App)
 	n.vars.set("np_art", coverURI(t))
+	if fade {
+		n.fade(0, 100)
+	}
 	if err := n.tint.setArtwork(t.Artwork); err != nil {
 		log.Printf("tint: %v", err)
 	}
@@ -203,6 +219,16 @@ func (n *nowPlaying) send(command string) error {
 	return err
 }
 
+func (n *nowPlaying) fade(from, to float64) {
+	frames := int(trackFadeFor * stripHz / time.Second)
+	ticker := time.NewTicker(time.Second / stripHz)
+	defer ticker.Stop()
+	for i := 1; i <= frames; i++ {
+		<-ticker.C
+		n.vars.set("np_fade", strconv.Itoa(int(from+(to-from)*float64(i)/float64(frames))))
+	}
+}
+
 func sameTitle(a, b string) bool {
 	return a != "" && b != "" && (strings.HasPrefix(a, b) || strings.HasPrefix(b, a))
 }
@@ -211,6 +237,10 @@ func (n *nowPlaying) setLike(title, state string) {
 	n.mu.Lock()
 	changed := n.like != state || n.likeTitle != title
 	n.like, n.likeTitle = state, title
+	if changed && state == "disliked" {
+		n.dislikedAt = time.Now()
+		time.AfterFunc(dislikeShown, n.publish)
+	}
 	n.mu.Unlock()
 	if changed {
 		n.publish()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 )
@@ -83,5 +84,14 @@ func TestChatsRepublishesAfterFailedPost(t *testing.T) {
 	c.publish()
 	if len(posts) != 2 || posts[0] != posts[1] {
 		t.Fatalf("posts %d", len(posts))
+	}
+}
+
+func TestChatsLines(t *testing.T) {
+	if got := chatsLines("Команда бэкенда — VKDoc", 3, 4); !slices.Equal(got, []string{"кома", "бэке", "vkdo"}) {
+		t.Fatal(got)
+	}
+	if got := chatsLines("!!", 2, 4); !slices.Equal(got, []string{"·"}) {
+		t.Fatal(got)
 	}
 }

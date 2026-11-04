@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+const (
+	iconSize     = 56.0
+	iconCY       = 50.0
+	iconCaptionY = 40.0
+)
+
 //go:embed icons/*.svg
 var iconFiles embed.FS
 
@@ -20,6 +26,10 @@ func iconBody(name string) string {
 		panic("icon " + name + ": not an svg")
 	}
 	return strings.TrimSpace(s[start:end])
+}
+
+func tileIcon(name, color string) string {
+	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt(name, color, 50, iconCY, iconSize) + `</svg>`)
 }
 
 func iconAt(name, color string, cx, cy, size float64) string {

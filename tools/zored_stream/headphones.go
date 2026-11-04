@@ -245,5 +245,5 @@ func headphonesSVG(on bool, stroke string) string {
 	if on {
 		name = "headphones"
 	}
-	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt(name, stroke, 50, 50, 60) + `</svg>`)
+	return tileIcon(name, stroke)
 }

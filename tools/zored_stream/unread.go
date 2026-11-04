@@ -98,7 +98,7 @@ func ago(at, now time.Time) string {
 
 func unreadSVG(apps []*unreadApp, now time.Time) string {
 	if len(apps) == 0 {
-		return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt("eye", "#fff", 50, 50, 44) + `</svg>`)
+		return tileIcon("eye", "#fff")
 	}
 	var b strings.Builder
 	step := 88.0 / float64(len(apps))
