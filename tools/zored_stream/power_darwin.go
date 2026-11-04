@@ -1,8 +1,9 @@
 package main
 
 /*
-#cgo LDFLAGS: -framework IOKit -framework CoreFoundation
+#cgo LDFLAGS: -framework IOKit -framework CoreFoundation -framework ApplicationServices
 #include <IOKit/pwr_mgt/IOPMLib.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 static IOReturn sleepNow(void) {
 	io_connect_t port = IOPMFindPowerManagement(MACH_PORT_NULL);
@@ -17,6 +18,11 @@ static IOReturn sleepNow(void) {
 static IOPMAssertionID activityID = kIOPMNullAssertionID;
 
 static IOReturn userActive(void) {
+	CGEventRef here = CGEventCreate(NULL);
+	CGEventRef move = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, CGEventGetLocation(here), kCGMouseButtonLeft);
+	CGEventPost(kCGHIDEventTap, move);
+	CFRelease(move);
+	CFRelease(here);
 	IOPMAssertionID previous = activityID;
 	activityID = kIOPMNullAssertionID;
 	IOReturn r = IOPMAssertionDeclareUserActivity(CFSTR("zored_stream controller"), kIOPMUserActiveLocal, &activityID);
