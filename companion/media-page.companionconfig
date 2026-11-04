@@ -6010,8 +6010,8 @@
          "isExpression": false
         },
         "y": {
-         "value": "$(custom:timer_svg) == \"\" ? 21 : 6",
-         "isExpression": true
+         "value": 6,
+         "isExpression": false
         },
         "width": {
          "value": 88,

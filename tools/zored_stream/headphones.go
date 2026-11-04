@@ -34,6 +34,7 @@ type headphones struct {
 	mu       sync.Mutex
 	vars     *vars
 	on       bool
+	output   string
 	busy     bool
 	errorTil time.Time
 	seen     map[string]bool
@@ -53,7 +54,7 @@ func (h *headphones) publish() {
 	case h.busy:
 		stroke = amber
 	}
-	h.vars.set("headphones_svg", headphonesSVG(h.on, stroke))
+	h.vars.set("headphones_svg", headphonesSVG(h.on, stroke, h.output))
 }
 
 func (h *headphones) poll() {
@@ -62,7 +63,7 @@ func (h *headphones) poll() {
 		log.Print(err)
 		return
 	}
-	on, err := headphonesActive(devices)
+	on, output, err := headphonesActive(devices)
 	if err != nil {
 		log.Print(err)
 		return
@@ -70,6 +71,7 @@ func (h *headphones) poll() {
 	h.mu.Lock()
 	arrived := h.seen != nil && speakersArrived(h.seen, devices)
 	h.seen = deviceKeys(devices)
+	h.output = strings.ToLower(output)
 	if !h.busy {
 		h.on = on
 	}
@@ -114,17 +116,17 @@ func (h *headphones) toggle() error {
 	return nil
 }
 
-func headphonesActive(devices []audioDevice) (bool, error) {
+func headphonesActive(devices []audioDevice) (bool, string, error) {
 	id, err := audioDefault(false)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	for _, d := range devices {
 		if d.id == id {
-			return d.transport == "blue", nil
+			return d.transport == "blue", d.name, nil
 		}
 	}
-	return false, nil
+	return false, "", nil
 }
 
 func switchHeadphones(on bool) error {
@@ -240,10 +242,10 @@ func findDevice(devices []audioDevice, match func(audioDevice) bool) (audioDevic
 	return audioDevice{}, false
 }
 
-func headphonesSVG(on bool, stroke string) string {
+func headphonesSVG(on bool, stroke, output string) string {
 	name := "speaker"
 	if on {
 		name = "headphones"
 	}
-	return tileIcon(name, stroke)
+	return captionTile(name, stroke, output, "")
 }

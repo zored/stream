@@ -3,13 +3,16 @@ package main
 import (
 	"embed"
 	"fmt"
+	"html"
 	"strings"
 )
 
 const (
 	iconSize     = 56.0
-	iconCY       = 50.0
-	iconCaptionY = 40.0
+	iconCY       = 38.0
+	captionY     = 89.0
+	captionSize  = 16.0
+	captionRunes = 10
 )
 
 //go:embed icons/*.svg
@@ -30,6 +33,25 @@ func iconBody(name string) string {
 
 func tileIcon(name, color string) string {
 	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt(name, color, 50, iconCY, iconSize) + `</svg>`)
+}
+
+func captionTile(name, color, caption, font string) string {
+	if caption == "" {
+		return tileIcon(name, color)
+	}
+	if font == "" {
+		font = stripFont
+	}
+	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` + iconAt(name, color, 50, iconCY, iconSize) +
+		captionText(caption, font) + `</svg>`)
+}
+
+func captionText(caption, font string) string {
+	if r := []rune(caption); len(r) > captionRunes {
+		caption = string(r[:captionRunes])
+	}
+	return fmt.Sprintf(`<text x="50" y="%g" text-anchor="middle" font-family="%s" font-size="%g" fill="#fff">%s</text>`,
+		captionY, font, captionSize, html.EscapeString(caption))
 }
 
 func iconAt(name, color string, cx, cy, size float64) string {

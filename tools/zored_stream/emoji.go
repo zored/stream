@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 )
@@ -86,6 +87,7 @@ func (e *emoji) tile() error {
 	if err != nil {
 		log.Print(err)
 	}
+	e.idle = emojiIdleImage(recents)
 	left := e.strips[emojiLeft]
 	left.list = slices.Concat(append([][]string{recents}, emojiGroups...)...)
 	e.starts = []int{0}
@@ -366,6 +368,10 @@ func emojiColumn(list []string, offset float64) []emojiGlyph {
 var emojiCategories = []string{"🕘", "😀", "👋", "🐻", "🍔", "⚽", "🚗", "💡", "🔣", "🏁"}
 
 var emojiIdle = tileIcon("emoji-smile", "#fff")
+
+func emojiIdleImage(recents []string) string {
+	return captionTile("emoji-smile", "#fff", strings.Join(recents[:min(3, len(recents))], ""), "Apple Color Emoji")
+}
 
 func emojiTileImage(text string, size float64) string {
 	uri, err := emojiTilePNG(text, size)

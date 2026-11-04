@@ -106,7 +106,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 2, колонка 2 — emoji picker
 
-- idle: Bootstrap `emoji-smile`, the same size as every tile icon
+- idle: Bootstrap `emoji-smile` on top, the last 3 recent emoji below (after the picker was opened once)
 - touch: opens the picker for 4 s, every action below extends it; shows the highlighted emoji of the last used strip
 - touch while open: types that emoji into the focused field
 - while open: the top item of each strip sits in a gray ring;

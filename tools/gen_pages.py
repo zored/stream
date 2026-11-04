@@ -354,7 +354,7 @@ def clock():
     ring = '$(custom:timer_ring) == 1 && $(internal:time_unix) % 2 == 0'
     return button([canvas(), box("box0", expr(f"{ring} ? {0xFFFFFF} : 0")),
                    image("time", time_image(), opacity=expr(f"{ring} ? 0 : 100"), x=v(6),
-                         y=expr('$(custom:timer_svg) == "" ? 21 : 6'), width=v(88), height=v(58)),
+                         y=v(6), width=v(88), height=v(58)),
                    image("timer", expr("$(custom:timer_svg)"), x=v(6), y=v(70), width=v(88), height=v(24))],
                   down=[post(TIMERS + "/timer/down")], up=[post(TIMERS + "/timer/up")])
 

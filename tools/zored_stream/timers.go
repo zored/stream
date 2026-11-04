@@ -249,7 +249,7 @@ func (t *timers) line(now time.Time) (string, string) {
 		return timerLeft(t.edit), "#fff"
 	}
 	if len(t.items) == 0 {
-		return "", ""
+		return calWeekdays[now.Weekday()], "#fff"
 	}
 	it := t.items[0]
 	s := timerLeft(it.At.Sub(now))
@@ -259,7 +259,7 @@ func (t *timers) line(now time.Time) (string, string) {
 	if n := len(t.items) - 1; n > 0 {
 		s += fmt.Sprintf(" +%d", n)
 	}
-	return s, gray
+	return s, "#fff"
 }
 
 func timerLeft(d time.Duration) string {
@@ -275,5 +275,5 @@ func timerSVG(text, fill string) string {
 		return ""
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 24"><text x="44" y="19" text-anchor="middle" `+
-		`font-family="JetBrains Mono" font-size="20" fill="%s">%s</text></svg>`, fill, text))
+		`font-family="%s" font-size="%g" fill="%s">%s</text></svg>`, stripFont, captionSize, fill, text))
 }

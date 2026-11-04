@@ -5,7 +5,7 @@ import (
 )
 
 func TestWifiLabel(t *testing.T) {
-	if got := wifiLabel("Момент и ВайФай 5G"); got != "Момент и ВайФ…" {
+	if got := wifiLabel("Момент и ВайФай 5G"); got != "Момент и ВайФа" {
 		t.Errorf("wifiLabel = %q", got)
 	}
 }

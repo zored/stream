@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html"
 	"log"
 	"net"
 	"net/http"
@@ -25,7 +24,6 @@ const (
 	wifiProbeURL    = "http://captive.apple.com/hotspot-detect.html"
 	wifiOffline     = "offline"
 	wifiNameMaxRune = 14
-	wifiTileRune    = 10
 )
 
 type wifi struct {
@@ -435,7 +433,7 @@ func wifiLabel(name string) string {
 func clip(s string, n int) string {
 	r := []rune(s)
 	if len(r) > n {
-		r = append(r[:n-1], '…')
+		r = r[:n]
 	}
 	return string(r)
 }
@@ -455,9 +453,6 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
 	cy := iconCY
-	if ssid != "" {
-		cy = iconCaptionY
-	}
 	name := "wifi-1"
 	switch {
 	case phone && fill != "none":
@@ -481,7 +476,7 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 		b.WriteString(iconAt(eye, c, 84, 14, 22))
 	}
 	if ssid != "" {
-		fmt.Fprintf(&b, `<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="%s">%s</text>`, text, html.EscapeString(clip(ssid, wifiTileRune)))
+		b.WriteString(strings.Replace(captionText(ssid, stripFont), `fill="#fff"`, `fill="`+text+`"`, 1))
 	}
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())

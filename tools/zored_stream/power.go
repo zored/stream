@@ -241,22 +241,18 @@ func awakeLeft(left time.Duration, editing bool) string {
 	if editing {
 		fill = "#fff"
 	}
-	return fmt.Sprintf(`<text x="50" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="22" fill="%s">%d:%02d</text>`,
-		fill, minutes/60, minutes%60)
+	return fmt.Sprintf(`<text x="50" y="%g" text-anchor="middle" font-family="%s" font-size="%g" fill="%s">%d:%02d</text>`,
+		captionY, stripFont, captionSize, fill, minutes/60, minutes%60)
 }
 
 func powerSVG(state, below string) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
-	cy := iconCY
-	if below != "" {
-		cy = iconCaptionY
-	}
 	name := map[string]string{"arm": "moon-fill", "on": "sun-fill"}[state]
 	if name == "" {
 		name = "sun"
 	}
-	b.WriteString(iconAt(name, "#fff", 50, cy, iconSize))
+	b.WriteString(iconAt(name, "#fff", 50, iconCY, iconSize))
 	b.WriteString(below)
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())

@@ -274,7 +274,7 @@ func shorten(s string) string {
 	if len(r) <= stripMaxRunes {
 		return string(r)
 	}
-	return strings.TrimSpace(string(r[:stripMaxRunes-1])) + "…"
+	return strings.TrimSpace(string(r[:stripMaxRunes]))
 }
 
 func trackSVG(t track, like string) string {
