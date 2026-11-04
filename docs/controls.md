@@ -132,7 +132,8 @@ Same as кнопка 6. [agents.md](agents.md)
 
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
 - in a call shows: dark green + mic = on, red + crossed = off, amber `…` = switching, amber `?` = unknown
-- no call: a circle per app with unread (Telegram light blue, VK WorkSpace dark blue), white count centered inside with a black outline (`99+` cap), gray age of the last new message below (`5m`, `3h`, `2d`, empty if it came before the daemon started); tap: opens the next app with unread, in turn; small white eye = nothing unread
+- no call: the 3 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push): avatar or initial in a gray circle, white unread count below (`99+` cap), gray age of the last message (`5m`, `3h`, `2d`); small white eye = nothing unread
+- tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (newest first); the tile shows the chat's big avatar, count and age, the right strip its name gray and last message white; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - [unread.md](unread.md)
 
 Same as кнопка 2. [vkcall.md](vkcall.md)

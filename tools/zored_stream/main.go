@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -367,11 +368,13 @@ func main() {
 	go serve(*calendarAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/24/press", tile24.press)
 	})
-	ur := newUnread(v)
-	go every(unreadPollEvery, ur.poll)
+	cs := newChats(v, sc.release, us.cover)
+	go cs.run(context.Background(), "tg", tgChats)
+	go cs.run(context.Background(), "vkws", vkwsChats)
+	go every(time.Second, cs.publish)
 	tile22 := &slot{vars: v, name: "tile_22", layers: []layer{
 		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
-		{name: "unread", press: ur.press},
+		{name: "unread", press: cs.press},
 	}}
 	go every(pollEvery, tile22.publish)
 	go serve(*unreadAddr, func(mux *http.ServeMux) {
@@ -394,12 +397,15 @@ func main() {
 				if took, err := cal.knob(down); took {
 					return err
 				}
+				if took, err := cs.knob(down); took {
+					return err
+				}
 				return sc.hold(down)
 			}
 		}
 		turn := func(direction int) func() error {
 			return func() error {
-				if tm.turn(direction) || cal.turn(direction) {
+				if tm.turn(direction) || cal.turn(direction) || cs.turn(direction) {
 					return nil
 				}
 				return sc.turn(direction)
