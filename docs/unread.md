@@ -4,7 +4,7 @@
 >
 > VK WorkSpace text: the last message's `text`, else its `parts` joined without `mediaType: quote` (a reply carries the parent as a `quote` part before its own `text` part; verified on `getHistory`). Group chats: `chat.sender` of the last incoming message is the sender; its avatar (same `files/avatar/get`, cached per sn, fetched once) sits as a small disc bottom-left of the chat avatar in the grid and the browse card. 1:1 and outgoing: no overlay.
 
-Module `unread` of `zored_stream`, port 47130 (`/tile/22/down`, `/tile/22/up`). Shares the mic tile through the `tile_22` slot (F23): a live call wins, otherwise the tile shows unread apps. Кнопка 3 (`/button/3/down`, `/button/3/up`, slot `button_3`) repeats the tile's tap outside a call, the camera wins in a call; its LED `chats_led`: white, green while browsing.
+Module `unread` of `zored_stream`, port 47130 (`/tile/22/down`, `/tile/22/up`). Shares the mic tile through the `tile_22` slot (F23): a live call wins, otherwise the tile shows unread apps. Крутилка слева, ряд 3: `/knob/down`, `/knob/up` = the tile's tap, `/knob/forward`, `/knob/back` browse (a turn outside browse starts it).
 
 ## Source
 

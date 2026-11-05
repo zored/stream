@@ -6,10 +6,9 @@ macOS only. Verified on VK WorkSpace Beta 27.1.0.144826 (calls SDK 26.2.0), macO
 
 | Control | Action | Look |
 |---|---|---|
-| button 3 (`3/2`) | in a call (layer `button_3` = `call`): tap = toggle mic; hold ≥ 300 ms = push-to-talk (mic was on → mute while held); outside a call the unread chats | LED |
 | button 4 (`3/3`) | toggle camera | LED |
 | button 5 (`3/4`), tile `2/4` | hang up in a call (button 5: calendar outside a call) | white LED / red icon on black while in a call |
-| tile `2/2` / `2/3` | same as button 3 / 4 (buttons sit under the tiles) | mic / camera icon |
+| tile `2/2` / `2/3` | `2/2`: tap = toggle mic, hold ≥ 300 ms = push-to-talk; `2/3`: same as button 4 | mic / camera icon |
 
 | State | LED | Tile |
 |---|---|---|

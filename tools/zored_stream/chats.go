@@ -6,7 +6,6 @@ import (
 	"log"
 	"os/exec"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -128,14 +127,6 @@ func (c *chats) publishLocked() {
 		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], len(c.list) > chatsOnTile, now)
 	}
 	c.vars.set("unread_svg", svg)
-	c.vars.set("chats_led", strconv.Itoa(chatsLed(c.browsing())))
-}
-
-func chatsLed(browsing bool) int {
-	if browsing {
-		return chatsLedBrowse
-	}
-	return chatsLedIdle
 }
 
 func (c *chats) down() error {
@@ -161,6 +152,21 @@ func (c *chats) press() error {
 	go c.release()
 	c.publishLocked()
 	c.mu.Unlock()
+	return nil
+}
+
+// knobTurn: a turn outside browse starts it on the first chat.
+func (c *chats) knobTurn(direction int) error {
+	if c.turn(direction) {
+		return nil
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.list) == 0 {
+		return nil
+	}
+	c.pick, c.browseTill = 0, time.Now().Add(chatsBrowseFor)
+	c.publishLocked()
 	return nil
 }
 

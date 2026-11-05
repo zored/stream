@@ -33,8 +33,8 @@ BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stre
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
+    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -300,14 +300,6 @@ def mic_tile():
                   down=[post(UNREAD + "/tile/22/down")], up=[post(UNREAD + "/tile/22/up")])
 
 
-def chats_led():
-    if WINDOWS:
-        return call_led("call_mic")
-    call = by_state("call_mic", CALL_LED)
-    color = expr(f'$(custom:button_3) == "call" ? ({call["value"]}) : $(custom:chats_led)')
-    return button([canvas(), box("box0", color)], down=[post(UNREAD + "/button/3/down")], up=[post(UNREAD + "/button/3/up")])
-
-
 def cal_led():
     return button([canvas(), box("box0", expr(f'{IN_CALL} ? {0xFFFFFF} : $(custom:cal_led)'))],
                   down=[post(CALENDAR + "/button/5/press")])
@@ -468,10 +460,10 @@ def media_page():
     grid = {
         (0, 0): button(glyph("volume-up-fill"), down=streamd("/volume/mute"),
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
-        (1, 0): button(glyph("music-note-beamed"), up=[mediakey("play")], held=ymusic("/like"),
-                       left=[mediakey("prev"), *streamd("/nowplaying/prev")],
-                       right=[mediakey("next"), *streamd("/nowplaying/next")]),
-        (2, 0): button(glyph("arrow-left-right"), left=[post(SEEK + "/seek/back")], right=[post(SEEK + "/seek/forward")]),
+        (1, 0): button(glyph("music-note-beamed"), down=[post(SEEK + "/track/down")], up=[post(SEEK + "/track/up")],
+                       left=[post(SEEK + "/seek/back")], right=[post(SEEK + "/seek/forward")]),
+        (2, 0): button(glyph("chat-dots"), down=[post(UNREAD + "/knob/down")], up=[post(UNREAD + "/knob/up")],
+                       left=[post(UNREAD + "/knob/back")], right=[post(UNREAD + "/knob/forward")]),
         (0, 7): button(glyph("brightness-high"), down=brightness("/brightness/hold"), up=brightness("/brightness/release"),
                        left=brightness("/brightness/down"), right=brightness("/brightness/up")),
         **{(r, 1): volume_cell(r) for r in range(3)},
@@ -491,7 +483,6 @@ def media_page():
         (0, 4): input_tile(),
         (0, 5): awake_tile(),
         (3, 6): dictation_led(),
-        (3, 2): chats_led(),
         (3, 3): call_led("call_cam"),
         (3, 4): cal_led(),
         (3, 0): kvm_led(),

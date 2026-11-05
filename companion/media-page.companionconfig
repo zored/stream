@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "pVNrSQy9qPf7BIHPMCrVM",
+  "id": "xHQwMNTKuTn1ui4pSjZI0",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -2194,8 +2194,7 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": [
+        "down": [
          {
           "type": "action",
           "id": "pWWe_Xp0KNq8MlQx9j2zk",
@@ -2203,7 +2202,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/play",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/track/down",
             "isExpression": false
            },
            "cwd": {
@@ -2222,7 +2221,7 @@
           "upgradeIndex": null
          }
         ],
-        "400": [
+        "up": [
          {
           "type": "action",
           "id": "gOLteHv5tVF5fqfRXZcXv",
@@ -2230,7 +2229,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47115/like",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/track/up",
             "isExpression": false
            },
            "cwd": {
@@ -2257,32 +2256,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/prev",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         },
-         {
-          "type": "action",
-          "id": "pM0synbVbFjUZS-ES98Wl",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/prev",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/seek/back",
             "isExpression": false
            },
            "cwd": {
@@ -2304,37 +2278,12 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "id": "pM0synbVbFjUZS-ES98Wl",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/key/next",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         },
-         {
-          "type": "action",
-          "id": "ZUFP98x9D3Dav21qpmNt5",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/nowplaying/next",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/seek/forward",
             "isExpression": false
            },
            "cwd": {
@@ -2355,9 +2304,7 @@
         ]
        },
        "options": {
-        "runWhileHeld": [
-         400
-        ]
+        "runWhileHeld": []
        }
       }
      },
@@ -4328,7 +4275,7 @@
          "isExpression": false
         },
         "base64Image": {
-         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiBmaWxsPSIjZmZmIiBjbGFzcz0iYmkgYmktYXJyb3ctbGVmdC1yaWdodCIgdmlld0JveD0iMCAwIDE2IDE2Ij4KICA8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xIDExLjVhLjUuNSAwIDAgMCAuNS41aDExLjc5M2wtMy4xNDcgMy4xNDZhLjUuNSAwIDAgMCAuNzA4LjcwOGw0LTRhLjUuNSAwIDAgMCAwLS43MDhsLTQtNGEuNS41IDAgMCAwLS43MDguNzA4TDEzLjI5MyAxMUgxLjVhLjUuNSAwIDAgMC0uNS41bTE0LTdhLjUuNSAwIDAgMS0uNS41SDIuNzA3bDMuMTQ3IDMuMTQ2YS41LjUgMCAxIDEtLjcwOC43MDhsLTQtNGEuNS41IDAgMCAxIDAtLjcwOGw0LTRhLjUuNSAwIDEgMSAuNzA4LjcwOEwyLjcwNyA0SDE0LjVhLjUuNSAwIDAgMSAuNS41Ii8+Cjwvc3ZnPg==",
+         "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiBmaWxsPSIjZmZmIiBjbGFzcz0iYmkgYmktY2hhdC1kb3RzIiB2aWV3Qm94PSIwIDAgMTYgMTYiPgogIDxwYXRoIGQ9Ik01IDhhMSAxIDAgMSAxLTIgMCAxIDEgMCAwIDEgMiAwbTQgMGExIDEgMCAxIDEtMiAwIDEgMSAwIDAgMSAyIDBtMyAxYTEgMSAwIDEgMCAwLTIgMSAxIDAgMCAwIDAgMiIvPgogIDxwYXRoIGQ9Im0yLjE2NSAxNS44MDMuMDItLjAwNGMxLjgzLS4zNjMgMi45NDgtLjg0MiAzLjQ2OC0xLjEwNUE5IDkgMCAwIDAgOCAxNWM0LjQxOCAwIDgtMy4xMzQgOC03cy0zLjU4Mi03LTgtNy04IDMuMTM0LTggN2MwIDEuNzYuNzQzIDMuMzcgMS45NyA0LjZhMTAuNCAxMC40IDAgMCAxLS41MjQgMi4zMThsLS4wMDMuMDExYTExIDExIDAgMCAxLS4yNDQuNjM3Yy0uMDc5LjE4Ni4wNzQuMzk0LjI3My4zNjJhMjIgMjIgMCAwIDAgLjY5My0uMTI1bS44LTMuMTA4YTEgMSAwIDAgMC0uMjg3LS44MDFDMS42MTggMTAuODMgMSA5LjQ2OCAxIDhjMC0zLjE5MiAzLjAwNC02IDctNnM3IDIuODA4IDcgNi0zLjAwNCA2LTcgNmE4IDggMCAwIDEtMi4wODgtLjI3MiAxIDEgMCAwIDAtLjcxMS4wNzRjLS4zODcuMTk2LTEuMjQuNTctMi42MzQuODkzYTExIDExIDAgMCAwIC4zOTgtMiIvPgo8L3N2Zz4=",
          "isExpression": false
         },
         "halign": {
@@ -4350,8 +4297,60 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": [],
+        "down": [
+         {
+          "type": "action",
+          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47130/knob/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47130/knob/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
         "rotate_left": [
          {
           "type": "action",
@@ -4360,7 +4359,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/seek/back",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47130/knob/back",
             "isExpression": false
            },
            "cwd": {
@@ -4387,7 +4386,7 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47119/seek/forward",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47130/knob/forward",
             "isExpression": false
            },
            "cwd": {
@@ -6782,7 +6781,7 @@
         "down": [
          {
           "type": "action",
-          "id": "ESuVqKMtiIJ0obGKB2_QC",
+          "id": "zWJ9etlHd7DIR87cjEYAL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6809,7 +6808,7 @@
         "up": [
          {
           "type": "action",
-          "id": "6QY0HC0aFZLhiO6LA6ecA",
+          "id": "THHDtRXTLqrLLqy3503At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6836,7 +6835,7 @@
         "400": [
          {
           "type": "action",
-          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
+          "id": "ESuVqKMtiIJ0obGKB2_QC",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6961,7 +6960,7 @@
         "down": [
          {
           "type": "action",
-          "id": "UUuaZkswN9ud5PAPapMpW",
+          "id": "6QY0HC0aFZLhiO6LA6ecA",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6988,7 +6987,7 @@
         "up": [
          {
           "type": "action",
-          "id": "mw6Aoeumb4cqbejYVNQd0",
+          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7082,7 +7081,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_3) : ($(custom:button_3) == \"call\" ? ($(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 4194304 : 16711680) : ($(custom:call_mic) == \"off\" ? (3158064) : ($(custom:call_mic) == \"pending\" ? (16766474) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16766474 : 0) : (0))))) : $(custom:chats_led))",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_3) : (0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -7111,12 +7110,12 @@
         "down": [
          {
           "type": "action",
-          "id": "4bjSxODAm1Fnx1nEN90-6",
+          "id": "UUuaZkswN9ud5PAPapMpW",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=3' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47130/button/3/down ; }",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/down?b=3' >/dev/null || { true ; }",
             "isExpression": false
            },
            "cwd": {
@@ -7138,12 +7137,12 @@
         "up": [
          {
           "type": "action",
-          "id": "8jmrkllUzNPJY6CS8ZsyP",
+          "id": "mw6Aoeumb4cqbejYVNQd0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=3' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47130/button/3/up ; }",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=3' >/dev/null || { true ; }",
             "isExpression": false
            },
            "cwd": {
@@ -7261,7 +7260,7 @@
         "down": [
          {
           "type": "action",
-          "id": "f7k9xQwOdXw1Qb3tafqaL",
+          "id": "4bjSxODAm1Fnx1nEN90-6",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7288,7 +7287,7 @@
         "up": [
          {
           "type": "action",
-          "id": "1w6V81qLrUqm_Yq0eB7DV",
+          "id": "8jmrkllUzNPJY6CS8ZsyP",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7411,7 +7410,7 @@
         "down": [
          {
           "type": "action",
-          "id": "BoJoXiNj-b0uo0jRSctp5",
+          "id": "f7k9xQwOdXw1Qb3tafqaL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7438,7 +7437,7 @@
         "up": [
          {
           "type": "action",
-          "id": "tNM4h_30k5rzbNPfAccl7",
+          "id": "1w6V81qLrUqm_Yq0eB7DV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7561,7 +7560,7 @@
         "down": [
          {
           "type": "action",
-          "id": "DfEvaASc8m9uu4Dm5rhyn",
+          "id": "BoJoXiNj-b0uo0jRSctp5",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7588,7 +7587,7 @@
         "up": [
          {
           "type": "action",
-          "id": "yK9rN837stCdSb4uOOBKY",
+          "id": "tNM4h_30k5rzbNPfAccl7",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7711,7 +7710,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Vr3ZMVC6MhWYxzSJerJlh",
+          "id": "DfEvaASc8m9uu4Dm5rhyn",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7738,7 +7737,7 @@
         "up": [
          {
           "type": "action",
-          "id": "sGkbE15Cm9SHYOS-W34At",
+          "id": "yK9rN837stCdSb4uOOBKY",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7861,7 +7860,7 @@
         "down": [
          {
           "type": "action",
-          "id": "xHQwMNTKuTn1ui4pSjZI0",
+          "id": "Vr3ZMVC6MhWYxzSJerJlh",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7888,7 +7887,7 @@
         "up": [
          {
           "type": "action",
-          "id": "qc26706JsftfcZpxhSaDV",
+          "id": "sGkbE15Cm9SHYOS-W34At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

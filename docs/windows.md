@@ -23,7 +23,7 @@ Names as in [companion.md](companion.md): тайл ряд R, колонка C; �
 | strip track text, progress, tint | daemon | keep | same `np_*` variables; `np_app` = `SourceAppUserModelId` |
 | тайл ряд 3, колонка 4: clock | Companion | keep | internal variables, no daemon |
 | тайл ряд 3, колонка 1 + кнопка 2: mic | VK WorkSpace gRPC | repurpose | system mic mute: `IAudioEndpointVolume::SetMute` on the default capture endpoint, same `:47114/mic/down|up`, same `call_mic` (`on`/`off`); works in any call app (proposal) |
-| тайл ряд 3, колонка 2 + кнопка 3: camera | VK WorkSpace gRPC | drop (freed) | no system-wide camera toggle |
+| тайл ряд 3, колонка 2 + кнопка 4: camera | VK WorkSpace gRPC | drop (freed) | no system-wide camera toggle |
 | тайл ряд 3, колонка 3 + кнопка 4: hang up | VK WorkSpace gRPC | drop (freed) | no generic hang-up |
 | тайл ряд 2, колонка 4 + кнопка 6: agents waiting | Claude Code hooks | repurpose: Codex | `notify` → `agent-turn-complete` = done; needs-input only via Codex hooks (below) |
 | кнопка 7: dictation | Claude Desktop AX | drop (freed) | no Claude Desktop |

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"slices"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -49,21 +48,6 @@ func TestChatsInitialSkipsSpaceAndLowercases(t *testing.T) {
 	}
 }
 
-func TestChatsLed(t *testing.T) {
-	postVar = func(string, string) error { return nil }
-	t.Cleanup(func() { postVar = post })
-	c := newChats(&vars{sent: map[string]string{}}, func() {}, func(string) {})
-	led := func() string { return c.vars.sent["chats_led"] }
-	c.set("tg", []chatEntry{{id: "loud", unread: 1}, {id: "quiet", unread: 1, muted: true}})
-	if led() != strconv.Itoa(chatsLedIdle) {
-		t.Fatalf("idle led = %s", led())
-	}
-	c.press()
-	if led() != strconv.Itoa(chatsLedBrowse) {
-		t.Fatalf("browse led = %s", led())
-	}
-}
-
 func TestChatsRepublishesAfterFailedPost(t *testing.T) {
 	var posts []string
 	fail := true
@@ -103,5 +87,21 @@ func TestChatsSenderBottomLeft(t *testing.T) {
 	d := chatsSender(chatEntry{sender: []byte{1}}, 10, 20, 88, 13)
 	if len(d) != 1 || d[0].cx != 23 || d[0].cy != 95 || d[0].r != 13 {
 		t.Fatalf("%+v", d)
+	}
+}
+
+func TestChatsKnobTurnStartsBrowse(t *testing.T) {
+	postVar = func(string, string) error { return nil }
+	t.Cleanup(func() { postVar = post })
+	c := newChats(&vars{sent: map[string]string{}}, func() {}, func(string) {})
+	now := time.Now()
+	c.set("tg", []chatEntry{{id: "a", unread: 1, at: now}, {id: "b", unread: 1, at: now.Add(-time.Minute)}})
+	c.knobTurn(1)
+	if !c.browsing() || c.pick != 0 {
+		t.Fatalf("browsing=%v pick=%d", c.browsing(), c.pick)
+	}
+	c.knobTurn(1)
+	if c.pick != 1 {
+		t.Fatalf("pick=%d", c.pick)
 	}
 }

@@ -34,21 +34,21 @@ Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed
 
 [macos.md](macos.md)
 
-### крутилка слева, ряд 2 — track
+### крутилка слева, ряд 2 — seek / track
 
-- turn: previous / next track; a ⏪/⏩ flies across the bottom of the left strip
-- press (on release): play / pause
-- hold: Yandex Music like / remove like (only when Yandex Music is the Now Playing app), second haptic at 400 ms
+- turn: seek in the current track, 2 / 4 / 8 / 15 s per detent by speed; live, the player follows while you turn; a bright white position bar on the left strip, fades 1 s after the last turn
+- press + turn: previous / next track; a ⏪/⏩ flies across the bottom of the left strip
+- click (press and release without a turn): play / pause
+- hold ≥ 400 ms without a turn: Yandex Music like / remove like (only when Yandex Music is the Now Playing app); timed in the daemon, no second haptic
 
-[macos.md](macos.md), [ymusic.md](ymusic.md)
+Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md](macos.md), [ymusic.md](ymusic.md)
 
-### крутилка слева, ряд 3 — seek
+### крутилка слева, ряд 3 — chats
 
-- turn: seek in the current track, 2 / 4 / 8 / 15 s per detent by speed; live, the player follows while you turn
-- press: nothing
-- shows: a bright white position bar on the left strip, fades 1 s after the last turn
+- turn: browse the unread chats of тайл ряд 3, колонка 1 (the first turn opens the first chat, then each detent moves one)
+- press: same as a tap on that tile: browse, or open the chat shown
 
-Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md](macos.md)
+[unread.md](unread.md)
 
 ## Left strip — track
 
@@ -99,7 +99,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 - shows: the track cover; ▶ stays while paused; ⏸ appears on a state change or a touch, holds 1.5 s, fades. No cover → a big ▶/⏸. On a track change the cover and the track strip fade out and in (150 ms each)
 - touch: shows the glyph; release: play / pause
-- hold: Yandex Music like, as on крутилка слева, ряд 2
+- hold: Yandex Music like
 - swipe left / right (≥ 40 px within 400 ms): previous / next track; up / down: Yandex Music like / dislike.
   A swipe skips the play / pause on release. Dislike works only where the player bar shows it (not on radio or album contexts)
 
@@ -137,9 +137,9 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
 - in a call shows: white mic on red = on, white crossed mic on black = off, amber `…` = switching, amber `?` = unknown
 - no call: up to 4 unread chats (Telegram + VK WorkSpace, via their APIs, push), normal ones first, then muted (muted or archived in Telegram, muted or archived in VK WorkSpace), each group newest first; muted chats sit at 40% opacity with a gray count badge; one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid of squares on black: avatar, or without one the first words of the name in 2–3 lowercase lines on dark gray, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
-- tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (same order) with a slide animation; the tile shows the chat's avatar at full opacity over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
+- tap: browse for 5 s, крутилка слева, ряд 3 (or справа, ряд 3) scrolls the chats (same order) with a slide animation; the tile shows the chat's avatar at full opacity over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - no hold
-- кнопка 3 does the same: in a call the mic, outside a call the chats tap
+- крутилка слева, ряд 3 does the same outside a call
 - [unread.md](unread.md) [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 2 — camera (VK WorkSpace call)
@@ -178,8 +178,8 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 |---|---|---|
 | кнопка 1 | KVM → Windows: press = Wake-on-LAN to the PC, then monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu. Hold = toggle PIP | pink, white 0.3 s on press |
 | кнопка 2 | free | off |
-| кнопка 3 | in a call: mic, tap toggles, hold ≥ 300 ms = push-to-talk; otherwise the unread chats of тайл ряд 3, колонка 1: tap = browse / open, hold = muted chats ↔ unread | in a call: red (dims 1 s every 4 s) = on, dim white = off, yellow = switching, blinking yellow = unknown; otherwise white = unread chats, green = browsing, gray = muted chats |
-| кнопка 4 | camera toggle in a call | as кнопка 3 in a call, off = no call |
+| кнопка 3 | free | off |
+| кнопка 4 | camera toggle in a call | in a call: red (dims 1 s every 4 s) = on, dim white = off, yellow = switching, blinking yellow = unknown; off = no call |
 | кнопка 5 | outside a call: the calendar of тайл ряд 3, колонка 3, tap = open the list / act on the item; in a call: hang up | white, green = browsing; white in a call |
 | кнопка 6 | free | off |
 | кнопка 7 | dictation into Claude Desktop (below) | white = ready, blinking green = recording, off = no Claude window with a record button |

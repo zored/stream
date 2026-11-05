@@ -360,8 +360,19 @@ func main() {
 	seek := &seeker{np: np, bar: vol.bar}
 	go every(progressEvery, np.publishProgress)
 	go serve(*seekAddr, func(mux *http.ServeMux) {
-		handle(mux, "/seek/forward", func() error { return seek.turn(1) })
-		handle(mux, "/seek/back", func() error { return seek.turn(-1) })
+		tk := &trackKnob{
+			seek: seek.turn,
+			skip: func(d int) error {
+				sk.show(d)
+				return postMediaKey(mediaKeys[map[int]string{1: "next", -1: "prev"}[d]])
+			},
+			play: func() error { return postMediaKey(mediaKeys["play"]) },
+			like: ym.pressAndPoll(true),
+		}
+		handle(mux, "/seek/forward", func() error { return tk.turn(1) })
+		handle(mux, "/seek/back", func() error { return tk.turn(-1) })
+		handle(mux, "/track/down", tk.down)
+		handle(mux, "/track/up", tk.up)
 	})
 	sc, err := newScroller(*scrollModeFile)
 	if err != nil {
@@ -394,17 +405,14 @@ func main() {
 		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
-	button3 := &slot{vars: v, name: "button_3", layers: []layer{
-		{name: "call", active: c.inCall, press: c.camDown},
-		{name: "unread", press: cs.down, up: cs.up},
-	}}
 	go every(pollEvery, tile22.publish)
-	go every(pollEvery, button3.publish)
 	go serve(*unreadAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/22/down", tile22.press)
 		handle(mux, "/tile/22/up", tile22.up)
-		handle(mux, "/button/3/down", button3.press)
-		handle(mux, "/button/3/up", button3.up)
+		handle(mux, "/knob/down", cs.down)
+		handle(mux, "/knob/up", cs.up)
+		handle(mux, "/knob/forward", func() error { return cs.knobTurn(1) })
+		handle(mux, "/knob/back", func() error { return cs.knobTurn(-1) })
 	})
 	go func() {
 		stop := make(chan os.Signal, 1)
