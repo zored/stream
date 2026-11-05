@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -136,6 +137,9 @@ func main() {
 	timersFile := flag.String("timers-file", filepath.Join(home, ".config/zored-stream/timers.json"), "pending timers and alarms")
 	emojiAddr := flag.String("emoji", "127.0.0.1:47128", "emoji picker HTTP address")
 	unreadAddr := flag.String("unread", "127.0.0.1:47130", "unread chats HTTP address")
+	weatherAddr := flag.String("weather", "127.0.0.1:47131", "weather HTTP address")
+	weatherLat := flag.Float64("weather-lat", 55.7558, "weather latitude")
+	weatherLon := flag.Float64("weather-lon", 37.6173, "weather longitude")
 	m1ddc := flag.String("m1ddc", "/opt/homebrew/bin/m1ddc", "DDC/CI CLI for the monitor input")
 	kvmMAC := flag.String("kvm-mac", "ec:3a:56:fa:39:ac", "Windows PC to wake before switching")
 	kvmWOL := flag.String("kvm-wol", "192.168.4.255:9", "Wake-on-LAN broadcast address")
@@ -406,13 +410,42 @@ func main() {
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
 	go every(pollEvery, tile22.publish)
+	wx := newWeather(v, *weatherLat, *weatherLon)
+	go wx.run()
+	go every(time.Second, wx.publish)
+	tile23 := &slot{vars: v, name: "tile_23", layers: []layer{
+		{name: "call", active: c.inCall, press: c.camDown},
+		{name: "weather", press: wx.press},
+	}}
+	go every(pollEvery, tile23.publish)
+	go serve(*weatherAddr, func(mux *http.ServeMux) {
+		handle(mux, "/tile/23/press", tile23.press)
+	})
 	go serve(*unreadAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/22/down", tile22.press)
 		handle(mux, "/tile/22/up", tile22.up)
-		handle(mux, "/knob/down", cs.down)
-		handle(mux, "/knob/up", cs.up)
-		handle(mux, "/knob/forward", func() error { return cs.knobTurn(1) })
-		handle(mux, "/knob/back", func() error { return cs.knobTurn(-1) })
+		var wxKnob atomic.Bool
+		handle(mux, "/knob/down", func() error {
+			if wx.browsing() {
+				wxKnob.Store(true)
+				return wx.press()
+			}
+			return cs.down()
+		})
+		handle(mux, "/knob/up", func() error {
+			if wxKnob.Swap(false) {
+				return nil
+			}
+			return cs.up()
+		})
+		knobTurn := func(direction int) error {
+			if !cs.browsing() && wx.turn(direction) {
+				return nil
+			}
+			return cs.knobTurn(direction)
+		}
+		handle(mux, "/knob/forward", func() error { return knobTurn(1) })
+		handle(mux, "/knob/back", func() error { return knobTurn(-1) })
 	})
 	go func() {
 		stop := make(chan os.Signal, 1)
@@ -496,6 +529,8 @@ func main() {
 		kv.publish()
 		cal.publish()
 		tile24.publish()
+		tile23.publish()
+		wx.publish()
 		tm.publish()
 		in.publish()
 		em.publish()

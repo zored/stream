@@ -47,8 +47,9 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 - turn: browse the unread chats of тайл ряд 3, колонка 1 (the first turn opens the first chat, then each detent moves one)
 - press: same as a tap on that tile: browse, or open the chat shown
+- while the weather tile browses: turn walks the forecast, press returns to now
 
-[unread.md](unread.md)
+[unread.md](unread.md), [weather.md](weather.md)
 
 ## Left strip — track
 
@@ -142,12 +143,14 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 - крутилка слева, ряд 3 does the same outside a call
 - [unread.md](unread.md) [vkcall.md](vkcall.md)
 
-### тайл ряд 3, колонка 2 — camera (VK WorkSpace call)
+### тайл ряд 3, колонка 2 — camera (VK WorkSpace call) / weather
 
-- tap: toggle the camera (takes 1–3 s, amber `…` meanwhile)
-- shows: same colors as the mic tile
+- in a call: tap toggles the camera (takes 1–3 s, amber `…` meanwhile), same colors as the mic tile; same as кнопка 4
+- outside a call: weather icon, `<temp> | <feels like>` below, gray when stale
+- tap outside a call: 5 s browse, крутилка слева, ряд 3 walks the forecast (утро, день, вечер, ночь, next days),
+  date and part of day gray on top; a second tap or the knob press returns to now
 
-Same as кнопка 4 in a call. [vkcall.md](vkcall.md)
+[vkcall.md](vkcall.md), [weather.md](weather.md)
 
 ### тайл ряд 3, колонка 3 — day / hang up
 

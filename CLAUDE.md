@@ -17,6 +17,7 @@ Status and next steps: `PLAN.md`.
 - `docs/agents.md` — agents waiting (hooks, Desktop unread), dictation, choice mode on кнопки 1–8
 - `docs/emoji.md` — emoji picker on two strips: `emoji` module of `zored_stream`, fork touch edges, rendering
 - `docs/unread.md` — unread Telegram / VK WorkSpace on tile `2/2`: Dock badges via AX
+- `docs/weather.md` — weather on tile `2/3` outside a call: Open-Meteo, forecast browse on крутилка слева, ряд 3
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `zored_stream` module, dead ends
 - `docs/windows.md` — port plan: what carries over, what needs a Windows build
 - `docs/device.md` — USB, raw protocol events, `tools/sniff.py`, firmware

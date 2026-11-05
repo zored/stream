@@ -80,6 +80,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Keyboard layout | `input.go`, `input_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47127` (`-input`) | see macos.md |
 | Emoji picker | `emoji.go`, `emoji_darwin.go`, `emoji_data.go`, [emoji.md](emoji.md) | `127.0.0.1:47128` (`-emoji`) | see emoji.md |
 | Timers + alarms | `timers.go`, [macos.md](macos.md) | `127.0.0.1:47129` (`-timers`) | see macos.md |
+| Weather | `weather.go`, `layers.go` (`tile_23`), [weather.md](weather.md) | `127.0.0.1:47131` (`-weather`) | see weather.md |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain

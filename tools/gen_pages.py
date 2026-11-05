@@ -28,13 +28,14 @@ INPUT = "http://127.0.0.1:47127"
 EMOJI = "http://127.0.0.1:47128"
 TIMERS = "http://127.0.0.1:47129"
 UNREAD = "http://127.0.0.1:47130"
+WEATHER_URL = "http://127.0.0.1:47131"
 HOLD_MS = 400
 BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
+    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -300,6 +301,17 @@ def mic_tile():
                   down=[post(UNREAD + "/tile/22/down")], up=[post(UNREAD + "/tile/22/up")])
 
 
+def cam_tile():
+    if WINDOWS:
+        return call_tile("call_cam", "camera-video")
+    on = expr('$(custom:tile_23) == "weather"')
+    return button([*call_layers("call_cam", "camera-video"),
+                   box("weather_bg", 0x000000, enabled=on),
+                   image("weather", expr("$(custom:weather_svg)"), enabled=on,
+                         x=v(6), y=v(6), width=v(88), height=v(88))],
+                  down=[post(WEATHER_URL + "/tile/23/press")])
+
+
 def cal_led():
     return button([canvas(), box("box0", expr(f'{IN_CALL} ? {0xFFFFFF} : $(custom:cal_led)'))],
                   down=[post(CALENDAR + "/button/5/press")])
@@ -469,7 +481,7 @@ def media_page():
         **{(r, 1): volume_cell(r) for r in range(3)},
         (1, 2): play_pause(),
         (2, 2): mic_tile(),
-        (2, 3): call_tile("call_cam", "camera-video"),
+        (2, 3): cam_tile(),
         (2, 4): day_tile(),
         (2, 5): clock(),
         **{(r, 6): ai_strip(r) for r in range(3)},
