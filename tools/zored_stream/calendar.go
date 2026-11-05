@@ -17,7 +17,6 @@ const (
 	calBrowseFor = 5 * time.Second
 	calPollEvery = time.Minute
 	calHorizon   = 7 * 24 * time.Hour
-	calAhead     = 12 * time.Hour
 	calSoon      = 5 * time.Minute
 	amberRGB     = 0xFFD60A
 	grayRGB      = 0x808080
@@ -80,7 +79,7 @@ func calKeep(items []calItem, now time.Time) []calItem {
 }
 
 func calNext(items []calItem, now time.Time) int {
-	return slices.IndexFunc(items, func(it calItem) bool { return !it.allDay && !it.done && !it.start.After(now.Add(calAhead)) })
+	return slices.IndexFunc(items, func(it calItem) bool { return !it.allDay && !it.done })
 }
 
 func (c *calendar) publish() {
@@ -154,7 +153,7 @@ func (c *calendar) press() error {
 		c.mu.Unlock()
 		return c.act(i)
 	}
-	c.pick, c.browseTill = 0, time.Now().Add(calBrowseFor)
+	c.pick, c.browseTill = max(calNext(c.items, time.Now()), 0), time.Now().Add(calBrowseFor)
 	go c.release()
 	c.publishLocked()
 	c.mu.Unlock()

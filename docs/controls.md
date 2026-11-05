@@ -153,11 +153,11 @@ Same as кнопка 4 in a call. [vkcall.md](vkcall.md)
 
 - one tile, two layers, top active wins: a VK WorkSpace call > the day; the daemon picks the layer (`tile_24`) and routes the tap to it
 - call: hang-up icon, tap ends the call. Same as кнопка 5 in a call. [vkcall.md](vkcall.md)
-- day: all white, left-aligned: the date `3 ноя`; below `+40m` / `+5h` / `+1d` until the next event or reminder within 12 h (for a running event: `25m` until its end) and its title, lowercase, wrapped (reminders get `○`)
+- day: all white, left-aligned: the date `3 ноя`; below `+40m` / `+5h` / `+1d` until the nearest event or reminder, tomorrow or later if today is empty (for a running event: `25m` until its end) and its title, lowercase, wrapped (reminders get `○`)
 - titles keep emoji (drawn by CoreText into a PNG, the SVG renderer had none) and wrap by character; a recurring event is listed once, at its next occurrence
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
 - dark green background from 5 min before an event (not reminders) until it ends; any calendar action (touch, кнопка 5, knob in the list) clears it for that event
-- touch: 5 s list, one item at a time; крутилка справа, ряд 3 scrolls it. The right strip (over model + effort) shows the title white with the notes right after it in gray, one run of text, HTML (`<br/>` = line break) and links, separator lines and call ID / access code lines cut out. The tile shows the item: its date `5 ноя`, below the weekday and time `ср 12:00` (amber for an event in ≤ 5 min or an overdue reminder), below `○` / `●` for a reminder
+- touch: 5 s list starting on the item the tile shows, one item at a time; крутилка справа, ряд 3 scrolls it. The right strip (over model + effort) shows the title white with the notes right after it in gray, one run of text, HTML (`<br/>` = line break) and links, separator lines and call ID / access code lines cut out. The tile shows the item: its date `5 ноя`, below the weekday and time `ср 12:00` (amber for an event in ≤ 5 min or an overdue reminder), below `○` / `●` for a reminder
 - in the list a touch (or the knob press) toggles the reminder (list stays open) or opens the event in Calendar
 - кнопка 5 does the same tap outside a call, hangs up in a call
 

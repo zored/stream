@@ -29,8 +29,8 @@ func TestCalKeepAndNext(t *testing.T) {
 	if calColor(items[2], now) != amberRGB || calColor(items[3], now) != 0 {
 		t.Error("soon amber, far plain")
 	}
-	if calNext(items[2:3], now.Add(-13*time.Hour)) != -1 {
-		t.Error("beyond 12 h must hide")
+	if calNext(items[2:3], now.Add(-13*time.Hour)) != 0 {
+		t.Error("beyond 12 h must show")
 	}
 }
 
@@ -104,5 +104,16 @@ func TestCalSoonBg(t *testing.T) {
 	}
 	if g := calGlow(items, now); calBg(items, now.Add(10*time.Minute), g) != 0 {
 		t.Error("dismissed glow came back")
+	}
+}
+
+func TestCalNextBeyondToday(t *testing.T) {
+	now := time.Date(2026, 11, 3, 12, 0, 0, 0, time.Local)
+	items := []calItem{
+		{id: "day", start: now, end: now.Add(time.Hour), allDay: true},
+		{id: "fri", start: now.Add(72 * time.Hour), end: now.Add(73 * time.Hour)},
+	}
+	if calNext(items, now) != 1 {
+		t.Error("future event not shown")
 	}
 }
