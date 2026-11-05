@@ -17,7 +17,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
 | tiles `0/2` keyboard layout, `0/3` wi-fi, `0/4` headphones, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
-| buttons `3/0` KVM, `3/1` mic, `3/2` camera / unread chats, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | button `3/7` (outside choice mode); `3/4` claimed 2026-11-05 (calendar, child session) |
+| buttons `3/0` KVM, `3/1` mic, `3/2` camera / unread chats, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | button `3/7` (outside choice mode) |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
 ## Done
@@ -91,7 +91,9 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 
 ### More buttons and actions
 
-- [ ] In progress (child session, 2026-11-05): кнопка 5 drives the calendar like кнопка 3 drives chats (tap = list / open, hold = reminder, LED)
+- [x] 2026-11-05: кнопка 5 (`3/4`) = calendar: tap = list / action, LED `cal_led` white, green while browsing, off in a call (`1437e17`, `29e911f`, verified on the device)
+- [x] keep-awake: the display blanked on sun off / length change because macOS does not count the controller as activity → the daemon nudges the mouse by 0 px on any press (`3a2af70`, verified on the device)
+- [ ] In progress (3 child sessions, 2026-11-05): pages — call buttons shifted right by one under the tiles + LED colors, mic/cam icons white off / red background on, flag ↔ sound tiles swapped, AI strip label = tile small text size; calendar — dark green tile background ≤ 5 min before an event, cleared on end / any action; agents — up to 16 dots, focused chat highlighted, slide animation, active dot bigger
 - [ ] Chats tile fix in a child session (started by unread-avatars, 2026-11-05); play tile: pauses < 0.6 s between tracks no longer flash ⏸ (`08e8d31`, device check pending)
 
 New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
