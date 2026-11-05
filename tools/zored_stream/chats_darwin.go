@@ -33,6 +33,7 @@ func chatsPNG(w, h float64, discs []chatsDisc, texts []calText) string {
 
 func chatsLayersPNG(w, h float64, layers []chatsLayer) string {
 	c := C.cal_canvas_new(C.double(w), C.double(h), chatsScale, 0)
+	C.cal_canvas_fill(c, 0)
 	for _, l := range layers {
 		if l.alpha < 1 {
 			C.cal_canvas_layer_begin(c, C.double(l.alpha))
