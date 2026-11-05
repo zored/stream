@@ -386,7 +386,7 @@ func main() {
 		handle(mux, "/tile/24/press", tile24.press)
 		handle(mux, "/button/5/press", func() error {
 			if c.inCall() {
-				return c.hangUp()
+				return nil
 			}
 			return cal.press()
 		})
@@ -400,7 +400,7 @@ func main() {
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
 	button3 := &slot{vars: v, name: "button_3", layers: []layer{
-		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
+		{name: "call", active: c.inCall, press: c.camDown},
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
 	go every(pollEvery, tile22.publish)
