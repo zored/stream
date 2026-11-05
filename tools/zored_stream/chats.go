@@ -15,13 +15,12 @@ import (
 )
 
 const (
-	chatsBrowseFor = 5 * time.Second
-	chatsOnTile    = 4
-	chatsRetry     = 30 * time.Second
-	chatsHold      = 400 * time.Millisecond
-	chatsLedIdle   = 0xFFFFFF
-	chatsLedBrowse = 0x00FF00
-	chatsLedMuted  = 0x404040
+	chatsBrowseFor  = 5 * time.Second
+	chatsOnTile     = 4
+	chatsRetry      = 30 * time.Second
+	chatsLedIdle    = 0xFFFFFF
+	chatsLedBrowse  = 0x00FF00
+	chatsMutedAlpha = 0.4
 )
 
 type chatEntry struct {
@@ -51,9 +50,6 @@ type chats struct {
 	pick       int
 	knobDown   bool
 	opener     func(url string) error
-	muted      bool
-	hold       *time.Timer
-	held       bool
 	slideGen   int
 	sliding    bool
 }
@@ -78,21 +74,29 @@ func (c *chats) set(app string, list []chatEntry) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.byApp[app] = list
-	c.list = chatsMerge(c.byApp, c.muted)
+	c.list = chatsMerge(c.byApp)
 	c.pick = min(c.pick, max(len(c.list)-1, 0))
 	c.publishLocked()
 }
 
-func chatsMerge(byApp map[string][]chatEntry, muted bool) []chatEntry {
+func chatsMerge(byApp map[string][]chatEntry) []chatEntry {
 	var out []chatEntry
 	for _, l := range byApp {
 		for _, e := range l {
-			if e.unread > 0 && e.muted == muted {
+			if e.unread > 0 {
 				out = append(out, e)
 			}
 		}
 	}
-	slices.SortStableFunc(out, func(a, b chatEntry) int { return b.at.Compare(a.at) })
+	slices.SortStableFunc(out, func(a, b chatEntry) int {
+		if a.muted != b.muted {
+			if a.muted {
+				return 1
+			}
+			return -1
+		}
+		return b.at.Compare(a.at)
+	})
 	return out
 }
 
@@ -114,60 +118,32 @@ func (c *chats) publishLocked() {
 	}
 	if c.browsing() {
 		c.covered = true
-		svg = chatsPickImage(c.list, c.pick, now, c.muted)
+		svg = chatsPickImage(c.list, c.pick, now)
 		c.strip(chatsStripImage(c.list, c.pick))
 	} else {
 		if c.covered {
 			c.covered = false
 			c.strip("")
 		}
-		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], len(c.list) > chatsOnTile, now, c.muted)
+		svg = chatsTileImage(c.list[:min(len(c.list), chatsOnTile)], len(c.list) > chatsOnTile, now)
 	}
 	c.vars.set("unread_svg", svg)
-	c.vars.set("chats_led", strconv.Itoa(chatsLed(c.browsing(), c.muted)))
+	c.vars.set("chats_led", strconv.Itoa(chatsLed(c.browsing())))
 }
 
-func chatsLed(browsing, muted bool) int {
-	switch {
-	case browsing:
+func chatsLed(browsing bool) int {
+	if browsing {
 		return chatsLedBrowse
-	case muted:
-		return chatsLedMuted
 	}
 	return chatsLedIdle
 }
 
 func (c *chats) down() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.held = false
-	c.hold = time.AfterFunc(chatsHold, c.toggleMuted)
 	return nil
 }
 
 func (c *chats) up() error {
-	c.mu.Lock()
-	if c.hold != nil {
-		c.hold.Stop()
-		c.hold = nil
-	}
-	held := c.held
-	c.mu.Unlock()
-	if held {
-		return nil
-	}
 	return c.press()
-}
-
-func (c *chats) toggleMuted() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.held = true
-	c.muted = !c.muted
-	c.list = chatsMerge(c.byApp, c.muted)
-	c.pick, c.browseTill = 0, time.Time{}
-	log.Printf("chats: muted=%v", c.muted)
-	c.publishLocked()
 }
 
 func (c *chats) press() error {
@@ -220,7 +196,7 @@ func (c *chats) slide(gen int, from, to chatEntry, direction int) {
 		}
 		if i < chatsFrames {
 			t := float64(i) / chatsFrames
-			img := chatsSlideImage(from, to, 1-(1-t)*(1-t), direction, time.Now(), c.muted)
+			img := chatsSlideImage(from, to, 1-(1-t)*(1-t), direction, time.Now())
 			c.vars.set("unread_svg", img)
 		} else {
 			c.sliding = false
@@ -290,9 +266,9 @@ func chatsLabel(text string, cx, cy, size float64, rgb uint32) calText {
 	return calText{text: text, x: cx - 30, y: cy - lh/2, w: 60, h: lh, size: size, rgb: rgb, center: true}
 }
 
-func chatsBadges(e chatEntry, x, y, w, r, size float64, muted bool, now time.Time) ([]chatsDisc, []calText) {
+func chatsBadges(e chatEntry, x, y, w, r, size float64, now time.Time) ([]chatsDisc, []calText) {
 	count := uint32(chatsRed)
-	if muted {
+	if e.muted {
 		count = grayRGB
 	}
 	cx, top, bottom := x+w-r, y+r, y+w-r
@@ -345,67 +321,63 @@ func chatsLines(title string, n, width int) []string {
 	return lines
 }
 
-func chatsEmpty(now time.Time, muted bool) string {
-	if muted {
-		return tileIcon("eye-slash", gray)
-	}
-	return unreadSVG(nil, now)
-}
-
-func chatsTileImage(list []chatEntry, more bool, now time.Time, muted bool) string {
+func chatsTileImage(list []chatEntry, more bool, now time.Time) string {
 	if len(list) == 0 {
-		return chatsEmpty(now, muted)
+		return unreadSVG(nil, now)
 	}
-	if len(list) == 1 {
-		d, t := chatsCard(list[0], 0, now, muted)
-		return chatsPNG(88, 88, d, t)
+	layer := func(e chatEntry, d []chatsDisc, t []calText) chatsLayer {
+		if e.muted {
+			return chatsLayer{d, t, chatsMutedAlpha}
+		}
+		return chatsLayer{d, t, 1}
 	}
-	if len(list) == 2 {
-		var discs []chatsDisc
-		var texts []calText
+	var layers []chatsLayer
+	switch len(list) {
+	case 1:
+		d, t := chatsCard(list[0], 0, now)
+		layers = append(layers, layer(list[0], d, t))
+	case 2:
 		for i, e := range list {
 			o := 40 * float64(i)
 			d, t := chatsFace(e, o+22, o+26, 21, false)
-			bd, bt := chatsBadges(e, o, o, 48, 9, 9, muted, now)
-			discs, texts = append(append(append(discs, d), chatsSender(e, o, o, 48, 9)...), bd...), append(append(texts, t...), bt...)
+			bd, bt := chatsBadges(e, o, o, 48, 9, 9, now)
+			layers = append(layers, layer(e, append(append([]chatsDisc{d}, chatsSender(e, o, o, 48, 9)...), bd...), append(t, bt...)))
 		}
-		return chatsPNG(88, 88, discs, texts)
+	default:
+		grid := 88.0
+		if more {
+			grid = 76
+			layers = append(layers, chatsLayer{nil, []calText{chatsLabel("+", 82, 44, 16, grayRGB)}, 1})
+		}
+		cell := grid / 2
+		for i, e := range list {
+			x, y := cell*float64(i%2), cell*float64(i/2)+(88-grid)/2
+			d, t := chatsFace(e, x+cell*0.42, y+cell*0.58, cell*0.36, false)
+			bd, bt := chatsBadges(e, x, y, cell, cell*0.2, cell*0.2, now)
+			layers = append(layers, layer(e, append(append([]chatsDisc{d}, chatsSender(e, x, y, cell, cell*0.2)...), bd...), append(t, bt...)))
+		}
 	}
-	grid := 88.0
-	var texts []calText
-	if more {
-		grid = 76
-		texts = append(texts, chatsLabel("+", 82, 44, 16, grayRGB))
-	}
-	cell := grid / 2
-	var discs []chatsDisc
-	for i, e := range list {
-		x, y := cell*float64(i%2), cell*float64(i/2)+(88-grid)/2
-		d, t := chatsFace(e, x+cell*0.42, y+cell*0.58, cell*0.36, false)
-		bd, bt := chatsBadges(e, x, y, cell, cell*0.2, cell*0.2, muted, now)
-		discs, texts = append(append(append(discs, d), chatsSender(e, x, y, cell, cell*0.2)...), bd...), append(append(texts, t...), bt...)
-	}
-	return chatsPNG(88, 88, discs, texts)
+	return chatsLayersPNG(88, 88, layers)
 }
 
-func chatsCard(e chatEntry, dx float64, now time.Time, muted bool) ([]chatsDisc, []calText) {
+func chatsCard(e chatEntry, dx float64, now time.Time) ([]chatsDisc, []calText) {
 	d, t := chatsFace(e, 44+dx, 44, 44, true)
-	bd, bt := chatsBadges(e, dx, 0, 88, 13, 13, muted, now)
+	bd, bt := chatsBadges(e, dx, 0, 88, 13, 13, now)
 	return append(append([]chatsDisc{d}, chatsSender(e, dx, 0, 88, 13)...), bd...), append(t, bt...)
 }
 
-func chatsPickImage(list []chatEntry, pick int, now time.Time, muted bool) string {
+func chatsPickImage(list []chatEntry, pick int, now time.Time) string {
 	if pick >= len(list) {
-		return chatsEmpty(now, muted)
+		return unreadSVG(nil, now)
 	}
-	d, t := chatsCard(list[pick], 0, now, muted)
+	d, t := chatsCard(list[pick], 0, now)
 	return chatsPNG(88, 88, d, t)
 }
 
-func chatsSlideImage(from, to chatEntry, step float64, direction int, now time.Time, muted bool) string {
+func chatsSlideImage(from, to chatEntry, step float64, direction int, now time.Time) string {
 	shift := 88 * float64(direction)
-	d1, t1 := chatsCard(from, -shift*step, now, muted)
-	d2, t2 := chatsCard(to, shift*(1-step), now, muted)
+	d1, t1 := chatsCard(from, -shift*step, now)
+	d2, t2 := chatsCard(to, shift*(1-step), now)
 	return chatsPNG(88, 88, append(d1, d2...), append(t1, t2...))
 }
 

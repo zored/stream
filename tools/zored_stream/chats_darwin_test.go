@@ -24,9 +24,9 @@ func TestChatsPhotoCardFitsCompanionBody(t *testing.T) {
 	e := chatEntry{title: "x", unread: 3, at: time.Now(), avatar: buf.Bytes()}
 	now := time.Now()
 	for name, uri := range map[string]string{
-		"card":  chatsPickImage([]chatEntry{e}, 0, now, false),
-		"slide": chatsSlideImage(e, e, 0.5, 1, now, false),
-		"grid":  chatsTileImage([]chatEntry{e, e, e, e}, true, now, false),
+		"card":  chatsPickImage([]chatEntry{e}, 0, now),
+		"slide": chatsSlideImage(e, e, 0.5, 1, now),
+		"grid":  chatsTileImage([]chatEntry{e, e, e, e}, true, now),
 	} {
 		if len(uri) > 80_000 {
 			t.Errorf("%s: %d bytes", name, len(uri))

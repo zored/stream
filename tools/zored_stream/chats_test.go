@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-func TestChatsMergeSortsRecentFirstAndDropsRead(t *testing.T) {
+func TestChatsMergeLoudFirstRecentFirstDropsRead(t *testing.T) {
 	now := time.Now()
 	got := chatsMerge(map[string][]chatEntry{
 		"tg":   {{id: "old", unread: 1, at: now.Add(-time.Hour)}, {id: "read", at: now}},
-		"vkws": {{id: "new", unread: 2, at: now}, {id: "muted", unread: 5, at: now, muted: true}},
-	}, false)
-	if len(got) != 2 || got[0].id != "new" || got[1].id != "old" {
+		"vkws": {{id: "new", unread: 2, at: now.Add(-time.Minute)}, {id: "muted", unread: 5, at: now, muted: true}},
+	})
+	if len(got) != 3 || got[0].id != "new" || got[1].id != "old" || got[2].id != "muted" {
 		t.Fatalf("got %+v", got)
 	}
 }
@@ -49,24 +49,6 @@ func TestChatsInitialSkipsSpaceAndLowercases(t *testing.T) {
 	}
 }
 
-func TestChatsHoldTogglesMutedWithoutPress(t *testing.T) {
-	postVar = func(string, string) error { return nil }
-	t.Cleanup(func() { postVar = post })
-	c := newChats(&vars{sent: map[string]string{}}, func() {}, func(string) {})
-	c.set("tg", []chatEntry{{id: "loud", unread: 1}, {id: "quiet", unread: 1, muted: true}})
-	c.down()
-	time.Sleep(chatsHold + 100*time.Millisecond)
-	c.up()
-	if !c.muted || c.browsing() || len(c.list) != 1 || c.list[0].id != "quiet" {
-		t.Fatalf("muted=%v browsing=%v list=%+v", c.muted, c.browsing(), c.list)
-	}
-	c.down()
-	c.up()
-	if !c.browsing() {
-		t.Fatal("short press must browse")
-	}
-}
-
 func TestChatsLed(t *testing.T) {
 	postVar = func(string, string) error { return nil }
 	t.Cleanup(func() { postVar = post })
@@ -79,10 +61,6 @@ func TestChatsLed(t *testing.T) {
 	c.press()
 	if led() != strconv.Itoa(chatsLedBrowse) {
 		t.Fatalf("browse led = %s", led())
-	}
-	c.toggleMuted()
-	if led() != strconv.Itoa(chatsLedMuted) {
-		t.Fatalf("muted led = %s", led())
 	}
 }
 

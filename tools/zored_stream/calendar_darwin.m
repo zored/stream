@@ -192,6 +192,19 @@ void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double si
     }
 }
 
+void cal_canvas_layer_begin(void *c, double alpha) {
+    CGContextRef ctx = ((canvas *)c)->ctx;
+    CGContextSaveGState(ctx);
+    CGContextSetAlpha(ctx, alpha);
+    CGContextBeginTransparencyLayer(ctx, NULL);
+}
+
+void cal_canvas_layer_end(void *c) {
+    CGContextRef ctx = ((canvas *)c)->ctx;
+    CGContextEndTransparencyLayer(ctx);
+    CGContextRestoreGState(ctx);
+}
+
 void cal_canvas_fill(void *c, unsigned rgb) {
     CGContextRef ctx = ((canvas *)c)->ctx;
     CGContextSetRGBFillColor(ctx, ((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
