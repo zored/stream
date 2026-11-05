@@ -35,6 +35,8 @@ const (
 	stripDrawW         = 48
 	stripDrawH         = 258
 	stripTextY         = stripDrawH - 8
+	modelFont          = captionSize * tilePx * 0.88 / 100 / (float64(stripDrawW) / svgHeight)
+	tilePx             = 90
 )
 
 var (
@@ -520,13 +522,13 @@ func labelMarkup(l stripLabel, note stripNote, dots [5]float64, ink string) stri
 	}
 	const r, gap = 30, 30
 	anchor := svgMinWidth / 2
-	y := svgHeight/2 + svgFont*35/100
+	y := svgHeight/2 + modelFont*35/100
 	var b strings.Builder
-	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="%s" font-size="%d" fill="%s">%s</text>`,
-		anchor, y, stripFont, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
+	fmt.Fprintf(&b, `<text x="%d" y="%g" text-anchor="end" font-family="%s" font-size="%g" fill="%s">%s</text>`,
+		anchor, y, stripFont, modelFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
 	if !slices.Contains(aiEffortDots, strings.ToLower(l.effort)) {
-		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="%s" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
-			anchor+2*gap, y, stripFont, svgFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
+		fmt.Fprintf(&b, `<text x="%d" y="%g" font-family="%s" font-size="%g" font-weight="bold" fill="%s">%s</text>`,
+			anchor+2*gap, y, stripFont, modelFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
 	}
 	var xs [len(dots)]float64
 	x := float64(anchor + 2*gap + r)

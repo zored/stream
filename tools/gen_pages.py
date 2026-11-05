@@ -258,8 +258,8 @@ def call_actions(var):
 
 
 CALL_LED = {
-    "on": f"$(internal:time_unix) % 4 == 0 ? {0x003300} : {0x00FF00}",
-    "off": 0x400000,
+    "on": f"$(internal:time_unix) % 4 == 0 ? {0x400000} : {0xFF0000}",
+    "off": 0x303030,
     "pending": 0xFFD60A,
     "unknown": f"$(internal:time_unix) % 2 == 0 ? {0xFFD60A} : 0",
 }
@@ -276,9 +276,9 @@ def call_layers(var, name):
     state = f"$(custom:{var})"
     return [
         canvas(),
-        box("box0", 0x000000),
-        image("on", bootstrap(name, GREEN), opacity=expr(f'{state} == "on" ? 100 : 0'), **ICON_BOX),
-        image("off", bootstrap(CALL_OFF[name], RED), opacity=expr(f'{state} == "off" ? 100 : 0'), **ICON_BOX),
+        box("box0", expr(f'{state} == "on" ? {int(RED[1:], 16)} : 0')),
+        image("on", bootstrap(name, "#fff"), opacity=expr(f'{state} == "on" ? 100 : 0'), **ICON_BOX),
+        image("off", bootstrap(CALL_OFF[name], "#fff"), opacity=expr(f'{state} == "off" ? 100 : 0'), **ICON_BOX),
         text("unknown", expr(f'{state} == "pending" ? "…" : "?"'), fontsize=60, color=int(AMBER[1:], 16),
              opacity=expr(f'{state} == "unknown" || {state} == "pending" ? 100 : 0')),
     ]
@@ -302,19 +302,17 @@ def mic_tile():
 
 def chats_led():
     if WINDOWS:
-        return call_led("call_cam")
-    call = by_state("call_cam", CALL_LED)
+        return call_led("call_mic")
+    call = by_state("call_mic", CALL_LED)
     color = expr(f'$(custom:button_3) == "call" ? ({call["value"]}) : $(custom:chats_led)')
     return button([canvas(), box("box0", color)], down=[post(UNREAD + "/button/3/down")], up=[post(UNREAD + "/button/3/up")])
 
 
 def cal_led():
-    return button([canvas(), box("box0", expr('$(custom:tile_24) == "call" ? 0 : $(custom:cal_led)'))],
+    return button([canvas(), box("box0", expr(f'{IN_CALL} ? {0xFFFFFF} : $(custom:cal_led)'))],
                   down=[post(CALENDAR + "/button/5/press")])
 
 
-def hangup_led():
-    return button([canvas(), box("box0", expr(f"{IN_CALL} ? {0xFFFFFF} : 0"))], down=vkcall("/call/end"))
 
 
 DIGITS_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 -74 289 75"><text font-family="JetBrains Mono" '
@@ -492,21 +490,20 @@ def media_page():
         (2, 7): button(glyph("mouse"), down=[post(SCROLL + "/scroll/down")], up=[post(SCROLL + "/scroll/up")],
                        left=[post(SCROLL + "/scroll/back")], right=[post(SCROLL + "/scroll/forward")]),
         (1, 5): agents_tile(),
-        (0, 2): input_tile(),
+        (0, 2): headphones_tile(),
         (1, 3): emoji_tile(),
         (0, 3): wifi_tile(),
-        (0, 4): headphones_tile(),
+        (0, 4): input_tile(),
         (0, 5): awake_tile(),
         (3, 5): agents_led(),
         (3, 6): dictation_led(),
-        (3, 1): call_led("call_mic"),
         (3, 2): chats_led(),
-        (3, 3): hangup_led(),
+        (3, 3): call_led("call_cam"),
         (3, 4): cal_led(),
         (3, 0): kvm_led(),
     }
     if WINDOWS:
-        for cell in ((3, 0), (1, 3), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 2), (3, 3), (3, 4), (3, 6)):
+        for cell in ((3, 0), (1, 3), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 3), (3, 4), (3, 6)):
             del grid[cell]
     else:
         for c in range(8):
