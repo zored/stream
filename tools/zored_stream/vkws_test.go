@@ -76,7 +76,7 @@ func TestVkwsLive(t *testing.T) {
 	defer cancel()
 	err := vkwsChats(ctx, func(es []chatEntry) {
 		for _, e := range es {
-			t.Logf("%-40s unread=%d at=%s text=%dch avatar=%dB", e.title, e.unread, e.at.Format(time.DateTime), len(e.text), len(e.avatar))
+			t.Logf("%-40s unread=%d at=%s text=%q avatar=%dB sender=%dB", e.title, e.unread, e.at.Format(time.DateTime), e.text, len(e.avatar), len(e.sender))
 		}
 		t.Logf("total %d", len(es))
 		cancel()
@@ -98,6 +98,25 @@ func TestVkwsArchivedIsMuted(t *testing.T) {
 	for sn, want := range map[string]bool{"open": false, "muted": true, "1000000569": true} {
 		if got := st.isMuted(sn); got != want {
 			t.Errorf("%s: muted=%v, want %v", sn, got, want)
+		}
+	}
+}
+
+func TestVkwsReplyShowsOwnTextAndSender(t *testing.T) {
+	d, err := parseVkwsHistory("1@chat.agent", []byte(`{"status":{"code":20000},"results":{"messages":[{"msgId":2,"time":5,"chat":{"sender":"b@corp"},"parts":[{"mediaType":"quote","text":"parent"},{"mediaType":"text","text":"answer"}]}]}}`))
+	if err != nil || d.text != "answer" || d.sender != "b@corp" {
+		t.Fatalf("%+v %v", d, err)
+	}
+}
+
+func TestVkwsNoSenderForDirectOrOutgoing(t *testing.T) {
+	for _, b := range []string{
+		`{"status":{"code":20000},"results":{"messages":[{"msgId":2,"time":5,"text":"hi","chat":{"sender":"a@corp"}}]}}`,
+		`{"status":{"code":20000},"results":{"messages":[{"msgId":2,"time":5,"text":"hi","outgoing":true,"chat":{"sender":"me@corp"}}]}}`,
+		`{"status":{"code":20000},"results":{"messages":[{"msgId":2,"time":5,"text":"hi"}]}}`,
+	} {
+		if d, err := parseVkwsHistory("a@corp", []byte(b)); err != nil || d.sender != "" {
+			t.Errorf("%s: %+v %v", b, d, err)
 		}
 	}
 }

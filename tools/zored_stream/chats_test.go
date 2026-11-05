@@ -117,3 +117,13 @@ func TestChatsLines(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestChatsSenderBottomLeft(t *testing.T) {
+	if chatsSender(chatEntry{}, 0, 0, 88, 13) != nil {
+		t.Fatal("no sender, no disc")
+	}
+	d := chatsSender(chatEntry{sender: []byte{1}}, 10, 20, 88, 13)
+	if len(d) != 1 || d[0].cx != 23 || d[0].cy != 95 || d[0].r != 13 {
+		t.Fatalf("%+v", d)
+	}
+}

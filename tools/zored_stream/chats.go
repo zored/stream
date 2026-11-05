@@ -32,6 +32,7 @@ type chatEntry struct {
 	at     time.Time
 	text   string
 	avatar []byte
+	sender []byte
 	open   string
 	muted  bool
 }
@@ -299,6 +300,13 @@ func chatsBadges(e chatEntry, x, y, w, r, size float64, muted bool, now time.Tim
 		[]calText{chatsLabel(capped(e.unread, 99), cx, top, size, whiteRGB), chatsLabel(ago(e.at, now), cx, bottom, size*0.85, whiteRGB)}
 }
 
+func chatsSender(e chatEntry, x, y, w, r float64) []chatsDisc {
+	if len(e.sender) == 0 {
+		return nil
+	}
+	return []chatsDisc{{avatar: e.sender, cx: x + r, cy: y + w - r, r: r}}
+}
+
 func chatsFace(e chatEntry, cx, cy, r float64, square bool) (chatsDisc, []calText) {
 	d := chatsDisc{avatar: e.avatar, cx: cx, cy: cy, r: r, square: square}
 	if len(e.avatar) > 0 {
@@ -359,7 +367,7 @@ func chatsTileImage(list []chatEntry, more bool, now time.Time, muted bool) stri
 			o := 40 * float64(i)
 			d, t := chatsFace(e, o+22, o+26, 21, false)
 			bd, bt := chatsBadges(e, o, o, 48, 9, 9, muted, now)
-			discs, texts = append(append(discs, d), bd...), append(append(texts, t...), bt...)
+			discs, texts = append(append(append(discs, d), chatsSender(e, o, o, 48, 9)...), bd...), append(append(texts, t...), bt...)
 		}
 		return chatsPNG(88, 88, discs, texts)
 	}
@@ -375,7 +383,7 @@ func chatsTileImage(list []chatEntry, more bool, now time.Time, muted bool) stri
 		x, y := cell*float64(i%2), cell*float64(i/2)+(88-grid)/2
 		d, t := chatsFace(e, x+cell*0.42, y+cell*0.58, cell*0.36, false)
 		bd, bt := chatsBadges(e, x, y, cell, cell*0.2, cell*0.2, muted, now)
-		discs, texts = append(append(discs, d), bd...), append(append(texts, t...), bt...)
+		discs, texts = append(append(append(discs, d), chatsSender(e, x, y, cell, cell*0.2)...), bd...), append(append(texts, t...), bt...)
 	}
 	return chatsPNG(88, 88, discs, texts)
 }
@@ -383,7 +391,7 @@ func chatsTileImage(list []chatEntry, more bool, now time.Time, muted bool) stri
 func chatsCard(e chatEntry, dx float64, now time.Time, muted bool) ([]chatsDisc, []calText) {
 	d, t := chatsFace(e, 44+dx, 44, 44, true)
 	bd, bt := chatsBadges(e, dx, 0, 88, 13, 13, muted, now)
-	return append([]chatsDisc{d}, bd...), append(t, bt...)
+	return append(append([]chatsDisc{d}, chatsSender(e, dx, 0, 88, 13)...), bd...), append(t, bt...)
 }
 
 func chatsPickImage(list []chatEntry, pick int, now time.Time, muted bool) string {

@@ -136,6 +136,7 @@ type vkwsDialog struct {
 	at     time.Time
 	text   string
 	name   string
+	sender string
 }
 
 func parseVkwsHistory(sn string, b []byte) (vkwsDialog, error) {
@@ -154,8 +155,12 @@ func parseVkwsHistory(sn string, b []byte) (vkwsDialog, error) {
 				Outgoing bool   `json:"outgoing"`
 				Text     string `json:"text"`
 				Class    string `json:"class"`
-				Parts    []struct {
-					Text string `json:"text"`
+				Chat     struct {
+					Sender string `json:"sender"`
+				} `json:"chat"`
+				Parts []struct {
+					MediaType string `json:"mediaType"`
+					Text      string `json:"text"`
 				} `json:"parts"`
 			} `json:"messages"`
 			Persons []struct {
@@ -195,10 +200,15 @@ func parseVkwsHistory(sn string, b []byte) (vkwsDialog, error) {
 		text := last.Text
 		if text == "" {
 			for _, p := range last.Parts {
-				text += " " + p.Text
+				if p.MediaType != "quote" {
+					text += " " + p.Text
+				}
 			}
 		}
 		d.text = strings.Join(strings.Fields(text), " ")
+		if !last.Outgoing && last.Chat.Sender != sn {
+			d.sender = last.Chat.Sender
+		}
 	}
 	for _, p := range res.Persons {
 		if p.SN == sn {
@@ -397,19 +407,27 @@ func (st *vkwsState) entries(ctx context.Context) []chatEntry {
 		if title == "" {
 			title = sn
 		}
-		av, ok := st.avatars[sn]
-		if !ok {
-			var err error
-			if av, err = st.c.avatar(ctx, sn); err != nil {
-				log.Printf("%v", err)
-			} else {
-				st.avatars[sn] = av
-			}
+		var sender []byte
+		if d.sender != "" {
+			sender = st.avatar(ctx, d.sender)
 		}
-		es = append(es, chatEntry{app: "vkws", id: sn, title: title, unread: d.unread, at: d.at, text: d.text, avatar: av, muted: st.isMuted(sn), open: vkwsOpenURL(st.c.s.BaseURL, sn)})
+		es = append(es, chatEntry{app: "vkws", id: sn, title: title, unread: d.unread, at: d.at, text: d.text, avatar: st.avatar(ctx, sn), sender: sender, muted: st.isMuted(sn), open: vkwsOpenURL(st.c.s.BaseURL, sn)})
 	}
 	sort.Slice(es, func(i, j int) bool { return es[i].at.After(es[j].at) })
 	return es
+}
+
+func (st *vkwsState) avatar(ctx context.Context, sn string) []byte {
+	if av, ok := st.avatars[sn]; ok {
+		return av
+	}
+	av, err := st.c.avatar(ctx, sn)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil
+	}
+	st.avatars[sn] = av
+	return av
 }
 
 func vkwsChats(ctx context.Context, push func([]chatEntry)) error {
@@ -437,7 +455,7 @@ func vkwsChats(ctx context.Context, push func([]chatEntry)) error {
 		es := st.entries(ctx)
 		key := fmt.Sprint(len(es))
 		for _, e := range es {
-			key += fmt.Sprintf("|%s:%d:%d:%v:%s", e.id, e.unread, e.at.Unix(), e.muted, e.text)
+			key += fmt.Sprintf("|%s:%d:%d:%v:%s:%d", e.id, e.unread, e.at.Unix(), e.muted, e.text, len(e.sender))
 		}
 		if key != shown {
 			shown = key
