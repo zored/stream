@@ -10,11 +10,11 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
           left                         tiles                           right
         knob strip   колонка 1   колонка 2   колонка 3   колонка 4   strip knob
 ряд 1   VOL   ┐      headphones  wi-fi       en/ru       awake       ┐     SUN
-ряд 2   TRACK ├trk   play/cover  emoji       ·           agents      ├ai   AI
-ряд 3   SEEK  ┘      mic         camera      day / call  clock+timer ┘     SCROLL
+ряд 2   SEEK  ├trk   play/cover  emoji       ·           agents      ├ai   AI
+ряд 3   CHATS ┘      mic/chats   cam/weather day / call  clock+timer ┘     SCROLL
 
         кнопка 1  2      3       4        5   6        7          8
-        KVM       ·      chats   ·        cal  ·        dictation  ·
+        KVM       ·      ·       ·        cal  ·        dictation  ·
         in a call:       mic     camera   hang up
 ```
 

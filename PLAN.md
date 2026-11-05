@@ -15,9 +15,9 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 
 | Used | Free |
 |---|---|
-| left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather (in progress), `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
-| buttons `3/0` KVM, `3/1` mic, `3/2` camera / unread chats, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/1`, `3/2`, `3/5`, `3/7` (outside choice mode); `3/3` outside a call; tile `2/3` outside a call claimed by weather |
+| left knobs `0/0` volume, `1/0` seek (press + turn = tracks, click = play / pause, hold = like), `2/0` chats browse; left strip `0–2/1` track + bar | — |
+| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
+| buttons `3/0` KVM, `3/2` mic / `3/3` camera / `3/4` hang up in a call, `3/4` calendar outside a call, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/1`, `3/5`, `3/7`; `3/2`, `3/3` outside a call |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
 ## Done
@@ -72,6 +72,20 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   newline, other HTML stripped, entities decoded (`3ef3b32`); perf total at idle: CPU ~17 % → ~3 %, forks 9/s → 0, unchanged
   renders ~1000/min → 0
 
+- 2026-11-05: кнопка 5 = calendar (tap = list / action, LED `cal_led`; `1437e17`, `29e911f`); keep-awake blanking fixed twice: idle reset
+  before an Amphetamine restart (`b98926f`, `1527646`), then a 0 px mouse nudge on any press because macOS ignores the controller
+  (`3a2af70`) — verified on the device; in a call mic / camera / hang-up on кнопки 3 / 4 / 5 under the tiles, LEDs follow the tiles;
+  mic / cam tiles white off, red background on; headphones `0/2` ↔ layout `0/4`; the right strip's `3d` / `h:mm` label at `captionSize`
+  (`8a161be`…`25fc4d4`); calendar: dark green tile ≤ 5 min before an event, cleared at its end or any action; next event within 7 days,
+  the list opens on the shown one (`d0a94a9`); agents: 16 dots, focused chat bigger, slide, title + folder on the right strip per detent,
+  detent opens the chat, sessions by activity, child sessions as squares, кнопка 6 freed (`5a3a96b`, `634fed4`, `6885132`); left side
+  reworked: крутилка слева, ряд 2 = seek / press + turn tracks / click play / hold like (no second haptic), ряд 3 = chats browse + press,
+  кнопка 3 freed (`6e12016`); VK WorkSpace chats: archived (not in the buddylist) → muted mode (`964a181`), a reply shows its own text,
+  sender avatar on group chats (`1bccb10`, verified); play tile: pauses < 0.6 s don't flash ⏸ (`08e8d31`); weather on tile `2/3`
+  under the call camera: Open-Meteo (no key, no proxy), 😎 for sun, temp + feels-like, tap = forecast slots on крутилка слева, ряд 3,
+  port 47131 ([weather.md](docs/weather.md), `eb39c98`, verified on the device); icon set research: Lucide recommended, nothing changed;
+  AI.md rule: child sessions ask the user in their own chat, the master never relays
+
 ## Next
 
 ### Verify
@@ -88,28 +102,14 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Emoji picker on the device: look, swipe + inertia, typing into a field, haptics (checked over the API only)
 - [ ] Unread tile on the device; choice cards and Yandex Music like after the perf round 2 (not run live)
 - [ ] Date tile on the device; the 00:05 alarm seen once = a turn below 0 at the clock tile (assumed)
+- [ ] 2026-11-05 batch on the device: green calendar before an event + list opening on the shown event; agents 16 dots / slide / hollow dot for a chat not on the tile; крутилка слева, ряд 2 (tracks, like) and ряд 3 (chats); jirabot in the gray (muted) mode; the `3d` / `h:mm` label size; chats animation smoothness
 
 ### More buttons and actions
 
-- [x] 2026-11-05: кнопка 5 (`3/4`) = calendar: tap = list / action, LED `cal_led` white, green while browsing, off in a call (`1437e17`, `29e911f`, verified on the device)
-- [x] keep-awake: the display blanked on sun off / length change because macOS does not count the controller as activity → the daemon nudges the mouse by 0 px on any press (`3a2af70`, verified on the device)
-- [x] 2026-11-05 pages: in a call mic / camera / hang-up moved to кнопки 3 / 4 / 5 under the tiles, LEDs follow the tiles (red = on, dim white = off), кнопка 2 free; mic / cam tiles white off, red background on; headphones `0/2` ↔ layout flag `0/4` swapped; the right strip's `3d` / `h:mm` label at the tiles' caption size (`captionSize`), model font unchanged (`8a161be`…`25fc4d4`; device check pending)
-- [ ] Calendar tile: dark green background ≤ 5 min before an event (1 min poll), cleared at the event end or on a tap / кнопка 5; the 12 h limit dropped (next event within 7 days, `+2d планёрка`), the list opens on the event shown (`d0a94a9`; device check pending)
-- [ ] Left side reworked (`6e12016`): крутилка слева, ряд 3 = chats (turn browses, press = tile tap), ряд 2 = seek, press + turn = prev / next, click = play / pause, hold = Yandex like (counted in the daemon, so no second haptic); кнопка 3 free, no LED, mic in a call stays on the tile; device check pending
-- [ ] Agents tile (`6885132`): sessions by last activity, normal = circles, child = squares, a chat in front missing from the tile = hollow dot for 1 min (hollow dot not seen live); кнопка 6 free, no LED
-- [ ] In progress (child session, 2026-11-05): weather on tile `2/3` under the call camera layer — source (Open-Meteo?), 😎 for sunny, temp + feels-like, tap = 5 s forecast slots on крутилка слева, ряд 3; port 47131
-- [ ] Agents tile: 16 dots, focused chat, slide; each knob detent shows the chat title + folder on the right strip for 2 s (`5a3a96b`) and opens that chat at once, knob click = tile press (`634fed4`); device check pending
-- [x] 2026-11-05: VK WorkSpace chats — a reply shows its own text (the quoted parent is the first `parts` item with `mediaType: quote`, skipped); the sender's avatar bottom-left on the chat avatar in group chats (`1bccb10`, verified by the user on the device)
-- [x] 2026-11-05: JiraBot (VK WorkSpace, not Telegram) counted as a normal unread: chats missing from the buddylist (archived) now go to muted mode (`964a181`, tile check pending)
-- [ ] Chats tile fix in a child session (started by unread-avatars, 2026-11-05); play tile: pauses < 0.6 s between tracks no longer flash ⏸ (`08e8d31`, device check pending)
-
 New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
 
-- [ ] Camera tile does something else outside a call (layers, F23)
-- [ ] Chats tile `2/2` (child session, 2026-11-04, `22decf8`…`0c09921`): Telegram via `gotd/td` (`tg.go`, session `tg-digest`), 2×2 avatar grid with badges, muted mode, knob scroll with a 150 ms slide, 3 lines on the strip — device check pending (animation smoothness, strip); VK WorkSpace source parked
-- [ ] Now Playing: a race between two publishes fixed (`ea9b8fd`), the stale-track symptom itself never reproduced (4 transitions < 1 s)
-- [x] Keep-awake tap blanked the display for 2 s while Amphetamine restarted its session (regression of `5b8a196`: one reused activity assertion); idle reset before every start / length change (`b98926f`, `1527646`, verified on the device)
-- [ ] Icon set (research done 2026-11-04, nothing changed): today 9 SVGs in `tools/icons/` (grid 48, stroke 3.5) + ~11 inline in the daemon; candidates Lucide (ISC) / Tabler (MIT) / Phosphor (MIT), SF Symbols out by license; recommendation Lucide, stroke 1.75 on 24, 60 px in a 90 px tile, vendored in `tools/icons/lucide/` with a pinned version + `go:embed`; off state = same icon in gray; migration: call tiles → media → wifi/headphones/sun → timers/agents/chats/layout — waiting for the user's pick
+- [ ] Now Playing: a race between two publishes fixed (`ea9b8fd`), the stale-track symptom itself never reproduced — reopen if seen again
+- [ ] Icon set — waiting for the user's pick (research 2026-11-04, nothing changed): today 9 SVGs in `tools/icons/` (grid 48, stroke 3.5) + ~11 inline in the daemon; candidates Lucide (ISC) / Tabler (MIT) / Phosphor (MIT), SF Symbols out by license; recommendation Lucide, stroke 1.75 on 24, 60 px in a 90 px tile, vendored in `tools/icons/lucide/` with a pinned version + `go:embed`; off state = same icon in gray; migration: call tiles → media → wifi/headphones/sun → timers/agents/chats/layout — waiting for the user's pick
 - [ ] IDE / terminal pages; page switching by frontmost app (`zored_stream` already reads it via `lsappinfo` and can push a variable)
 - [ ] Integrations worth a look: OBS, Zoom, GitHub/CI status via HTTP
 
@@ -118,7 +118,7 @@ New features go on the MEDIA page as buttons; separate pages only once it runs o
 Desk and display:
 - [ ] Monitor brightness: DDC/CI via `m1ddc` or BetterDisplay CLI. PIP dropped (2026-11-04, user's call); KVM on кнопка 1 is done (`kvm.go`)
 - [ ] Display off (`pmset displaysleepnow`), lock
-- [ ] Perf round 3 (child session, 2026-11-04): volume on CoreAudio listeners, any controller POST = `IOPMAssertionDeclareUserActivity` ≤ 1/5 s (`5b8a196`); idle still ~3 % (master measured 20 s `top`); next by CPU: dictation AX search in the Claude window (46 %), choice (10 %), agents scan (8 %), Yandex Music AX (5 %); log spam `ymusic: player bar not found` every 3 s since 11-02; stale `np_*` on a natural track change not reproduced yet (manual next = 1–1.5 s); a bare strip tap never reaches the daemon (fork hook, not done)
+- [ ] Perf round 4: after round 3 (CoreAudio listeners, `5b8a196`) idle is still ~3 %; next by CPU: dictation AX search in the Claude window (46 %), choice (10 %), agents scan (8 %), Yandex Music AX (5 %); log spam `ymusic: player bar not found` every 3 s since 11-02; stale `np_*` on a natural track change not reproduced yet (manual next = 1–1.5 s); a bare strip tap never reaches the daemon (fork hook, not done)
 
 Windows and apps:
 - [ ] Frontmost app icon on a tile, press cycles its windows
@@ -134,7 +134,7 @@ AI agents:
 - [ ] Haptic on a new waiting session (needs a fork endpoint)
 
 Communication:
-- [ ] Unread Telegram / VK WorkSpace: Dock badge via AX (`AXStatusLabel`), works for any app; press opens the app
+- [ ] Chats: the uncommitted `voip.go` / `call.go` / `main.go` work in the tree (2026-11-05, owner unknown) — the staged `main.go` is an old snapshot, restage on HEAD before committing
 
 Network:
 - [ ] Viscosity VPN on/off with status color: Viscosity AppleScript (`connect`, `disconnect`, connection state)
