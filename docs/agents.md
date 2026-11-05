@@ -20,6 +20,14 @@ The ring follows the chat in front, not only presses (`watchFront`, every 1 s, `
 - Other apps: the ring stays where it was. A front chat not on the tile clears the ring. A CLI "done" chat seen in front drops, as on a press.
 - Slide: the ring moves from the old dot to the new one and the dot sizes swap (8 → 9.5) over 150 ms, smoothstep,
   `animationHz`, the ticker runs only while sliding (P1, P2).
+- After a press or a knob step the front check is ignored for 2.3 s: Desktop writes `lastFocusedAt` late, and the old
+  value pulled the cursor back, so the next press went to the same chat again (seen by the user).
+
+## Knob
+
+For 5 s after a press (`agents.knobTill`, extended by each detent) `/ai/turn`, `/ai/down`, `/ai/up` of крутилка справа, ряд 2
+go to the agents: a turn steps the cursor and wraps (`agentStep`), the chat opens 300 ms after the last detent;
+the knob press = a tile press (`focus`). Verified 2026-11-05 through the HTTP API, log `agents: knob …`.
 
 ## Flow
 

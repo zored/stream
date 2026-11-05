@@ -126,6 +126,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - press (on release): focus the next session (needs input → done → working, oldest first), next press moves on and wraps;
   none waiting → opens a new Code session
 - hold: new Claude Desktop Code session
+- for 5 s after a press (each detent extends it) крутилка справа, ряд 2 walks the chats instead of the model: turn moves the ring and wraps, the chat opens 300 ms after the knob rests; knob press = tile press
 
 Same as кнопка 6. [agents.md](agents.md)
 
@@ -222,6 +223,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 2 — AI model + effort
 
+- for 5 s after a press of тайл ряд 2, колонка 4 / кнопка 6 it walks the agent chats instead (see that tile)
 - turn: walks Sonnet·Low … Sonnet·High → Opus·Low … → Fable·High (9 stops, stops at the ends)
 - press + turn: model only, effort stays
 - press and release without a turn: re-applies the shown choice

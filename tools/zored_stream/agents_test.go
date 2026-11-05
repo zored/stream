@@ -77,3 +77,13 @@ func TestFrontDesktop(t *testing.T) {
 		t.Errorf("iterm uid %q", got)
 	}
 }
+
+func TestAgentStep(t *testing.T) {
+	for _, c := range []struct{ i, d, n, want int }{
+		{-1, 1, 3, 0}, {-1, -1, 3, 2}, {0, 1, 3, 1}, {2, 1, 3, 0}, {0, -1, 3, 2}, {1, -2, 3, 2},
+	} {
+		if got := agentStep(c.i, c.d, c.n); got != c.want {
+			t.Errorf("agentStep(%d,%d,%d) = %d, want %d", c.i, c.d, c.n, got, c.want)
+		}
+	}
+}

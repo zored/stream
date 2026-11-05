@@ -219,6 +219,7 @@ func main() {
 	dict := newDictation(v, np)
 	go dict.run()
 	go every(dictatePollEvery, dict.poll)
+	var ag *agents
 	go serve(*aiAddr, func(mux *http.ServeMux) {
 		handle(mux, "/dictation/down", func() error { return dict.push(true) })
 		handle(mux, "/dictation/up", func() error { return dict.push(false) })
@@ -228,7 +229,11 @@ func main() {
 				http.Error(w, "d: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			ai.turn(d)
+			if ag.browsing() {
+				ag.step(d)
+			} else {
+				ai.turn(d)
+			}
 			w.WriteHeader(http.StatusNoContent)
 		})
 		mux.HandleFunc("POST /ai/slide", func(w http.ResponseWriter, r *http.Request) {
@@ -242,14 +247,24 @@ func main() {
 			}
 			w.WriteHeader(http.StatusNoContent)
 		})
-		handle(mux, "/ai/down", ai.down)
-		handle(mux, "/ai/up", ai.up)
+		handle(mux, "/ai/down", func() error {
+			if ag.browsing() {
+				return nil
+			}
+			return ai.down()
+		})
+		handle(mux, "/ai/up", func() error {
+			if ag.browsing() {
+				return ag.focus()
+			}
+			return ai.up()
+		})
 	})
 	configDir, err := os.UserConfigDir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	ag := newAgents(v, *agentsTTL, newDesktopSessions(configDir))
+	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir))
 	ch := newChoice(v, func() (*choiceCard, choiceTarget, string, error) { return readChoiceCard(ag) })
 	go ch.run()
 	var choicePolled time.Time
@@ -371,7 +386,7 @@ func main() {
 		handle(mux, "/tile/24/press", tile24.press)
 		handle(mux, "/button/5/press", func() error {
 			if c.inCall() {
-				return nil
+				return c.hangUp()
 			}
 			return cal.press()
 		})
@@ -385,7 +400,7 @@ func main() {
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
 	button3 := &slot{vars: v, name: "button_3", layers: []layer{
-		{name: "call", active: c.inCall, press: c.camDown},
+		{name: "call", active: c.inCall, press: c.micDown, up: c.micUp},
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
 	go every(pollEvery, tile22.publish)

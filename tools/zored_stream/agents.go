@@ -29,6 +29,9 @@ const (
 	agentActiveR   = 9.5
 	agentSlide     = 150 * time.Millisecond
 	agentFrontFreq = time.Second
+	agentKnobFor   = 5 * time.Second
+	agentKnobRest  = 300 * time.Millisecond
+	agentManual    = 2 * time.Second
 	agentLedDone   = 0x404040
 	agentLedIdle   = 0xFFFFFF
 	agentLedRed    = 0xFF
@@ -93,6 +96,9 @@ type agents struct {
 	ringAt   time.Time
 	front    int
 	polled   time.Time
+	knobTill time.Time
+	knobOpen *time.Timer
+	manual   time.Time
 }
 
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
@@ -269,6 +275,7 @@ func (a *agents) focus() error {
 		}
 	}
 	a.cursor = next
+	a.knobTill, a.manual = time.Now().Add(agentKnobFor), time.Now()
 	if next.Kind == agentDone && !next.desktopDone() {
 		delete(a.sessions, next.ID)
 	}
@@ -277,6 +284,46 @@ func (a *agents) focus() error {
 	log.Printf("agents: focus %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
 	a.publish()
 	return target.open()
+}
+
+func (a *agents) browsing() bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return time.Now().Before(a.knobTill)
+}
+
+func (a *agents) step(d int) {
+	a.mu.Lock()
+	list := a.sorted()
+	if len(list) == 0 {
+		a.mu.Unlock()
+		return
+	}
+	i := agentStep(slices.IndexFunc(list, func(s *agentSession) bool { return a.cursor != nil && s.ID == a.cursor.ID }), d, len(list))
+	a.cursor = list[i]
+	a.knobTill, a.manual = time.Now().Add(agentKnobFor), time.Now()
+	target := *list[i]
+	if a.knobOpen != nil {
+		a.knobOpen.Stop()
+	}
+	a.knobOpen = time.AfterFunc(agentKnobRest, func() {
+		log.Printf("agents: knob %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
+		if err := target.open(); err != nil {
+			log.Printf("agents: %v", err)
+		}
+	})
+	a.mu.Unlock()
+	a.publish()
+}
+
+func agentStep(i, d, n int) int {
+	if i < 0 {
+		if d > 0 {
+			return 0
+		}
+		return n - 1
+	}
+	return ((i+d)%n + n) % n
 }
 
 func (s agentSession) open() error {
@@ -448,6 +495,10 @@ func (a *agents) watchFront() {
 		return
 	}
 	a.mu.Lock()
+	if time.Since(a.manual) < agentManual+agentKnobRest {
+		a.mu.Unlock()
+		return
+	}
 	var hit *agentSession
 	for _, s := range a.sessions {
 		if match(s) {
