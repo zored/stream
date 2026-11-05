@@ -260,6 +260,7 @@ func main() {
 		log.Fatal(err)
 	}
 	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir))
+	ag.strip = us.cover
 	ch := newChoice(v, func() (*choiceCard, choiceTarget, string, error) { return readChoiceCard(ag) })
 	go ch.run()
 	var choicePolled time.Time

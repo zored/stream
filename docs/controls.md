@@ -126,7 +126,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - press (on release): focus the next session (needs input → done → working, oldest first), next press moves on and wraps;
   none waiting → opens a new Code session
 - hold: new Claude Desktop Code session
-- крутилка справа, ряд 2: turn moves the ring and wraps, the chat opens 400 ms after the knob rests; click = tile press (opens the ringed chat at once if it is still waiting)
+- крутилка справа, ряд 2: turn moves the ring and wraps, the right strip shows the chat title white + folder gray for 2 s (as the calendar list), the chat opens 400 ms after the knob rests; click = tile press (opens the ringed chat at once if it is still waiting)
 - a chat read in Desktop (or a CLI one focused) stays for 1 min at the end as a hollow gray circle
 
 Same as кнопка 6. [agents.md](agents.md)

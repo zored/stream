@@ -15,6 +15,7 @@ type desktopRecord struct {
 	SessionID       string `json:"sessionId"`
 	CliSessionID    string `json:"cliSessionId"`
 	Cwd             string `json:"cwd"`
+	Title           string `json:"title"`
 	IsArchived      bool   `json:"isArchived"`
 	ScheduledTaskID string `json:"scheduledTaskId"`
 	LastFocusedAt   int64  `json:"lastFocusedAt"`
@@ -78,6 +79,12 @@ func (d *desktopSessions) scanIfChanged() (map[string]desktopRecord, error) {
 		return d.recs, nil
 	}
 	return d.scanLocked()
+}
+
+func (d *desktopSessions) title(host string) string {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.recs[host].Title
 }
 
 func (d *desktopSessions) scanLocked() (map[string]desktopRecord, error) {

@@ -33,6 +33,7 @@ const (
 	agentKnobRest  = 400 * time.Millisecond
 	agentReadFor   = time.Minute
 	agentManual    = 2 * time.Second
+	agentStripFor  = 2 * time.Second
 	agentLedDone   = 0x404040
 	agentLedIdle   = 0xFFFFFF
 	agentLedRed    = 0xFF
@@ -99,6 +100,8 @@ type agents struct {
 	polled   time.Time
 	knobOpen *time.Timer
 	manual   time.Time
+	strip    func(uri string)
+	stripOff *time.Timer
 }
 
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
@@ -310,6 +313,7 @@ func (a *agents) step(d int) {
 	if a.knobOpen != nil {
 		a.knobOpen.Stop()
 	}
+	a.showStrip(target)
 	a.knobOpen = time.AfterFunc(agentKnobRest, func() {
 		log.Printf("agents: knob %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
 		if err := target.open(); err != nil {
@@ -333,6 +337,25 @@ func (a *agents) knobPress() error {
 	}
 	log.Printf("agents: knob press %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
 	return target.open()
+}
+
+func (a *agents) showStrip(s agentSession) {
+	if a.strip == nil {
+		return
+	}
+	a.strip(agentStripImage(a.desktop.title(s.Host), filepath.Base(s.Cwd)))
+	if a.stripOff != nil {
+		a.stripOff.Stop()
+	}
+	a.stripOff = time.AfterFunc(agentStripFor, func() { a.strip("") })
+}
+
+func agentStripImage(title, cwd string) string {
+	const w, h = stripDrawH, stripDrawW
+	if title == "" {
+		return calImage(w, h, true, calText{text: cwd, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB})
+	}
+	return calImage(w, h, true, calText{text: title, tail: " " + cwd, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB, tailRGB: grayRGB})
 }
 
 func agentStep(i, d, n int) int {
