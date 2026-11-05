@@ -33,7 +33,7 @@ BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stre
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_led", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
+    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
     if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_22", "unread_svg", "button_3", "chats_led", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
@@ -395,11 +395,6 @@ def emoji_tile():
                   down=[post(EMOJI + "/emoji/tile")])
 
 
-def agents_led():
-    return button([canvas(), box("box0", expr("$(custom:agents_led)"))],
-                  up=[post(AGENTS + "/agent/focus")], held=[post(AGENTS + "/agent/new")])
-
-
 def agents_tile():
     return button([canvas(), box("box0", 0x000000),
                    image("dots", expr("$(custom:agents_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
@@ -495,7 +490,6 @@ def media_page():
         (0, 3): wifi_tile(),
         (0, 4): input_tile(),
         (0, 5): awake_tile(),
-        (3, 5): agents_led(),
         (3, 6): dictation_led(),
         (3, 2): chats_led(),
         (3, 3): call_led("call_cam"),

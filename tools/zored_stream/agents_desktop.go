@@ -15,7 +15,9 @@ type desktopRecord struct {
 	SessionID       string `json:"sessionId"`
 	CliSessionID    string `json:"cliSessionId"`
 	Cwd             string `json:"cwd"`
-	Title           string `json:"title"`
+	Title           string          `json:"title"`
+	LastActivityAt  int64           `json:"lastActivityAt"`
+	SpawnedFrom     json.RawMessage `json:"spawnedFrom"`
 	IsArchived      bool   `json:"isArchived"`
 	ScheduledTaskID string `json:"scheduledTaskId"`
 	LastFocusedAt   int64  `json:"lastFocusedAt"`
@@ -26,12 +28,17 @@ func (r desktopRecord) unread() bool {
 	return !r.IsArchived && r.ScheduledTaskID == "" && r.LastTurnEdgeAt > r.LastFocusedAt
 }
 
+func (r desktopRecord) child() bool {
+	return len(r.SpawnedFrom) > 0 && string(r.SpawnedFrom) != "null"
+}
+
 func (r desktopRecord) session() *agentSession {
 	id := r.CliSessionID
 	if id == "" {
 		id = r.SessionID
 	}
-	return &agentSession{ID: id, Kind: agentDone, Since: time.UnixMilli(r.LastTurnEdgeAt), Cwd: r.Cwd, Host: r.SessionID}
+	return &agentSession{ID: id, Kind: agentDone, Since: time.UnixMilli(r.LastTurnEdgeAt), Cwd: r.Cwd, Host: r.SessionID,
+		Updated: time.UnixMilli(max(r.LastActivityAt, r.LastTurnEdgeAt)), Child: r.child()}
 }
 
 type desktopFile struct {
@@ -81,10 +88,18 @@ func (d *desktopSessions) scanIfChanged() (map[string]desktopRecord, error) {
 	return d.scanLocked()
 }
 
-func (d *desktopSessions) title(host string) string {
+func (d *desktopSessions) record(host string) (desktopRecord, bool) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	return d.recs[host].Title
+	rec, ok := d.recs[host]
+	return rec, ok
+}
+
+func (d *desktopSessions) front() (desktopRecord, bool) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	rec, ok := d.recs[frontDesktop(d.recs)]
+	return rec, ok
 }
 
 func (d *desktopSessions) scanLocked() (map[string]desktopRecord, error) {

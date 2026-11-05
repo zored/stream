@@ -14,7 +14,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ряд 3   SEEK  ┘      mic         camera      day / call  clock+timer ┘     SCROLL
 
         кнопка 1  2      3       4        5   6        7          8
-        KVM       ·      chats   ·        cal  agents   dictation  ·
+        KVM       ·      chats   ·        cal  ·        dictation  ·
         in a call:       mic     camera   hang up
 ```
 
@@ -123,13 +123,14 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 - shows: one dot per Claude Code session: amber = needs input, white = done and unread (a Desktop chat stays white while its sidebar shows the blue dot), gray = working, up to 16 in a 4×4 grid; the active one (chat in front, else last focused) is bigger with a white ring,
   the ring slides over in 150 ms; a number above 16; a hollow gray circle when none
-- press (on release): focus the next session (needs input → done → working, oldest first), next press moves on and wraps;
+- order: top-level chats as circles, then sub-sessions as squares, each newest activity first
+- press (on release): focus the next session in that order, next press moves on and wraps;
   none waiting → opens a new Code session
 - hold: new Claude Desktop Code session
 - крутилка справа, ряд 2: turn moves the ring and wraps, the right strip shows the chat title white + folder gray for 2 s (as the calendar list), the chat opens at once (hollow dots of read chats help to step back); click = tile press
 - a chat read in Desktop (or a CLI one focused) stays for 1 min at the end as a hollow gray circle
 
-Same as кнопка 6. [agents.md](agents.md)
+A knob turn with the chat in front not on the tile adds it as a hollow dot for 1 min. [agents.md](agents.md)
 
 ### тайл ряд 3, колонка 1 — microphone in a call, unread chats otherwise
 
@@ -180,7 +181,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | кнопка 3 | in a call: mic, tap toggles, hold ≥ 300 ms = push-to-talk; otherwise the unread chats of тайл ряд 3, колонка 1: tap = browse / open, hold = muted chats ↔ unread | in a call: red (dims 1 s every 4 s) = on, dim white = off, yellow = switching, blinking yellow = unknown; otherwise white = unread chats, green = browsing, gray = muted chats |
 | кнопка 4 | camera toggle in a call | as кнопка 3 in a call, off = no call |
 | кнопка 5 | outside a call: the calendar of тайл ряд 3, колонка 3, tap = open the list / act on the item; in a call: hang up | white, green = browsing; white in a call |
-| кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, white = none |
+| кнопка 6 | free | off |
 | кнопка 7 | dictation into Claude Desktop (below) | white = ready, blinking green = recording, off = no Claude window with a record button |
 | кнопка 8 | free | off |
 
@@ -274,6 +275,6 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 | volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold or swipes up/down; brightness = monitor over DDC/CI |
 | mic tile + кнопка 2 | system mic mute (proposal) |
 | keyboard layout, wi-fi, headphones, keep-awake, emoji, camera, day / hang-up tiles, timers, кнопки 1, 3, 4, 7 | dropped, free (the clock stays, no timers) |
-| agents tile + кнопка 6 | Codex sessions |
+| agents tile | Codex sessions |
 | right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |

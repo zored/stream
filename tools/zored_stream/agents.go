@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"os/exec"
 	"path/filepath"
@@ -23,8 +22,6 @@ const (
 	agentDone      = "done"
 	agentWorking   = "working"
 	agentRead      = "read"
-	agentLedHz     = 20
-	agentBreathe   = 2 * time.Second
 	agentMaxDots   = 16
 	agentDotR      = 8
 	agentActiveR   = 9.5
@@ -33,11 +30,6 @@ const (
 	agentReadFor   = time.Minute
 	agentManual    = 2 * time.Second
 	agentStripFor  = 2 * time.Second
-	agentLedDone   = 0x404040
-	agentLedIdle   = 0xFFFFFF
-	agentLedRed    = 0xFF
-	agentLedGreen  = 0xB0
-	agentLedFloor  = 0.12
 	agentCheckFreq = 10 * time.Second
 )
 
@@ -56,6 +48,8 @@ type agentSession struct {
 	ITerm string    `json:"iterm,omitempty"`
 	App   string    `json:"app,omitempty"`
 	Pid   int       `json:"pid,omitempty"`
+	Updated time.Time `json:"updated"`
+	Child   bool      `json:"child,omitempty"`
 	choicePayload
 }
 
@@ -89,7 +83,6 @@ type agents struct {
 	cursor   *agentSession
 	ttl      time.Duration
 	vars     *vars
-	breathe  chan struct{}
 	slide    chan struct{}
 	desktop  *desktopSessions
 	ringFrom string
@@ -103,7 +96,7 @@ type agents struct {
 }
 
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
-	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, breathe: make(chan struct{}, 1), slide: make(chan struct{}, 1), desktop: desktop}
+	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, slide: make(chan struct{}, 1), desktop: desktop}
 }
 
 func (s *agentSession) desktopDone() bool {
@@ -171,6 +164,8 @@ func (a *agents) mark(s agentSession, kind string) {
 		return
 	}
 	s.Kind, s.Since = kind, time.Now()
+	s.Updated = s.Since
+	a.enrich(&s)
 	s.Picked = make([]map[int]bool, len(s.Questions))
 	for i := range s.Picked {
 		s.Picked[i] = map[int]bool{}
@@ -230,6 +225,9 @@ func (a *agents) expire() {
 			changed = true
 			continue
 		}
+		if rec, ok := recs[s.Host]; ok {
+			s.Updated, s.Child = time.UnixMilli(max(rec.LastActivityAt, rec.LastTurnEdgeAt)), rec.child()
+		}
 		hosts[s.Host] = true
 	}
 	for host, rec := range recs {
@@ -246,17 +244,24 @@ func (a *agents) expire() {
 	}
 }
 
-var agentRank = map[string]int{agentInput: 0, agentDone: 1, agentWorking: 2, agentRead: 3}
-
 func (s *agentSession) markRead() {
 	s.Kind, s.Since = agentRead, time.Now()
 }
 
-func agentLess(x, y *agentSession) int {
-	if c := agentRank[x.Kind] - agentRank[y.Kind]; c != 0 {
-		return c
+func (a *agents) enrich(s *agentSession) {
+	if rec, ok := a.desktop.record(s.Host); ok {
+		s.Updated, s.Child = time.Now(), rec.child()
 	}
-	if c := x.Since.Compare(y.Since); c != 0 {
+}
+
+func agentLess(x, y *agentSession) int {
+	if x.Child != y.Child {
+		if x.Child {
+			return 1
+		}
+		return -1
+	}
+	if c := y.Updated.Compare(x.Updated); c != 0 {
 		return c
 	}
 	return strings.Compare(x.ID, y.ID)
@@ -298,6 +303,7 @@ func (a *agents) focus() error {
 }
 
 func (a *agents) step(d int) {
+	a.addFront()
 	a.mu.Lock()
 	list := a.sorted()
 	if len(list) == 0 {
@@ -324,7 +330,8 @@ func (a *agents) showStrip(s agentSession) {
 	if a.strip == nil {
 		return
 	}
-	a.strip(agentStripImage(a.desktop.title(s.Host), filepath.Base(s.Cwd)))
+	rec, _ := a.desktop.record(s.Host)
+	a.strip(agentStripImage(rec.Title, filepath.Base(s.Cwd)))
 	if a.stripOff != nil {
 		a.stripOff.Stop()
 	}
@@ -337,6 +344,28 @@ func agentStripImage(title, cwd string) string {
 		return calImage(w, h, true, calText{text: cwd, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB})
 	}
 	return calImage(w, h, true, calText{text: title, tail: " " + cwd, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB, tailRGB: grayRGB})
+}
+
+func (a *agents) addFront() {
+	if pid := frontPid(); pid == 0 || pid != claudePid() {
+		return
+	}
+	rec, ok := a.desktop.front()
+	if !ok {
+		return
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, s := range a.sessions {
+		if s.Host == rec.SessionID {
+			return
+		}
+	}
+	s := rec.session()
+	s.markRead()
+	a.sessions[s.ID] = s
+	a.cursor = s
+	log.Printf("agents: front %s added hollow %s", s.ID, filepath.Base(s.Cwd))
 }
 
 func agentStep(i, d, n int) int {
@@ -395,21 +424,9 @@ const itermFocus = `tell application id "com.googlecode.iterm2"
 	error "iTerm2 session not found"
 end tell`
 
-func (a *agents) counts() (input, done int) {
-	for _, s := range a.sessions {
-		switch s.Kind {
-		case agentInput:
-			input++
-		case agentDone:
-			done++
-		}
-	}
-	return
-}
 
 func (a *agents) publish() {
 	a.mu.Lock()
-	input, done := a.counts()
 	list := a.sorted()
 	cursor := ""
 	if a.cursor != nil {
@@ -422,10 +439,10 @@ func (a *agents) publish() {
 		default:
 		}
 	}
-	kinds := make([]string, len(list))
+	dots := make([]agentDotSpec, len(list))
 	current, prev := -1, -1
 	for i, s := range list {
-		kinds[i] = s.Kind
+		dots[i] = agentDotSpec{s.Kind, s.Child}
 		switch s.ID {
 		case a.ringTo:
 			current = i
@@ -435,37 +452,9 @@ func (a *agents) publish() {
 	}
 	t := a.slideT()
 	a.mu.Unlock()
-	a.vars.set("agents_svg", agentsSVG(kinds, current, prev, t))
-	if input > 0 {
-		select {
-		case a.breathe <- struct{}{}:
-		default:
-		}
-		return
-	}
-	a.vars.set("agents_led", strconv.Itoa(map[bool]int{true: agentLedDone, false: agentLedIdle}[done > 0]))
+	a.vars.set("agents_svg", agentsSVG(dots, current, prev, t))
 }
 
-func (a *agents) animate() {
-	for range a.breathe {
-		start := time.Now()
-		ticker := time.NewTicker(time.Second / agentLedHz)
-		for range ticker.C {
-			a.mu.Lock()
-			input, _ := a.counts()
-			a.mu.Unlock()
-			if input == 0 {
-				break
-			}
-			phase := float64(time.Since(start)) / float64(agentBreathe)
-			level := agentLedFloor + (1-agentLedFloor)*(0.5-0.5*math.Cos(2*math.Pi*phase))
-			r, g := int(agentLedRed*level), int(agentLedGreen*level)
-			a.vars.set("agents_led", strconv.Itoa(r<<16|g<<8))
-		}
-		ticker.Stop()
-		a.publish()
-	}
-}
 
 func (a *agents) slideT() float64 {
 	return min(1, float64(time.Since(a.ringAt))/float64(agentSlide))
@@ -568,21 +557,35 @@ func agentDot(i, n int) (x, y float64) {
 	return 50 + (float64(col)-float64(inRow-1)/2)*22, 50 + (float64(row)-float64(rows-1)/2)*22
 }
 
-func agentsSVG(kinds []string, current, prev int, t float64) string {
+type agentDotSpec struct {
+	kind  string
+	child bool
+}
+
+func agentShape(b *strings.Builder, x, y, r float64, child bool, paint string) {
+	if child {
+		h := r * 0.9
+		fmt.Fprintf(b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="1.5" %s/>`, x-h, y-h, 2*h, 2*h, paint)
+		return
+	}
+	fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" %s/>`, x, y, r, paint)
+}
+
+func agentsSVG(dots []agentDotSpec, current, prev int, t float64) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
-	switch n := len(kinds); {
+	switch n := len(dots); {
 	case n == 0:
 		fmt.Fprintf(&b, `<circle cx="50" cy="50" r="7" fill="none" stroke="%s" stroke-width="2.5"/>`, gray)
 	case n > agentMaxDots:
 		fill := "#fff"
-		if kinds[0] == agentInput {
+		if dots[0].kind == agentInput {
 			fill = amber
 		}
 		fmt.Fprintf(&b, `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="56" fill="%s">%d</text>`, fill, n)
 	default:
 		e := t * t * (3 - 2*t)
-		for i, kind := range kinds {
+		for i, dot := range dots {
 			x, y := agentDot(i, n)
 			r := float64(agentDotR)
 			if i == current {
@@ -592,16 +595,16 @@ func agentsSVG(kinds []string, current, prev int, t float64) string {
 				r += (agentActiveR - agentDotR) * (1 - e)
 			}
 			fill := gray
-			switch kind {
+			switch dot.kind {
 			case agentInput:
 				fill = amber
 			case agentDone:
 				fill = "#fff"
 			case agentRead:
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="%s" stroke-width="2"/>`, x, y, r-1, gray)
+				agentShape(&b, x, y, r-1, dot.child, `fill="none" stroke="`+gray+`" stroke-width="2"`)
 				continue
 			}
-			fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>`, x, y, r, fill)
+			agentShape(&b, x, y, r, dot.child, `fill="`+fill+`"`)
 		}
 		if current >= 0 {
 			x, y := agentDot(current, n)

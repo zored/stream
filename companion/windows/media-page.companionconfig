@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "zWJ9etlHd7DIR87cjEYAL",
+  "id": "FteBe65k3gRJx5wTKagZH",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -5272,7 +5272,7 @@
         "down": [
          {
           "type": "action",
-          "id": "UQzGzTBQQRpPvhT6NZntI",
+          "id": "eF5P9PJ9V8j0XtY--hKpe",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5299,7 +5299,7 @@
         "up": [
          {
           "type": "action",
-          "id": "p7tPRLhAAiH2GRmhC0EeE",
+          "id": "Xt1tCZjj-h_-NVOAg_rJt",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5589,8 +5589,8 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:agents_led)",
-         "isExpression": true
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -5616,65 +5616,10 @@
       "0": {
        "action_sets": {
         "down": [],
-        "up": [
-         {
-          "type": "action",
-          "id": "n2FEXX9BQGpzKJEh1PLkZ",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ],
-        "400": [
-         {
-          "type": "action",
-          "id": "-9Ctfutp7uupreH1p3yL6",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/new",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ]
+        "up": []
        },
        "options": {
-        "runWhileHeld": [
-         400
-        ]
+        "runWhileHeld": []
        }
       }
      },

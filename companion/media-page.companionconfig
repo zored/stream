@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "_I1aV8WrNGTETuS7s2d88",
+  "id": "pVNrSQy9qPf7BIHPMCrVM",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -6782,7 +6782,7 @@
         "down": [
          {
           "type": "action",
-          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
+          "id": "ESuVqKMtiIJ0obGKB2_QC",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6809,7 +6809,7 @@
         "up": [
          {
           "type": "action",
-          "id": "UUuaZkswN9ud5PAPapMpW",
+          "id": "6QY0HC0aFZLhiO6LA6ecA",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6836,7 +6836,7 @@
         "400": [
          {
           "type": "action",
-          "id": "mw6Aoeumb4cqbejYVNQd0",
+          "id": "b7MYG-yJQ0tXKq_p4Bnuq",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6961,7 +6961,7 @@
         "down": [
          {
           "type": "action",
-          "id": "4bjSxODAm1Fnx1nEN90-6",
+          "id": "UUuaZkswN9ud5PAPapMpW",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6988,7 +6988,7 @@
         "up": [
          {
           "type": "action",
-          "id": "8jmrkllUzNPJY6CS8ZsyP",
+          "id": "mw6Aoeumb4cqbejYVNQd0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7111,7 +7111,7 @@
         "down": [
          {
           "type": "action",
-          "id": "f7k9xQwOdXw1Qb3tafqaL",
+          "id": "4bjSxODAm1Fnx1nEN90-6",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7138,7 +7138,7 @@
         "up": [
          {
           "type": "action",
-          "id": "1w6V81qLrUqm_Yq0eB7DV",
+          "id": "8jmrkllUzNPJY6CS8ZsyP",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7261,7 +7261,7 @@
         "down": [
          {
           "type": "action",
-          "id": "BoJoXiNj-b0uo0jRSctp5",
+          "id": "f7k9xQwOdXw1Qb3tafqaL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7288,7 +7288,7 @@
         "up": [
          {
           "type": "action",
-          "id": "tNM4h_30k5rzbNPfAccl7",
+          "id": "1w6V81qLrUqm_Yq0eB7DV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7411,7 +7411,7 @@
         "down": [
          {
           "type": "action",
-          "id": "DfEvaASc8m9uu4Dm5rhyn",
+          "id": "BoJoXiNj-b0uo0jRSctp5",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7438,7 +7438,7 @@
         "up": [
          {
           "type": "action",
-          "id": "yK9rN837stCdSb4uOOBKY",
+          "id": "tNM4h_30k5rzbNPfAccl7",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7532,7 +7532,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_6) : ($(custom:agents_led))",
+         "value": "$(custom:choice_on) == 1 ? $(custom:choice_6) : (0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -7561,7 +7561,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Vr3ZMVC6MhWYxzSJerJlh",
+          "id": "DfEvaASc8m9uu4Dm5rhyn",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7588,39 +7588,12 @@
         "up": [
          {
           "type": "action",
-          "id": "sGkbE15Cm9SHYOS-W34At",
+          "id": "yK9rN837stCdSb4uOOBKY",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=6' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/focus ; }",
-            "isExpression": false
-           },
-           "cwd": {
-            "value": "",
-            "isExpression": false
-           },
-           "timeout": {
-            "value": 2000,
-            "isExpression": false
-           },
-           "targetVariable": {
-            "value": null,
-            "isExpression": false
-           }
-          },
-          "upgradeIndex": null
-         }
-        ],
-        "400": [
-         {
-          "type": "action",
-          "id": "xHQwMNTKuTn1ui4pSjZI0",
-          "connectionId": "internal",
-          "definitionId": "exec",
-          "options": {
-           "path": {
-            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=6' >/dev/null || { curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/new ; }",
+            "value": "curl -fs -m 1 -X POST 'http://127.0.0.1:47120/choice/up?b=6' >/dev/null || { true ; }",
             "isExpression": false
            },
            "cwd": {
@@ -7641,9 +7614,7 @@
         ]
        },
        "options": {
-        "runWhileHeld": [
-         400
-        ]
+        "runWhileHeld": []
        }
       }
      },
@@ -7740,7 +7711,7 @@
         "down": [
          {
           "type": "action",
-          "id": "qc26706JsftfcZpxhSaDV",
+          "id": "Vr3ZMVC6MhWYxzSJerJlh",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7767,7 +7738,7 @@
         "up": [
          {
           "type": "action",
-          "id": "pVNrSQy9qPf7BIHPMCrVM",
+          "id": "sGkbE15Cm9SHYOS-W34At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7890,7 +7861,7 @@
         "down": [
          {
           "type": "action",
-          "id": "-yPVMPbWzLMGwQ3cpGr5-",
+          "id": "xHQwMNTKuTn1ui4pSjZI0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7917,7 +7888,7 @@
         "up": [
          {
           "type": "action",
-          "id": "TtBVN9_5DOABuhLPDn81a",
+          "id": "qc26706JsftfcZpxhSaDV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

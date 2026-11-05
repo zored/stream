@@ -5,9 +5,8 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 
 ## Controls
 
-- кнопка 6 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
-- тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working, in that order, up to 16 in a 4×4 grid; the active one (the chat in front, else the last focused) is drawn bigger with a white ring, the ring slides to the next one in 150 ms; a number above 16; a hollow gray circle when none.
-- Press either: focus the next session (needs input, then done, then working, oldest first), the next press moves on and wraps.
+- тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working; Desktop sub-sessions (`spawnedFrom` in the session file) are squares after the top-level chats, each group newest activity first (`lastActivityAt`, CLI: last hook), up to 16 in a 4×4 grid; the active one (the chat in front, else the last focused) is drawn bigger with a white ring, the ring slides to the next one in 150 ms; a number above 16; a hollow gray circle when none.
+- Press the tile: focus the next session in tile order, the next press moves on and wraps. A knob turn with the chat in front not on the tile adds it as a hollow dot first (1 min).
   A Desktop "done" session stays until Desktop marks it read (see Unread); a CLI one drops when focused; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile or кнопка 6 (400 ms) always opens a new Code session; both focus on release.
 
 ## Active chat
@@ -73,7 +72,7 @@ still unread (verified 2026-11-03: two finished chats vanished from the tile 2 m
 - A new hook event for the same Desktop chat replaces the older entry (the `cliSessionId` changes on `/clear`).
 - After a restart a chat in the middle of a turn shows as "done" until its next hook (≤ one tool call).
 
-Variables: `agents_led` (LED color as an int), `agents_svg` (tile). `GET /agents` lists the state, `POST /agent/focus` is the press (`409` when empty).
+Variables: `agents_svg` (tile). кнопка 6 has no agents role since 2026-11-05: the knob walks the chats. `GET /agents` lists the state, `POST /agent/focus` is the press (`409` when empty).
 
 ## Which hooks fire
 

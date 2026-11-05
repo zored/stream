@@ -274,7 +274,6 @@ func main() {
 	})
 	ag.expire()
 	ag.publish()
-	go ag.animate()
 	go ag.animateSlide()
 	go every(agentFrontFreq, ag.watchFront)
 	go every(agentCheckFreq, ag.expire)

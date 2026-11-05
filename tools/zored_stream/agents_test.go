@@ -9,18 +9,18 @@ import (
 func TestAgentOrder(t *testing.T) {
 	t0 := time.Unix(1000, 0)
 	list := []*agentSession{
-		{ID: "w", Kind: agentWorking, Since: t0},
-		{ID: "d2", Kind: agentDone, Since: t0.Add(time.Minute)},
-		{ID: "i2", Kind: agentInput, Since: t0.Add(time.Minute)},
-		{ID: "d1", Kind: agentDone, Since: t0},
-		{ID: "i1", Kind: agentInput, Since: t0},
+		{ID: "old", Kind: agentInput, Updated: t0},
+		{ID: "kid-new", Kind: agentDone, Updated: t0.Add(3 * time.Minute), Child: true},
+		{ID: "new", Kind: agentWorking, Updated: t0.Add(2 * time.Minute)},
+		{ID: "kid-old", Kind: agentInput, Updated: t0, Child: true},
+		{ID: "mid", Kind: agentRead, Updated: t0.Add(time.Minute)},
 	}
 	slices.SortFunc(list, agentLess)
 	var got []string
 	for _, s := range list {
 		got = append(got, s.ID)
 	}
-	if want := []string{"i1", "i2", "d1", "d2", "w"}; !slices.Equal(got, want) {
+	if want := []string{"new", "mid", "old", "kid-new", "kid-old"}; !slices.Equal(got, want) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
