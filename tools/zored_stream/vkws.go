@@ -333,6 +333,12 @@ type vkwsState struct {
 	muted   map[string]bool
 }
 
+// isMuted: a dialog missing from the buddylist is archived (hidden), and the server drops its mute flag with it.
+func (st *vkwsState) isMuted(sn string) bool {
+	m, listed := st.muted[sn]
+	return m || !listed
+}
+
 func (st *vkwsState) refresh(ctx context.Context, sns []string) error {
 	type res struct {
 		sn  string
@@ -400,7 +406,7 @@ func (st *vkwsState) entries(ctx context.Context) []chatEntry {
 				st.avatars[sn] = av
 			}
 		}
-		es = append(es, chatEntry{app: "vkws", id: sn, title: title, unread: d.unread, at: d.at, text: d.text, avatar: av, muted: st.muted[sn], open: vkwsOpenURL(st.c.s.BaseURL, sn)})
+		es = append(es, chatEntry{app: "vkws", id: sn, title: title, unread: d.unread, at: d.at, text: d.text, avatar: av, muted: st.isMuted(sn), open: vkwsOpenURL(st.c.s.BaseURL, sn)})
 	}
 	sort.Slice(es, func(i, j int) bool { return es[i].at.After(es[j].at) })
 	return es

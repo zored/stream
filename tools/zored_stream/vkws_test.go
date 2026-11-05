@@ -92,3 +92,12 @@ func TestVkwsHistoryTextFromParts(t *testing.T) {
 		t.Fatalf("got %q, %v", d.text, err)
 	}
 }
+
+func TestVkwsArchivedIsMuted(t *testing.T) {
+	st := &vkwsState{muted: map[string]bool{"open": false, "muted": true}}
+	for sn, want := range map[string]bool{"open": false, "muted": true, "1000000569": true} {
+		if got := st.isMuted(sn); got != want {
+			t.Errorf("%s: muted=%v, want %v", sn, got, want)
+		}
+	}
+}
