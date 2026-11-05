@@ -96,7 +96,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [x] 2026-11-05 pages: in a call mic / camera / hang-up moved to кнопки 3 / 4 / 5 under the tiles, LEDs follow the tiles (red = on, dim white = off), кнопка 2 free; mic / cam tiles white off, red background on; headphones `0/2` ↔ layout flag `0/4` swapped; the right strip's `3d` / `h:mm` label at the tiles' caption size (`captionSize`), model font unchanged (`8a161be`…`25fc4d4`; device check pending)
 - [ ] Calendar tile: dark green background ≤ 5 min before an event (1 min poll), cleared at the event end or on a tap / кнопка 5 (child session, user check pending)
 - [ ] Agents tile: 16 dots, focused chat, slide; each knob detent shows the chat title + folder on the right strip for 2 s (`5a3a96b`, device check pending)
-- [ ] In progress (child session, 2026-11-05): Telegram muted + archived chat (jirabot) shown as a normal unread
+- [x] 2026-11-05: JiraBot (VK WorkSpace, not Telegram) counted as a normal unread: chats missing from the buddylist (archived) now go to muted mode (`964a181`, tile check pending)
 - [ ] Chats tile fix in a child session (started by unread-avatars, 2026-11-05); play tile: pauses < 0.6 s between tracks no longer flash ⏸ (`08e8d31`, device check pending)
 
 New features go on the MEDIA page as buttons; separate pages only once it runs out of room.
