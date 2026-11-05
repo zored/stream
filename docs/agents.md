@@ -27,8 +27,7 @@ The ring follows the chat in front, not only presses (`watchFront`, every 1 s, `
 
 крутилка справа, ряд 2 (`/ai/turn`, `/ai/down`, `/ai/up`, routed in `main.go`): a plain turn steps the cursor and wraps
 (`agentStep`), the right strip shows the Desktop title (`title` in its session file) white and the cwd folder gray for 2 s
-(`usage.cover`, `calImage` as the calendar list), the chat opens 400 ms after the last detent; a click = `knobPress`: opens the ringed chat at once while its open
-is still pending, else a tile press (`focus`). Press + turn goes to the model switch. Verified 2026-11-05 through the HTTP API.
+(`usage.cover`, `calImage` as the calendar list), each detent opens its chat at once; a click = a tile press (`focus`). Press + turn goes to the model switch. Verified 2026-11-05 through the HTTP API.
 
 ## Read chats
 

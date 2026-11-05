@@ -252,7 +252,7 @@ func main() {
 			if ai.up() {
 				return nil
 			}
-			return ag.knobPress()
+			return ag.focus()
 		})
 	})
 	configDir, err := os.UserConfigDir()

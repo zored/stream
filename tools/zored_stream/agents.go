@@ -30,7 +30,6 @@ const (
 	agentActiveR   = 9.5
 	agentSlide     = 150 * time.Millisecond
 	agentFrontFreq = time.Second
-	agentKnobRest  = 400 * time.Millisecond
 	agentReadFor   = time.Minute
 	agentManual    = 2 * time.Second
 	agentStripFor  = 2 * time.Second
@@ -98,7 +97,6 @@ type agents struct {
 	ringAt   time.Time
 	front    int
 	polled   time.Time
-	knobOpen *time.Timer
 	manual   time.Time
 	strip    func(uri string)
 	stripOff *time.Timer
@@ -310,34 +308,17 @@ func (a *agents) step(d int) {
 	a.cursor = list[i]
 	a.manual = time.Now()
 	target := *list[i]
-	if a.knobOpen != nil {
-		a.knobOpen.Stop()
-	}
 	a.showStrip(target)
-	a.knobOpen = time.AfterFunc(agentKnobRest, func() {
+	go func() {
 		log.Printf("agents: knob %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
 		if err := target.open(); err != nil {
 			log.Printf("agents: %v", err)
 		}
-	})
+	}()
 	a.mu.Unlock()
 	a.publish()
 }
 
-func (a *agents) knobPress() error {
-	a.mu.Lock()
-	pending := a.knobOpen != nil && a.knobOpen.Stop()
-	var target agentSession
-	if pending && a.cursor != nil {
-		target = *a.cursor
-	}
-	a.mu.Unlock()
-	if target.ID == "" {
-		return a.focus()
-	}
-	log.Printf("agents: knob press %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
-	return target.open()
-}
 
 func (a *agents) showStrip(s agentSession) {
 	if a.strip == nil {
@@ -537,7 +518,7 @@ func (a *agents) watchFront() {
 		return
 	}
 	a.mu.Lock()
-	if time.Since(a.manual) < agentManual+agentKnobRest {
+	if time.Since(a.manual) < agentManual {
 		a.mu.Unlock()
 		return
 	}
