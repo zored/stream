@@ -256,7 +256,7 @@ func chatsInitial(title string) string {
 const (
 	chatsRed     = redRGB
 	chatsDark    = 0x333333
-	chatsBlack   = 0x000001
+	chatsBlack   = 0x1C1C1E
 	chatsFrames  = 6
 	chatsFrameAt = 25 * time.Millisecond
 )
@@ -339,7 +339,7 @@ func chatsTileImage(list []chatEntry, more bool, now time.Time) string {
 	case 2:
 		for i, e := range list {
 			o := 40 * float64(i)
-			d, t := chatsFace(e, o+22, o+26, 21, false)
+			d, t := chatsFace(e, o+22, o+26, 21, true)
 			bd, bt := chatsBadges(e, o, o, 48, 9, 9, now)
 			layers = append(layers, layer(e, append(append([]chatsDisc{d}, chatsSender(e, o, o, 48, 9)...), bd...), append(t, bt...)))
 		}
@@ -352,7 +352,7 @@ func chatsTileImage(list []chatEntry, more bool, now time.Time) string {
 		cell := grid / 2
 		for i, e := range list {
 			x, y := cell*float64(i%2), cell*float64(i/2)+(88-grid)/2
-			d, t := chatsFace(e, x+cell*0.42, y+cell*0.58, cell*0.36, false)
+			d, t := chatsFace(e, x+cell*0.42, y+cell*0.58, cell*0.36, true)
 			bd, bt := chatsBadges(e, x, y, cell, cell*0.2, cell*0.2, now)
 			layers = append(layers, layer(e, append(append([]chatsDisc{d}, chatsSender(e, x, y, cell, cell*0.2)...), bd...), append(t, bt...)))
 		}
