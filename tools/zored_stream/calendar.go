@@ -23,6 +23,7 @@ const (
 	grayRGB      = 0x808080
 	whiteRGB     = 0xFFFFFF
 	greenRGB     = 0x00FF00
+	soonBgRGB    = 0x0E4420
 )
 
 type calItem struct {
@@ -46,6 +47,7 @@ type calendar struct {
 	browseTill time.Time
 	pick       int
 	knobDown   bool
+	dismissed  string
 }
 
 func newCalendar(v *vars, release func(), strip func(string)) *calendar {
@@ -100,13 +102,37 @@ func (c *calendar) publishLocked() {
 		c.vars.set("cal_browse", "0")
 	}
 	var next *calItem
-	key := calDate(now)
+	bg := calBg(c.items, now, c.dismissed)
+	key := calDate(now) + strconv.Itoa(int(bg))
 	if i := calNext(c.items, now); i >= 0 {
 		next = &c.items[i]
 		key += "\n" + calWhen(*next, now) + " " + calTitle(*next)
 	}
 	c.vars.set("cal_led", strconv.Itoa(calLed(c.browsing())))
-	c.vars.set("cal_card", c.card.render(key, func() string { return calCardImage(now, next) }))
+	c.vars.set("cal_card", c.card.render(key, func() string { return calCardImage(now, next, bg) }))
+}
+
+func calGlow(items []calItem, now time.Time) string {
+	i := slices.IndexFunc(items, func(it calItem) bool {
+		return !it.reminder && !it.allDay && it.end.After(now) && it.start.Sub(now) <= calSoon
+	})
+	if i < 0 {
+		return ""
+	}
+	return items[i].id + "@" + items[i].start.String()
+}
+
+func calBg(items []calItem, now time.Time, dismissed string) uint32 {
+	if g := calGlow(items, now); g != "" && g != dismissed {
+		return soonBgRGB
+	}
+	return 0
+}
+
+func (c *calendar) dismissLocked() {
+	if g := calGlow(c.items, time.Now()); g != "" {
+		c.dismissed = g
+	}
 }
 
 func calLed(browsing bool) int {
@@ -122,6 +148,7 @@ func (c *calendar) browsing() bool {
 
 func (c *calendar) press() error {
 	c.mu.Lock()
+	c.dismissLocked()
 	if c.browsing() {
 		i := c.pick
 		c.mu.Unlock()
@@ -140,6 +167,7 @@ func (c *calendar) turn(direction int) bool {
 	if !c.browsing() {
 		return false
 	}
+	c.dismissLocked()
 	if n := len(c.items); n > 0 {
 		c.pick = min(max(c.pick+direction, 0), n-1)
 	}
@@ -172,6 +200,7 @@ func (c *calendar) act(i int) error {
 		return nil
 	}
 	it := c.items[i]
+	c.dismissLocked()
 	if it.reminder {
 		c.items[i].done = !it.done
 		if c.browsing() {
@@ -230,7 +259,11 @@ func calColor(it calItem, now time.Time) uint32 {
 }
 
 func calImage(w, h float64, rotate bool, texts ...calText) string {
-	uri, err := calPNG(w, h, rotate, texts)
+	return calImageBg(w, h, rotate, 0, texts...)
+}
+
+func calImageBg(w, h float64, rotate bool, bg uint32, texts ...calText) string {
+	uri, err := calPNG(w, h, rotate, bg, texts)
 	if err != nil {
 		log.Print(err)
 	}
@@ -265,12 +298,12 @@ func calDate(t time.Time) string {
 	return fmt.Sprintf("%d %s", t.Day(), calMonths[t.Month()-1])
 }
 
-func calCardImage(now time.Time, it *calItem) string {
+func calCardImage(now time.Time, it *calItem, bg uint32) string {
 	texts := []calText{{text: calDate(now), y: 68, w: 88, h: 20, size: captionSize, rgb: whiteRGB, center: true}}
 	if it != nil {
 		texts = append(texts, calText{text: calWhen(*it, now) + " " + calTitle(*it), w: 88, h: 64, size: 15, rgb: whiteRGB})
 	}
-	return calImage(88, 88, false, texts...)
+	return calImageBg(88, 88, false, bg, texts...)
 }
 
 var calWeekdays = [...]string{"вс", "пн", "вт", "ср", "чт", "пт", "сб"}

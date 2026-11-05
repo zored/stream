@@ -86,3 +86,23 @@ func TestCalLed(t *testing.T) {
 		t.Error("calLed")
 	}
 }
+
+func TestCalSoonBg(t *testing.T) {
+	now := time.Date(2026, 11, 3, 12, 0, 0, 0, time.Local)
+	items := []calItem{
+		{id: "r", start: now.Add(time.Minute), end: now.Add(time.Minute), reminder: true},
+		{id: "m", start: now.Add(4 * time.Minute), end: now.Add(30 * time.Minute)},
+	}
+	if calBg(items, now.Add(-2*time.Minute), "") != 0 {
+		t.Error("6 min ahead glows")
+	}
+	if calBg(items, now, "") != soonBgRGB || calBg(items, now.Add(20*time.Minute), "") != soonBgRGB {
+		t.Error("no glow from 5 min ahead till the end")
+	}
+	if calBg(items, now.Add(30*time.Minute), "") != 0 {
+		t.Error("glow after the end")
+	}
+	if g := calGlow(items, now); calBg(items, now.Add(10*time.Minute), g) != 0 {
+		t.Error("dismissed glow came back")
+	}
+}

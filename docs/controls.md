@@ -9,12 +9,13 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ```
           left                         tiles                           right
         knob strip   колонка 1   колонка 2   колонка 3   колонка 4   strip knob
-ряд 1   VOL   ┐      en/ru       wi-fi       headphones  awake       ┐     SUN
+ряд 1   VOL   ┐      headphones  wi-fi       en/ru       awake       ┐     SUN
 ряд 2   TRACK ├trk   play/cover  emoji       ·           agents      ├ai   AI
 ряд 3   SEEK  ┘      mic         camera      day / call  clock+timer ┘     SCROLL
 
         кнопка 1  2      3       4        5   6        7          8
-        KVM       mic    camera  hang up  ·   agents   dictation  ·
+        KVM       ·      chats   ·        cal  agents   dictation  ·
+        in a call:       mic     camera   hang up
 ```
 
 `·` = free. Grid coords for code: `row/col`, knobs `r/0` and `r/7`, strips `r/1` and `r/6`, tiles `r/2–5`, buttons `3/0–7`
@@ -62,18 +63,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ## Tiles
 
-### тайл ряд 1, колонка 1 — keyboard layout
-- shows the current layout as a small flag: 🇬🇧 / 🇷🇺 (other languages: the code, white), crossfades in 0.3 s on a switch; follows ⌃Space and any other switch
-- touch: next enabled layout (two enabled now, so EN ↔ RU)
-
-
-### тайл ряд 1, колонка 2 — wi-fi
-
-- shows: the current network name under the fan (white, cut to 10 chars); while joining, the target name in gray (up to 15 s); a phone instead of the wi-fi icon on an iPhone hotspot (router in 172.20.10.0/28, filled when joined); gray crossed wi-fi = off; one white arc = on, not joined; full wi-fi = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; an eye top-right = Viscosity VPN: white eye connected, yellow eye connecting, red crossed eye all down, none when Viscosity is not running
-- hold 400 ms: wi-fi on / off
-- touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`) instead of the model, yellow while the list loads, with a small `›` toward the knob until the first turn. Each turn extends the 5 s. List: what the Wi-Fi details of Control Center show (iPhone hotspots, then known networks in range); Control Center flashes and the list loads in ~3 s; meanwhile the strip is yellow and the knob already turns through the previous list. If the pick is gone from the fresh list, the first network is picked; a pause on a yellow pick joins after the load. Names keep their case (`zored_5G` ≠ `zored_5g`) A 1 s pause switches: drop the current Wi-Fi, disconnect Viscosity, join the pick, wait for its link, 1 s later connect `Barbos_SE` (flag `-wifi-vpn`; one retry if not connected in 20 s). The join itself: the daemon clicks it in the Wi-Fi details of Control Center (it flashes for ~1.5 s), macOS fills the password itself
-
-### тайл ряд 1, колонка 3 — headphones
+### тайл ряд 1, колонка 1 — headphones
 
 - shows the current output: speaker = wired / built-in, headphones = any Bluetooth output; yellow = connecting; red for 3 s = switch failed
 - touch: toggle. To headphones: connect over Bluetooth, output and mic go to them (the mic always, so music drops to headset quality).
@@ -82,6 +72,17 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - no hold
 
 [macos.md](macos.md)
+
+### тайл ряд 1, колонка 2 — wi-fi
+
+- shows: the current network name under the fan (white, cut to 10 chars); while joining, the target name in gray (up to 15 s); a phone instead of the wi-fi icon on an iPhone hotspot (router in 172.20.10.0/28, filled when joined); gray crossed wi-fi = off; one white arc = on, not joined; full wi-fi = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; an eye top-right = Viscosity VPN: white eye connected, yellow eye connecting, red crossed eye all down, none when Viscosity is not running
+- hold 400 ms: wi-fi on / off
+- touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`) instead of the model, yellow while the list loads, with a small `›` toward the knob until the first turn. Each turn extends the 5 s. List: what the Wi-Fi details of Control Center show (iPhone hotspots, then known networks in range); Control Center flashes and the list loads in ~3 s; meanwhile the strip is yellow and the knob already turns through the previous list. If the pick is gone from the fresh list, the first network is picked; a pause on a yellow pick joins after the load. Names keep their case (`zored_5G` ≠ `zored_5g`) A 1 s pause switches: drop the current Wi-Fi, disconnect Viscosity, join the pick, wait for its link, 1 s later connect `Barbos_SE` (flag `-wifi-vpn`; one retry if not connected in 20 s). The join itself: the daemon clicks it in the Wi-Fi details of Control Center (it flashes for ~1.5 s), macOS fills the password itself
+
+### тайл ряд 1, колонка 3 — keyboard layout
+- shows the current layout as a small flag: 🇬🇧 / 🇷🇺 (other languages: the code, white), crossfades in 0.3 s on a switch; follows ⌃Space and any other switch
+- touch: next enabled layout (two enabled now, so EN ↔ RU)
+
 
 ### тайл ряд 1, колонка 4 — keep awake / sleep
 
@@ -131,32 +132,31 @@ Same as кнопка 6. [agents.md](agents.md)
 ### тайл ряд 3, колонка 1 — microphone in a call, unread chats otherwise
 
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
-- in a call shows: black tile, the icon is colored: green mic = on, red crossed mic = off, amber `…` = switching, amber `?` = unknown
+- in a call shows: white mic on red = on, white crossed mic on black = off, amber `…` = switching, amber `?` = unknown
 - no call: up to 4 most recent unread chats (Telegram + VK WorkSpace, via their APIs, push); one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid: avatar, or without one the first words of the name in 2–3 lowercase lines on black, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
 - tap: browse for 5 s, крутилка справа, ряд 3 scrolls the chats (newest first) with a slide animation; the tile shows the chat's avatar over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - hold ≥ 400 ms: switch to muted chats (muted or archived in Telegram, muted in VK WorkSpace), count badges gray, a gray closed eye when none; hold again to switch back
-- кнопка 3 does the same tap and hold outside a call
-- [unread.md](unread.md)
-
-Same as кнопка 2. [vkcall.md](vkcall.md)
+- кнопка 3 does the same: in a call the mic, outside a call the chats tap and hold
+- [unread.md](unread.md) [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 2 — camera (VK WorkSpace call)
 
 - tap: toggle the camera (takes 1–3 s, amber `…` meanwhile)
 - shows: same colors as the mic tile
 
-Same as кнопка 3 in a call. [vkcall.md](vkcall.md)
+Same as кнопка 4 in a call. [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 3 — day / hang up
 
 - one tile, two layers, top active wins: a VK WorkSpace call > the day; the daemon picks the layer (`tile_24`) and routes the tap to it
-- call: hang-up icon, tap ends the call. Same as кнопка 4. [vkcall.md](vkcall.md)
+- call: hang-up icon, tap ends the call. Same as кнопка 5 in a call. [vkcall.md](vkcall.md)
 - day: all white, left-aligned: the date `3 ноя`; below `+40m` / `+5h` / `+1d` until the next event or reminder within 12 h (for a running event: `25m` until its end) and its title, lowercase, wrapped (reminders get `○`)
 - titles keep emoji (drawn by CoreText into a PNG, the SVG renderer had none) and wrap by character; a recurring event is listed once, at its next occurrence
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
+- dark green background from 5 min before an event (not reminders) until it ends; any calendar action (touch, кнопка 5, knob in the list) clears it for that event
 - touch: 5 s list, one item at a time; крутилка справа, ряд 3 scrolls it. The right strip (over model + effort) shows the title white with the notes right after it in gray, one run of text, HTML (`<br/>` = line break) and links, separator lines and call ID / access code lines cut out. The tile shows the item: its date `5 ноя`, below the weekday and time `ср 12:00` (amber for an event in ≤ 5 min or an overdue reminder), below `○` / `●` for a reminder
 - in the list a touch (or the knob press) toggles the reminder (list stays open) or opens the event in Calendar
-- кнопка 5 does the same tap outside a call
+- кнопка 5 does the same tap outside a call, hangs up in a call
 
 ### тайл ряд 3, колонка 4 — clock + timers
 
@@ -174,10 +174,10 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | Button | Does | LED |
 |---|---|---|
 | кнопка 1 | KVM → Windows: press = Wake-on-LAN to the PC, then monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu. Hold = toggle PIP | pink, white 0.3 s on press |
-| кнопка 2 | mic: tap toggles, hold = push-to-talk | green (dims 1 s every 4 s) = on, dim red = off, yellow = switching, blinking yellow = unknown, off = no call |
-| кнопка 3 | in a call: camera toggle; otherwise the unread chats of тайл ряд 3, колонка 1: tap = browse / open, hold = muted chats ↔ unread | in a call as кнопка 2; otherwise white = unread chats, green = browsing, gray = muted chats |
-| кнопка 4 | hang up | white while in a call |
-| кнопка 5 | outside a call: the calendar of тайл ряд 3, колонка 3, tap = open the list / act on the item; in a call: nothing | white, green = browsing, off in a call |
+| кнопка 2 | free | off |
+| кнопка 3 | in a call: mic, tap toggles, hold ≥ 300 ms = push-to-talk; otherwise the unread chats of тайл ряд 3, колонка 1: tap = browse / open, hold = muted chats ↔ unread | in a call: red (dims 1 s every 4 s) = on, dim white = off, yellow = switching, blinking yellow = unknown; otherwise white = unread chats, green = browsing, gray = muted chats |
+| кнопка 4 | camera toggle in a call | as кнопка 3 in a call, off = no call |
+| кнопка 5 | outside a call: the calendar of тайл ряд 3, колонка 3, tap = open the list / act on the item; in a call: hang up | white, green = browsing; white in a call |
 | кнопка 6 | agents: press = focus next session, hold = new Code session | amber breathing = a session needs input, dim gray = only finished unread ones, white = none |
 | кнопка 7 | dictation into Claude Desktop (below) | white = ready, blinking green = recording, off = no Claude window with a record button |
 | кнопка 8 | free | off |

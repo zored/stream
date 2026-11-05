@@ -73,8 +73,11 @@ type calText struct {
 	center       bool
 }
 
-func calPNG(w, h float64, rotate bool, texts []calText) (string, error) {
+func calPNG(w, h float64, rotate bool, bg uint32, texts []calText) (string, error) {
 	c := C.cal_canvas_new(C.double(w), C.double(h), 4, cBool(rotate))
+	if bg != 0 {
+		C.cal_canvas_fill(c, C.uint(bg))
+	}
 	for _, t := range texts {
 		s, tail := C.CString(t.text), C.CString(t.tail)
 		C.cal_canvas_text(c, s, tail, C.double(t.x), C.double(t.y), C.double(t.w), C.double(t.h), C.double(t.size), C.uint(t.rgb), C.uint(t.tailRGB), cBool(t.center))

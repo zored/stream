@@ -192,6 +192,12 @@ void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double si
     }
 }
 
+void cal_canvas_fill(void *c, unsigned rgb) {
+    CGContextRef ctx = ((canvas *)c)->ctx;
+    CGContextSetRGBFillColor(ctx, ((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
+    CGContextFillRect(ctx, CGRectMake(-1e4, -1e4, 2e4, 2e4));
+}
+
 void cal_canvas_ring(void *c, double cx, double cy, double r, double width, unsigned rgb) {
     CGContextRef ctx = ((canvas *)c)->ctx;
     double H = ((canvas *)c)->h;

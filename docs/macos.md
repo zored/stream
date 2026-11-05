@@ -79,7 +79,7 @@ The device has no HID interface, so it can't wake a sleeping Mac (verified: pres
 
 ## zored_stream — headphones
 
-`headphones.go`, `headphones_darwin.{go,m,h}`, `:47123`: `POST /headphones/toggle` from тайл ряд 1, колонка 3; variable `headphones_svg`
+`headphones.go`, `headphones_darwin.{go,m,h}`, `:47123`: `POST /headphones/toggle` from тайл ряд 1, колонка 1; variable `headphones_svg`
 = the whole tile (speaker or headphones glyph, yellow while switching, red 3 s on failure). State is polled every 2 s:
 headphones = the default output is any Bluetooth CoreAudio device; a press then goes back to speakers.
 
@@ -219,6 +219,7 @@ no AppleScript). The Karabiner VirtualHID route needs a root client and was not 
 - EventKit in-process (`calendar_darwin.m`): events ±7 days (cancelled dropped) and incomplete reminders with a due date up to +7 days, polled every minute; past events drop out, overdue reminders stay.
 - Access: `requestFullAccessTo{Events,Reminders}` (macOS 14+), usage strings in the embedded `Info.plist`; the first poll blocks until the prompt is answered.
 - Notes (`EKCalendarItem.notes`) go to the list strip, gray.
+- Soon glow: the day tile gets a dark green background (`soonBgRGB`, `cal_canvas_fill`) while the first non-reminder event is ≤ 5 min ahead or running (`calGlow`); a tap, knob turn or act stores its id+start in `dismissed`, so it never comes back for that event. The glow is part of the card's frame key: re-render only on the edge, at most 1 min late (poll).
 - Done toggles `EKReminder.completed` + `saveReminder:commit:`; reminders completed since midnight are listed too.
 - Text is drawn by CoreText (`cal_canvas_*`, JetBrains Mono, system emoji fallback, char wrap) into a 4× PNG: Companion's SVG text has no emoji. The frame path is taller than the box and clipped, otherwise a line taller than the box (emoji ascent) is dropped; lines are drawn one by one at a fixed baseline (font ascent, step = 1.25 × size) so an emoji does not push its line down. Open: `open ical://ekevent/<eventIdentifier>?method=show&options=more`.
 - Knob capture: `/scroll/*` ask `calendar` first (`knob`, `turn`); entering the list releases Ctrl (S1).
