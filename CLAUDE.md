@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Config-as-code for a Razer Stream Controller (= Loupedeck Live) driven by Bitfocus Companion, on macOS now, Windows next.
-Status and next steps: `PLAN.md`.
+Status and next steps: `PLAN.md`. Prompt for a new master session: `docs/master-prompt.md`.
 
 **Must-read before any change: `docs/invariants.md`** — what must stay true, where it is enforced, how to change a rule.
 
