@@ -16,8 +16,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` track (hold = like), `2/0` seek; left strip `0–2/1` track + bar | — |
-| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic, `2/3` camera, `2/2` mic / unread chats, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
-| buttons `3/0` KVM, `3/1` mic, `3/2` camera / unread chats, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/1`, `3/7` (outside choice mode); `3/3` outside a call |
+| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather (in progress), `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
+| buttons `3/0` KVM, `3/1` mic, `3/2` camera / unread chats, `3/3` hang up, `3/5` agents, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/1`, `3/2`, `3/5`, `3/7` (outside choice mode); `3/3` outside a call; tile `2/3` outside a call claimed by weather |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
 ## Done
@@ -94,7 +94,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [x] 2026-11-05: кнопка 5 (`3/4`) = calendar: tap = list / action, LED `cal_led` white, green while browsing, off in a call (`1437e17`, `29e911f`, verified on the device)
 - [x] keep-awake: the display blanked on sun off / length change because macOS does not count the controller as activity → the daemon nudges the mouse by 0 px on any press (`3a2af70`, verified on the device)
 - [x] 2026-11-05 pages: in a call mic / camera / hang-up moved to кнопки 3 / 4 / 5 under the tiles, LEDs follow the tiles (red = on, dim white = off), кнопка 2 free; mic / cam tiles white off, red background on; headphones `0/2` ↔ layout flag `0/4` swapped; the right strip's `3d` / `h:mm` label at the tiles' caption size (`captionSize`), model font unchanged (`8a161be`…`25fc4d4`; device check pending)
-- [ ] Calendar tile: dark green background ≤ 5 min before an event (1 min poll), cleared at the event end or on a tap / кнопка 5 (child session, user check pending)
+- [ ] Calendar tile: dark green background ≤ 5 min before an event (1 min poll), cleared at the event end or on a tap / кнопка 5; the 12 h limit dropped (next event within 7 days, `+2d планёрка`), the list opens on the event shown (`d0a94a9`; device check pending)
+- [ ] Left side reworked (`6e12016`): крутилка слева, ряд 3 = chats (turn browses, press = tile tap), ряд 2 = seek, press + turn = prev / next, click = play / pause, hold = Yandex like (counted in the daemon, so no second haptic); кнопка 3 free, no LED, mic in a call stays on the tile; device check pending
+- [ ] Agents tile (`6885132`): sessions by last activity, normal = circles, child = squares, a chat in front missing from the tile = hollow dot for 1 min (hollow dot not seen live); кнопка 6 free, no LED
+- [ ] In progress (child session, 2026-11-05): weather on tile `2/3` under the call camera layer — source (Open-Meteo?), 😎 for sunny, temp + feels-like, tap = 5 s forecast slots on крутилка слева, ряд 3; port 47131
 - [ ] Agents tile: 16 dots, focused chat, slide; each knob detent shows the chat title + folder on the right strip for 2 s (`5a3a96b`) and opens that chat at once, knob click = tile press (`634fed4`); device check pending
 - [x] 2026-11-05: VK WorkSpace chats — a reply shows its own text (the quoted parent is the first `parts` item with `mediaType: quote`, skipped); the sender's avatar bottom-left on the chat avatar in group chats (`1bccb10`, verified by the user on the device)
 - [x] 2026-11-05: JiraBot (VK WorkSpace, not Telegram) counted as a normal unread: chats missing from the buddylist (archived) now go to muted mode (`964a181`, tile check pending)
