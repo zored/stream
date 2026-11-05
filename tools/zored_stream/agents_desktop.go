@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -40,8 +41,11 @@ type desktopFile struct {
 }
 
 type desktopSessions struct {
+	mu    sync.Mutex
 	dir   string
 	files map[string]desktopFile
+	dirs  map[string]time.Time
+	recs  map[string]desktopRecord
 }
 
 func newDesktopSessions(configDir string) *desktopSessions {
@@ -49,6 +53,46 @@ func newDesktopSessions(configDir string) *desktopSessions {
 }
 
 func (d *desktopSessions) scan() (map[string]desktopRecord, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.scanLocked()
+}
+
+// scanIfChanged rescans only when a session directory changed: Desktop replaces the files, which bumps the directory mtime.
+func (d *desktopSessions) scanIfChanged() (map[string]desktopRecord, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	paths, err := filepath.Glob(filepath.Join(d.dir, "*", "*"))
+	if err != nil {
+		return nil, err
+	}
+	same := d.recs != nil && len(paths) == len(d.dirs)
+	for _, p := range paths {
+		info, err := os.Stat(p)
+		if err != nil {
+			return nil, err
+		}
+		same = same && d.dirs[p].Equal(info.ModTime())
+	}
+	if same {
+		return d.recs, nil
+	}
+	return d.scanLocked()
+}
+
+func (d *desktopSessions) scanLocked() (map[string]desktopRecord, error) {
+	dirs := map[string]time.Time{}
+	dirPaths, err := filepath.Glob(filepath.Join(d.dir, "*", "*"))
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range dirPaths {
+		info, err := os.Stat(p)
+		if err != nil {
+			return nil, err
+		}
+		dirs[p] = info.ModTime()
+	}
 	paths, err := filepath.Glob(filepath.Join(d.dir, "*", "*", "local_*.json"))
 	if err != nil {
 		return nil, err
@@ -83,6 +127,6 @@ func (d *desktopSessions) scan() (map[string]desktopRecord, error) {
 			recs[f.rec.SessionID] = f.rec
 		}
 	}
-	d.files = files
+	d.files, d.dirs, d.recs = files, dirs, recs
 	return recs, nil
 }

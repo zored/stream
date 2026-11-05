@@ -6,9 +6,20 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 ## Controls
 
 - кнопка 6 LED: amber breathing (2 s, 20 Hz from the daemon) while any session needs input; dim gray while only finished ones wait; off when none.
-- тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working, in that order; the last focused one has a white ring; a number above 8; a hollow gray circle when none.
+- тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working, in that order, up to 16 in a 4×4 grid; the active one (the chat in front, else the last focused) is drawn bigger with a white ring, the ring slides to the next one in 150 ms; a number above 16; a hollow gray circle when none.
 - Press either: focus the next session (needs input, then done, then working, oldest first), the next press moves on and wraps.
   A Desktop "done" session stays until Desktop marks it read (see Unread); a CLI one drops when focused; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile or кнопка 6 (400 ms) always opens a new Code session; both focus on release.
+
+## Active chat
+
+The ring follows the chat in front, not only presses (`watchFront`, every 1 s, `claude.due` gate: 3 s when Claude is cold).
+- Claude Desktop frontmost: the chat with the newest `lastFocusedAt` in Desktop's session files is the one on screen (verified 2026-11-05:
+  switching chats with `claude://code/continue` moved it within a second). The directory listing is ~1100 files, a full scan
+  costs ~7.5 ms, so `scanIfChanged` rescans only when a session directory's mtime moved (Desktop replaces files; verified).
+- iTerm2 frontmost: `unique id of current session` via `osascript`, once per switch to iTerm2 (tab switches inside iTerm2 are not seen).
+- Other apps: the ring stays where it was. A front chat not on the tile clears the ring. A CLI "done" chat seen in front drops, as on a press.
+- Slide: the ring moves from the old dot to the new one and the dot sizes swap (8 → 9.5) over 150 ms, smoothstep,
+  `animationHz`, the ticker runs only while sliding (P1, P2).
 
 ## Flow
 

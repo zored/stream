@@ -40,3 +40,40 @@ func TestDesktopDone(t *testing.T) {
 		}
 	}
 }
+
+func TestAgentDotGrid(t *testing.T) {
+	seen := map[[2]float64]bool{}
+	for i := range agentMaxDots {
+		x, y := agentDot(i, agentMaxDots)
+		if x-11.5 < 5 || x+11.5 > 95 || y-11.5 < 5 || y+11.5 > 95 {
+			t.Errorf("dot %d at %.1f,%.1f leaves the tile", i, x, y)
+		}
+		seen[[2]float64{x, y}] = true
+	}
+	if len(seen) != agentMaxDots {
+		t.Errorf("got %d distinct dots, want %d", len(seen), agentMaxDots)
+	}
+	if x, y := agentDot(0, 1); x != 50 || y != 50 {
+		t.Errorf("single dot at %.1f,%.1f", x, y)
+	}
+	if x, _ := agentDot(4, 5); x != 50 {
+		t.Errorf("lone dot of row 2 at x=%.1f", x)
+	}
+}
+
+func TestFrontDesktop(t *testing.T) {
+	recs := map[string]desktopRecord{
+		"local_a": {SessionID: "local_a", LastFocusedAt: 10},
+		"local_b": {SessionID: "local_b", LastFocusedAt: 30, IsArchived: true},
+		"local_c": {SessionID: "local_c", LastFocusedAt: 20},
+	}
+	if got := frontDesktop(recs); got != "local_c" {
+		t.Errorf("got %q", got)
+	}
+	if got := frontDesktop(nil); got != "" {
+		t.Errorf("empty: got %q", got)
+	}
+	if got := itermUID("w0t1p0:AB-12"); got != "AB-12" {
+		t.Errorf("iterm uid %q", got)
+	}
+}

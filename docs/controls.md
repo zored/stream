@@ -121,8 +121,8 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 2, колонка 4 — agents waiting
 
-- shows: one dot per Claude Code session: amber = needs input, white = done and unread (a Desktop chat stays white while its sidebar shows the blue dot), gray = working; white ring = last focused;
-  a number above 8; a hollow gray circle when none
+- shows: one dot per Claude Code session: amber = needs input, white = done and unread (a Desktop chat stays white while its sidebar shows the blue dot), gray = working, up to 16 in a 4×4 grid; the active one (chat in front, else last focused) is bigger with a white ring,
+  the ring slides over in 150 ms; a number above 16; a hollow gray circle when none
 - press (on release): focus the next session (needs input → done → working, oldest first), next press moves on and wraps;
   none waiting → opens a new Code session
 - hold: new Claude Desktop Code session

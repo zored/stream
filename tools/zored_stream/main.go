@@ -264,6 +264,8 @@ func main() {
 	ag.expire()
 	ag.publish()
 	go ag.animate()
+	go ag.animateSlide()
+	go every(agentFrontFreq, ag.watchFront)
 	go every(agentCheckFreq, ag.expire)
 	go serve(*agentsAddr, func(mux *http.ServeMux) {
 		mux.HandleFunc("POST /agent/event", ag.serveEvent)

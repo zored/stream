@@ -56,3 +56,35 @@ func TestDesktopScan(t *testing.T) {
 		t.Error("local_a still unread after focus")
 	}
 }
+
+func TestDesktopScanIfChanged(t *testing.T) {
+	dir := t.TempDir()
+	writeDesktop(t, dir, "local_a", `{"sessionId":"local_a","lastFocusedAt":1}`)
+	d := newDesktopSessions(dir)
+	if _, err := d.scanIfChanged(); err != nil {
+		t.Fatal(err)
+	}
+	org := filepath.Join(dir, "Claude", "claude-code-sessions", "acct", "org")
+	old := time.Unix(1000, 0)
+	if err := os.Chtimes(org, old, old); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.scan(); err != nil {
+		t.Fatal(err)
+	}
+	writeDesktop(t, dir, "local_a", `{"sessionId":"local_a","lastFocusedAt":5}`)
+	if err := os.Chtimes(org, old, old); err != nil {
+		t.Fatal(err)
+	}
+	recs, _ := d.scanIfChanged()
+	if recs["local_a"].LastFocusedAt != 1 {
+		t.Errorf("unchanged directory rescanned: %+v", recs["local_a"])
+	}
+	if err := os.Chtimes(org, time.Now(), time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	recs, _ = d.scanIfChanged()
+	if recs["local_a"].LastFocusedAt != 5 {
+		t.Errorf("changed directory not rescanned: %+v", recs["local_a"])
+	}
+}

@@ -24,7 +24,11 @@ const (
 	agentWorking   = "working"
 	agentLedHz     = 20
 	agentBreathe   = 2 * time.Second
-	agentMaxDots   = 8
+	agentMaxDots   = 16
+	agentDotR      = 8
+	agentActiveR   = 9.5
+	agentSlide     = 150 * time.Millisecond
+	agentFrontFreq = time.Second
 	agentLedDone   = 0x404040
 	agentLedIdle   = 0xFFFFFF
 	agentLedRed    = 0xFF
@@ -82,11 +86,17 @@ type agents struct {
 	ttl      time.Duration
 	vars     *vars
 	breathe  chan struct{}
+	slide    chan struct{}
 	desktop  *desktopSessions
+	ringFrom string
+	ringTo   string
+	ringAt   time.Time
+	front    int
+	polled   time.Time
 }
 
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
-	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, breathe: make(chan struct{}, 1), desktop: desktop}
+	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, breathe: make(chan struct{}, 1), slide: make(chan struct{}, 1), desktop: desktop}
 }
 
 func (s *agentSession) desktopDone() bool {
@@ -331,16 +341,31 @@ func (a *agents) publish() {
 	a.mu.Lock()
 	input, done := a.counts()
 	list := a.sorted()
-	kinds := make([]string, len(list))
-	current := -1
-	for i, s := range list {
-		kinds[i] = s.Kind
-		if a.cursor != nil && s.ID == a.cursor.ID {
-			current = i
+	cursor := ""
+	if a.cursor != nil {
+		cursor = a.cursor.ID
+	}
+	if cursor != a.ringTo {
+		a.ringFrom, a.ringTo, a.ringAt = a.ringTo, cursor, time.Now()
+		select {
+		case a.slide <- struct{}{}:
+		default:
 		}
 	}
+	kinds := make([]string, len(list))
+	current, prev := -1, -1
+	for i, s := range list {
+		kinds[i] = s.Kind
+		switch s.ID {
+		case a.ringTo:
+			current = i
+		case a.ringFrom:
+			prev = i
+		}
+	}
+	t := a.slideT()
 	a.mu.Unlock()
-	a.vars.set("agents_svg", agentsSVG(kinds, current))
+	a.vars.set("agents_svg", agentsSVG(kinds, current, prev, t))
 	if input > 0 {
 		select {
 		case a.breathe <- struct{}{}:
@@ -372,7 +397,104 @@ func (a *agents) animate() {
 	}
 }
 
-func agentsSVG(kinds []string, current int) string {
+func (a *agents) slideT() float64 {
+	return min(1, float64(time.Since(a.ringAt))/float64(agentSlide))
+}
+
+func (a *agents) animateSlide() {
+	for range a.slide {
+		ticker := time.NewTicker(time.Second / animationHz)
+		for range ticker.C {
+			a.publish()
+			a.mu.Lock()
+			done := a.slideT() >= 1
+			a.mu.Unlock()
+			if done {
+				break
+			}
+		}
+		ticker.Stop()
+	}
+}
+
+func (a *agents) watchFront() {
+	front := int(frontPid())
+	changed := front != a.front
+	a.front = front
+	var match func(*agentSession) bool
+	switch {
+	case front != 0 && front == int(claudePid()):
+		if !claude.due(&a.polled) {
+			return
+		}
+		recs, err := a.desktop.scanIfChanged()
+		if err != nil {
+			log.Printf("agents: desktop sessions: %v", err)
+			return
+		}
+		host := frontDesktop(recs)
+		if host == "" {
+			return
+		}
+		match = func(s *agentSession) bool { return s.Host == host }
+	case changed && front != 0 && front == int(itermPid()):
+		uid, err := itermCurrent()
+		if err != nil {
+			log.Printf("agents: %v", err)
+			return
+		}
+		match = func(s *agentSession) bool { return itermUID(s.ITerm) == uid }
+	default:
+		return
+	}
+	a.mu.Lock()
+	var hit *agentSession
+	for _, s := range a.sessions {
+		if match(s) {
+			hit = s
+		}
+	}
+	same := hit == a.cursor || hit != nil && a.cursor != nil && hit.ID == a.cursor.ID
+	if !same {
+		a.cursor = hit
+		if hit != nil && hit.Kind == agentDone && !hit.desktopDone() {
+			delete(a.sessions, hit.ID)
+		}
+	}
+	a.mu.Unlock()
+	if !same {
+		if hit != nil {
+			log.Printf("agents: front %s %s %s", hit.ID, hit.Kind, filepath.Base(hit.Cwd))
+		}
+		a.publish()
+	}
+}
+
+func frontDesktop(recs map[string]desktopRecord) string {
+	var best desktopRecord
+	for _, r := range recs {
+		if !r.IsArchived && r.LastFocusedAt > best.LastFocusedAt {
+			best = r
+		}
+	}
+	return best.SessionID
+}
+
+func itermUID(s string) string {
+	if m := itermSession.FindStringSubmatch(s); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
+func agentDot(i, n int) (x, y float64) {
+	rows := (n + 3) / 4
+	row, col := i/4, i%4
+	inRow := min(4, n-row*4)
+	return 50 + (float64(col)-float64(inRow-1)/2)*22, 50 + (float64(row)-float64(rows-1)/2)*22
+}
+
+func agentsSVG(kinds []string, current, prev int, t float64) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
 	switch n := len(kinds); {
@@ -385,22 +507,32 @@ func agentsSVG(kinds []string, current int) string {
 		}
 		fmt.Fprintf(&b, `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="56" fill="%s">%d</text>`, fill, n)
 	default:
-		rows := (n + 3) / 4
+		e := t * t * (3 - 2*t)
 		for i, kind := range kinds {
-			row, col := i/4, i%4
-			inRow := min(4, n-row*4)
-			x, y := 50+(float64(col)-float64(inRow-1)/2)*22, 50+(float64(row)-float64(rows-1)/2)*22
+			x, y := agentDot(i, n)
+			r := float64(agentDotR)
+			if i == current {
+				r += (agentActiveR - agentDotR) * e
+			}
+			if i == prev {
+				r += (agentActiveR - agentDotR) * (1 - e)
+			}
+			fill := gray
 			switch kind {
 			case agentInput:
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="%s"/>`, x, y, amber)
+				fill = amber
 			case agentDone:
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="#fff"/>`, x, y)
-			default:
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="8" fill="%s"/>`, x, y, gray)
+				fill = "#fff"
 			}
-			if i == current {
-				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="10.5" fill="none" stroke="#fff" stroke-width="1.5"/>`, x, y)
+			fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>`, x, y, r, fill)
+		}
+		if current >= 0 {
+			x, y := agentDot(current, n)
+			if prev >= 0 {
+				px, py := agentDot(prev, n)
+				x, y = px+(x-px)*e, py+(y-py)*e
 			}
+			fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="11.5" fill="none" stroke="#fff" stroke-width="1.5"/>`, x, y)
 		}
 	}
 	b.WriteString(`</svg>`)
