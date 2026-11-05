@@ -22,6 +22,7 @@ const (
 	agentInput     = "input"
 	agentDone      = "done"
 	agentWorking   = "working"
+	agentRead      = "read"
 	agentLedHz     = 20
 	agentBreathe   = 2 * time.Second
 	agentMaxDots   = 16
@@ -29,8 +30,8 @@ const (
 	agentActiveR   = 9.5
 	agentSlide     = 150 * time.Millisecond
 	agentFrontFreq = time.Second
-	agentKnobFor   = 5 * time.Second
-	agentKnobRest  = 300 * time.Millisecond
+	agentKnobRest  = 400 * time.Millisecond
+	agentReadFor   = time.Minute
 	agentManual    = 2 * time.Second
 	agentLedDone   = 0x404040
 	agentLedIdle   = 0xFFFFFF
@@ -96,7 +97,6 @@ type agents struct {
 	ringAt   time.Time
 	front    int
 	polled   time.Time
-	knobTill time.Time
 	knobOpen *time.Timer
 	manual   time.Time
 }
@@ -213,9 +213,15 @@ func (a *agents) expire() {
 	for id, s := range a.sessions {
 		rec, known := recs[s.Host]
 		var drop bool
-		if known && s.desktopDone() {
-			drop = !rec.unread()
-		} else {
+		switch {
+		case s.Kind == agentRead:
+			drop = time.Since(s.Since) > agentReadFor || known && rec.unread()
+		case known && s.desktopDone():
+			if !rec.unread() {
+				s.markRead()
+				changed = true
+			}
+		default:
 			drop = time.Since(s.Since) > a.ttl || s.Pid > 0 && errors.Is(syscall.Kill(s.Pid, 0), syscall.ESRCH)
 		}
 		if drop {
@@ -239,7 +245,11 @@ func (a *agents) expire() {
 	}
 }
 
-var agentRank = map[string]int{agentInput: 0, agentDone: 1, agentWorking: 2}
+var agentRank = map[string]int{agentInput: 0, agentDone: 1, agentWorking: 2, agentRead: 3}
+
+func (s *agentSession) markRead() {
+	s.Kind, s.Since = agentRead, time.Now()
+}
 
 func agentLess(x, y *agentSession) int {
 	if c := agentRank[x.Kind] - agentRank[y.Kind]; c != 0 {
@@ -275,21 +285,15 @@ func (a *agents) focus() error {
 		}
 	}
 	a.cursor = next
-	a.knobTill, a.manual = time.Now().Add(agentKnobFor), time.Now()
+	a.manual = time.Now()
 	if next.Kind == agentDone && !next.desktopDone() {
-		delete(a.sessions, next.ID)
+		next.markRead()
 	}
 	target := *next
 	a.mu.Unlock()
 	log.Printf("agents: focus %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
 	a.publish()
 	return target.open()
-}
-
-func (a *agents) browsing() bool {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	return time.Now().Before(a.knobTill)
 }
 
 func (a *agents) step(d int) {
@@ -301,7 +305,7 @@ func (a *agents) step(d int) {
 	}
 	i := agentStep(slices.IndexFunc(list, func(s *agentSession) bool { return a.cursor != nil && s.ID == a.cursor.ID }), d, len(list))
 	a.cursor = list[i]
-	a.knobTill, a.manual = time.Now().Add(agentKnobFor), time.Now()
+	a.manual = time.Now()
 	target := *list[i]
 	if a.knobOpen != nil {
 		a.knobOpen.Stop()
@@ -314,6 +318,21 @@ func (a *agents) step(d int) {
 	})
 	a.mu.Unlock()
 	a.publish()
+}
+
+func (a *agents) knobPress() error {
+	a.mu.Lock()
+	pending := a.knobOpen != nil && a.knobOpen.Stop()
+	var target agentSession
+	if pending && a.cursor != nil {
+		target = *a.cursor
+	}
+	a.mu.Unlock()
+	if target.ID == "" {
+		return a.focus()
+	}
+	log.Printf("agents: knob press %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
+	return target.open()
 }
 
 func agentStep(i, d, n int) int {
@@ -509,7 +528,7 @@ func (a *agents) watchFront() {
 	if !same {
 		a.cursor = hit
 		if hit != nil && hit.Kind == agentDone && !hit.desktopDone() {
-			delete(a.sessions, hit.ID)
+			hit.markRead()
 		}
 	}
 	a.mu.Unlock()
@@ -574,6 +593,9 @@ func agentsSVG(kinds []string, current, prev int, t float64) string {
 				fill = amber
 			case agentDone:
 				fill = "#fff"
+			case agentRead:
+				fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="%s" stroke-width="2"/>`, x, y, r-1, gray)
+				continue
 			}
 			fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>`, x, y, r, fill)
 		}

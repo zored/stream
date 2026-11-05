@@ -76,13 +76,8 @@ func (a *aiSwitch) show(c aiChoice, state string) {
 func (a *aiSwitch) turn(d int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.held {
-		a.turned = true
-		n := len(aiEfforts)
-		a.index = min(max(a.index/n+d, 0), len(aiModels)-1)*n + a.index%n
-	} else {
-		a.index = min(max(a.index+d, 0), len(aiModels)*len(aiEfforts)-1)
-	}
+	a.turned = true
+	a.index = min(max(a.index+d, 0), len(aiModels)*len(aiEfforts)-1)
 	a.schedule()
 }
 
@@ -105,14 +100,17 @@ func (a *aiSwitch) down() error {
 	return nil
 }
 
-func (a *aiSwitch) up() error {
+func (a *aiSwitch) up() (turned bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.held = false
-	if !a.turned {
-		a.schedule()
-	}
-	return nil
+	return a.turned
+}
+
+func (a *aiSwitch) holding() bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.held
 }
 
 func (a *aiSwitch) schedule() {

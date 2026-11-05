@@ -25,9 +25,14 @@ The ring follows the chat in front, not only presses (`watchFront`, every 1 s, `
 
 ## Knob
 
-For 5 s after a press (`agents.knobTill`, extended by each detent) `/ai/turn`, `/ai/down`, `/ai/up` of крутилка справа, ряд 2
-go to the agents: a turn steps the cursor and wraps (`agentStep`), the chat opens 300 ms after the last detent;
-the knob press = a tile press (`focus`). Verified 2026-11-05 through the HTTP API, log `agents: knob …`.
+крутилка справа, ряд 2 (`/ai/turn`, `/ai/down`, `/ai/up`, routed in `main.go`): a plain turn steps the cursor and wraps
+(`agentStep`), the chat opens 400 ms after the last detent; a click = `knobPress`: opens the ringed chat at once while its open
+is still pending, else a tile press (`focus`). Press + turn goes to the model switch. Verified 2026-11-05 through the HTTP API.
+
+## Read chats
+
+A "done" chat that gets read (Desktop file says read, or a CLI one focused) turns `read`: ranked last, a hollow gray
+circle, dropped by `expire` 1 min later (`agentReadFor`), or back to done if Desktop marks it unread again.
 
 ## Flow
 

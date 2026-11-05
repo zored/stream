@@ -229,10 +229,10 @@ func main() {
 				http.Error(w, "d: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			if ag.browsing() {
-				ag.step(d)
-			} else {
+			if ai.holding() {
 				ai.turn(d)
+			} else {
+				ag.step(d)
 			}
 			w.WriteHeader(http.StatusNoContent)
 		})
@@ -247,17 +247,12 @@ func main() {
 			}
 			w.WriteHeader(http.StatusNoContent)
 		})
-		handle(mux, "/ai/down", func() error {
-			if ag.browsing() {
+		handle(mux, "/ai/down", ai.down)
+		handle(mux, "/ai/up", func() error {
+			if ai.up() {
 				return nil
 			}
-			return ai.down()
-		})
-		handle(mux, "/ai/up", func() error {
-			if ag.browsing() {
-				return ag.focus()
-			}
-			return ai.up()
+			return ag.knobPress()
 		})
 	})
 	configDir, err := os.UserConfigDir()

@@ -63,7 +63,7 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
 - Sliding along the right strip picks the same list by position, bottom `Sonnet·Low` to top `Fable·High`: the module fork posts
   `POST /ai/slide?y=<px>` (0 = top of the 270 px strip) on every touch move, the daemon maps it to one of the 9 stops and schedules
   the switch like a turn (verified with curl: y=10 → Fable·High, y=260 → Sonnet·Low; on the device: not confirmed yet).
-- Turn while pressed: only the model changes, the effort stays. A press released without a turn re-applies the shown choice.
+- The knob walks the choice only while pressed (press + turn); a plain turn and a click belong to the agent chats ([agents.md](agents.md)).
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
 - Label: part of `ai_strip_svg` (see [ai.md](ai.md)), drawn across the right strip like the track on the left strip but rotated 270° so it reads bottom-up:
