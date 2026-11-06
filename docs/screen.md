@@ -1,6 +1,6 @@
 # Screen panel
 
-An on-screen stand-in for the controller on macOS while the device is unplugged. Decided with the user 2026-11-06.
+An on-screen controller panel for macOS. Temporary user override (2026-11-06): show the panel with the USB controller plugged or unplugged. USB detection remains active; automatic hiding is disabled.
 **Verified** = observed here, **assumed** = read or reasoned, not checked.
 
 ## What it is
@@ -16,14 +16,14 @@ Companion ──Satellite TCP :16622── screen app ── NSPanel at the top 
 
 ## Layout
 
-- One row at the top center of the main screen, above all windows, on all Spaces, never takes focus (`NSPanel`, `.nonactivatingPanel`, level `.statusBar`).
+- One row at the top center of the primary screen (`NSScreen.screens.first`), above all windows, on all Spaces, never takes focus (`NSPanel`, `.nonactivatingPanel`, level `.statusBar`).
 - 12 tiles ordered by device column: 4 groups of 3. Group *c* holds тайл ряд 1–3, колонка *c*. Tile number *n* = 1…12 in that order.
 - Strips lie horizontally at both ends of the row, bottom edge towards the tiles: the left strip turned 90° counterclockwise
   (device top → screen left), the right strip 90° clockwise (device top → screen right).
 - No кнопки 1–8 on screen.
 - Small mode: tile 40 pt, strip 40 × 215 pt (48 × 258 turned), rounded corners (tile 9 pt, strip 8 pt), black, hairline outline.
 - Hover: Dock-style magnification, each element by its own distance to the cursor (cosine falloff, range 200 pt),
-  up to 80 pt per tile (= the device tile); grows downwards from the top edge.
+  up to 80 pt per tile (= the device tile); grows downwards from a 4 pt top margin. Magnification runs only while the cursor is inside the panel and freezes while any mouse button is held. The panel moves to the primary display when the display configuration changes.
 - Style follows the device (D1–D3): the pictures are Companion's, the app adds only the outline and corners.
 
 ## Input
@@ -42,23 +42,78 @@ Companion ──Satellite TCP :16622── screen app ── NSPanel at the top 
 | double click on a strip | hide the panel (strip taps do nothing on the device, [controls.md](controls.md)) |
 | cursor at the top screen edge (≤ 2 pt) while hidden | show the panel again |
 
+A release goes to the control pressed on mouse down, even outside the panel. A tile swipe waits for the daemon reply:
+any status except `404` releases the tile immediately; `404` keeps the normal release on mouse up. A mouse up during the request
+waits for that reply, then releases once. Wheel direction follows physical movement (up = knob right), independent of natural scrolling;
+mouse wheels use one delta unit per step and precise trackpads accumulate 10 pt per step.
+The second click of a strip double click hides the panel without sending another emoji start/end pair.
+
 Strip mouse position → device y (0 … 270, 0 = top): left strip `y = 270 · x / width`, right strip `y = 270 · (1 − x / width)`.
+
+Left-strip drag posts `dy=previousY−currentY`, skipping the first sample and unchanged coordinates; its wheel posts ±5 device px
+per step (the daemon uses 0.4 % per px). Right-strip drag posts the changed absolute `y`. Strip cells receive no Satellite presses.
+All daemon requests use an ephemeral URLSession with a one-second timeout and log failures.
 
 ## Frames
 
 Satellite `ADD-DEVICE` with `LAYOUT_MANIFEST` (verified in Companion 5.1.1: per-control `bitmap {w, h}` style presets,
-`KEY-ROTATE` by `CONTROLID`): the 4×8 grid of the Loupedeck page, presets `tile` 160×160 and `strip` 120×180
-(2× the largest on-screen size). The surface joins the Loupedeck's surface group so it shows the same page (assumed: set once through tRPC like `tools/surface.mjs`).
+`KEY-ROTATE` by `CONTROLID`): the 4×8 grid of the Loupedeck page, presets `tile` 160×160 and `strip` 160×287
+(2× the largest on-screen size). The surface joins the Loupedeck's surface group so it shows the same page (`node tools/surface.mjs group`). Verified through tRPC: both surfaces belong to `group:zored-stream`, assigned with `surfaceSetGroup` and the physical surface's configuration copied to the group. Companion UI confirmation is pending.
 Companion pushes a frame only when a picture changes, through the same debounce as the device: ≤ 60 fps (assumed: same pipeline).
-Each control is one `CALayer`; a strip is three cells cropped by 6 px (the module's hidden padding) into 48×258, then turned.
+Each displayed element is one `CALayer`. A strip stacks three RGB cells top to bottom, then turns the result left/right.
+The fork already removes its 6 px padding: device cells are 48×86, so no extra cropping is applied. The 160×287 preset preserves
+that aspect ratio at twice the largest on-screen height. Missing cells are black until their first frame arrives.
+
+## Satellite protocol
+
+Verified by inspection of Companion 5.1.1 `Contents/Resources/main.js` in the preceding implementation session (2026-11-06):
+
+- Server greeting: `BEGIN CompanionVersion=… ApiVersion="1.14.0"`, followed by `CAPS`.
+- Client: `ADD-DEVICE DEVICEID=zored-screen PRODUCT_NAME="zored screen" BITMAP_FORMAT=rgb BRIGHTNESS=false LAYOUT_MANIFEST=…`.
+- Input: `KEY-PRESS … CONTROLID=… PRESSED=true|false` and `KEY-ROTATE … CONTROLID=… DIRECTION=1|-1`.
+  Pressed is false for `false`, `0` or an empty value; rotation uses the sign of the number.
+- Server fields are quoted, booleans are `1`/`0`; replies are `CMD OK …` or `CMD ERROR … MESSAGE="…"`.
+- `KEY-STATE DEVICEID CONTROLID LOCATION="page/row/col" PRESSED TYPE BITMAP=…` carries base64 raw RGB (`w·h·3` bytes)
+  only for bitmap presets. Accepted formats are `rgb` (default), `png`, `webp`.
+- Invalid manifests produce `ERROR … MESSAGE="Invalid LAYOUT_MANIFEST"`.
+
+Verified in the installed Companion bundle during this continuation: `e.setTimeout(5e3,()=>e.destroy())` closes a Satellite
+socket after five seconds without inbound traffic. The initial probe received all 18 bitmap control ids while the physical controller
+was plugged in, then exited with `Satellite closed` (status 1) at the inactivity timeout. After adding the heartbeat, the repeated probe received all 18 ids and exited cleanly (status 0). Companion accepts both surfaces together.
+
+The client answers `PING` with `PONG` and sends a `PING` every two seconds while connected to prevent this timeout.
+This connection-only heartbeat is the exception to the no-timers rule; disconnect cancels it. A Satellite error, malformed frame size, closed connection or failed/waiting TCP state logs
+and exits with status 1; launchd restarts it. An intentional disconnect sends `REMOVE-DEVICE` before closing.
 
 ## When it shows
 
-- Device plugged (IOKit USB match VID `0x1532`, PID `0x0D06`) → panel hidden, Satellite disconnected: Companion renders nothing extra.
-- Unplugged → connect, show.
+- Current temporary mode: connect and show regardless of USB state. Plugging or unplugging the controller neither hides the panel nor disconnects Satellite, and does not clear a user hide.
+- IOKit matched/terminated detection (VID `0x1532`, PID `0x0D06`) remains active. Automatic hiding on plug is deferred until the user requests it again.
 - Hidden by a double click → stays hidden until the cursor touches the top edge; a global `mouseMoved` monitor runs only while hidden
   (assumed: needs no Accessibility).
-- Idle CPU ≈ 0: no timers; frames and mouse events drive everything (P2).
+- Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There are no polling or animation timers. A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
+
+## Install and verify
+
+`make screen` builds and signs `~/.local/bin/screen` with `zored-stream`, then installs `com.zored.stream.screen`.
+`make screen-uninstall` unloads the agent. The agent uses `KeepAlive`, a 5 s restart throttle and
+`~/Library/Logs/zored-stream/screen.log`. `make build` also builds the app with ad-hoc signing for CI.
+`cd tools/screen && swift run screen-checks` runs the pure Swift checks; `make test` includes them.
+`swift test` does not work with the Command Line Tools setup used here.
+
+Verified in this continuation: a standalone IOKit run detected the plugged controller (`device plugged=true`);
+the LaunchAgent plist passes `plutil -lint`. The plugged-device probe received all 12 tile and 6 strip ids and exited with status 0 after the heartbeat fix; tRPC confirmed the common group. The user confirmed that the panel appears to work visually. Detailed input checks below are pending:
+
+- Confirm the common group in Companion → Surfaces.
+- With either USB state, tile 4 press must log `Button 1/0/3 pressed`; wheel on tile 1 changes volume;
+  right click on tile 12 toggles scroll mode; middle click on tile 7 presses кнопка 7; left-strip drag changes volume.
+- Release outside the pressed tile: confirm no control stays pressed.
+- If checking USB transitions, ask the user to handle the cable. The current temporary mode must stay visible and connected; a user-hidden panel must remain hidden. Checks for the dormant USB hide/disconnect policy are deferred until that policy is restored.
+- Double click a strip with the emoji picker closed: hide without changing state; top-edge movement reveals the panel.
+  If macOS asks for Accessibility, stop for the user to grant permission.
+- Change the primary display or disconnect it: the panel follows the primary display.
+- Restart Companion: the app exits, launchd restarts it, then reconnects.
+- CPU sampling of the installed app (`top`, seven samples at 10 s) observed 0.0–3.9 % with live Companion frames. Cursor inactivity was not controlled, so the idle target remains unverified.
 
 ## Open
 
@@ -66,3 +121,5 @@ Each control is one `CALayer`; a strip is three cells cropped by 6 px (the modul
 - The main display is an OLED (MPG321UX): static white pixels all day. A 1–2 px drift every few minutes if the user wants it.
 - iOS later: a PWA speaking Satellite over WebSocket `:16623`, or SwiftUI sharing `ScreenCore`; a paid Apple Developer account
   past the 7-day free signing. Satellite listens on `*` (verified), so the LAN reaches it.
+
+Shutdown regression: `python3 tools/screen/check_shutdown.py` builds a temporary app against an isolated TCP server, delays REMOVE-DEVICE and checks it arrives before EOF with exit 0. Verified RED→GREEN. Termination first cancels the AppKit request, drains disconnect asynchronously, then requests termination again; `terminateLater` stalled this command-line AppKit runloop in the regression.

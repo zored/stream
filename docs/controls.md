@@ -281,3 +281,21 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 | agents tile | Codex sessions |
 | right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |
+
+
+## On screen
+
+`make screen` installs a panel at the top center of the primary display. In the current temporary mode it appears whether
+the USB controller is plugged in or not. USB detection remains active, but visibility gating is dormant. Companion draws the same page on both surfaces.
+
+The row contains 12 tiles in column order: tiles 1–3 are the first device column, 4–6 the second, 7–9 the third, 10–12 the fourth.
+The horizontal strips sit at the ends. Hover enlarges nearby controls; the panel keeps keyboard focus in the current app.
+
+- Click or hold a tile as on the device; drag at least 40 pt within 400 ms for its swipe action.
+- Wheel over tiles 1–3 or 10–12 turns the corresponding left or right knob; right click presses that knob.
+- Middle click on tiles 1–8 presses кнопка 1–8. There is no separate button row.
+- Drag the left strip for volume, the right strip for model/effort. Wheel over the left strip changes volume by 2 % per step.
+  While the emoji picker is open, strip press/drag/release follows the device picker controls.
+- Double click either strip to hide the panel. Move the cursor to the primary display's top edge to bring it back. USB changes preserve this hidden state.
+
+Manual checks of the panel are pending. Technical details and the verification list: [screen.md](screen.md).

@@ -20,6 +20,7 @@ Status and next steps: `PLAN.md`. Prompt for a new master session: `docs/master-
 - `docs/weather.md` — weather on tile `2/3` outside a call: Open-Meteo, forecast browse on крутилка слева, ряд 3
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `zored_stream` module, dead ends
 - `docs/windows.md` — port plan: what carries over, what needs a Windows build
+- `docs/screen.md` — on-screen Companion surface, mouse controls, USB visibility and LaunchAgent
 - `docs/device.md` — USB, raw protocol events, `tools/sniff.py`, firmware
 - `docs/architecture.html` — architecture overview with diagrams: layers, pages pipeline, daemon modules, mechanisms, invariants
 
@@ -27,12 +28,12 @@ Status and next steps: `PLAN.md`. Prompt for a new master session: `docs/master-
 
 1. Edit pages in `tools/gen_pages.py` (the generated `companion/*` files are build output, committed).
 2. `make deploy` — regenerates pages, creates custom variables, imports pages into the running Companion. Overwrites pages 1 (MEDIA) and 2 (TEST).
-3. `make test` (pages ↔ daemon contract, Go tests; CI runs the same). Then verify before reporting done:
+3. `make test` (pages ↔ daemon contract, Go tests, Swift screen checks; CI runs the same). Then verify before reporting done:
    - inputs: `custom_log` actions or debug log lines `Button <page>/<row>/<col> pressed`
    - state: `GET /api/custom-variable/<name>/value`, `POST /api/location/<p>/<r>/<c>/press`
    - looks: web preview at `http://127.0.0.1:8000/buttons/1`; strips and haptics only on the device — ask the user
 
-Helpers: `make zored_stream` (LaunchAgent), `make module` (builds the module fork, restarts Companion), `make companion` (autostart).
+Helpers: `make screen` (screen panel LaunchAgent), `make zored_stream` (LaunchAgent), `make module` (builds the module fork, restarts Companion), `make companion` (autostart).
 Run them yourself; hand to the user only what needs them: macOS permission grants, `make zored_stream-cert` (keychain password), `make companion` (login item), `make agent-hooks` (global settings).
 
 ## Rules

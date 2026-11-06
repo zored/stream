@@ -4,7 +4,7 @@ public enum Satellite {
     public static let deviceID = "zored-screen"
     public static let productName = "zored screen"
     public static let tileBitmap = 160
-    public static let stripBitmap = (w: 120, h: 180)
+    public static let stripBitmap = (w: 160, h: 287)
 
     public enum Message: Equatable, Sendable {
         case begin

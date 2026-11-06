@@ -23,10 +23,10 @@ define uninstall-agent
 	rm -f $(AGENTS)/com.zored.stream.$(1).plist
 endef
 
-.PHONY: build zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall module companion companion-restart ymusic-launcher pages check test deploy agent-hooks
+.PHONY: build zored_stream-cert zored_stream-bin zored_stream zored_stream-uninstall screen-bin screen screen-uninstall module companion companion-restart ymusic-launcher pages check test deploy agent-hooks
 
 build:
-	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- zored_stream-bin
+	$(MAKE) BIN=$(CURDIR)/build LIB=$(CURDIR)/build SHARE=$(CURDIR)/build SIGN=- zored_stream-bin screen-bin
 
 zored_stream-cert:
 	tools/zored_stream/cert.sh
@@ -44,6 +44,18 @@ zored_stream: zored_stream-bin
 
 zored_stream-uninstall:
 	$(call uninstall-agent,zored_stream)
+
+screen-bin:
+	mkdir -p $(BIN)
+	cd tools/screen && swift build -c release
+	cp "$$(cd tools/screen && swift build -c release --show-bin-path)/screen" $(BIN)/screen
+	codesign -f -s $(SIGN) -i com.zored.stream.screen $(BIN)/screen
+
+screen: screen-bin
+	$(call install-agent,screen)
+
+screen-uninstall:
+	$(call uninstall-agent,screen)
 
 module:
 	test -d $(MODULE) || git clone -b zored_stream git@github.com:zored/companion-surface-loupedeck.git $(MODULE)
@@ -83,6 +95,7 @@ check: pages
 	python3 -I tools/check_contract.py
 
 test: check
+	cd tools/screen && swift run screen-checks
 	cd tools/zored_stream && GOWORK=off go vet ./... && GOWORK=off go test ./...
 
 deploy: pages

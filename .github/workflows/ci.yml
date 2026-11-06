@@ -29,4 +29,5 @@ jobs:
           go-version-file: tools/zored_stream/go.mod
           cache-dependency-path: tools/zored_stream/go.sum
       - run: make build
+      - run: cd tools/screen && swift run screen-checks
       - run: cd tools/zored_stream && GOWORK=off go vet ./... && GOWORK=off go test ./...

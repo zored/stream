@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "ScreenCore"),
-        .executableTarget(name: "screen", dependencies: ["ScreenCore"]),
+        .executableTarget(name: "screen", dependencies: ["ScreenCore"], swiftSettings: [.swiftLanguageMode(.v5)]),
         .executableTarget(name: "screen-checks", dependencies: ["ScreenCore"]),
     ]
 )
