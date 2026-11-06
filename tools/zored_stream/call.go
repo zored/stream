@@ -168,16 +168,18 @@ func findPort() (int, error) {
 }
 
 type call struct {
-	mu       sync.Mutex
-	conn     *grpc.ClientConn
-	callID   string
-	mic, cam string
-	pressed  time.Time
-	micWas   bool
-	want     [2]bool
-	confirm  *time.Timer
-	resync   context.CancelFunc
-	changed  chan struct{}
+	mu        sync.Mutex
+	conn      *grpc.ClientConn
+	callID    string
+	mic, cam  string
+	pressed   time.Time
+	micWas    bool
+	want      [2]bool
+	confirm   *time.Timer
+	resync    context.CancelFunc
+	changed   chan struct{}
+	voipID    string
+	voipMedia [2]bool
 }
 
 func (d *call) notify() {
@@ -198,6 +200,9 @@ func (d *call) setLocked(mic, cam string) {
 func (d *call) set(callID, state string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	if d.voipID != "" {
+		return
+	}
 	d.callID = callID
 	d.stopConfirmLocked()
 	d.setLocked(state, state)
@@ -243,6 +248,7 @@ func onOff(v bool) string {
 }
 
 func (d *call) run() {
+	go d.runVoip()
 	for {
 		port, err := findPort()
 		switch {
@@ -396,10 +402,17 @@ func (d *call) change(next func(mic, cam bool) (bool, bool)) error {
 }
 
 func (d *call) changeLocked(next func(mic, cam bool) (bool, bool)) error {
-	if d.conn == nil || d.callID == "" || !known(d.mic) || !known(d.cam) {
+	if d.conn == nil && d.voipID == "" || d.callID == "" || !known(d.mic) || !known(d.cam) {
 		return errNoCall
 	}
 	mic, cam := next(d.isOn(0), d.isOn(1))
+	if d.voipID != "" {
+		if err := d.voipChangeLocked(mic, cam); err != nil {
+			return err
+		}
+		d.awaitLocked(mic, cam)
+		return nil
+	}
 	req := appendBool(appendBool(header(d.callID), 2, mic), 3, cam)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -413,6 +426,11 @@ func (d *call) changeLocked(next func(mic, cam bool) (bool, bool)) error {
 		d.setLocked(unknown, unknown)
 		return fmt.Errorf("ChangeMyMedia rejected: %x", resp)
 	}
+	d.awaitLocked(mic, cam)
+	return nil
+}
+
+func (d *call) awaitLocked(mic, cam bool) {
 	d.want = [2]bool{mic, cam}
 	states := [2]string{d.mic, d.cam}
 	for i, state := range states {
@@ -425,7 +443,6 @@ func (d *call) changeLocked(next func(mic, cam bool) (bool, bool)) error {
 		d.confirm = time.AfterFunc(confirmIn, d.confirmTimeout)
 	}
 	d.setLocked(states[0], states[1])
-	return nil
 }
 
 func known(s string) bool { return s == on || s == off || s == pending }
@@ -433,6 +450,9 @@ func known(s string) bool { return s == on || s == off || s == pending }
 func (d *call) hangUp() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	if d.voipID != "" {
+		return d.voipHangUpLocked()
+	}
 	if d.conn == nil || d.callID == "" {
 		return errNoCall
 	}
@@ -458,6 +478,10 @@ func (d *call) confirmTimeout() {
 	}
 	d.confirm = nil
 	log.Printf("call %q: change not confirmed in %s, resyncing", d.callID, confirmIn)
+	if d.voipID != "" {
+		d.setLocked(onOff(d.voipMedia[0]), onOff(d.voipMedia[1]))
+		return
+	}
 	d.setLocked(unknown, unknown)
 	if d.resync != nil {
 		d.resync()

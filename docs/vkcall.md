@@ -1,6 +1,17 @@
 # VK WorkSpace calls: microphone and camera
 
-macOS only. Verified on VK WorkSpace Beta 27.1.0.144826 (calls SDK 26.2.0), macOS 26.
+macOS only.
+
+## Supported versions
+
+| Component | Version | Used for |
+|---|---|---|
+| VK WorkSpace Beta | 27.1.0.144826 | host app, macOS 26 |
+| calls SDK (`vkws-call-service`) | 26.2.0 | new engine: gRPC, below |
+| voip3sdk (in the main process) | 26.1.10.3774 | old engine: calls joined by link, see [Old engine](#old-engine-voip3sdk) |
+
+The client picks the engine per call: a call joined by link (`"call_type":"link"`) runs on voip3sdk and never reaches
+`vkws-call-service`. Another version may rename log lines or fields: the buttons go yellow (`unknown`) or stay `none`.
 
 ## Buttons
 
@@ -67,3 +78,22 @@ Log: `~/Library/Logs/zored-stream/zored_stream.log`.
 
 Debug by hand (Python with `grpcio` + `protoc --decode_raw`): build the raw request bytes and call
 `/com.vk.calls.sdk.v1.CallAgent/<Method>` with identity serializers.
+
+## Old engine (voip3sdk)
+
+Calls joined by link run inside the main `VK WorkSpace` process: no gRPC, no port, the call window (`In call: <n>`, n = people
+with self) is QML with no accessibility inside. `voip.go` / `voip_darwin.go` in `zored_stream`, verified on a live 18-person call:
+
+- State: tail of the newest `logs/voip_<date>_<time>.log` (new file per call and hourly), polled every 150 ms; on start the
+  files of the last 12 h are replayed.
+  - start: `VM_StartOutgoing: id:<callId> … "url" : "<meetingId>"`; initial media: `CallObserversWithCurrentState: … _media_audio_enable_tx:1, _media_video_enable_tx:0`
+  - media: `OnStateMediaAudioTXEnabled: call_id: <id> enabled=0|1`, same with `Video`; mouse clicks in the client log the same lines
+  - end: `(VoipController.cc:…): OnCallTerminated:`; also `none` when the process is gone
+  - participants (used by vkws-party, not by buttons): `AdhocCallSession.cc:659 FocusCallSession_StateUpdated … [email|JOINED|aVC|WEBRTC_CLIENT]…`,
+    full list without self, `JOINING`/`JOINED`; `A`/`V` uppercase = audio/video on (assumed)
+- Mic: ⇧⌘A posted to the pid (`CGEventPostToPid`, no focus needed). Camera: ⇧⌘V. Both are
+  **toggles**: the daemon presses only when the wanted value differs from the log state (or the pending one).
+- Hang up: press the `In call` window's AX close button (returns `-25204` but opens «End call — Are you sure?»), wait 0.8 s,
+  keypad Enter (keycode 76) to the pid confirms Yes. No focus needed. Return (36) does not confirm it, ⌘W only sometimes opens it.
+- Focus: a hotkey posted to the pid is sometimes ignored until the call window is key. Each press activates VK WorkSpace, raises the `In call` window (AXMain + AXFocused), sends the key and reactivates the previous front app (~0.3 s flicker). Hang up: icons go `pending` at once, the dialog appears ~1 s after close, a full hang up takes ~2 s.
+- Dead ends: Return / mouse clicks posted to the pid on the dialog, no hang-up shortcut in the binary, DevTools on `127.0.0.1:3333` lists web tabs only.

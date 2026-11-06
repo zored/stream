@@ -396,7 +396,7 @@ func main() {
 		handle(mux, "/tile/24/press", tile24.press)
 		handle(mux, "/button/5/press", func() error {
 			if c.inCall() {
-				return nil
+				return c.hangUp()
 			}
 			return cal.press()
 		})
