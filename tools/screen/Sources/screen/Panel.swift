@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 import ScreenCore
 
 final class OverlayWindow: NSPanel {
@@ -13,7 +14,13 @@ final class Panel {
     private var cells: [GridID: Data] = [:]
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private var mouseMonitor: Any?
-    private var timer: Timer?
+    private final class FrameTarget: NSObject {
+        weak var owner: Panel?
+        @objc func tick(_ link: CADisplayLink) { owner?.advance(at: link.targetTimestamp) }
+    }
+    private let frameTarget = FrameTarget()
+    private var displayLink: CADisplayLink?
+    private var animationTime = CACurrentMediaTime()
     private var layoutMotion: (tracker: HoverMotion, to: [ElementFrame], time: TimeInterval)?
     private var visibilityMotion: (from: Double, to: Double, start: TimeInterval)?
     private var slide = 1.0
@@ -22,7 +29,7 @@ final class Panel {
     private(set) var frames = RowLayout.frames(cursorX: nil)
     private(set) var input: Input!
     var isHidden: Bool { !wantsVisible }
-    var isAnimating: Bool { timer != nil }
+    var isAnimating: Bool { displayLink != nil }
 
     init(connection: SatelliteConnection) {
         window.level = .statusBar
@@ -51,12 +58,16 @@ final class Panel {
             content.addSubview(tile)
             tiles[element] = tile
         }
+        frameTarget.owner = self
         input = Input(panel: self, connection: connection)
         observe(.default, NSApplication.didChangeScreenParametersNotification) { panel in
             panel.releaseAll()
             panel.layoutMotion = nil
             panel.frames = RowLayout.frames(cursorX: nil)
             panel.applyLayout()
+            panel.displayLink?.invalidate()
+            panel.displayLink = nil
+            if panel.visibilityMotion != nil { panel.startAnimation() }
         }
         observe(.default, NSApplication.didResignActiveNotification) { $0.focusLost() }
         observe(.default, NSApplication.didHideNotification) { $0.focusLost() }
@@ -73,7 +84,7 @@ final class Panel {
     }
 
     deinit {
-        timer?.invalidate()
+        displayLink?.invalidate()
         if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
         for (center, token) in observers { center.removeObserver(token) }
     }
@@ -84,7 +95,7 @@ final class Panel {
         wantsVisible = true
         window.ignoresMouseEvents = false
         window.orderFrontRegardless()
-        visibilityMotion = (slide, 0, ProcessInfo.processInfo.systemUptime)
+        visibilityMotion = (slide, 0, CACurrentMediaTime())
         startAnimation()
         mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
             self?.relayout(hover: true)
@@ -100,7 +111,7 @@ final class Panel {
         if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
         mouseMonitor = nil
         setLayoutTarget(RowLayout.frames(cursorX: nil))
-        visibilityMotion = (slide, 1, ProcessInfo.processInfo.systemUptime)
+        visibilityMotion = (slide, 1, CACurrentMediaTime())
         startAnimation()
     }
 
@@ -129,7 +140,7 @@ final class Panel {
     }
 
     private func setLayoutTarget(_ target: [ElementFrame]) {
-        let now = ProcessInfo.processInfo.systemUptime
+        let now = CACurrentMediaTime()
         var motion = layoutMotion ?? (HoverMotion(frames: frames), target, now)
         motion.tracker.retarget(target)
         motion.to = target
@@ -137,18 +148,29 @@ final class Panel {
     }
 
     private func startAnimation() {
-        guard timer == nil else { return }
-        let source = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] _ in self?.advance() }
-        timer = source
-        RunLoop.main.add(source, forMode: .common)
+        guard displayLink == nil else { return }
+        guard let screen = NSScreen.screens.first else { fail("panel display is unavailable") }
+        let link = screen.displayLink(target: frameTarget, selector: #selector(FrameTarget.tick(_:)))
+        configure(link)
+        displayLink = link
+        link.add(to: .main, forMode: .common)
+    }
+
+    private func configure(_ link: CADisplayLink) {
+        guard let screen = NSScreen.screens.first, screen.maximumFramesPerSecond > 0 else {
+            fail("cannot determine panel display refresh rate")
+        }
+        let rate = Float(screen.maximumFramesPerSecond)
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: rate, maximum: rate, preferred: rate)
     }
 
     private func stopAnimationIfIdle() {
-        if layoutMotion == nil && visibilityMotion == nil { timer?.invalidate(); timer = nil }
+        if layoutMotion == nil && visibilityMotion == nil { displayLink?.invalidate(); displayLink = nil }
     }
 
-    private func advance() {
-        let now = ProcessInfo.processInfo.systemUptime
+    private func advance(at timestamp: TimeInterval? = nil) {
+        let now = max(timestamp ?? CACurrentMediaTime(), animationTime)
+        animationTime = now
         if var motion = layoutMotion {
             motion.tracker.advance(seconds: now - motion.time)
             frames = motion.tracker.frames
@@ -173,7 +195,8 @@ final class Panel {
         let height = RowLayout.height(frames) + 4
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        window.setFrame(NSRect(x: screen.frame.midX - width / 2, y: screen.frame.maxY - height, width: width, height: height), display: true)
+        let bounds = NSRect(x: screen.frame.midX - width / 2, y: screen.frame.maxY - height, width: width, height: height)
+        if window.frame != bounds { window.setFrame(bounds, display: false) }
         for frame in frames {
             let tile = tiles[frame.element]!
             tile.frame = CGRect(x: frame.x + width / 2, y: 4 - 84 * slide, width: frame.width, height: frame.height)
@@ -229,21 +252,23 @@ private class PassThroughView: NSView {
 private final class TileView: PassThroughView {
     let picture = PassThroughView()
     private let effect: NSView
+    private let content = PassThroughView()
+    private var edge = 1.0
 
     override init(frame: NSRect) {
         if #available(macOS 26.0, *) {
             let glass = NSGlassEffectView()
             glass.style = .clear
-            glass.tintColor = NSColor.black.withAlphaComponent(0.12)
-            glass.contentView = picture
+            glass.tintColor = nil
+            glass.contentView = content
             effect = glass
         } else {
             let blur = NSVisualEffectView()
             blur.material = .hudWindow
             blur.blendingMode = .behindWindow
             blur.state = .active
-            blur.addSubview(picture)
-            picture.autoresizingMask = [.width, .height]
+            blur.addSubview(content)
+            content.autoresizingMask = [.width, .height]
             effect = blur
         }
         super.init(frame: frame)
@@ -252,6 +277,7 @@ private final class TileView: PassThroughView {
         layer!.cornerCurve = .continuous
         layer!.borderColor = NSColor.white.withAlphaComponent(0.14).cgColor
         layer!.borderWidth = 0.5
+        content.addSubview(picture)
         picture.wantsLayer = true
         picture.layer!.opacity = 1
         picture.layer!.masksToBounds = true
@@ -264,9 +290,16 @@ private final class TileView: PassThroughView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is unavailable") }
 
+    override func layout() {
+        super.layout()
+        picture.frame = NSRect(x: edge, y: edge, width: max(0, content.bounds.width - 2 * edge), height: max(0, content.bounds.height - 2 * edge))
+    }
+
     func setRadius(_ radius: Double) {
+        edge = radius / 4
+        needsLayout = true
         layer!.cornerRadius = radius
-        picture.layer!.cornerRadius = radius
+        picture.layer!.cornerRadius = radius - edge
         if #available(macOS 26.0, *), let glass = effect as? NSGlassEffectView { glass.cornerRadius = radius }
     }
 }

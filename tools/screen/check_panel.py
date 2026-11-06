@@ -50,6 +50,21 @@ panel.show()
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
 require(panel.window.isVisible, "show must reveal the panel")
 require(!panel.isAnimating, "show animation must settle")
+let refreshRate = NSScreen.screens.first!.maximumFramesPerSecond
+print("display maximum: \(refreshRate) Hz")
+if refreshRate > 60 {
+    var scales = Set<Double>()
+    let sampler = Timer(timeInterval: 0.001, repeats: true) { _ in scales.insert(panel.frames[1].scale) }
+    RunLoop.main.add(sampler, forMode: .common)
+    panel.relayout(hover: true)
+    RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.18))
+    sampler.invalidate()
+    print("distinct hover frames in 180 ms: \(scales.count)")
+    require(Double(scales.count) >= Double(refreshRate) * 0.18 * 0.7, "hover must follow high-refresh display cadence")
+    panel.relayout()
+    RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
+}
+
 panel.relayout(hover: true)
 require(panel.frames == rest, "hover must not jump directly to the target")
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.03))
@@ -87,6 +102,7 @@ for picture in pictures {
     require(picture.layer!.masksToBounds, "artwork must be clipped to its own layer")
     require(picture.layer!.cornerRadius > 0 && picture.layer!.cornerRadius <= 8, "artwork radius must match the smaller scaled corners")
     require(picture.bounds.width > 0 && picture.bounds.height > 0, "artwork must fill a nonempty content view")
+    require(picture.frame.minX > 0 && picture.frame.minY > 0, "artwork must leave the native glass edge unobstructed")
 }
 
 NotificationCenter.default.post(name: NSApplication.didResignActiveNotification, object: application)
