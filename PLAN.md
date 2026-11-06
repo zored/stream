@@ -85,6 +85,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   under the call camera: Open-Meteo (no key, no proxy), 😎 for sun, temp + feels-like, tap = forecast slots on крутилка слева, ряд 3,
   port 47131 ([weather.md](docs/weather.md), `eb39c98`, verified on the device); icon set research: Lucide recommended, nothing changed;
   AI.md rule: child sessions ask the user in their own chat, the master never relays
+- 2026-11-06: VK WorkSpace calls joined by link (old engine voip3sdk, [vkcall.md](docs/vkcall.md#old-engine-voip3sdk)): state from
+  the newest `voip_*.log`, mic / camera via ⇧⌘A / ⇧⌘V, hang-up closes the `In call` window; кнопка 5 hangs up in a call (`fdf7a9c`)
 
 ## Next
 
@@ -102,6 +104,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Emoji picker on the device: look, swipe + inertia, typing into a field, haptics (checked over the API only)
 - [ ] Unread tile on the device; choice cards and Yandex Music like after the perf round 2 (not run live)
 - [ ] Date tile on the device; the 00:05 alarm seen once = a turn below 0 at the clock tile (assumed)
+- [ ] Call joined by link: кнопки 3 / 4 / 5 and tiles `2/2`, `2/3` — mic, camera, hang-up from the device
 - [ ] 2026-11-05 batch on the device: green calendar before an event + list opening on the shown event; agents 16 dots / slide / hollow dot for a chat not on the tile; крутилка слева, ряд 2 (tracks, like) and ряд 3 (chats); jirabot in the gray (muted) mode; the `3d` / `h:mm` label size; chats animation smoothness
 
 ### More buttons and actions
@@ -132,9 +135,6 @@ Windows and apps:
 AI agents:
 - [ ] Codex sessions on the agents tile ([agents.md](docs/agents.md#next-codex))
 - [ ] Haptic on a new waiting session (needs a fork endpoint)
-
-Communication:
-- [ ] Chats: the uncommitted `voip.go` / `call.go` / `main.go` work in the tree (2026-11-05, owner unknown) — the staged `main.go` is an old snapshot, restage on HEAD before committing
 
 Network:
 - [ ] Viscosity VPN on/off with status color: Viscosity AppleScript (`connect`, `disconnect`, connection state)
