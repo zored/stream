@@ -25,10 +25,12 @@ def main():
         (work / "main.swift").write_text('''import AppKit
 import ScreenCore
 
+var cursorOffset = 0.0
+
 func fixedMouseLocation() -> NSPoint {
     let screen = NSScreen.screens.first!.frame
     let tile = RowLayout.frames(cursorX: nil)[1]
-    return NSPoint(x: screen.midX + tile.x + tile.width / 2, y: screen.maxY - 20)
+    return NSPoint(x: screen.midX + tile.x + tile.width / 2 + cursorOffset, y: screen.maxY - 20)
 }
 
 func require(_ condition: Bool, _ message: String) {
@@ -50,11 +52,27 @@ require(panel.window.isVisible, "show must reveal the panel")
 require(!panel.isAnimating, "show animation must settle")
 panel.relayout(hover: true)
 require(panel.frames == rest, "hover must not jump directly to the target")
-RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.08))
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.03))
 require(panel.frames[1].scale > 1 && panel.frames[1].scale < 2, "hover must interpolate through an intermediate scale")
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
 require(abs(panel.frames[1].scale - 2) < 0.0001, "hover must reach the magnified target")
 require(!panel.isAnimating, "hover animation must settle")
+
+cursorOffset = 200
+panel.relayout(hover: true)
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
+require(abs(panel.frames[1].scale - 1) < 0.0001, "retarget fixture must start outside tile magnification range")
+let retargetStart = ProcessInfo.processInfo.systemUptime
+for sample in 1...12 {
+    cursorOffset = 200 * (1 - Double(sample) / 12)
+    panel.relayout(hover: true)
+    let remaining = retargetStart + Double(sample) / 120 - ProcessInfo.processInfo.systemUptime
+    if remaining > 0 { RunLoop.main.run(until: Date(timeIntervalSinceNow: remaining)) }
+}
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.016))
+require(panel.frames[1].scale >= 1.75, "continuous hover must track 120 Hz cursor motion without restarting easing; scale=\\(panel.frames[1].scale)")
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
+require(abs(panel.frames[1].scale - 2) < 0.0001 && !panel.isAnimating, "continuous hover must settle at its final target")
 
 let bitmap = Data(repeating: 255, count: 160 * 160 * 3)
 let image = SatelliteConnection.image(bitmap, width: 160, height: 160)!
@@ -98,7 +116,7 @@ for unsupportedKnob in [false, true] {
     require(!panel.isAnimating, "invalid click must leave no animation timer")
 }
 panel.hide()
-RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.08))
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.04))
 require(panel.window.isVisible, "hide must slide before ordering the panel out")
 require(panel.isAnimating, "hide must animate at an intermediate time")
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))

@@ -109,7 +109,7 @@ check(ScreenVisibility.shouldShow(devicePlugged: true, userHidden: false), "pane
 check(ScreenVisibility.shouldShow(devicePlugged: false, userHidden: false), "panel visible unplugged")
 check(!ScreenVisibility.shouldShow(devicePlugged: true, userHidden: true), "user hide wins while plugged")
 
-check(Motion.hoverDuration == 0.16 && Motion.visibilityDuration == 0.18, "motion durations")
+check(Motion.hoverDuration == 0.10 && Motion.visibilityDuration == 0.12, "motion durations")
 check(Motion.value(from: -80, to: 0, progress: -1) == -80, "slide clamps before start")
 check(Motion.value(from: -80, to: 0, progress: 2) == 0, "slide clamps after finish")
 check(Motion.value(from: -80, to: 0, progress: 0.5) == -40, "slide midpoint")
@@ -136,6 +136,62 @@ for i in rest.indices {
         check(zip(values, values.dropFirst()).allSatisfy { increases ? $0 <= $1 : $0 >= $1 }, "frame components progress monotonically")
     }
 }
+
+var hover = HoverMotion(frames: rest)
+check(hover.isSettled && hover.frames == rest, "hover starts settled")
+hover.retarget(mag)
+check(!hover.isSettled && hover.frames == rest, "retarget preserves current frame")
+hover.advance(seconds: 0)
+check(hover.frames == rest, "zero elapsed time preserves frame")
+hover.advance(seconds: 0.08)
+check(hover.frames[1].width > 76, "hover reaches over ninety percent in eighty milliseconds")
+check(hover.frames[1].width <= mag[1].width, "initial hover does not overshoot")
+hover.advance(seconds: 0.17)
+check(hover.isSettled && hover.frames == mag, "hover snaps exactly by quarter second")
+hover.retarget(rest)
+hover.advance(seconds: 0.25)
+check(hover.isSettled && hover.frames == rest, "hover return settles exactly")
+var uninterruptedHover = HoverMotion(frames: rest)
+uninterruptedHover.retarget(mag)
+uninterruptedHover.advance(seconds: 0.03)
+var retargetedHover = uninterruptedHover
+retargetedHover.retarget(mag)
+check(retargetedHover.frames == uninterruptedHover.frames, "retarget leaves position continuous")
+uninterruptedHover.advance(seconds: 0.02)
+retargetedHover.advance(seconds: 0.02)
+check(retargetedHover.frames == uninterruptedHover.frames, "same target preserves velocity trajectory")
+var movingHover = HoverMotion(frames: rest)
+for sample in 0..<16 {
+    let target = RowLayout.frames(cursorX: tile1.x + 20 + Double(sample) / 10)
+    movingHover.retarget(target)
+    movingHover.advance(seconds: 0.005)
+}
+check(movingHover.frames[1].width > 76, "frequent hover retargets do not stall")
+var initialHover = HoverMotion(frames: rest)
+initialHover.retarget(mag)
+var previousWidth = rest[1].width
+for _ in 0..<30 {
+    initialHover.advance(seconds: 0.01)
+    check(initialHover.frames[1].width >= previousWidth && initialHover.frames[1].width <= mag[1].width, "hover accelerates and settles without initial overshoot")
+    previousWidth = initialHover.frames[1].width
+}
+check(initialHover.isSettled, "hover stops after settling")
+
+let glassRGB = Data([0, 0, 0, 8, 8, 8, 16, 8, 0, 24, 0, 0, 255, 255, 255, 142, 142, 147, 0, 255, 0])
+check(GlassBitmap.rgba(glassRGB, width: 7, height: 1) == Data([
+    0, 0, 0, 0, 0, 0, 0, 0, 8, 4, 0, 128, 24, 0, 0, 255,
+    255, 255, 255, 255, 142, 142, 147, 255, 0, 255, 0, 255,
+]), "glass removes black, feathers near-black with premultiplied alpha, preserves foreground colors")
+let glassCover = GlassBitmap.rgba(Data(repeating: 0, count: 100 * 100 * 3), width: 100, height: 100, preserveInset: 0.06)
+for y in 0..<100 {
+    for x in 0..<100 {
+        let alpha: UInt8 = (6..<94).contains(x) && (6..<94).contains(y) ? 255 : 0
+        check(glassCover[(y * 100 + x) * 4 + 3] == alpha, "glass preserves every black cover pixel and removes only its outer background")
+    }
+}
+let smallGlassCover = GlassBitmap.rgba(Data(repeating: 0, count: 160 * 160 * 3), width: 160, height: 160, preserveInset: 0.06)
+check(smallGlassCover[(9 * 160 + 9) * 4 + 3] == 255, "fractional cover edge rounds outward to preserve artwork")
+check(smallGlassCover[(8 * 160 + 8) * 4 + 3] == 0, "outside fractional cover edge stays transparent")
 
 if failures > 0 { exit(1) }
 print("ok")

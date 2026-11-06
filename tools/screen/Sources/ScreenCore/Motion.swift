@@ -1,6 +1,6 @@
 public enum Motion {
-    public static let hoverDuration = 0.16
-    public static let visibilityDuration = 0.18
+    public static let hoverDuration = 0.10
+    public static let visibilityDuration = 0.12
 
     public static func value(from: Double, to: Double, progress: Double) -> Double {
         if progress <= 0 { return from }

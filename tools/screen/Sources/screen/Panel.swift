@@ -14,7 +14,7 @@ final class Panel {
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private var mouseMonitor: Any?
     private var timer: Timer?
-    private var layoutMotion: (from: [ElementFrame], to: [ElementFrame], start: TimeInterval)?
+    private var layoutMotion: (tracker: HoverMotion, to: [ElementFrame], time: TimeInterval)?
     private var visibilityMotion: (from: Double, to: Double, start: TimeInterval)?
     private var slide = 1.0
     private var wantsVisible = false
@@ -99,7 +99,7 @@ final class Panel {
         window.ignoresMouseEvents = true
         if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
         mouseMonitor = nil
-        layoutMotion = (frames, RowLayout.frames(cursorX: nil), ProcessInfo.processInfo.systemUptime)
+        setLayoutTarget(RowLayout.frames(cursorX: nil))
         visibilityMotion = (slide, 1, ProcessInfo.processInfo.systemUptime)
         startAnimation()
     }
@@ -124,9 +124,16 @@ final class Panel {
         let target = RowLayout.frames(cursorX: cursor)
         if let motion = layoutMotion, motion.to == target { return }
         if layoutMotion == nil && target == frames { return }
-        advance()
-        layoutMotion = (frames, target, ProcessInfo.processInfo.systemUptime)
+        setLayoutTarget(target)
         startAnimation()
+    }
+
+    private func setLayoutTarget(_ target: [ElementFrame]) {
+        let now = ProcessInfo.processInfo.systemUptime
+        var motion = layoutMotion ?? (HoverMotion(frames: frames), target, now)
+        motion.tracker.retarget(target)
+        motion.to = target
+        layoutMotion = motion
     }
 
     private func startAnimation() {
@@ -142,10 +149,11 @@ final class Panel {
 
     private func advance() {
         let now = ProcessInfo.processInfo.systemUptime
-        if let motion = layoutMotion {
-            let progress = (now - motion.start) / Motion.hoverDuration
-            frames = Motion.frames(from: motion.from, to: motion.to, progress: progress)
-            if progress >= 1 { layoutMotion = nil }
+        if var motion = layoutMotion {
+            motion.tracker.advance(seconds: now - motion.time)
+            frames = motion.tracker.frames
+            motion.time = now
+            layoutMotion = motion.tracker.isSettled ? nil : motion
         }
         if let motion = visibilityMotion {
             let progress = (now - motion.start) / Motion.visibilityDuration
@@ -192,12 +200,24 @@ final class Panel {
             cells[id] = data
             let bitmap = Satellite.stripBitmap
             let composed = Strip.compose(Layout.stripCells(side).map { cells[$0] }, cellW: bitmap.w, cellH: bitmap.h, side: side)
-            guard let strip = SatelliteConnection.image(composed, width: bitmap.h * 3, height: bitmap.w) else { fail("cannot compose strip image") }
+            let strip = glassImage(composed, width: bitmap.h * 3, height: bitmap.w)
             tiles[.strip(side)]!.picture.layer!.contents = strip
         } else if let n = Layout.tiles.firstIndex(of: id) {
-            tiles[.tile(n: n + 1, grid: id)]!.picture.layer!.contents = image
+            tiles[.tile(n: n + 1, grid: id)]!.picture.layer!.contents = glassImage(data, width: image.width, height: image.height, preserveInset: id == GridID(1, 2) ? 0.06 : nil)
         }
         CATransaction.commit()
+    }
+
+    private func glassImage(_ rgb: Data, width: Int, height: Int, preserveInset: Double? = nil) -> CGImage {
+        let rgba = GlassBitmap.rgba(rgb, width: width, height: height, preserveInset: preserveInset)
+        guard let provider = CGDataProvider(data: rgba as CFData),
+              let image = CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32,
+                                  bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue).union(.byteOrder32Big),
+                                  provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) else {
+            fail("cannot create transparent glass bitmap")
+        }
+        return image
     }
 }
 
@@ -233,7 +253,7 @@ private final class TileView: PassThroughView {
         layer!.borderColor = NSColor.white.withAlphaComponent(0.14).cgColor
         layer!.borderWidth = 0.5
         picture.wantsLayer = true
-        picture.layer!.opacity = 0.90
+        picture.layer!.opacity = 1
         picture.layer!.masksToBounds = true
         picture.layer!.cornerCurve = .continuous
         picture.layer!.contentsGravity = .resize
