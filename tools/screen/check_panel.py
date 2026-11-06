@@ -102,7 +102,7 @@ for picture in pictures {
     require(picture.layer!.masksToBounds, "artwork must be clipped to its own layer")
     require(picture.layer!.cornerRadius > 0 && picture.layer!.cornerRadius <= 8, "artwork radius must match the smaller scaled corners")
     require(picture.bounds.width > 0 && picture.bounds.height > 0, "artwork must fill a nonempty content view")
-    require(picture.frame.minX > 0 && picture.frame.minY > 0, "artwork must leave the native glass edge unobstructed")
+    require(picture.frame == picture.superview!.bounds, "artwork must fill the tile without an extra glass edge")
 }
 
 NotificationCenter.default.post(name: NSApplication.didResignActiveNotification, object: application)

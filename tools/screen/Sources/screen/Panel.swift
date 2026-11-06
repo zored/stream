@@ -253,7 +253,6 @@ private final class TileView: PassThroughView {
     let picture = PassThroughView()
     private let effect: NSView
     private let content = PassThroughView()
-    private var edge = 1.0
 
     override init(frame: NSRect) {
         if #available(macOS 26.0, *) {
@@ -292,14 +291,13 @@ private final class TileView: PassThroughView {
 
     override func layout() {
         super.layout()
-        picture.frame = NSRect(x: edge, y: edge, width: max(0, content.bounds.width - 2 * edge), height: max(0, content.bounds.height - 2 * edge))
+        picture.frame = content.bounds
     }
 
     func setRadius(_ radius: Double) {
-        edge = radius / 4
         needsLayout = true
         layer!.cornerRadius = radius
-        picture.layer!.cornerRadius = radius - edge
+        picture.layer!.cornerRadius = radius
         if #available(macOS 26.0, *), let glass = effect as? NSGlassEffectView { glass.cornerRadius = radius }
     }
 }
