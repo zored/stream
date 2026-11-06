@@ -9,13 +9,20 @@ final class OverlayWindow: NSPanel {
 final class Panel {
     let window = OverlayWindow(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
     private let view = PanelView()
-    private var layers: [Element: CALayer] = [:]
+    private var tiles: [Element: TileView] = [:]
     private var cells: [GridID: Data] = [:]
-    private var observer: NSObjectProtocol?
+    private var observers: [(NotificationCenter, NSObjectProtocol)] = []
+    private var mouseMonitor: Any?
+    private var timer: Timer?
+    private var layoutMotion: (from: [ElementFrame], to: [ElementFrame], start: TimeInterval)?
+    private var visibilityMotion: (from: Double, to: Double, start: TimeInterval)?
+    private var slide = 1.0
+    private var wantsVisible = false
     var onStripDoubleClick: () -> Void = {}
     private(set) var frames = RowLayout.frames(cursorX: nil)
     private(set) var input: Input!
-    var isHidden: Bool { !window.isVisible }
+    var isHidden: Bool { !wantsVisible }
+    var isAnimating: Bool { timer != nil }
 
     init(connection: SatelliteConnection) {
         window.level = .statusBar
@@ -28,45 +35,147 @@ final class Panel {
         window.contentView = view
         view.owner = self
         view.wantsLayer = true
+        let content = PassThroughView()
+        let container: NSView
+        if #available(macOS 26.0, *) {
+            let glass = NSGlassEffectContainerView()
+            glass.spacing = 0
+            glass.contentView = content
+            container = glass
+        } else { container = content }
+        container.frame = view.bounds
+        container.autoresizingMask = [.width, .height]
+        view.addSubview(container)
         for element in Layout.elements {
-            let layer = CALayer()
-            layer.backgroundColor = NSColor.black.cgColor
-            layer.borderColor = NSColor.white.withAlphaComponent(0.14).cgColor
-            layer.borderWidth = 0.5
-            layer.masksToBounds = true
-            layer.contentsGravity = .resize
-            view.layer!.addSublayer(layer)
-            layers[element] = layer
+            let tile = TileView()
+            content.addSubview(tile)
+            tiles[element] = tile
         }
         input = Input(panel: self, connection: connection)
-        observer = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in self?.releaseAll(); self?.relayout() }
+        observe(.default, NSApplication.didChangeScreenParametersNotification) { panel in
+            panel.releaseAll()
+            panel.layoutMotion = nil
+            panel.frames = RowLayout.frames(cursorX: nil)
+            panel.applyLayout()
+        }
+        observe(.default, NSApplication.didResignActiveNotification) { $0.focusLost() }
+        observe(.default, NSApplication.didHideNotification) { $0.focusLost() }
+        observe(NSWorkspace.shared.notificationCenter, NSWorkspace.didActivateApplicationNotification) { $0.focusLost() }
+        observe(NSWorkspace.shared.notificationCenter, NSWorkspace.sessionDidResignActiveNotification) { $0.focusLost() }
+        applyLayout()
+    }
+
+    private func observe(_ center: NotificationCenter, _ name: Notification.Name, action: @escaping (Panel) -> Void) {
+        let token = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+            if let self { action(self) }
+        }
+        observers.append((center, token))
+    }
+
+    deinit {
+        timer?.invalidate()
+        if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
+        for (center, token) in observers { center.removeObserver(token) }
+    }
+
+    func show() {
+        guard !wantsVisible else { return }
+        advance()
+        wantsVisible = true
+        window.ignoresMouseEvents = false
+        window.orderFrontRegardless()
+        visibilityMotion = (slide, 0, ProcessInfo.processInfo.systemUptime)
+        startAnimation()
+        mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
+            self?.relayout(hover: true)
+        }
+        guard mouseMonitor != nil else { fail("cannot install panel mouse monitor") }
+    }
+
+    func hide() {
+        guard wantsVisible else { return }
+        advance()
+        wantsVisible = false
+        window.ignoresMouseEvents = true
+        if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
+        mouseMonitor = nil
+        layoutMotion = (frames, RowLayout.frames(cursorX: nil), ProcessInfo.processInfo.systemUptime)
+        visibilityMotion = (slide, 1, ProcessInfo.processInfo.systemUptime)
+        startAnimation()
+    }
+
+    func releaseAll() { input.releaseAll() }
+
+    private func focusLost() {
+        releaseAll()
         relayout()
     }
 
-    deinit { if let observer { NotificationCenter.default.removeObserver(observer) } }
-    func show() { relayout(); window.orderFrontRegardless() }
-    func hide() { window.orderOut(nil) }
-    func releaseAll() { input.releaseAll() }
+    func freezeLayout() {
+        layoutMotion = nil
+        stopAnimationIfIdle()
+    }
 
     func relayout(hover: Bool = false) {
         guard !input.isHeld, let screen = NSScreen.screens.first else { return }
-        let cursor = hover ? Double(NSEvent.mouseLocation.x - screen.frame.midX) : nil
-        frames = RowLayout.frames(cursorX: cursor)
+        let location = NSEvent.mouseLocation
+        let cursor = hover && wantsVisible && visibilityMotion == nil && window.frame.contains(location)
+            ? Double(location.x - screen.frame.midX) : nil
+        let target = RowLayout.frames(cursorX: cursor)
+        if let motion = layoutMotion, motion.to == target { return }
+        if layoutMotion == nil && target == frames { return }
+        advance()
+        layoutMotion = (frames, target, ProcessInfo.processInfo.systemUptime)
+        startAnimation()
+    }
+
+    private func startAnimation() {
+        guard timer == nil else { return }
+        let source = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] _ in self?.advance() }
+        timer = source
+        RunLoop.main.add(source, forMode: .common)
+    }
+
+    private func stopAnimationIfIdle() {
+        if layoutMotion == nil && visibilityMotion == nil { timer?.invalidate(); timer = nil }
+    }
+
+    private func advance() {
+        let now = ProcessInfo.processInfo.systemUptime
+        if let motion = layoutMotion {
+            let progress = (now - motion.start) / Motion.hoverDuration
+            frames = Motion.frames(from: motion.from, to: motion.to, progress: progress)
+            if progress >= 1 { layoutMotion = nil }
+        }
+        if let motion = visibilityMotion {
+            let progress = (now - motion.start) / Motion.visibilityDuration
+            slide = Motion.value(from: motion.from, to: motion.to, progress: progress)
+            if progress >= 1 {
+                visibilityMotion = nil
+                if !wantsVisible { window.orderOut(nil) }
+            }
+        }
+        applyLayout()
+        stopAnimationIfIdle()
+    }
+
+    private func applyLayout() {
+        guard let screen = NSScreen.screens.first else { return }
         let width = RowLayout.width(frames)
         let height = RowLayout.height(frames) + 4
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         window.setFrame(NSRect(x: screen.frame.midX - width / 2, y: screen.frame.maxY - height, width: width, height: height), display: true)
         for frame in frames {
-            let layer = layers[frame.element]!
-            layer.frame = CGRect(x: frame.x + width / 2, y: 4, width: frame.width, height: frame.height)
-            let radius: Double = if case .strip = frame.element { 8 } else { 9 }
-            layer.cornerRadius = radius * frame.scale
+            let tile = tiles[frame.element]!
+            tile.frame = CGRect(x: frame.x + width / 2, y: 4 - 84 * slide, width: frame.width, height: frame.height)
+            tile.setRadius(4 * frame.scale)
         }
         CATransaction.commit()
     }
 
     func hit(_ point: NSPoint) -> ElementFrame? {
+        guard wantsVisible, visibilityMotion == nil else { return nil }
         let x = point.x - RowLayout.width(frames) / 2
         return frames.first { x >= $0.x && x < $0.x + $0.width && point.y >= 4 && point.y < 4 + $0.height }
     }
@@ -83,12 +192,62 @@ final class Panel {
             cells[id] = data
             let bitmap = Satellite.stripBitmap
             let composed = Strip.compose(Layout.stripCells(side).map { cells[$0] }, cellW: bitmap.w, cellH: bitmap.h, side: side)
-            let provider = CGDataProvider(data: composed as CFData)!
-            layers[.strip(side)]!.contents = CGImage(width: bitmap.h * 3, height: bitmap.w, bitsPerComponent: 8, bitsPerPixel: 24, bytesPerRow: bitmap.h * 9, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: 0), provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)!
+            guard let strip = SatelliteConnection.image(composed, width: bitmap.h * 3, height: bitmap.w) else { fail("cannot compose strip image") }
+            tiles[.strip(side)]!.picture.layer!.contents = strip
         } else if let n = Layout.tiles.firstIndex(of: id) {
-            layers[.tile(n: n + 1, grid: id)]!.contents = image
+            tiles[.tile(n: n + 1, grid: id)]!.picture.layer!.contents = image
         }
         CATransaction.commit()
+    }
+}
+
+private class PassThroughView: NSView {
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+}
+
+private final class TileView: PassThroughView {
+    let picture = PassThroughView()
+    private let effect: NSView
+
+    override init(frame: NSRect) {
+        if #available(macOS 26.0, *) {
+            let glass = NSGlassEffectView()
+            glass.style = .clear
+            glass.tintColor = NSColor.black.withAlphaComponent(0.12)
+            glass.contentView = picture
+            effect = glass
+        } else {
+            let blur = NSVisualEffectView()
+            blur.material = .hudWindow
+            blur.blendingMode = .behindWindow
+            blur.state = .active
+            blur.addSubview(picture)
+            picture.autoresizingMask = [.width, .height]
+            effect = blur
+        }
+        super.init(frame: frame)
+        wantsLayer = true
+        layer!.masksToBounds = true
+        layer!.cornerCurve = .continuous
+        layer!.borderColor = NSColor.white.withAlphaComponent(0.14).cgColor
+        layer!.borderWidth = 0.5
+        picture.wantsLayer = true
+        picture.layer!.opacity = 0.90
+        picture.layer!.masksToBounds = true
+        picture.layer!.cornerCurve = .continuous
+        picture.layer!.contentsGravity = .resize
+        effect.frame = bounds
+        effect.autoresizingMask = [.width, .height]
+        addSubview(effect)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is unavailable") }
+
+    func setRadius(_ radius: Double) {
+        layer!.cornerRadius = radius
+        picture.layer!.cornerRadius = radius
+        if #available(macOS 26.0, *), let glass = effect as? NSGlassEffectView { glass.cornerRadius = radius }
     }
 }
 

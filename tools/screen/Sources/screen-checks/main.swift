@@ -109,5 +109,33 @@ check(ScreenVisibility.shouldShow(devicePlugged: true, userHidden: false), "pane
 check(ScreenVisibility.shouldShow(devicePlugged: false, userHidden: false), "panel visible unplugged")
 check(!ScreenVisibility.shouldShow(devicePlugged: true, userHidden: true), "user hide wins while plugged")
 
+check(Motion.hoverDuration == 0.16 && Motion.visibilityDuration == 0.18, "motion durations")
+check(Motion.value(from: -80, to: 0, progress: -1) == -80, "slide clamps before start")
+check(Motion.value(from: -80, to: 0, progress: 2) == 0, "slide clamps after finish")
+check(Motion.value(from: -80, to: 0, progress: 0.5) == -40, "slide midpoint")
+check(Motion.value(from: 0, to: 1, progress: 0.25) == 0.15625, "smoothstep quarter")
+let slideValues = (0...10).map { Motion.value(from: -80, to: 0, progress: Double($0) / 10) }
+check(zip(slideValues, slideValues.dropFirst()).allSatisfy { $0 <= $1 }, "slide progresses monotonically")
+check(Motion.frames(from: rest, to: mag, progress: 0) == rest, "motion exact start frames")
+check(Motion.frames(from: rest, to: mag, progress: 1) == mag, "motion exact final frames")
+check(Motion.frames(from: rest, to: mag, progress: -1) == rest, "frame motion clamps before start")
+check(Motion.frames(from: rest, to: mag, progress: 2) == mag, "frame motion clamps after end")
+let halfwayFrames = Motion.frames(from: rest, to: mag, progress: 0.5)
+check(halfwayFrames.map(\.element) == rest.map(\.element), "motion preserves element identity")
+for i in rest.indices {
+    check(halfwayFrames[i].x == (rest[i].x + mag[i].x) / 2, "motion midpoint x")
+    check(halfwayFrames[i].width == (rest[i].width + mag[i].width) / 2, "motion midpoint width")
+    check(halfwayFrames[i].height == (rest[i].height + mag[i].height) / 2, "motion midpoint height")
+    check(halfwayFrames[i].scale == (rest[i].scale + mag[i].scale) / 2, "motion midpoint scale")
+}
+let motionSamples = (0...10).map { Motion.frames(from: rest, to: mag, progress: Double($0) / 10) }
+for i in rest.indices {
+    for component in [\ElementFrame.x, \ElementFrame.width, \ElementFrame.height, \ElementFrame.scale] {
+        let values = motionSamples.map { $0[i][keyPath: component] }
+        let increases = rest[i][keyPath: component] <= mag[i][keyPath: component]
+        check(zip(values, values.dropFirst()).allSatisfy { increases ? $0 <= $1 : $0 >= $1 }, "frame components progress monotonically")
+    }
+}
+
 if failures > 0 { exit(1) }
 print("ok")

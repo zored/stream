@@ -21,10 +21,10 @@ Companion ──Satellite TCP :16622── screen app ── NSPanel at the top 
 - Strips lie horizontally at both ends of the row, bottom edge towards the tiles: the left strip turned 90° counterclockwise
   (device top → screen left), the right strip 90° clockwise (device top → screen right).
 - No кнопки 1–8 on screen.
-- Small mode: tile 40 pt, strip 40 × 215 pt (48 × 258 turned), rounded corners (tile 9 pt, strip 8 pt), black, hairline outline.
+- Small mode: tile 40 pt, strip 40 × 215 pt (48 × 258 turned), continuous corners (4 pt at rest, 8 pt enlarged), clipped artwork and a hairline outline.
 - Hover: Dock-style magnification, each element by its own distance to the cursor (cosine falloff, range 200 pt),
-  up to 80 pt per tile (= the device tile); grows downwards from a 4 pt top margin. Magnification runs only while the cursor is inside the panel and freezes while any mouse button is held. The panel moves to the primary display when the display configuration changes.
-- Style follows the device (D1–D3): the pictures are Companion's, the app adds only the outline and corners.
+  up to 80 pt per tile (= the device tile); grows downwards from a 4 pt top margin. Magnification runs only while the cursor is inside the panel and freezes while any mouse button is held. Hover transitions use 160 ms smoothstep easing; focus/session loss and application changes return to rest, and mouse movement outside the panel clears missed exit events. The panel moves to the primary display when the display configuration changes.
+- Companion supplies the pictures. On macOS 26+, a clear native `NSGlassEffectView` sits beneath each picture (90 % opacity), batched in `NSGlassEffectContainerView`. macOS 14–25 uses `NSVisualEffectView` blur; it does not provide Liquid Glass refraction. The native effect controls refraction and highlights; it is not a custom iOS shader.
 
 ## Input
 
@@ -89,9 +89,9 @@ and exits with status 1; launchd restarts it. An intentional disconnect sends `R
 
 - Current temporary mode: connect and show regardless of USB state. Plugging or unplugging the controller neither hides the panel nor disconnects Satellite, and does not clear a user hide.
 - IOKit matched/terminated detection (VID `0x1532`, PID `0x0D06`) remains active. Automatic hiding on plug is deferred until the user requests it again.
-- Hidden by a double click → stays hidden until the cursor touches the top edge; a global `mouseMoved` monitor runs only while hidden
+- Double click slides the row upward over 180 ms, then hides the window; top-edge reveal reverses the slide downward. Input is disabled during the transition. Hidden by a double click → stays hidden until the cursor touches the top edge; a global `mouseMoved` monitor runs only while hidden
   (assumed: needs no Accessibility).
-- Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There are no polling or animation timers. A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
+- Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There is no cursor polling. A 60 Hz animation timer runs only during a hover or visibility transition and is invalidated when settled. A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
 
 ## Install and verify
 
@@ -123,3 +123,7 @@ the LaunchAgent plist passes `plutil -lint`. The plugged-device probe received a
   past the 7-day free signing. Satellite listens on `*` (verified), so the LAN reaches it.
 
 Shutdown regression: `python3 tools/screen/check_shutdown.py` builds a temporary app against an isolated TCP server, delays REMOVE-DEVICE and checks it arrives before EOF with exit 0. Verified RED→GREEN. Termination first cancels the AppKit request, drains disconnect asynchronously, then requests termination again; `terminateLater` stalled this command-line AppKit runloop in the regression.
+
+Panel regression: `python3 tools/screen/check_panel.py` compiles the real AppKit panel with a fixed cursor fixture and posts an in-process focus-loss notification. It checks hover interpolation, collapse on focus loss, and animated hide/reveal. The original implementation reproduced the stuck magnification before the fix.
+
+Verified after the animation update: full `make test`, AppKit panel regression (including unsupported clicks during collapse), shutdown regression, signed release build and LaunchAgent restart. Visual quality of glass/refraction is still unverified; native screenshot attempts timed out. P2 now permits a 60 Hz timer only while the panel is transitioning; the runtime check confirms it stops after hover, focus reset and visibility animations.

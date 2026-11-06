@@ -52,9 +52,11 @@ final class Input {
             default: id = nil
             }
             guard let id, held.down(button: event.buttonNumber, id: id) else { return }
+            panel.freezeLayout()
             connection.press(id, down: true)
         case let .strip(side):
             guard event.buttonNumber == 0 else { return }
+            panel.freezeLayout()
             let y = panel.deviceY(point, frame: frame, side: side)
             gesture.y = y
             post(47128, "emoji/start?s=\(side == .left ? "l" : "r")&y=\(y)")
