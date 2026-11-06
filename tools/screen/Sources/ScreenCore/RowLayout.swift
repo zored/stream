@@ -33,7 +33,8 @@ public enum RowLayout {
         return xs.map { $0 - x / 2 }
     }
 
-    public static func frames(cursorX: Double?) -> [ElementFrame] {
+    public static func frames(cursorX: Double?, exclusion: ClosedRange<Double>? = nil, availableWidth: Double? = nil) -> [ElementFrame] {
+        if let exclusion { return splitFrames(cursorX: cursorX, exclusion: exclusion, availableWidth: availableWidth) }
         let els = Layout.elements
         let base = els.map(baseSize)
         let baseX = place(base.map(\.w))
@@ -51,9 +52,65 @@ public enum RowLayout {
         }
     }
 
+    private static func splitFrames(cursorX: Double?, exclusion: ClosedRange<Double>, availableWidth: Double?) -> [ElementFrame] {
+        let elements = Layout.elements
+        let base = elements.map(baseSize)
+        let anchors = [exclusion.lowerBound - 8, exclusion.upperBound + 8]
+        let groups = [0..<7, 7..<14]
+        var baseScales = Array(repeating: 1.0, count: 14)
+        var gapScales = [1.0, 1.0]
+        var room = [Double.infinity, Double.infinity]
+        for wing in groups.indices {
+            let group = groups[wing]
+            let span = group.reduce(0.0) { $0 + base[$1].w } + group.dropLast().reduce(0.0) { $0 + gapAfter($1) }
+            if let availableWidth {
+                room[wing] = max(0, availableWidth / 2 - 8 + (wing == 0 ? anchors[wing] : -anchors[wing]))
+                gapScales[wing] = min(1, room[wing] / span)
+                for i in group { baseScales[i] = gapScales[wing] }
+            }
+        }
+        func positions(_ scales: [Double]) -> [Double] {
+            var xs = Array(repeating: 0.0, count: 14)
+            for wing in groups.indices {
+                let group = groups[wing]
+                let span = group.reduce(0.0) { $0 + base[$1].w * scales[$1] }
+                    + group.dropLast().reduce(0.0) { $0 + gapAfter($1) * gapScales[wing] }
+                var x = wing == 0 ? anchors[wing] - span : anchors[wing]
+                for i in group {
+                    xs[i] = x
+                    x += base[i].w * scales[i] + gapAfter(i) * gapScales[wing]
+                }
+            }
+            return xs
+        }
+        let restingX = positions(baseScales)
+        let cursor = cursorX.flatMap { exclusion.contains($0) ? nil : $0 }
+        var scales = elements.indices.map { i -> Double in
+            guard let cursor else { return baseScales[i] }
+            let half = base[i].w * baseScales[i] / 2
+            let center = restingX[i] + half
+            let edge: Double = if case .strip = elements[i] { half } else { 0 }
+            return baseScales[i] * Geometry.scale(distance: max(0, abs(cursor - center) - edge), small: tile, max: maxTile, range: range)
+        }
+        for wing in groups.indices {
+            let group = groups[wing]
+            let baseSpan = group.reduce(0.0) { $0 + base[$1].w * baseScales[$1] }
+                + group.dropLast().reduce(0.0) { $0 + gapAfter($1) * gapScales[wing] }
+            let excess = group.reduce(0.0) { $0 + base[$1].w * (scales[$1] - baseScales[$1]) }
+            if excess > 0 {
+                let fraction = min(1, max(0, room[wing] - baseSpan) / excess)
+                for i in group { scales[i] = baseScales[i] + (scales[i] - baseScales[i]) * fraction }
+            }
+        }
+        let xs = positions(scales)
+        return elements.indices.map {
+            ElementFrame(element: elements[$0], x: xs[$0], width: base[$0].w * scales[$0], height: base[$0].h * scales[$0], scale: scales[$0])
+        }
+    }
+
     public static func width(_ f: [ElementFrame]) -> Double {
         guard let a = f.first, let b = f.last else { return 0 }
-        return b.x + b.width - a.x
+        return 2 * max(abs(a.x), abs(b.x + b.width))
     }
 
     public static func height(_ f: [ElementFrame]) -> Double {

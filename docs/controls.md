@@ -289,7 +289,7 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 the USB controller is plugged in or not. USB detection remains active, but visibility gating is dormant. Companion draws the same page on both surfaces.
 
 The row contains 12 tiles in column order: tiles 1–3 are the first device column, 4–6 the second, 7–9 the third, 10–12 the fourth.
-The horizontal strips sit at the ends. Hover smoothly enlarges nearby controls; changing apps or leaving the panel returns them to their normal size. The panel keeps keyboard focus in the current app.
+The horizontal strips sit at the ends. On a MacBook with a camera cutout, tiles 1–6 sit to its left and 7–12 to its right; the strips remain at the outer ends. Displays without a cutout keep one continuous row. Hover smoothly enlarges nearby controls; changing apps or leaving the panel returns them to their normal size. The panel keeps keyboard focus in the current app.
 
 - Click or hold a tile as on the device; drag at least 40 pt within 400 ms for its swipe action.
 - Wheel over tiles 1–3 or 10–12 turns the corresponding left or right knob; right click presses that knob.

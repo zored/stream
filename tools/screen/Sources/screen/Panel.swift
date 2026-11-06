@@ -63,7 +63,7 @@ final class Panel {
         observe(.default, NSApplication.didChangeScreenParametersNotification) { panel in
             panel.releaseAll()
             panel.layoutMotion = nil
-            panel.frames = RowLayout.frames(cursorX: nil)
+            panel.frames = panel.layoutFrames(cursorX: nil)
             panel.applyLayout()
             panel.displayLink?.invalidate()
             panel.displayLink = nil
@@ -73,6 +73,7 @@ final class Panel {
         observe(.default, NSApplication.didHideNotification) { $0.focusLost() }
         observe(NSWorkspace.shared.notificationCenter, NSWorkspace.didActivateApplicationNotification) { $0.focusLost() }
         observe(NSWorkspace.shared.notificationCenter, NSWorkspace.sessionDidResignActiveNotification) { $0.focusLost() }
+        frames = layoutFrames(cursorX: nil)
         applyLayout()
     }
 
@@ -110,7 +111,7 @@ final class Panel {
         window.ignoresMouseEvents = true
         if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
         mouseMonitor = nil
-        setLayoutTarget(RowLayout.frames(cursorX: nil))
+        setLayoutTarget(layoutFrames(cursorX: nil))
         visibilityMotion = (slide, 1, CACurrentMediaTime())
         startAnimation()
     }
@@ -132,11 +133,19 @@ final class Panel {
         let location = NSEvent.mouseLocation
         let cursor = hover && wantsVisible && visibilityMotion == nil && window.frame.contains(location)
             ? Double(location.x - screen.frame.midX) : nil
-        let target = RowLayout.frames(cursorX: cursor)
+        let target = layoutFrames(cursorX: cursor)
         if let motion = layoutMotion, motion.to == target { return }
         if layoutMotion == nil && target == frames { return }
         setLayoutTarget(target)
         startAnimation()
+    }
+
+    private func layoutFrames(cursorX: Double?) -> [ElementFrame] {
+        guard let screen = NSScreen.screens.first, screen.safeAreaInsets.top > 0,
+              let left = screen.auxiliaryTopLeftArea, let right = screen.auxiliaryTopRightArea,
+              left.maxX < right.minX else { return RowLayout.frames(cursorX: cursorX) }
+        let exclusion = Double(left.maxX - screen.frame.midX)...Double(right.minX - screen.frame.midX)
+        return RowLayout.frames(cursorX: cursorX, exclusion: exclusion, availableWidth: Double(screen.frame.width))
     }
 
     private func setLayoutTarget(_ target: [ElementFrame]) {

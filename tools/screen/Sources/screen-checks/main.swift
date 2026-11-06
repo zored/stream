@@ -193,5 +193,27 @@ let smallGlassCover = GlassBitmap.rgba(Data(repeating: 0, count: 160 * 160 * 3),
 check(smallGlassCover[(9 * 160 + 9) * 4 + 3] == 255, "fractional cover edge rounds outward to preserve artwork")
 check(smallGlassCover[(8 * 160 + 8) * 4 + 3] == 0, "outside fractional cover edge stays transparent")
 
+let notchHole = -100.0...100.0
+let splitRest = RowLayout.frames(cursorX: nil, exclusion: notchHole)
+check(splitRest.count == 14 && splitRest.map(\.element) == rest.map(\.element), "notch preserves all controls and order")
+check(splitRest[6].x + splitRest[6].width == -108 && splitRest[7].x == 108, "wings anchor eight points from notch")
+check(RowLayout.hit(splitRest, x: 0) == nil, "notch is not a hit target")
+check(RowLayout.frames(cursorX: 0, exclusion: notchHole) == splitRest, "cursor in notch leaves row at rest")
+check(RowLayout.frames(cursorX: tile1.x + tile1.width / 2, exclusion: nil) == mag, "no notch preserves original layout")
+for displayWidth in [1512.0, 1728.0] {
+    for cursor in stride(from: -displayWidth / 2, through: displayWidth / 2, by: 17) {
+        let split = RowLayout.frames(cursorX: cursor, exclusion: notchHole, availableWidth: displayWidth)
+        check(split.prefix(7).allSatisfy { $0.x + $0.width <= -108 + 1e-9 }, "left wing clears notch while magnifying")
+        check(split.suffix(7).allSatisfy { $0.x >= 108 - 1e-9 }, "right wing clears notch while magnifying")
+        check(split.first!.x >= -displayWidth / 2 + 8 - 1e-9 && split.last!.x + split.last!.width <= displayWidth / 2 - 8 + 1e-9, "magnified wings fit display margins")
+        check(split.allSatisfy { $0.width >= 40 && $0.height >= 40 }, "display fit preserves base size when room permits")
+        let canvasHalf = RowLayout.width(split) / 2
+        check(split.allSatisfy { $0.x >= -canvasHalf - 1e-9 && $0.x + $0.width <= canvasHalf + 1e-9 }, "symmetric canvas contains every frame")
+        check(RowLayout.hit(split, x: split.last!.x + split.last!.width / 2) == .strip(.right), "right strip remains hittable")
+    }
+}
+let narrowSplit = RowLayout.frames(cursorX: -350, exclusion: notchHole, availableWidth: 900)
+check(narrowSplit.first!.x >= -442 - 1e-9 && narrowSplit.last!.x + narrowSplit.last!.width <= 442 + 1e-9, "narrow display uniformly shrinks base wings to fit")
+
 if failures > 0 { exit(1) }
 print("ok")

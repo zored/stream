@@ -27,9 +27,18 @@ import ScreenCore
 
 var cursorOffset = 0.0
 
+func fixtureFrames(cursorX: Double? = nil) -> [ElementFrame] {
+    let screen = NSScreen.screens.first!
+    if screen.safeAreaInsets.top > 0, let left = screen.auxiliaryTopLeftArea, let right = screen.auxiliaryTopRightArea {
+        let gap = Double(left.maxX - screen.frame.midX)...Double(right.minX - screen.frame.midX)
+        return RowLayout.frames(cursorX: cursorX, exclusion: gap, availableWidth: Double(screen.frame.width))
+    }
+    return RowLayout.frames(cursorX: cursorX)
+}
+
 func fixedMouseLocation() -> NSPoint {
     let screen = NSScreen.screens.first!.frame
-    let tile = RowLayout.frames(cursorX: nil)[1]
+    let tile = fixtureFrames()[1]
     return NSPoint(x: screen.midX + tile.x + tile.width / 2 + cursorOffset, y: screen.maxY - 20)
 }
 
@@ -45,7 +54,18 @@ let application = NSApplication.shared
 application.setActivationPolicy(.accessory)
 require(NSScreen.screens.first != nil, "no display available")
 let panel = Panel(connection: SatelliteConnection())
-let rest = RowLayout.frames(cursorX: nil)
+let currentScreen = NSScreen.screens.first!
+if currentScreen.safeAreaInsets.top > 0,
+   let left = currentScreen.auxiliaryTopLeftArea, let right = currentScreen.auxiliaryTopRightArea {
+    let lower = Double(left.maxX - currentScreen.frame.midX)
+    let upper = Double(right.minX - currentScreen.frame.midX)
+    print("camera exclusion: \(lower)...\(upper)")
+    require(panel.frames.allSatisfy { $0.x + $0.width <= lower || $0.x >= upper }, "camera housing must not cover any tile")
+    require(panel.hit(NSPoint(x: RowLayout.width(panel.frames) / 2, y: 10)) == nil, "camera gap must not hit a control")
+}
+
+let rest = fixtureFrames()
+let hoverTarget = fixtureFrames(cursorX: rest[1].x + rest[1].width / 2)[1].scale
 panel.show()
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
 require(panel.window.isVisible, "show must reveal the panel")
@@ -70,7 +90,7 @@ require(panel.frames == rest, "hover must not jump directly to the target")
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.03))
 require(panel.frames[1].scale > 1 && panel.frames[1].scale < 2, "hover must interpolate through an intermediate scale")
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
-require(abs(panel.frames[1].scale - 2) < 0.0001, "hover must reach the magnified target")
+require(abs(panel.frames[1].scale - hoverTarget) < 0.0001, "hover must reach the magnified target")
 require(!panel.isAnimating, "hover animation must settle")
 
 cursorOffset = 200
@@ -85,9 +105,9 @@ for sample in 1...12 {
     if remaining > 0 { RunLoop.main.run(until: Date(timeIntervalSinceNow: remaining)) }
 }
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.016))
-require(panel.frames[1].scale >= 1.75, "continuous hover must track 120 Hz cursor motion without restarting easing; scale=\\(panel.frames[1].scale)")
+require(panel.frames[1].scale >= 1 + (hoverTarget - 1) * 0.75, "continuous hover must track 120 Hz cursor motion without restarting easing; scale=\\(panel.frames[1].scale)")
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
-require(abs(panel.frames[1].scale - 2) < 0.0001 && !panel.isAnimating, "continuous hover must settle at its final target")
+require(abs(panel.frames[1].scale - hoverTarget) < 0.0001 && !panel.isAnimating, "continuous hover must settle at its final target")
 
 let bitmap = Data(repeating: 255, count: 160 * 160 * 3)
 let image = SatelliteConnection.image(bitmap, width: 160, height: 160)!
