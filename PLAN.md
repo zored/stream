@@ -87,6 +87,14 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   AI.md rule: child sessions ask the user in their own chat, the master never relays
 - 2026-11-06: VK WorkSpace calls joined by link (old engine voip3sdk, [vkcall.md](docs/vkcall.md#old-engine-voip3sdk)): state from
   the newest `voip_*.log`, mic / camera via ⇧⌘A / ⇧⌘V, hang-up closes the `In call` window; кнопка 5 hangs up in a call (`fdf7a9c`)
+  verified by the user on a live call; on-screen controller panel ([screen.md](docs/screen.md), `tools/screen/`): Swift NSPanel as a
+  second Companion Satellite surface in the same group, 12 tiles + 2 strips at the top of the screen, Dock-style magnification, mouse
+  click / wheel / right click = tile / knob turn / knob press, strip drags to the daemon (`be6ea38`…`912385d`)
+- 2026-11-09: screen panel hidden while the USB controller is plugged, shown when unplugged; after a double-click hide the top edge
+  gives a 0.6 s peek of 10 pt, leaving it flies back up (`74da23e`…`27a3f63`, verified by the user); Satellite disconnects for system
+  sleep, reconnects on wake (`699805b`); VK WorkSpace chats: 1:1 mute from `getUserInfo` instead of «not in buddylist → muted», so
+  unmuted chats are no longer gray (`817e88a`, `6446912`, verified on the device); кнопка 3 toggles the mic / push-to-talk in a call
+  again, broken by `6e12016` (`5360b2c`, verified on the device)
 
 ## Next
 
@@ -104,7 +112,8 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Emoji picker on the device: look, swipe + inertia, typing into a field, haptics (checked over the API only)
 - [ ] Unread tile on the device; choice cards and Yandex Music like after the perf round 2 (not run live)
 - [ ] Date tile on the device; the 00:05 alarm seen once = a turn below 0 at the clock tile (assumed)
-- [ ] Call joined by link: кнопки 3 / 4 / 5 and tiles `2/2`, `2/3` — mic, camera, hang-up from the device
+- [ ] Screen panel after a real sleep: `screen.log` shows `sleep` / `wake`, no `Satellite closed`
+- [ ] Muted 1:1 VK WorkSpace chat shows gray on the chats tile (test + API only)
 - [ ] 2026-11-05 batch on the device: green calendar before an event + list opening on the shown event; agents 16 dots / slide / hollow dot for a chat not on the tile; крутилка слева, ряд 2 (tracks, like) and ряд 3 (chats); jirabot in the gray (muted) mode; the `3d` / `h:mm` label size; chats animation smoothness
 
 ### More buttons and actions
