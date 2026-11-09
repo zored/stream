@@ -33,6 +33,61 @@ func vkwsSessionPath() string {
 	return filepath.Join(home, ".config/ai-launcher/mcp/lighthouse/generic_vkworkspace/current/bin/session.json")
 }
 
+func vkwsKnownPath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".config/zored-stream/vkws-dialogs")
+}
+
+// vkwsKnown: dialogs seen via histDlgState; the buddylist lacks 1:1 chats, so the startup scan reads them from here.
+type vkwsKnown struct {
+	file string
+	sns  map[string]bool
+}
+
+func loadVkwsKnown(file string) (*vkwsKnown, error) {
+	k := &vkwsKnown{file: file, sns: map[string]bool{}}
+	b, err := os.ReadFile(file)
+	if errors.Is(err, os.ErrNotExist) {
+		return k, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("vkws: known dialogs: %w", err)
+	}
+	for _, sn := range strings.Fields(string(b)) {
+		k.sns[sn] = true
+	}
+	return k, nil
+}
+
+func (k *vkwsKnown) list() []string {
+	out := make([]string, 0, len(k.sns))
+	for sn := range k.sns {
+		out = append(out, sn)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func (k *vkwsKnown) add(sns []string) error {
+	grew := false
+	for _, sn := range sns {
+		if !k.sns[sn] {
+			k.sns[sn] = true
+			grew = true
+		}
+	}
+	if !grew {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(k.file), 0o755); err != nil {
+		return fmt.Errorf("vkws: known dialogs: %w", err)
+	}
+	if err := os.WriteFile(k.file, []byte(strings.Join(k.list(), "\n")+"\n"), 0o644); err != nil {
+		return fmt.Errorf("vkws: known dialogs: %w", err)
+	}
+	return nil
+}
+
 type vkwsSession struct {
 	BaseURL      string `json:"base_url"`
 	BaseHost     string `json:"base_host"`
@@ -487,11 +542,17 @@ func vkwsChats(ctx context.Context, push func([]chatEntry)) error {
 		return err
 	}
 	st := &vkwsState{c: c, names: map[string]string{}, muted: map[string]bool{}, dialogs: map[string]vkwsDialog{}, avatars: map[string][]byte{}}
-	var scan []string
+	known, err := loadVkwsKnown(vkwsKnownPath())
+	if err != nil {
+		return err
+	}
+	scan := known.list()
 	for _, b := range ev.buddies {
 		st.names[b.sn] = b.name
 		st.muted[b.sn] = b.muted
-		scan = append(scan, b.sn)
+		if !known.sns[b.sn] {
+			scan = append(scan, b.sn)
+		}
 	}
 	if err := st.refresh(ctx, scan); err != nil {
 		return err
@@ -535,6 +596,9 @@ func vkwsChats(ctx context.Context, push func([]chatEntry)) error {
 		}
 		if len(todo) == 0 {
 			continue
+		}
+		if err := known.add(todo); err != nil {
+			return err
 		}
 		if err := st.refresh(ctx, todo); err != nil {
 			return err

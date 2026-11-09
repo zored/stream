@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -135,5 +137,23 @@ func TestVkwsNoSenderForDirectOrOutgoing(t *testing.T) {
 		if d, err := parseVkwsHistory("a@corp", []byte(b)); err != nil || d.sender != "" {
 			t.Errorf("%s: %+v %v", b, d, err)
 		}
+	}
+}
+
+func TestVkwsKnownDialogsPersist(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "dir", "vkws-dialogs")
+	k, err := loadVkwsKnown(file)
+	if err != nil || len(k.list()) != 0 {
+		t.Fatalf("fresh: %v, %v", k.list(), err)
+	}
+	if err := k.add([]string{"b@vk.team", "a@vk.team", "b@vk.team"}); err != nil {
+		t.Fatal(err)
+	}
+	k, err = loadVkwsKnown(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(k.list(), ","); got != "a@vk.team,b@vk.team" {
+		t.Fatalf("got %q", got)
 	}
 }
