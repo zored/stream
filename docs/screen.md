@@ -41,7 +41,7 @@ Companion ──Satellite TCP :16622── screen app ── NSPanel at the top 
 | drag along the right strip | `POST :47117/ai/slide?y=` (device px, absolute) |
 | strip press / release | `POST :47128/emoji/start\|end?s=l\|r&y=` |
 | double click on a strip | hide the panel (strip taps do nothing on the device, [controls.md](controls.md)) |
-| cursor at the top screen edge (≤ 2 pt) for 3 s while hidden | peek, then show the panel again |
+| cursor at the top screen edge (≤ 2 pt) for 1.2 s while hidden | peek, then show the panel again |
 
 A release goes to the control pressed on mouse down, even outside the panel. A tile swipe waits for the daemon reply:
 any status except `404` releases the tile immediately; `404` keeps the normal release on mouse up. A mouse up during the request
@@ -90,10 +90,10 @@ and exits with status 1; launchd restarts it. An intentional disconnect sends `R
 
 - USB controller plugged (IOKit matched/terminated, VID `0x1532`, PID `0x0D06`) → the row slides up, Satellite sends `REMOVE-DEVICE` and disconnects. Unplugged → Satellite connects and the row slides down. Verified 2026-11-09: launch with the controller plugged logs `device plugged=true`, keeps no `:16622` socket.
 - Double click on a strip slides the row up over 120 ms and hides it. Any USB change clears this user hide: plugging hides anyway, unplugging always shows.
-- Hidden by the user, a global `mouseMoved` monitor runs (assumed: needs no Accessibility). Cursor ≤ 2 pt from the top of the primary display starts a peek at once: the row jumps (invisibly) to tiles touching the top edge, then over 3 s slides down with a cubic ease-out (fast start, ~27 % of the way in the first 0.1 s) until 10 pt of each resting tile is visible. After 3 s the panel shows completely. Cursor more than 14 pt below the top during the peek → the row flies back up in 80 ms; the next touch of the edge starts a new 3 s peek. The peek ignores mouse input.
+- Hidden by the user, a global `mouseMoved` monitor runs (assumed: needs no Accessibility). Cursor ≤ 2 pt from the top of the primary display starts a peek at once: the row jumps (invisibly) to tiles touching the top edge, then over 1.2 s slides down with a cubic ease-out (fast start, ~56 % of the way in the first 0.1 s) until 10 pt of each resting tile is visible. After 1.2 s the panel shows completely. Cursor more than 14 pt below the top during the peek → the row flies back up in 80 ms; the next touch of the edge starts a new 1.2 s peek. The peek ignores mouse input.
 - Input is disabled during every transition.
-- Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There is no cursor polling: the 3 s reveal is a one-shot `DispatchWorkItem`, so a cursor resting at the edge needs no events. A primary-screen CADisplayLink drives hover/visibility transitions at the refresh rate reported by AppKit and is invalidated when settled; the 3 s peek runs it at 60 Hz (at most 0.17 pt per frame). A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
-- Measured 2026-11-09: with the controller plugged the installed app used 0.01 s CPU in 30 s (`ps`). The AppKit regression spends ~0.37 s CPU during one 3 s peek at 60 Hz.
+- Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There is no cursor polling: the 1.2 s reveal is a one-shot `DispatchWorkItem`, so a cursor resting at the edge needs no events. A primary-screen CADisplayLink drives hover/visibility transitions at the refresh rate reported by AppKit and is invalidated when settled; the 1.2 s peek runs it at 60 Hz (at most 0.42 pt per frame). A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
+- Measured 2026-11-09: with the controller plugged the installed app used 0.01 s CPU in 30 s (`ps`). The AppKit regression spends ~0.10 s CPU during one 1.2 s peek at 60 Hz.
 
 ## Install and verify
 
@@ -111,7 +111,7 @@ the LaunchAgent plist passes `plutil -lint`. The plugged-device probe received a
   right click on tile 12 toggles scroll mode; middle click on tile 7 presses кнопка 7; left-strip drag changes volume.
 - Release outside the pressed tile: confirm no control stays pressed.
 - USB transitions (ask the user to handle the cable): plug → the row slides up and the log shows `device plugged=true`; unplug → it slides down, frames arrive. A user hide does not survive either change.
-- Double click a strip with the emoji picker closed: hide without changing state. Hold the cursor at the top edge: a 10 pt sliver slides in over 3 s, then the full row. Move away before 3 s: the sliver flies back up.
+- Double click a strip with the emoji picker closed: hide without changing state. Hold the cursor at the top edge: a 10 pt sliver slides in over 1.2 s, then the full row. Move away before 1.2 s: the sliver flies back up.
   If macOS asks for Accessibility, stop for the user to grant permission.
 - Change the primary display or disconnect it: the panel follows the primary display.
 - Restart Companion: the app exits, launchd restarts it, then reconnects.

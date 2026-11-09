@@ -12,7 +12,7 @@ public enum Reveal {
     public static let edge = 2.0
     public static let peek = 10.0
     public static let band = peek + 4
-    public static let delay = 3.0
+    public static let delay = 1.2
     public static let retract = 0.08
     public static let peekHz = 60
     public static let travel = 4 + RowLayout.maxTile
