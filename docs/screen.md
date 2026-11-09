@@ -83,7 +83,7 @@ socket after five seconds without inbound traffic. The initial probe received al
 was plugged in, then exited with `Satellite closed` (status 1) at the inactivity timeout. After adding the heartbeat, the repeated probe received all 18 ids and exited cleanly (status 0). Companion accepts both surfaces together.
 
 The client answers `PING` with `PONG` and sends a `PING` every two seconds while connected to prevent this timeout.
-This connection-only heartbeat is the exception to the no-timers rule; disconnect cancels it. A Satellite error, malformed frame size, closed connection or failed/waiting TCP state logs
+This connection-only heartbeat is the exception to the no-timers rule; disconnect cancels it. System sleep (`NSWorkspace.willSleepNotification`) disconnects with `REMOVE-DEVICE`; `didWakeNotification` reconnects unless the controller is plugged. Before this, every DarkWake let Companion time the frozen socket out (`socket timeout` in its log at the same second as `DarkWake` in `pmset -g log`, verified 2026-11-09), the app logged `Satellite closed`, exited 1 and launchd restarted it. Assumed until the next sleep: the log shows `sleep` / `wake` and no `Satellite closed`. A Satellite error, malformed frame size, closed connection or failed/waiting TCP state logs
 and exits with status 1; launchd restarts it. An intentional disconnect sends `REMOVE-DEVICE` before closing.
 
 ## When it shows

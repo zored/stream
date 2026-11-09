@@ -6,6 +6,8 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
     private var panel: Panel!
     private var device: Device?
     private var userHidden = false
+    private var plugged = false
+    private var asleep = false
     private var monitor: Any?
     private var reveal: DispatchWorkItem?
     private var terminating = false
@@ -30,16 +32,31 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
             connection.connect()
             DispatchQueue.main.asyncAfter(deadline: .now() + 5) { NSApp.terminate(nil) }
         } else {
+            let workspace = NSWorkspace.shared.notificationCenter
+            workspace.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+                guard let self else { return }
+                log("sleep")
+                self.asleep = true
+                self.panel.releaseAll()
+                self.connection.disconnect()
+            }
+            workspace.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+                guard let self else { return }
+                log("wake")
+                self.asleep = false
+                if !self.plugged { self.connection.connect() }
+            }
             device = Device { [weak self] in self?.deviceChanged($0) }
         }
     }
 
     private func deviceChanged(_ isPlugged: Bool) {
         log("device plugged=\(isPlugged)")
+        plugged = isPlugged
         userHidden = false
         stopReveal()
         if ScreenVisibility.shouldShow(devicePlugged: isPlugged, userHidden: userHidden) {
-            connection.connect()
+            if !asleep { connection.connect() }
             panel.show()
         } else {
             panel.releaseAll()
