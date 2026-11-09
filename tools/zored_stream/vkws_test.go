@@ -76,7 +76,7 @@ func TestVkwsLive(t *testing.T) {
 	defer cancel()
 	err := vkwsChats(ctx, func(es []chatEntry) {
 		for _, e := range es {
-			t.Logf("%-40s unread=%d at=%s text=%q avatar=%dB sender=%dB", e.title, e.unread, e.at.Format(time.DateTime), e.text, len(e.avatar), len(e.sender))
+			t.Logf("%-40s unread=%d muted=%v at=%s text=%q avatar=%dB sender=%dB", e.title, e.unread, e.muted, e.at.Format(time.DateTime), e.text, len(e.avatar), len(e.sender))
 		}
 		t.Logf("total %d", len(es))
 		cancel()
@@ -93,12 +93,29 @@ func TestVkwsHistoryTextFromParts(t *testing.T) {
 	}
 }
 
-func TestVkwsArchivedIsMuted(t *testing.T) {
-	st := &vkwsState{muted: map[string]bool{"open": false, "muted": true}}
-	for sn, want := range map[string]bool{"open": false, "muted": true, "1000000569": true} {
+func TestVkwsMuted(t *testing.T) {
+	st := &vkwsState{muted: map[string]bool{"1@chat.agent": false, "2@chat.agent": true, "a@vk.team": false, "1000000569": true}}
+	for sn, want := range map[string]bool{"1@chat.agent": false, "2@chat.agent": true, "3@chat.agent": true, "a@vk.team": false, "b@vk.team": false, "1000000569": true} {
 		if got := st.isMuted(sn); got != want {
 			t.Errorf("%s: muted=%v, want %v", sn, got, want)
 		}
+	}
+}
+
+func TestParseVkwsUserMute(t *testing.T) {
+	for body, want := range map[string]bool{
+		`{"status":{"code":20000},"results":{"friendly":"JiraBot","mute":true,"bot":true}}`: true,
+		`{"status":{"code":20000},"results":{"friendly":"Антон Чертков"}}`:                  false,
+	} {
+		if got, err := parseVkwsUserMute([]byte(body)); err != nil || got != want {
+			t.Errorf("%s: mute=%v, %v, want %v", body, got, err, want)
+		}
+	}
+	if _, err := parseVkwsUserMute([]byte(`{"status":{"code":40400}}`)); err == nil {
+		t.Fatal("want error")
+	}
+	if _, err := parseVkwsUserMute([]byte(`{"status":{"code":40100}}`)); !errors.Is(err, errVkwsSession) {
+		t.Fatalf("want errVkwsSession, got %v", err)
 	}
 }
 

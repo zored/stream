@@ -281,34 +281,67 @@ func (c *vkwsClient) fetch(ctx context.Context, base string, first bool) (vkwsEv
 	return parseVkwsEvents(b)
 }
 
-func (c *vkwsClient) history(ctx context.Context, sn string) (vkwsDialog, error) {
+func (c *vkwsClient) rapi(ctx context.Context, method string, params map[string]any) ([]byte, error) {
 	c.mu.Lock()
 	c.seq++
 	id := fmt.Sprintf("%d-%d", time.Now().UnixMilli(), c.seq)
 	c.mu.Unlock()
-	body, _ := json.Marshal(map[string]any{
-		"reqId":  id,
-		"aimsid": c.s.AIMSID,
-		"params": map[string]any{"sn": sn, "fromMsgId": -1, "count": -vkwsTail, "patchVersion": "init"},
-	})
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.s.BaseURL+"/api/v151/rapi/getHistory", strings.NewReader(string(body)))
+	body, _ := json.Marshal(map[string]any{"reqId": id, "aimsid": c.s.AIMSID, "params": params})
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.s.BaseURL+"/api/v151/rapi/"+method, strings.NewReader(string(body)))
 	if err != nil {
-		return vkwsDialog{}, err
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return vkwsDialog{}, fmt.Errorf("vkws: getHistory: %w", redactAimsid(err))
+		return nil, fmt.Errorf("vkws: %s: %w", method, redactAimsid(err))
 	}
 	defer resp.Body.Close()
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return vkwsDialog{}, fmt.Errorf("vkws: getHistory: %w", err)
+		return nil, fmt.Errorf("vkws: %s: %w", method, err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return vkwsDialog{}, fmt.Errorf("vkws: getHistory http %d", resp.StatusCode)
+		return nil, fmt.Errorf("vkws: %s http %d", method, resp.StatusCode)
+	}
+	return b, nil
+}
+
+func (c *vkwsClient) history(ctx context.Context, sn string) (vkwsDialog, error) {
+	b, err := c.rapi(ctx, "getHistory", map[string]any{"sn": sn, "fromMsgId": -1, "count": -vkwsTail, "patchVersion": "init"})
+	if err != nil {
+		return vkwsDialog{}, err
 	}
 	return parseVkwsHistory(sn, b)
+}
+
+func (c *vkwsClient) userMute(ctx context.Context, sn string) (bool, error) {
+	b, err := c.rapi(ctx, "getUserInfo", map[string]any{"sn": sn})
+	if err != nil {
+		return false, err
+	}
+	return parseVkwsUserMute(b)
+}
+
+func parseVkwsUserMute(b []byte) (bool, error) {
+	var r struct {
+		Status struct {
+			Code int `json:"code"`
+		} `json:"status"`
+		Results struct {
+			Mute bool `json:"mute"`
+		} `json:"results"`
+	}
+	if err := json.Unmarshal(b, &r); err != nil {
+		return false, fmt.Errorf("vkws: decode getUserInfo: %w", err)
+	}
+	switch r.Status.Code {
+	case 20000:
+		return r.Results.Mute, nil
+	case 40001, 40100, 40101, 40102:
+		return false, errVkwsSession
+	}
+	return false, fmt.Errorf("vkws: getUserInfo status %d", r.Status.Code)
 }
 
 func (c *vkwsClient) avatar(ctx context.Context, sn string) ([]byte, error) {
@@ -343,17 +376,22 @@ type vkwsState struct {
 	muted   map[string]bool
 }
 
-// isMuted: a dialog missing from the buddylist is archived (hidden), and the server drops its mute flag with it.
+func vkwsIsGroup(sn string) bool {
+	return strings.HasSuffix(sn, "@chat.agent")
+}
+
+// isMuted: the buddylist holds group chats only; a group missing from it is archived and lost its mute flag. 1:1 mute comes from getUserInfo.
 func (st *vkwsState) isMuted(sn string) bool {
 	m, listed := st.muted[sn]
-	return m || !listed
+	return m || (!listed && vkwsIsGroup(sn))
 }
 
 func (st *vkwsState) refresh(ctx context.Context, sns []string) error {
 	type res struct {
-		sn  string
-		d   vkwsDialog
-		err error
+		sn    string
+		d     vkwsDialog
+		muted *bool
+		err   error
 	}
 	jobs := make(chan string)
 	out := make(chan res)
@@ -364,7 +402,12 @@ func (st *vkwsState) refresh(ctx context.Context, sns []string) error {
 			defer wg.Done()
 			for sn := range jobs {
 				d, err := st.c.history(ctx, sn)
-				out <- res{sn, d, err}
+				var muted *bool
+				if err == nil && !vkwsIsGroup(sn) {
+					m, merr := st.c.userMute(ctx, sn)
+					muted, err = &m, merr
+				}
+				out <- res{sn, d, muted, err}
 			}
 		}()
 	}
@@ -386,6 +429,9 @@ func (st *vkwsState) refresh(ctx context.Context, sns []string) error {
 			skipped++
 		default:
 			st.dialogs[r.sn] = r.d
+			if r.muted != nil {
+				st.muted[r.sn] = *r.muted
+			}
 		}
 	}
 	if skipped > 0 {
