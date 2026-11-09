@@ -268,7 +268,7 @@ func (d *call) applyVoip(st voipState) {
 	}
 }
 
-func (d *call) voipChangeLocked(mic, cam bool) error {
+var voipPress = func(key int) error {
 	pid, err := vkwsPid()
 	if err != nil {
 		return err
@@ -276,18 +276,29 @@ func (d *call) voipChangeLocked(mic, cam bool) error {
 	if pid == 0 {
 		return fmt.Errorf("VK WorkSpace is not running")
 	}
+	voipKey(pid, key)
+	return nil
+}
+
+func (d *call) voipChangeLocked(mic, cam bool) error {
 	base := d.voipMedia
 	if d.confirm != nil {
 		base = d.want
 	}
+	var keys []int
 	if mic != base[0] {
-		voipKey(pid, keyA)
+		keys = append(keys, keyA)
 	}
 	if cam != base[1] {
-		if mic != base[0] {
+		keys = append(keys, keyV)
+	}
+	for i, key := range keys {
+		if i > 0 {
 			time.Sleep(voipKeyGap)
 		}
-		voipKey(pid, keyV)
+		if err := voipPress(key); err != nil {
+			return err
+		}
 	}
 	return nil
 }

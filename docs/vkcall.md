@@ -94,6 +94,9 @@ with self) is QML with no accessibility inside. `voip.go` / `voip_darwin.go` in 
     full list without self, `JOINING`/`JOINED`; `A`/`V` uppercase = audio/video on (assumed)
 - Mic: ⇧⌘A posted to the pid (`CGEventPostToPid`, no focus needed). Camera: ⇧⌘V. Both are
   **toggles**: the daemon presses only when the wanted value differs from the log state (or the pending one).
+- Tap vs hold: a press takes ~0.5 s under the call lock, so `/mic/up` waits for it. Hold time is measured between the
+  arrival of `/mic/down` and `/mic/up`, not after the lock; measuring after the lock turned every tap into a hold
+  (⇧⌘A on, ⇧⌘A off ~0.9 s later, verified in `voip_*.log`).
 - Hang up: press the `In call` window's AX close button (returns `-25204` but opens «End call — Are you sure?»), wait 0.8 s,
   keypad Enter (keycode 76) to the pid confirms Yes. No focus needed. Return (36) does not confirm it, ⌘W only sometimes opens it.
 - Focus: a hotkey posted to the pid is sometimes ignored until the call window is key. Each press activates VK WorkSpace, raises the `In call` window (AXMain + AXFocused), sends the key and reactivates the previous front app (~0.3 s flicker). Hang up: icons go `pending` at once, the dialog appears ~1 s after close, a full hang up takes ~2 s.

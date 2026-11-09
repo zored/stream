@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestVoipState(t *testing.T) {
@@ -77,5 +78,45 @@ func TestVoipNewest(t *testing.T) {
 	got, err := voipNewest(dir)
 	if err != nil || got != filepath.Join(dir, "voip_2026.11.06_19.10.03.log") {
 		t.Fatalf("got %q %v", got, err)
+	}
+}
+
+func TestVoipMicTapAndHold(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		keyTakes  time.Duration
+		releaseIn time.Duration
+		wantPress int
+		wantMicOn bool
+	}{
+		{"tap while key is slow", holdMin + 200*time.Millisecond, 50 * time.Millisecond, 1, true},
+		{"hold", 10 * time.Millisecond, holdMin + 100*time.Millisecond, 2, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var presses []int
+			orig := voipPress
+			voipPress = func(key int) error {
+				presses = append(presses, key)
+				time.Sleep(tc.keyTakes)
+				return nil
+			}
+			defer func() { voipPress = orig }()
+			d := &call{changed: make(chan struct{}, 1), voipID: "x", callID: "x", mic: off, cam: off}
+			down := make(chan error)
+			go func() { down <- d.micDown() }()
+			time.Sleep(tc.releaseIn)
+			if err := d.micUp(); err != nil {
+				t.Fatal(err)
+			}
+			if err := <-down; err != nil {
+				t.Fatal(err)
+			}
+			d.mu.Lock()
+			defer d.mu.Unlock()
+			d.stopConfirmLocked()
+			if len(presses) != tc.wantPress || d.want[0] != tc.wantMicOn {
+				t.Fatalf("presses %v, want mic %v", presses, d.want)
+			}
+		})
 	}
 }

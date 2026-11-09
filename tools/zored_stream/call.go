@@ -489,22 +489,24 @@ func (d *call) confirmTimeout() {
 }
 
 func (d *call) micDown() error {
+	now := time.Now()
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if !known(d.mic) {
 		return errNoCall
 	}
-	d.pressed, d.micWas = time.Now(), d.isOn(0)
+	d.pressed, d.micWas = now, d.isOn(0)
 	return d.changeLocked(func(mic, cam bool) (bool, bool) { return !d.micWas, cam })
 }
 
 func (d *call) micUp() error {
+	now := time.Now()
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.pressed.IsZero() {
 		return nil
 	}
-	held := time.Since(d.pressed) >= holdMin
+	held := now.Sub(d.pressed) >= holdMin
 	d.pressed = time.Time{}
 	if !held {
 		return nil
