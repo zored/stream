@@ -93,7 +93,7 @@ and exits with status 1; launchd restarts it. An intentional disconnect sends `R
 - Hidden by the user, a global `mouseMoved` monitor runs (assumed: needs no Accessibility). Cursor ≤ 2 pt from the top of the primary display starts a peek at once: the row jumps (invisibly) to tiles touching the top edge, then over 0.6 s slides down with a cubic ease-out (fast start, ~42 % of the way in the first 0.1 s) until 10 pt of each resting tile is visible. After 0.6 s the panel shows completely. Cursor more than 14 pt below the top during the peek → the row flies back up in 80 ms; the next touch of the edge starts a new 0.6 s peek. The peek ignores mouse input.
 - Input is disabled during every transition.
 - Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There is no cursor polling: the 0.6 s reveal is a one-shot `DispatchWorkItem`, so a cursor resting at the edge needs no events. A primary-screen CADisplayLink drives hover/visibility transitions at the refresh rate reported by AppKit and is invalidated when settled. A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
-- Measured 2026-11-09: with the controller plugged the installed app used 0.01 s CPU in 30 s (`ps`). The AppKit regression spends ~0.08 s CPU during one 0.6 s peek at the display refresh rate.
+- Measured 2026-11-09: with the controller plugged the installed app used 0.01 s CPU in 30 s (`ps`). The AppKit regression spends ~0.08 s CPU during one 0.6 s peek at the display refresh rate. The user confirmed USB hide/show and the 0.6 s peek on the device and desktop (2026-11-09).
 
 ## Install and verify
 
