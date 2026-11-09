@@ -296,6 +296,6 @@ The horizontal strips sit at the ends. On a MacBook with a camera cutout, tiles 
 - Middle click on tiles 1–8 presses кнопка 1–8. There is no separate button row.
 - Drag the left strip for volume, the right strip for model/effort. Wheel over the left strip changes volume by 2 % per step.
   While the emoji picker is open, strip press/drag/release follows the device picker controls.
-- Double click either strip to slide the row upward out of view. Hold the cursor at the primary display's top edge for 1.2 s: the row starts peeking at once, 10 pt by the end, then comes back. Moving away earlier sends it back up. Plugging or unplugging the controller clears this hidden state.
+- Double click either strip to slide the row upward out of view. Hold the cursor at the primary display's top edge for 0.6 s: the row starts peeking at once, 10 pt by the end, then comes back. Moving away earlier sends it back up. Plugging or unplugging the controller clears this hidden state.
 
 Manual checks of the panel are pending. Technical details and the verification list: [screen.md](screen.md).

@@ -173,7 +173,7 @@ final class Panel {
     }
 
     private func startAnimation() {
-        if let displayLink { configure(displayLink); return }
+        guard displayLink == nil else { return }
         guard let screen = NSScreen.screens.first else { fail("panel display is unavailable") }
         let link = screen.displayLink(target: frameTarget, selector: #selector(FrameTarget.tick(_:)))
         configure(link)
@@ -185,8 +185,7 @@ final class Panel {
         guard let screen = NSScreen.screens.first, screen.maximumFramesPerSecond > 0 else {
             fail("cannot determine panel display refresh rate")
         }
-        let peeking = layoutMotion == nil && visibilityMotion?.duration == Reveal.delay
-        let rate = Float(peeking ? min(Reveal.peekHz, screen.maximumFramesPerSecond) : screen.maximumFramesPerSecond)
+        let rate = Float(screen.maximumFramesPerSecond)
         link.preferredFrameRateRange = CAFrameRateRange(minimum: rate, maximum: rate, preferred: rate)
     }
 

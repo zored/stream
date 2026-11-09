@@ -164,9 +164,9 @@ require(panel.window.isVisible && !panel.isAnimating, "reveal must finish visibl
 panel.hide()
 RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
 panel.peek()
-RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.5))
-require(panel.window.isVisible && panel.isAnimating, "peek must slide in slowly")
-require(panel.slide > Reveal.peekSlide, "peek must be partway after 0.5 s")
+RunLoop.main.run(until: Date(timeIntervalSinceNow: Reveal.delay * 0.4))
+require(panel.window.isVisible && panel.isAnimating, "peek must still be sliding")
+require(panel.slide > Reveal.peekSlide, "peek must be partway")
 let visible = 4 + RowLayout.tile - Reveal.travel * panel.slide
 require(visible > Reveal.peek * 0.3, "peek must visibly start after 0.5 s; visible=\\(visible)")
 panel.retract()
