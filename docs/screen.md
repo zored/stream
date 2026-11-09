@@ -1,6 +1,6 @@
 # Screen panel
 
-An on-screen controller panel for macOS. Temporary user override (2026-11-06): show the panel with the USB controller plugged or unplugged. USB detection remains active; automatic hiding is disabled.
+An on-screen controller panel for macOS, shown only while the USB controller is unplugged.
 **Verified** = observed here, **assumed** = read or reasoned, not checked.
 
 ## What it is
@@ -41,7 +41,7 @@ Companion ──Satellite TCP :16622── screen app ── NSPanel at the top 
 | drag along the right strip | `POST :47117/ai/slide?y=` (device px, absolute) |
 | strip press / release | `POST :47128/emoji/start\|end?s=l\|r&y=` |
 | double click on a strip | hide the panel (strip taps do nothing on the device, [controls.md](controls.md)) |
-| cursor at the top screen edge (≤ 2 pt) while hidden | show the panel again |
+| cursor at the top screen edge (≤ 2 pt) for 3 s while hidden | peek, then show the panel again |
 
 A release goes to the control pressed on mouse down, even outside the panel. A tile swipe waits for the daemon reply:
 any status except `404` releases the tile immediately; `404` keeps the normal release on mouse up. A mouse up during the request
@@ -88,11 +88,12 @@ and exits with status 1; launchd restarts it. An intentional disconnect sends `R
 
 ## When it shows
 
-- Current temporary mode: connect and show regardless of USB state. Plugging or unplugging the controller neither hides the panel nor disconnects Satellite, and does not clear a user hide.
-- IOKit matched/terminated detection (VID `0x1532`, PID `0x0D06`) remains active. Automatic hiding on plug is deferred until the user requests it again.
-- Double click slides the row upward over 120 ms, then hides the window; top-edge reveal reverses the slide downward. Input is disabled during the transition. Hidden by a double click → stays hidden until the cursor touches the top edge; a global `mouseMoved` monitor runs only while hidden
-  (assumed: needs no Accessibility).
-- Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There is no cursor polling. A primary-screen CADisplayLink drives hover/visibility transitions at the refresh rate reported by AppKit and is invalidated when settled. A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
+- USB controller plugged (IOKit matched/terminated, VID `0x1532`, PID `0x0D06`) → the row slides up, Satellite sends `REMOVE-DEVICE` and disconnects. Unplugged → Satellite connects and the row slides down. Verified 2026-11-09: launch with the controller plugged logs `device plugged=true`, keeps no `:16622` socket.
+- Double click on a strip slides the row up over 120 ms and hides it. Any USB change clears this user hide: plugging hides anyway, unplugging always shows.
+- Hidden by the user, a global `mouseMoved` monitor runs (assumed: needs no Accessibility). Cursor ≤ 2 pt from the top of the primary display starts a peek: over 3 s the row slides down until 10 pt of each resting tile is visible. After 3 s the panel shows completely. Cursor more than 14 pt below the top during the peek → the row flies back up in 80 ms; the next touch of the edge starts a new 3 s peek. The peek ignores mouse input.
+- Input is disabled during every transition.
+- Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There is no cursor polling: the 3 s reveal is a one-shot `DispatchWorkItem`, so a cursor resting at the edge needs no events. A primary-screen CADisplayLink drives hover/visibility transitions at the refresh rate reported by AppKit and is invalidated when settled; the 3 s peek runs it at 30 Hz (10 pt in 3 s moves under 0.2 pt per frame). A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
+- Measured 2026-11-09: with the controller plugged the installed app used 0.01 s CPU in 30 s (`ps`). The AppKit regression spends 0.11–0.21 s CPU during one 3 s peek.
 
 ## Install and verify
 
@@ -106,11 +107,11 @@ Verified in this continuation: a standalone IOKit run detected the plugged contr
 the LaunchAgent plist passes `plutil -lint`. The plugged-device probe received all 12 tile and 6 strip ids and exited with status 0 after the heartbeat fix; tRPC confirmed the common group. The user confirmed that the panel appears to work visually. Detailed input checks below are pending:
 
 - Confirm the common group in Companion → Surfaces.
-- With either USB state, tile 4 press must log `Button 1/0/3 pressed`; wheel on tile 1 changes volume;
+- With the controller unplugged, tile 4 press must log `Button 1/0/3 pressed`; wheel on tile 1 changes volume;
   right click on tile 12 toggles scroll mode; middle click on tile 7 presses кнопка 7; left-strip drag changes volume.
 - Release outside the pressed tile: confirm no control stays pressed.
-- If checking USB transitions, ask the user to handle the cable. The current temporary mode must stay visible and connected; a user-hidden panel must remain hidden. Checks for the dormant USB hide/disconnect policy are deferred until that policy is restored.
-- Double click a strip with the emoji picker closed: hide without changing state; top-edge movement reveals the panel.
+- USB transitions (ask the user to handle the cable): plug → the row slides up and the log shows `device plugged=true`; unplug → it slides down, frames arrive. A user hide does not survive either change.
+- Double click a strip with the emoji picker closed: hide without changing state. Hold the cursor at the top edge: a 10 pt sliver slides in over 3 s, then the full row. Move away before 3 s: the sliver flies back up.
   If macOS asks for Accessibility, stop for the user to grant permission.
 - Change the primary display or disconnect it: the panel follows the primary display.
 - Restart Companion: the app exits, launchd restarts it, then reconnects.
@@ -125,7 +126,7 @@ the LaunchAgent plist passes `plutil -lint`. The plugged-device probe received a
 
 Shutdown regression: `python3 tools/screen/check_shutdown.py` builds a temporary app against an isolated TCP server, delays REMOVE-DEVICE and checks it arrives before EOF with exit 0. Verified RED→GREEN. Termination first cancels the AppKit request, drains disconnect asynchronously, then requests termination again; `terminateLater` stalled this command-line AppKit runloop in the regression.
 
-Panel regression: `python3 tools/screen/check_panel.py` compiles the real AppKit panel with a fixed cursor fixture and posts an in-process focus-loss notification. It checks hover interpolation, collapse on focus loss, and animated hide/reveal. The original implementation reproduced the stuck magnification before the fix.
+Panel regression: `python3 tools/screen/check_panel.py` compiles the real AppKit panel with a fixed cursor fixture and posts an in-process focus-loss notification. It checks hover interpolation, collapse on focus loss, animated hide/reveal, the slow peek, fast retract and show after a settled peek. On 2026-11-09 one of 15 runs failed with an uncaptured message; the next 14 passed. The original implementation reproduced the stuck magnification before the fix.
 
 Verified after the animation update: full `make test`, AppKit panel regression (including unsupported clicks during collapse), shutdown regression, signed release build and LaunchAgent restart. Visual quality of glass/refraction is still unverified; native screenshot attempts timed out. P2 permits a display link only while the panel is transitioning; the runtime check confirms it stops after hover, focus reset and visibility animations.
 

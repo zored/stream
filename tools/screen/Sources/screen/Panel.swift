@@ -22,8 +22,8 @@ final class Panel {
     private var displayLink: CADisplayLink?
     private var animationTime = CACurrentMediaTime()
     private var layoutMotion: (tracker: HoverMotion, to: [ElementFrame], time: TimeInterval)?
-    private var visibilityMotion: (from: Double, to: Double, start: TimeInterval)?
-    private var slide = 1.0
+    private var visibilityMotion: (from: Double, to: Double, start: TimeInterval, duration: TimeInterval)?
+    private(set) var slide = 1.0
     private var wantsVisible = false
     var onStripDoubleClick: () -> Void = {}
     private(set) var frames = RowLayout.frames(cursorX: nil)
@@ -96,7 +96,7 @@ final class Panel {
         wantsVisible = true
         window.ignoresMouseEvents = false
         window.orderFrontRegardless()
-        visibilityMotion = (slide, 0, CACurrentMediaTime())
+        visibilityMotion = (slide, 0, CACurrentMediaTime(), Motion.visibilityDuration)
         startAnimation()
         mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
             self?.relayout(hover: true)
@@ -112,7 +112,22 @@ final class Panel {
         if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
         mouseMonitor = nil
         setLayoutTarget(layoutFrames(cursorX: nil))
-        visibilityMotion = (slide, 1, CACurrentMediaTime())
+        visibilityMotion = (slide, 1, CACurrentMediaTime(), Motion.visibilityDuration)
+        startAnimation()
+    }
+
+    func peek() {
+        guard !wantsVisible else { return }
+        advance()
+        window.orderFrontRegardless()
+        visibilityMotion = (slide, Reveal.peekSlide, CACurrentMediaTime(), Reveal.delay)
+        startAnimation()
+    }
+
+    func retract() {
+        guard !wantsVisible else { return }
+        advance()
+        visibilityMotion = (slide, 1, CACurrentMediaTime(), Reveal.retract)
         startAnimation()
     }
 
@@ -157,7 +172,7 @@ final class Panel {
     }
 
     private func startAnimation() {
-        guard displayLink == nil else { return }
+        if let displayLink { configure(displayLink); return }
         guard let screen = NSScreen.screens.first else { fail("panel display is unavailable") }
         let link = screen.displayLink(target: frameTarget, selector: #selector(FrameTarget.tick(_:)))
         configure(link)
@@ -169,7 +184,8 @@ final class Panel {
         guard let screen = NSScreen.screens.first, screen.maximumFramesPerSecond > 0 else {
             fail("cannot determine panel display refresh rate")
         }
-        let rate = Float(screen.maximumFramesPerSecond)
+        let peeking = layoutMotion == nil && visibilityMotion?.duration == Reveal.delay
+        let rate = Float(peeking ? min(Reveal.peekHz, screen.maximumFramesPerSecond) : screen.maximumFramesPerSecond)
         link.preferredFrameRateRange = CAFrameRateRange(minimum: rate, maximum: rate, preferred: rate)
     }
 
@@ -187,11 +203,11 @@ final class Panel {
             layoutMotion = motion.tracker.isSettled ? nil : motion
         }
         if let motion = visibilityMotion {
-            let progress = (now - motion.start) / Motion.visibilityDuration
+            let progress = (now - motion.start) / motion.duration
             slide = Motion.value(from: motion.from, to: motion.to, progress: progress)
             if progress >= 1 {
                 visibilityMotion = nil
-                if !wantsVisible { window.orderOut(nil) }
+                if motion.to == 1 { window.orderOut(nil) }
             }
         }
         applyLayout()
@@ -208,7 +224,7 @@ final class Panel {
         if window.frame != bounds { window.setFrame(bounds, display: false) }
         for frame in frames {
             let tile = tiles[frame.element]!
-            tile.frame = CGRect(x: frame.x + width / 2, y: 4 - 84 * slide, width: frame.width, height: frame.height)
+            tile.frame = CGRect(x: frame.x + width / 2, y: 4 - Reveal.travel * slide, width: frame.width, height: frame.height)
             tile.setRadius(4 * frame.scale)
         }
         CATransaction.commit()

@@ -7,6 +7,7 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
     private var device: Device?
     private var userHidden = false
     private var monitor: Any?
+    private var reveal: DispatchWorkItem?
     private var terminating = false
     private var cleanupComplete = false
     private var signals: [DispatchSourceSignal] = []
@@ -34,9 +35,16 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
     }
 
     private func deviceChanged(_ isPlugged: Bool) {
+        log("device plugged=\(isPlugged)")
+        userHidden = false
+        stopReveal()
         if ScreenVisibility.shouldShow(devicePlugged: isPlugged, userHidden: userHidden) {
             connection.connect()
             panel.show()
+        } else {
+            panel.releaseAll()
+            panel.hide()
+            connection.disconnect()
         }
     }
 
@@ -44,18 +52,39 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
         panel.releaseAll()
         panel.hide()
         userHidden = true
-        removeMonitor()
-        monitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
-            guard let self, self.userHidden,
-                  let screen = NSScreen.screens.first else { return }
-            let point = NSEvent.mouseLocation
-            guard point.x >= screen.frame.minX, point.x < screen.frame.maxX,
-                  point.y >= screen.frame.maxY - 2, point.y <= screen.frame.maxY else { return }
-            self.userHidden = false
-            self.removeMonitor()
-            self.panel.show()
-        }
+        stopReveal()
+        monitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in self?.cursorMoved() }
         guard monitor != nil else { fail("cannot install global mouse monitor") }
+    }
+
+    private func cursorMoved() {
+        guard userHidden, let screen = NSScreen.screens.first else { return }
+        let point = NSEvent.mouseLocation
+        let inside = point.x >= screen.frame.minX && point.x < screen.frame.maxX && point.y <= screen.frame.maxY
+        let distance = inside ? Double(screen.frame.maxY - point.y) : .infinity
+        switch Reveal.step(distanceFromTop: distance, peeking: reveal != nil) {
+        case .start:
+            panel.peek()
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                self.userHidden = false
+                self.stopReveal()
+                self.panel.show()
+            }
+            reveal = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + Reveal.delay, execute: work)
+        case .cancel:
+            reveal?.cancel()
+            reveal = nil
+            panel.retract()
+        case .none: break
+        }
+    }
+
+    private func stopReveal() {
+        reveal?.cancel()
+        reveal = nil
+        removeMonitor()
     }
 
     private func removeMonitor() {
@@ -67,7 +96,7 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
         if cleanupComplete { return .terminateNow }
         guard !terminating else { return .terminateCancel }
         terminating = true
-        removeMonitor()
+        stopReveal()
         panel?.releaseAll()
         connection.disconnect { [weak self] in
             self?.cleanupComplete = true
