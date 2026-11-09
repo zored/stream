@@ -17,9 +17,10 @@ The client picks the engine per call: a call joined by link (`"call_type":"link"
 
 | Control | Action | Look |
 |---|---|---|
+| button 3 (`3/2`) | in a call: tap = toggle mic, hold ≥ 300 ms = push-to-talk; free outside a call | LED |
 | button 4 (`3/3`) | toggle camera | LED |
 | button 5 (`3/4`), tile `2/4` | hang up in a call (button 5: calendar outside a call) | white LED / red icon on black while in a call |
-| tile `2/2` / `2/3` | `2/2`: tap = toggle mic, hold ≥ 300 ms = push-to-talk; `2/3`: same as button 4 | mic / camera icon |
+| tile `2/2` / `2/3` | same as button 3 / 4 in a call (buttons sit under the tiles) | mic / camera icon |
 
 | State | LED | Tile |
 |---|---|---|

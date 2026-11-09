@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "Nf0DcLFWsgyZA9Nw5X72Q",
+  "id": "fgtYKjY2dKocGBnIUhREX",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -5271,8 +5271,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 4194304 : 16711680) : ($(custom:call_mic) == \"off\" ? (3158064) : ($(custom:call_mic) == \"pending\" ? (16766474) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16766474 : 0) : (0))))",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -5297,8 +5297,60 @@
      "steps": {
       "0": {
        "action_sets": {
-        "down": [],
-        "up": []
+        "down": [
+         {
+          "type": "action",
+          "id": "Xt1tCZjj-h_-NVOAg_rJt",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/down",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "up": [
+         {
+          "type": "action",
+          "id": "UQzGzTBQQRpPvhT6NZntI",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47114/mic/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []

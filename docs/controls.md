@@ -140,7 +140,7 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 - no call: up to 4 unread chats (Telegram + VK WorkSpace, via their APIs, push), normal ones first, then muted (muted or archived in Telegram, muted or archived in VK WorkSpace), each group newest first; muted chats sit at 40% opacity with a gray count badge; one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid of squares on black: avatar, or without one the first words of the name in 2–3 lowercase lines on dark gray, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
 - tap: browse for 5 s, крутилка слева, ряд 3 (or справа, ряд 3) scrolls the chats (same order) with a slide animation; the tile shows the chat's avatar at full opacity over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
 - no hold
-- крутилка слева, ряд 3 does the same outside a call
+- кнопка 3 does the same in a call, крутилка слева, ряд 3 outside a call
 - [unread.md](unread.md) [vkcall.md](vkcall.md)
 
 ### тайл ряд 3, колонка 2 — camera (VK WorkSpace call) / weather
@@ -181,8 +181,8 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 |---|---|---|
 | кнопка 1 | KVM → Windows: press = Wake-on-LAN to the PC, then monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu. Hold = toggle PIP | pink, white 0.3 s on press |
 | кнопка 2 | free | off |
-| кнопка 3 | free | off |
-| кнопка 4 | camera toggle in a call | in a call: red (dims 1 s every 4 s) = on, dim white = off, yellow = switching, blinking yellow = unknown; off = no call |
+| кнопка 3 | in a call: mic, tap toggles, hold ≥ 300 ms = push-to-talk (same as тайл ряд 3, колонка 1); otherwise free | in a call: red (dims 1 s every 4 s) = on, dim white = off, yellow = switching, blinking yellow = unknown; off = no call |
+| кнопка 4 | camera toggle in a call | as кнопка 3 |
 | кнопка 5 | outside a call: the calendar of тайл ряд 3, колонка 3, tap = open the list / act on the item; in a call: hang up | white, green = browsing; white in a call |
 | кнопка 6 | free | off |
 | кнопка 7 | dictation into Claude Desktop (below) | white = ready, blinking green = recording, off = no Claude window with a record button |

@@ -495,6 +495,7 @@ def media_page():
         (0, 4): input_tile(),
         (0, 5): awake_tile(),
         (3, 6): dictation_led(),
+        (3, 2): call_led("call_mic"),
         (3, 3): call_led("call_cam"),
         (3, 4): cal_led(),
         (3, 0): kvm_led(),
