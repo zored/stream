@@ -119,6 +119,8 @@ check(Motion.value(from: -80, to: 0, progress: -1) == -80, "slide clamps before 
 check(Motion.value(from: -80, to: 0, progress: 2) == 0, "slide clamps after finish")
 check(Motion.value(from: -80, to: 0, progress: 0.5) == -40, "slide midpoint")
 check(Motion.value(from: 0, to: 1, progress: 0.25) == 0.15625, "smoothstep quarter")
+check(Motion.easeOut(from: 0, to: 1, progress: 0.1) > 0.25, "peek moves at once")
+check(Motion.easeOut(from: 0, to: 1, progress: 1) == 1, "peek ease ends exactly")
 let slideValues = (0...10).map { Motion.value(from: -80, to: 0, progress: Double($0) / 10) }
 check(zip(slideValues, slideValues.dropFirst()).allSatisfy { $0 <= $1 }, "slide progresses monotonically")
 check(Motion.frames(from: rest, to: mag, progress: 0) == rest, "motion exact start frames")

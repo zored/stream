@@ -9,6 +9,13 @@ public enum Motion {
         return from + (to - from) * eased
     }
 
+    public static func easeOut(from: Double, to: Double, progress: Double) -> Double {
+        if progress <= 0 { return from }
+        if progress >= 1 { return to }
+        let rest = 1 - progress
+        return from + (to - from) * (1 - rest * rest * rest)
+    }
+
     public static func frames(from: [ElementFrame], to: [ElementFrame], progress: Double) -> [ElementFrame] {
         precondition(from.map(\.element) == to.map(\.element), "motion requires matching elements")
         if progress <= 0 { return from }

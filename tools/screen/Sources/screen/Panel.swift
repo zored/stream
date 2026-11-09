@@ -204,7 +204,8 @@ final class Panel {
         }
         if let motion = visibilityMotion {
             let progress = (now - motion.start) / motion.duration
-            slide = Motion.value(from: motion.from, to: motion.to, progress: progress)
+            let ease = motion.duration == Reveal.delay ? Motion.easeOut : Motion.value
+            slide = ease(motion.from, motion.to, progress)
             if progress >= 1 {
                 visibilityMotion = nil
                 if motion.to == 1 { window.orderOut(nil) }

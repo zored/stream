@@ -14,7 +14,7 @@ public enum Reveal {
     public static let band = peek + 4
     public static let delay = 3.0
     public static let retract = 0.08
-    public static let peekHz = 30
+    public static let peekHz = 60
     public static let travel = 4 + RowLayout.maxTile
     public static let peekSlide = (4 + RowLayout.tile - peek) / travel
 
