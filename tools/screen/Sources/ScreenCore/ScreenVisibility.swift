@@ -17,6 +17,7 @@ public enum Reveal {
     public static let peekHz = 60
     public static let travel = 4 + RowLayout.maxTile
     public static let peekSlide = (4 + RowLayout.tile - peek) / travel
+    public static let edgeSlide = (4 + RowLayout.tile) / travel
 
     public static func step(distanceFromTop: Double, peeking: Bool) -> RevealStep {
         if peeking { return distanceFromTop > band ? .cancel : .none }

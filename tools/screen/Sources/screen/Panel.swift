@@ -119,6 +119,7 @@ final class Panel {
     func peek() {
         guard !wantsVisible else { return }
         advance()
+        slide = min(slide, Reveal.edgeSlide)
         window.orderFrontRegardless()
         visibilityMotion = (slide, Reveal.peekSlide, CACurrentMediaTime(), Reveal.delay)
         startAnimation()

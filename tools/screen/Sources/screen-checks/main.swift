@@ -113,6 +113,7 @@ check(Reveal.step(distanceFromTop: 3, peeking: false) == .none, "below the edge 
 check(Reveal.step(distanceFromTop: Reveal.band, peeking: true) == .none, "peek band keeps the peek")
 check(Reveal.step(distanceFromTop: Reveal.band + 1, peeking: true) == .cancel, "leaving the band retracts")
 check(abs((4 + RowLayout.tile - Reveal.travel * Reveal.peekSlide) - Reveal.peek) < 1e-9, "peek shows 10 pt of a resting tile")
+check(abs(4 + RowLayout.tile - Reveal.travel * Reveal.edgeSlide) < 1e-9, "peek starts with tiles touching the top edge")
 
 check(Motion.hoverDuration == 0.10 && Motion.visibilityDuration == 0.12, "motion durations")
 check(Motion.value(from: -80, to: 0, progress: -1) == -80, "slide clamps before start")
