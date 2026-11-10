@@ -36,6 +36,9 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 
 - Fetch on start, then every `-usage-every`. Network/HTTP errors back off: interval × 2ⁿ, at most 1 h, at least `Retry-After`.
   Keychain problems (no item, no refresh token) retry every minute: a local read, no network.
+  No route (`dial`/`proxyconnect` errors: the VPN is off and `squid.ai-proxy.vk.team` does not resolve) also retries every minute
+  and does not grow the backoff: nothing reaches the server. Before 2026-11-10 it backed off to 1 h, so the red dot stayed up to
+  an hour after the VPN came back (verified in the log).
 - `GET /usage`: `{"limits": [...as upstream...], "fetched_at", "error", "next_at"}` from the cache, never fetches.
 - `POST /usage/refresh`: fetch now, ignored within a minute of the last fetch.
 - Variables: `ai_strip_svg` (right strip top cell), `ai_session`, `ai_session_reset`, `ai_day`, `ai_week`, `ai_week_reset`, `ai_level`

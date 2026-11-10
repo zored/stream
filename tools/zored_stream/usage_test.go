@@ -1,6 +1,10 @@
 package main
 
 import (
+	"errors"
+	"fmt"
+	"net"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -128,5 +132,29 @@ func TestUsageWaitSurvivesSleep(t *testing.T) {
 	}
 	if w := usageWait(now.Add(-time.Minute), now); w > 0 {
 		t.Fatalf("overdue fetch waits %v", w)
+	}
+}
+
+func TestUsageRetryAfterOffline(t *testing.T) {
+	now := time.Now()
+	offline := fmt.Errorf("token refresh: %w", &url.Error{Op: "Post", URL: oauthTokenURL, Err: &net.OpError{
+		Op: "proxyconnect", Net: "tcp", Err: &net.OpError{Op: "dial", Net: "tcp", Err: &net.DNSError{Err: "no such host", Name: "squid.ai-proxy.vk.team", IsNotFound: true}},
+	}})
+	for _, c := range []struct {
+		name     string
+		err      error
+		failures int
+		want     time.Duration
+		counted  bool
+	}{
+		{"offline", offline, 5, usageOfflineRetry, false},
+		{"keychain", fmt.Errorf("%w: no item", errKeychain), 5, usageKeychainRetry, false},
+		{"server", errors.New("503 Service Unavailable"), 1, 30 * time.Minute, true},
+		{"server capped", errors.New("503 Service Unavailable"), 9, usageMaxBackoff, true},
+	} {
+		next, counted := usageNextTry(c.err, c.failures, 15*time.Minute, 0, now)
+		if next.Sub(now) != c.want || counted != c.counted {
+			t.Errorf("%s: next in %v counted %v, want %v %v", c.name, next.Sub(now), counted, c.want, c.counted)
+		}
 	}
 }
