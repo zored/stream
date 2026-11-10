@@ -3,6 +3,10 @@
 Plan for running the same controller setup on the Windows PC while the Mac keeps working.
 **Verified** = observed on the Mac on 2026-11-03, **assumed** = read or recalled, nothing here was checked on Windows yet.
 
+What each control and module actually does, the routes and variables to keep, and the exact symbols a Windows build must provide:
+[logic.md](logic.md). Rows of this plan that no longer match the code (left knobs 2/3, mic on кнопка 3 not 2, freed buttons,
+daemon table past 47122, "shared" files) are listed in [logic.md](logic.md#docs-that-disagree-with-the-code); the code wins.
+
 ## Constraints
 
 - The PC has Codex only: no Claude Code, no Claude Desktop. It has its own media players and no VK WorkSpace.

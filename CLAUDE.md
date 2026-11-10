@@ -20,6 +20,7 @@ Status and next steps: `PLAN.md`. Prompt for a new master session: `docs/master-
 - `docs/weather.md` — weather on tile `2/3` outside a call: Open-Meteo, forecast browse on крутилка слева, ряд 3
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `zored_stream` module, dead ends
 - `docs/windows.md` — port plan: what carries over, what needs a Windows build
+- `docs/logic.md` — behaviour spec for porting: every control and daemon module (input → route → state → variables → drawing), Windows mapping, symbols a Windows build must provide, docs that disagree with the code
 - `docs/screen.md` — on-screen Companion surface, mouse controls, USB visibility and LaunchAgent
 - `docs/device.md` — USB, raw protocol events, `tools/sniff.py`, firmware
 - `docs/architecture.html` — architecture overview with diagrams: layers, pages pipeline, daemon modules, mechanisms, invariants
