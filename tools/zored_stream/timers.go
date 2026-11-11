@@ -157,6 +157,17 @@ func (t *timers) knob(down bool) (bool, error) {
 	return true, t.commitLocked(now)
 }
 
+// close ends the edit like its timeout: the next tick starts what was set.
+func (t *timers) close() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	now := time.Now()
+	if t.editing(now) {
+		t.editTill = now
+		t.publishLocked(now)
+	}
+}
+
 func (t *timers) capturing() bool {
 	t.mu.Lock()
 	defer t.mu.Unlock()

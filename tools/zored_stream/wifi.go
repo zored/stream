@@ -264,6 +264,12 @@ func (w *wifi) joinPick() {
 	w.poll()
 }
 
+func (w *wifi) close() {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.closePick()
+}
+
 func (w *wifi) closePick() {
 	if w.join != nil {
 		w.join.Stop()

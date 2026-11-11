@@ -70,6 +70,19 @@ func (e *emoji) open() bool {
 	return time.Now().Before(e.openTill)
 }
 
+func (e *emoji) isOpen() bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.open()
+}
+
+func (e *emoji) close() {
+	e.mu.Lock()
+	e.openTill = time.Time{}
+	e.mu.Unlock()
+	e.publish()
+}
+
 func (e *emoji) touch() {
 	e.openTill = time.Now().Add(emojiOpenFor)
 	select {

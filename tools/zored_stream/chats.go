@@ -296,6 +296,13 @@ func (c *chats) knobTurn(direction int) error {
 }
 
 // turn scrolls the shown message (крутилка справа, ряд 3) while browsing.
+func (c *chats) close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.browseTill = time.Time{}
+	c.publishLocked()
+}
+
 func (c *chats) capturing() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()

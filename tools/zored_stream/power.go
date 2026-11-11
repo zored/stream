@@ -194,6 +194,13 @@ func (p *power) end() error {
 	return nil
 }
 
+func (p *power) close() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.editTill = time.Time{}
+	p.publishLocked()
+}
+
 func (p *power) sizing() bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()

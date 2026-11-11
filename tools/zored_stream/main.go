@@ -108,6 +108,7 @@ func serve(addr string, register func(*http.ServeMux)) {
 		}
 		mux.ServeHTTP(w, r)
 		if r.Method == http.MethodPost {
+			tileModes.check()
 			kickHints()
 		}
 	})))
@@ -446,6 +447,17 @@ func main() {
 	hints.own("r2", cal.capturing)
 	hints.own("r2", cs.capturing)
 	go hints.run()
+	for _, md := range []mode{
+		{"wifi", wf.capturing, wf.close},
+		{"awake", pw.sizing, pw.close},
+		{"emoji", em.isOpen, em.close},
+		{"chats", cs.capturing, cs.close},
+		{"weather", wx.browsing, wx.close},
+		{"calendar", cal.capturing, cal.close},
+		{"timer", tm.capturing, tm.close},
+	} {
+		tileModes.add(md)
+	}
 	go serve(*weatherAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/23/press", tile23.press)
 	})

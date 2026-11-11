@@ -160,6 +160,13 @@ func (c *calendar) press() error {
 	return nil
 }
 
+func (c *calendar) close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.browseTill = time.Time{}
+	c.publishLocked()
+}
+
 func (c *calendar) capturing() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()

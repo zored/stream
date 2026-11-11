@@ -293,6 +293,13 @@ func (w *weather) press() error {
 	return nil
 }
 
+func (w *weather) close() {
+	w.mu.Lock()
+	w.deadline = time.Time{}
+	w.mu.Unlock()
+	w.publish()
+}
+
 // turn walks the forecast while the tile's browse window is open.
 func (w *weather) turn(direction int) bool {
 	w.mu.Lock()

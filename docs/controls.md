@@ -22,6 +22,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ([companion.md](companion.md)).
 
 Everywhere: a short haptic tap on every press of a knob, tile or button, no haptics while sliding along a strip.
+One temporary tile mode at a time: opening one (wi-fi pick, keep-awake length, emoji picker, chats browse, weather browse, day list, timer edit) closes any other open one, as its timeout would (a timer being set starts, a wi-fi pick not yet joined is dropped).
 Knob hint: while a tile has taken a knob for a while (wi-fi, keep-awake, chats, weather, day, clock), a small white chevron sits at the outer edge of the strip next to that knob, pointing at it, 30 % opaque (100 % while turning or held);
 every detent swings it in the turn direction and it springs back, it grows while the knob is held and pulses on a click; gone when the knob is given back. Not for the emoji picker (it owns both strips anyway) ([logic.md](logic.md#shared-primitives-all-portable-go))
 Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed; the release after it does nothing. The haptic list (`companion/hold-controls.txt`) is generated from every control with a hold. Exceptions timed on release: keep-awake sleep, push-to-talk, dictation.
