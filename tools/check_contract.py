@@ -73,7 +73,7 @@ def check(directory, windows, go, served):
     if not windows:
         published = set(re.findall(r'\.set\("(\w+)"', go)) - {"choice_"}
         published |= set(re.findall(r'"(call_\w+)": ', go)) | COMPANION_SET
-        published |= set(re.findall(r'\{name: "(hint_\w+)"', go))
+        published |= set(re.findall(r'"(hint_[lr]\d)"', go))
         published |= set(re.findall(r'&slot\{vars: \w+, name: "(\w+)"', go))
         published |= {f"choice_{b}" for b in range(1, 9)}
         for name in sorted(published - set(variables)):

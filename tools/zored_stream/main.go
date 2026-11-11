@@ -240,7 +240,7 @@ func main() {
 				http.Error(w, "d: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			hints.turn("hint_r1", d)
+			hints.turn("r1", d)
 			switch {
 			case cs.msgTurn(d):
 			case ai.holding():
@@ -262,11 +262,11 @@ func main() {
 			w.WriteHeader(http.StatusNoContent)
 		})
 		handle(mux, "/ai/down", func() error {
-			hints.press("hint_r1", true)
+			hints.press("r1", true)
 			return ai.down()
 		})
 		handle(mux, "/ai/up", func() error {
-			hints.press("hint_r1", false)
+			hints.press("r1", false)
 			if ai.up() {
 				return nil
 			}
@@ -340,28 +340,28 @@ func main() {
 	}
 	go serve(*brightnessAddr, func(mux *http.ServeMux) {
 		handleValue(mux, "/brightness/up", func() (int, error) {
-			hints.turn("hint_r0", 1)
+			hints.turn("r0", 1)
 			if pw.turn(1) || wf.turn(1) || em.turn(emojiRight, 1) {
 				return br.level(), nil
 			}
 			return br.turn(1)
 		})
 		handleValue(mux, "/brightness/down", func() (int, error) {
-			hints.turn("hint_r0", -1)
+			hints.turn("r0", -1)
 			if pw.turn(-1) || wf.turn(-1) || em.turn(emojiRight, -1) {
 				return br.level(), nil
 			}
 			return br.turn(-1)
 		})
 		handleValue(mux, "/brightness/hold", func() (int, error) {
-			hints.press("hint_r0", true)
+			hints.press("r0", true)
 			if took, err := em.press(emojiRight); took {
 				return br.level(), err
 			}
 			return br.hold()
 		})
 		handleValue(mux, "/brightness/release", func() (int, error) {
-			hints.press("hint_r0", false)
+			hints.press("r0", false)
 			if em.release(emojiRight) {
 				return br.level(), nil
 			}
@@ -438,13 +438,13 @@ func main() {
 		{name: "weather", press: wx.press},
 	}}
 	go every(pollEvery, tile23.publish)
-	hints.own("hint_l2", func() bool { return wx.browsing() && !cs.capturing() })
-	hints.own("hint_r0", pw.sizing)
-	hints.own("hint_r0", wf.capturing)
-	hints.own("hint_r1", cs.capturing)
-	hints.own("hint_r2", tm.capturing)
-	hints.own("hint_r2", cal.capturing)
-	hints.own("hint_r2", cs.capturing)
+	hints.own("l2", func() bool { return wx.browsing() && !cs.capturing() })
+	hints.own("r0", pw.sizing)
+	hints.own("r0", wf.capturing)
+	hints.own("r1", cs.capturing)
+	hints.own("r2", tm.capturing)
+	hints.own("r2", cal.capturing)
+	hints.own("r2", cs.capturing)
 	go hints.run()
 	go serve(*weatherAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/23/press", tile23.press)
@@ -454,7 +454,7 @@ func main() {
 		handle(mux, "/tile/22/up", tile22.up)
 		var wxKnob atomic.Bool
 		handle(mux, "/knob/down", func() error {
-			hints.press("hint_l2", true)
+			hints.press("l2", true)
 			if wx.browsing() {
 				wxKnob.Store(true)
 				return wx.press()
@@ -462,14 +462,14 @@ func main() {
 			return cs.down()
 		})
 		handle(mux, "/knob/up", func() error {
-			hints.press("hint_l2", false)
+			hints.press("l2", false)
 			if wxKnob.Swap(false) {
 				return nil
 			}
 			return cs.up()
 		})
 		knobTurn := func(direction int) error {
-			hints.turn("hint_l2", direction)
+			hints.turn("l2", direction)
 			if !cs.browsing() && wx.turn(direction) {
 				return nil
 			}
@@ -488,7 +488,7 @@ func main() {
 	go serve(*scrollAddr, func(mux *http.ServeMux) {
 		press := func(down bool) func() error {
 			return func() error {
-				hints.press("hint_r2", down)
+				hints.press("r2", down)
 				if took, err := tm.knob(down); took {
 					return err
 				}
@@ -503,7 +503,7 @@ func main() {
 		}
 		turn := func(direction int) func() error {
 			return func() error {
-				hints.turn("hint_r2", direction)
+				hints.turn("r2", direction)
 				if tm.turn(direction) || cal.turn(direction) || cs.turn(direction) {
 					return nil
 				}

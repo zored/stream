@@ -31,7 +31,7 @@ UNREAD = "http://127.0.0.1:47130"
 WEATHER_URL = "http://127.0.0.1:47131"
 HOLD_MS = 400
 BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
-HINTS = ("hint_l2", "hint_r0", "hint_r1", "hint_r2")
+HINTS = ("hint_l0", "hint_l2", "hint_r0", "hint_r1", "hint_r2")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "strip_flip", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam", "call_peek",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
