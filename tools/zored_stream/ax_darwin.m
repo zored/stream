@@ -238,12 +238,7 @@ static int card_option(int kind, AXUIElementRef element, NSString *role) {
     return kind == AX_CARD_QUESTION ? is_option(element, role) : is_box_option(element, role);
 }
 
-static AXUIElementRef card_root(AXUIElementRef window, int kind) {
-    int truncated = 0;
-    AXUIElementRef node =
-        kind == AX_CARD_QUESTION     ? ax_find_attr(window, "AXButton", "AXTitle", "Skip", 0, 20000, &truncated)
-        : kind == AX_CARD_PERMISSION ? ax_find_attr(window, "AXStaticText", "AXValue", "Permission requested", 1, 20000, &truncated)
-                                     : ax_find_attr(window, "AXGroup", "AXDescription", "Suggested next", 1, 20000, &truncated);
+static AXUIElementRef card_climb(AXUIElementRef node, int kind) {
     for (int level = 0; node && level < 6; level++) {
         CFTypeRef parent = NULL;
         AXUIElementCopyAttributeValue(node, kAXParentAttribute, &parent);
@@ -259,30 +254,40 @@ static AXUIElementRef card_root(AXUIElementRef window, int kind) {
     return NULL;
 }
 
+static AXUIElementRef card_root(AXUIElementRef window, int kind) {
+    int truncated = 0;
+    AXUIElementRef node =
+        kind == AX_CARD_QUESTION     ? ax_find_attr(window, "AXButton", "AXTitle", "Skip", 0, 20000, &truncated)
+        : kind == AX_CARD_PERMISSION ? ax_find_attr(window, "AXStaticText", "AXValue", "Permission requested", 1, 20000, &truncated)
+                                     : ax_find_attr(window, "AXGroup", "AXDescription", "Suggested next", 1, 20000, &truncated);
+    return card_climb(node, kind);
+}
+
 static int match_card_kind(AXUIElementRef e, const void *context) {
-    int *kinds = (int *)context;
+    AXUIElementRef *anchors = (AXUIElementRef *)context;
     @autoreleasepool {
         NSString *role = card_attr(e, kAXRoleAttribute);
+        int kind = -1;
         if ([role isEqualToString:@"AXButton"] && [card_attr(e, kAXTitleAttribute) isEqualToString:@"Skip"])
-            *kinds |= 1 << AX_CARD_QUESTION;
+            kind = AX_CARD_QUESTION;
         else if ([role isEqualToString:@"AXStaticText"] && [card_attr(e, kAXValueAttribute) hasPrefix:@"Permission requested"])
-            *kinds |= 1 << AX_CARD_PERMISSION;
+            kind = AX_CARD_PERMISSION;
         else if ([role isEqualToString:@"AXGroup"] && [card_attr(e, kAXDescriptionAttribute) hasPrefix:@"Suggested next"])
-            *kinds |= 1 << AX_CARD_BOX;
+            kind = AX_CARD_BOX;
+        if (kind >= 0 && !anchors[kind]) anchors[kind] = (AXUIElementRef)CFRetain(e);
     }
     return 0;
 }
 
-int ax_card_kinds(AXUIElementRef window) {
-    int kinds = 0, truncated = 0;
-    AXUIElementRef found = bfs(window, match_card_kind, &kinds, 20000, &truncated);
+void ax_card_anchors(AXUIElementRef window, AXUIElementRef *anchors) {
+    int truncated = 0;
+    AXUIElementRef found = bfs(window, match_card_kind, anchors, 20000, &truncated);
     if (found) CFRelease(found);
-    return kinds;
 }
 
-char *ax_card(AXUIElementRef window, int kind) {
+char *ax_card_at(AXUIElementRef anchor, int kind) {
     @autoreleasepool {
-        AXUIElementRef root = card_root(window, kind);
+        AXUIElementRef root = card_climb((AXUIElementRef)CFRetain(anchor), kind);
         if (!root) return NULL;
         NSMutableString *out = [NSMutableString string];
         int budget = 2000;

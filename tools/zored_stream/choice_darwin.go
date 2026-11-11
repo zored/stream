@@ -21,6 +21,7 @@ import (
 const (
 	itermBundle      = "com.googlecode.iterm2"
 	choiceSettle     = 300 * time.Millisecond
+	choiceScanGap    = 1500 * time.Millisecond
 	choiceCheckEvery = 25 * time.Millisecond
 	itermTab         = "(ASCII character 9)"
 	itermEsc         = "(ASCII character 27)"
@@ -90,7 +91,11 @@ func (c *cardAnchors) liveLocked() bool {
 func (c *cardAnchors) kinds(pid C.pid_t) C.int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.liveLocked() || time.Since(c.scanned) >= claudeColdEvery {
+	live := c.liveLocked()
+	if !live && time.Since(c.scanned) < choiceScanGap {
+		return 0
+	}
+	if !live || time.Since(c.scanned) >= claudeColdEvery {
 		c.dropLocked()
 		c.scanned = time.Now()
 		if err := inClaudeWindow(pid, func(w C.AXUIElementRef) error {

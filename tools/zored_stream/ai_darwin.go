@@ -24,6 +24,7 @@ const (
 	aiWait       = 1500 * time.Millisecond
 	aiStep       = 100 * time.Millisecond
 	aiPollEvery  = time.Second
+	aiMissEvery  = 5 * time.Second
 	aiPreview    = 5 * time.Second
 	stripHeight  = 270.0
 	keyE         = 14
@@ -56,6 +57,8 @@ type aiSwitch struct {
 	preview time.Time
 	known   int
 	onShow  func(stripLabel)
+	popup   C.AXUIElementRef
+	missAt  time.Time
 }
 
 func newAISwitch(v *vars, onShow func(stripLabel)) *aiSwitch {
@@ -151,14 +154,10 @@ func (a *aiSwitch) poll() {
 	a.mu.Lock()
 	busy := a.pending || time.Now().Before(a.preview)
 	a.mu.Unlock()
-	if busy || !claude.due(&a.polled) {
+	if busy || a.popup == 0 && time.Since(a.missAt) < aiMissEvery || !claude.due(&a.polled) {
 		return
 	}
-	var cur aiChoice
-	err := withClaude(false, func(_ C.pid_t, w C.AXUIElementRef) (err error) {
-		cur, err = readChoice(w)
-		return err
-	})
+	cur, err := a.readCached()
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.pending || time.Now().Before(a.preview) {
@@ -180,6 +179,34 @@ func (a *aiSwitch) poll() {
 	a.index = m*len(aiEfforts) + e
 	a.known = a.index
 	a.show(cur, "ok")
+}
+
+func (a *aiSwitch) readCached() (aiChoice, error) {
+	if a.popup != 0 {
+		if c, err := parseChoice(axString(a.popup, "AXDescription")); err == nil {
+			return c, nil
+		}
+		C.ax_release(a.popup)
+		a.popup = 0
+	}
+	var cur aiChoice
+	err := withClaude(false, func(_ C.pid_t, w C.AXUIElementRef) error {
+		popup := findAttr(w, "AXPopUpButton", "AXDescription", "Model: ", true)
+		if popup == 0 {
+			return errNoPicker
+		}
+		c, err := parseChoice(axString(popup, "AXDescription"))
+		if err != nil {
+			C.ax_release(popup)
+			return err
+		}
+		cur, a.popup = c, popup
+		return nil
+	})
+	if errors.Is(err, errNoPicker) {
+		a.missAt = time.Now()
+	}
+	return cur, err
 }
 
 func (a *aiSwitch) apply(want aiChoice) error {
@@ -290,7 +317,13 @@ func readChoice(w C.AXUIElementRef) (aiChoice, error) {
 		return aiChoice{}, errNoPicker
 	}
 	defer C.ax_release(popup)
-	desc := axString(popup, "AXDescription")
+	return parseChoice(axString(popup, "AXDescription"))
+}
+
+func parseChoice(desc string) (aiChoice, error) {
+	if !strings.HasPrefix(desc, "Model: ") {
+		return aiChoice{}, errNoPicker
+	}
 	fields := strings.Fields(strings.TrimPrefix(desc, "Model: "))
 	if len(fields) < 2 {
 		return aiChoice{}, fmt.Errorf("unexpected picker description %q", desc)

@@ -13,6 +13,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 	"unsafe"
 )
@@ -68,6 +69,9 @@ func (y *ymusic) connect() bool {
 	bundle := C.CString(ymBundle)
 	defer C.free(unsafe.Pointer(bundle))
 	pid := C.ax_app_pid(bundle)
+	if pid == 0 && y.pid != 0 && syscall.Kill(int(y.pid), 0) == nil {
+		pid = y.pid
+	}
 	if pid == 0 {
 		y.pid = 0
 		y.dropBar()
