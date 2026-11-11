@@ -94,7 +94,11 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   gives a 0.6 s peek of 10 pt, leaving it flies back up (`74da23e`…`27a3f63`, verified by the user); Satellite disconnects for system
   sleep, reconnects on wake (`699805b`); VK WorkSpace chats: 1:1 mute from `getUserInfo` instead of «not in buddylist → muted», so
   unmuted chats are no longer gray (`817e88a`, `6446912`, verified on the device); кнопка 3 toggles the mic / push-to-talk in a call
-  again, broken by `6e12016` (`5360b2c`, verified on the device)
+  again, broken by `6e12016` (`5360b2c`, verified on the device); voip3sdk: a mic tap sent ⇧⌘A twice (press held a lock while the release waited), now one toggle, hold = push-to-talk
+  (`3978343`, verified on the device)
+- 2026-11-10: usage: red dot fixed, it stays red only while the network / VPN is really down and clears ~1 min after (`a55a688`,
+  verified on the device); [logic.md](docs/logic.md) — behaviour spec of every control and daemon module for the Windows port by
+  Codex (`738b917`); daemon binary kept out of git via `.gitignore` (`e0e5741`)
 
 ## Next
 
