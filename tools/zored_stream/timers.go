@@ -249,6 +249,9 @@ func (t *timers) line(now time.Time) (string, string) {
 		if !t.alarm.IsZero() {
 			return t.alarm.Format("15:04"), "#fff"
 		}
+		if t.edit == 0 {
+			return "", "#fff"
+		}
 		return timerLeft(t.edit), "#fff"
 	}
 	if len(t.items) == 0 {
