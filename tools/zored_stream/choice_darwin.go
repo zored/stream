@@ -13,16 +13,18 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 )
 
 const (
-	itermBundle  = "com.googlecode.iterm2"
-	choiceSettle = 300 * time.Millisecond
-	itermTab     = "(ASCII character 9)"
-	itermEsc     = "(ASCII character 27)"
-	itermBackTab = `(ASCII character 27) & "[Z"`
+	itermBundle      = "com.googlecode.iterm2"
+	choiceSettle     = 300 * time.Millisecond
+	choiceCheckEvery = 25 * time.Millisecond
+	itermTab         = "(ASCII character 9)"
+	itermEsc         = "(ASCII character 27)"
+	itermBackTab     = `(ASCII character 27) & "[Z"`
 )
 
 var cardPosition = regexp.MustCompile(`^(\d+) of (\d+)$`)
@@ -55,30 +57,75 @@ func readChoiceCard(a *agents) (*choiceCard, choiceTarget, string, error) {
 	return card, cliTarget{a: a, id: id, uid: uid}, "iTerm2 session " + uid, nil
 }
 
-func desktopDump(pid C.pid_t, kind C.int) string {
-	var dump string
-	err := inClaudeWindow(pid, func(w C.AXUIElementRef) error {
-		s := C.ax_card(w, kind)
-		if s != nil {
-			dump = C.GoString(s)
-			C.free(unsafe.Pointer(s))
+type cardAnchors struct {
+	mu      sync.Mutex
+	at      [3]C.AXUIElementRef
+	scanned time.Time
+}
+
+var anchors cardAnchors
+
+func (c *cardAnchors) dropLocked() {
+	for i, e := range c.at {
+		if e != 0 {
+			C.ax_release(e)
+			c.at[i] = 0
 		}
-		return nil
-	})
-	if err != nil {
+	}
+}
+
+func (c *cardAnchors) liveLocked() bool {
+	any := false
+	for _, e := range c.at {
+		if e != 0 {
+			if C.ax_alive(e) == 0 {
+				return false
+			}
+			any = true
+		}
+	}
+	return any
+}
+
+func (c *cardAnchors) kinds(pid C.pid_t) C.int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.liveLocked() || time.Since(c.scanned) >= claudeColdEvery {
+		c.dropLocked()
+		c.scanned = time.Now()
+		if err := inClaudeWindow(pid, func(w C.AXUIElementRef) error {
+			C.ax_card_anchors(w, &c.at[0])
+			return nil
+		}); err != nil {
+			return 0
+		}
+	}
+	var kinds C.int
+	for i, e := range c.at {
+		if e != 0 {
+			kinds |= 1 << i
+		}
+	}
+	return kinds
+}
+
+func desktopDump(_ C.pid_t, kind C.int) string {
+	anchors.mu.Lock()
+	defer anchors.mu.Unlock()
+	e := anchors.at[kind]
+	if e == 0 {
 		return ""
 	}
-	return strings.TrimSpace(dump)
+	s := C.ax_card_at(e, kind)
+	if s == nil {
+		return ""
+	}
+	defer C.free(unsafe.Pointer(s))
+	return strings.TrimSpace(C.GoString(s))
 }
 
 func readDesktopCard(pid C.pid_t) (*choiceCard, choiceTarget, error) {
-	var kinds C.int
-	if err := inClaudeWindow(pid, func(w C.AXUIElementRef) error {
-		kinds = C.ax_card_kinds(w)
-		return nil
-	}); err != nil {
-		return nil, nil, nil
-	}
+	kinds := anchors.kinds(pid)
 	has := func(kind C.int) bool { return kinds&(1<<kind) != 0 }
 	dump := ""
 	if has(C.AX_CARD_QUESTION) {
@@ -254,13 +301,15 @@ func (t desktopTarget) choose(card choiceCard, i int) error {
 	if card.Multi {
 		return desktopPress(C.AX_CARD_QUESTION, t.titles[i])
 	}
+	picked := "opt\t" + t.titles[i] + "\t1"
 	for range 3 {
 		if err := desktopPress(C.AX_CARD_QUESTION, t.titles[i]); err != nil {
 			return err
 		}
-		time.Sleep(choiceSettle)
-		if now, _, err := readDesktopCard(claudePid()); err == nil && now != nil && i < len(now.Options) && now.Options[i].Selected {
-			return t.forward(card)
+		for deadline := time.Now().Add(choiceSettle); time.Now().Before(deadline); time.Sleep(choiceCheckEvery) {
+			if slices.Contains(strings.Split(desktopDump(claudePid(), C.AX_CARD_QUESTION), "\n"), picked) {
+				return t.forward(card)
+			}
 		}
 	}
 	return fmt.Errorf("option %q did not get picked", t.titles[i])
