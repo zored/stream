@@ -159,6 +159,8 @@ func main() {
 		handle(mux, "/mic/up", c.micUp)
 		handle(mux, "/cam/down", c.camDown)
 		handle(mux, "/call/end", c.hangUp)
+		handle(mux, "/peek/down", c.peekDown)
+		handle(mux, "/peek/up", c.peekUp)
 	})
 
 	v := &vars{sent: map[string]string{}}
@@ -272,10 +274,8 @@ func main() {
 	go ch.run()
 	var choicePolled time.Time
 	go every(choicePollEvery, func() {
-		if ch.showing() {
-			claude.wake()
-		}
-		if claude.due(&choicePolled) {
+		if claude.due(&choicePolled) || ch.showing() && time.Since(choicePolled) >= choiceShownEvery {
+			choicePolled = time.Now()
 			ch.poll()
 		}
 	})

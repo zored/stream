@@ -12,7 +12,8 @@ import (
 
 const (
 	choiceButtons   = 8
-	choicePollEvery = 500 * time.Millisecond
+	choicePollEvery  = 500 * time.Millisecond
+	choiceShownEvery = time.Second
 	choicePicked    = 0x00FF00
 	choiceLive      = 0xFF0000
 	choicePrimary   = 0xFFFFFF
@@ -174,12 +175,15 @@ func (c *choice) run() {
 		c.mu.Lock()
 		card, target := c.card, c.target
 		c.mu.Unlock()
+		start := time.Now()
 		if card != nil {
 			if err := c.apply(*card, target, b); err != nil {
 				log.Printf("choice: button %d: %v", b, err)
 			}
 		}
+		applied := time.Since(start)
 		c.poll()
+		log.Printf("choice: button %d apply %v, repoll %v", b, applied, time.Since(start)-applied)
 	}
 }
 
