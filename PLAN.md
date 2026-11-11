@@ -99,6 +99,9 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - 2026-11-10: usage: red dot fixed, it stays red only while the network / VPN is really down and clears ~1 min after (`a55a688`,
   verified on the device); [logic.md](docs/logic.md) — behaviour spec of every control and daemon module for the Windows port by
   Codex (`738b917`); daemon binary kept out of git via `.gitignore` (`e0e5741`)
+- 2026-11-11: chats browse reads messages: крутилка справа, ряд 2 steps unread messages of the chat (mini avatar in group chats),
+  ряд 3 scrolls a long one smoothly; hold 400 ms on the chats tile or крутилка слева, ряд 3 marks the chat read (Telegram
+  `messages.readHistory`, VK WorkSpace `rapi/setDlgState`) (`6a1581e`, checked over HTTP only)
 
 ## Next
 
@@ -118,6 +121,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Date tile on the device; the 00:05 alarm seen once = a turn below 0 at the clock tile (assumed)
 - [ ] Screen panel after a real sleep: `screen.log` shows `sleep` / `wake`, no `Satellite closed`
 - [ ] Muted 1:1 VK WorkSpace chat shows gray on the chats tile (test + API only)
+- [ ] Chats browse on the device: message strip, smooth scroll, hold = read really clears Telegram / VK WorkSpace
 - [ ] 2026-11-05 batch on the device: green calendar before an event + list opening on the shown event; agents 16 dots / slide / hollow dot for a chat not on the tile; крутилка слева, ряд 2 (tracks, like) and ряд 3 (chats); jirabot in the gray (muted) mode; the `3d` / `h:mm` label size; chats animation smoothness
 
 ### More buttons and actions
