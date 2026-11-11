@@ -8,7 +8,7 @@ func TestEmojiPicker(t *testing.T) {
 	e.recents = func() ([]string, error) { return []string{"🔥"}, nil }
 	e.orient = func() (int, error) { return 90, nil }
 	e.send = func(s string) error { sent = append(sent, s); return nil }
-	e.render = func([]emojiGlyph, bool) (string, error) { return "", nil }
+	e.render = func([]emojiGlyph, float64) (string, error) { return "", nil }
 	postVar = func(string, string) error { return nil }
 	if e.turn(emojiLeft, 1) {
 		t.Fatal("closed picker must not take the knob")
@@ -19,7 +19,7 @@ func TestEmojiPicker(t *testing.T) {
 	if got := e.top(emojiLeft); got != "🔥" {
 		t.Errorf("left top = %q, want the recent", got)
 	}
-	if !e.turn(emojiRight, 1) {
+	if !e.turn(emojiRight, -1) {
 		t.Fatal("open picker must take the knob")
 	}
 	for range 100 {
@@ -34,7 +34,7 @@ func TestEmojiPicker(t *testing.T) {
 }
 
 func TestEmojiColumn(t *testing.T) {
-	g := emojiColumn([]string{"a", "b", "c"}, 0.6, 90)
+	g := emojiColumn([]string{"a", "b", "c"}, 0.6, 90, false)
 	if len(g) != 3 || g[1].text != "b" {
 		t.Errorf("column = %+v", g)
 	}
@@ -46,5 +46,12 @@ func TestUpright(t *testing.T) {
 		if got := upright(k[0], k[1] == 1); got != w {
 			t.Errorf("upright(%d, right=%d) = %v, want %v", k[0], k[1], got, w)
 		}
+	}
+}
+
+func TestEmojiColumnMirror(t *testing.T) {
+	g := emojiColumn([]string{"a", "b"}, 0, 0, true)
+	if g[0].y != emojiRingY(true) || g[1].y != emojiRingY(true)-emojiPitch {
+		t.Errorf("mirrored column = %+v", g)
 	}
 }

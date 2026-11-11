@@ -113,9 +113,9 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - touch while open: types that emoji into the focused field
 - while open: the top item of each strip sits in a gray ring;
   left = recent emoji, then all of them; right = categories (🕘 recent, 😀, 👋, 🐻, 🍔, ⚽, 🚗, 💡, 🔣, 🏁), kept in sync with the left column: picking one jumps the left column to its start
-- emoji stand upright in every device orientation (turned per glyph; the orientation is read each time the picker opens)
+- emoji stand upright in every device orientation (turned per glyph; the left strip is mirrored when the fork flips it; the orientation is read each time the picker opens)
 - strip swipe: scrolls its column, flicks keep coasting; tap on an item lower down brings it to the top; tap on the left top emoji types it
-- крутилка слева, ряд 1 / справа, ряд 1: turn scrolls its column (faster turns step more), press types the left top emoji; volume and brightness are off while the picker is open
+- крутилка слева, ряд 1 / справа, ряд 1: turn scrolls its column (faster turns step more; direction inverted when the device is turned), press types the left top emoji; volume and brightness are off while the picker is open
 
 [emoji.md](emoji.md)
 
@@ -226,7 +226,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - press + turn: the controller's own brightness, never below 10 %
 - hold 3 s without a turn: the picture turns 90° clockwise, then again every 2 s while held: device orientation 90° → 0° → 270° → 180° → 90° (how far the device itself is turned clockwise; 90° by default), a haptic tap on each switch; survives restarts.
   90°: tile pictures turn 90° counter-clockwise, the left strip (track) 180°, the right strip stays. 180°: everything 180°. 270°: tiles 90° clockwise, the right strip 180°, the left stays.
-  Taps and strip slides follow the picture, tile swipes follow the turned device. The tiles keep their places and controls: only the picture turns. The emoji picker strips are not turned yet
+  Taps and strip slides follow the picture, tile swipes follow the turned device. The tiles keep their places and controls: only the picture turns. The emoji picker turns with the device ([emoji.md](emoji.md#orientation))
 - shows: the left strip bar for 1 s, white = Mac, gray = controller
 
 [macos.md](macos.md)

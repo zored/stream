@@ -125,9 +125,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Date tile on the device; the 00:05 alarm seen once = a turn below 0 at the clock tile (assumed)
 - [ ] Screen panel after a real sleep: `screen.log` shows `sleep` / `wake`, no `Satellite closed`
 - [ ] Muted 1:1 VK WorkSpace chat shows gray on the chats tile (test + API only)
-- [ ] Emoji picker turned: knob direction inverted while the device is turned + left strip mirrored — uncommitted in the tree
-  (`emoji.go`, `emoji_darwin.go`, `emoji_test.go`, `docs/emoji.md`, `docs/controls.md`), session «Эмодзи на полосках в повороте»
-  waits for the user's device check and «коммить»
+- [ ] Emoji picker turned: knob direction inverted while the device is turned + left strip mirrored (committed 11 ноя on the user's «сохраняй», not seen on the device)
 - [ ] Orientation 0° / 180° / 270° on the device (90° is the one used daily)
 - [ ] 2026-11-05 batch on the device: green calendar before an event + list opening on the shown event; agents 16 dots / slide / hollow dot for a chat not on the tile; крутилка слева, ряд 2 (tracks, like) and ряд 3 (chats); jirabot in the gray (muted) mode; the `3d` / `h:mm` label size; chats animation smoothness
 

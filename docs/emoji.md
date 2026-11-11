@@ -23,8 +23,11 @@ Controls: [controls.md](controls.md#тайл-ряд-2-колонка-2--emoji-pi
 ## Orientation
 
 - Each glyph is drawn turned by `-(o + 180 if the fork flips the strip)` clockwise, so it stands upright for the user after the
-  fork's rotation (A12 still holds: layout, scroll, ring and touches stay at 0°). Left strip at 90 and 270: 90°, right: 270°,
+  fork's rotation (A12 holds: the daemon still draws for 0° and reads touches as the fork gives them; only the mirror below depends on the orientation). Left strip at 90 and 270: 90°, right: 270°,
   both at 180: 0°. The ring is a circle, not turned.
+- The left strip, when the fork flips it (90, 180), is mirrored: the ring sits at the other end, the list runs the other way, a drag
+  still follows the finger (touch y is already the fork's) and a tap row is counted from the ring. The right strip is not mirrored.
+- Knob turns on both strips are inverted whenever the device is turned (o ≠ 0): the detent direction no longer matches the layout.
 - `orientation.go` reads `~/.config/zored-stream/orientation` (missing = 90; bad content is an error and the picker does not
   open) on every picker open, no poll (P2): the file changes with the knob hold, picker closed, so the next open sees it.
 - Verified: glyph turn by a PNG render and on the device (confirmed by the user).

@@ -41,6 +41,7 @@ type emojiStrip struct {
 	accel          accel
 	shown          string
 	turn           float64
+	mirror         bool
 }
 
 type emoji struct {
@@ -49,6 +50,7 @@ type emoji struct {
 	openTill time.Time
 	strips   [2]*emojiStrip
 	active   int
+	turned   bool
 	starts   []int
 	idle     string
 	tileText string
@@ -56,7 +58,7 @@ type emoji struct {
 	recents  func() ([]string, error)
 	orient   func() (int, error)
 	send     func(string) error
-	render   func(glyphs []emojiGlyph, ring bool) (string, error)
+	render   func(glyphs []emojiGlyph, ringY float64) (string, error)
 }
 
 func newEmoji(v *vars) *emoji {
@@ -90,6 +92,8 @@ func (e *emoji) tile() error {
 		return err
 	}
 	e.strips[emojiLeft].turn, e.strips[emojiRight].turn = upright(o, false), upright(o, true)
+	e.strips[emojiLeft].mirror = stripFlipped(o, false)
+	e.turned = o != 0
 	recents, err := e.recents()
 	if err != nil {
 		log.Print(err)
@@ -135,6 +139,9 @@ func (e *emoji) turn(side, direction int) bool {
 		return false
 	}
 	s := e.strips[side]
+	if e.turned {
+		direction = -direction
+	}
 	s.vel = 0
 	s.target = e.clamp(s, math.Round(s.target)+float64(s.accel.step(direction)))
 	e.active = side
@@ -207,6 +214,9 @@ func (e *emoji) dragLocked(side int, dy float64) {
 	s := e.strips[side]
 	now := time.Now()
 	items := dy / emojiPitch
+	if s.mirror {
+		items = -items
+	}
 	if dt := now.Sub(s.lastMove).Seconds(); dt > 0 && dt < 0.1 {
 		s.vel = 0.5*s.vel + 0.5*items/dt
 	} else {
@@ -230,6 +240,9 @@ func (e *emoji) end(side int) error {
 	s := e.strips[side]
 	tap := s.moved < emojiTapPx
 	y := s.lastY * stripDrawH / stripHeight
+	if s.mirror {
+		y = stripDrawH - y
+	}
 	s.touching, s.hasY = false, false
 	if time.Since(s.lastMove) > 100*time.Millisecond || math.Abs(s.vel) < emojiFling {
 		s.vel = 0
@@ -338,7 +351,7 @@ func (e *emoji) publish() {
 			continue
 		}
 		s.shown = key
-		uri, err := e.render(emojiColumn(s.list, s.offset, s.turn), true)
+		uri, err := e.render(emojiColumn(s.list, s.offset, s.turn, s.mirror), emojiRingY(s.mirror))
 		if err != nil {
 			log.Print(err)
 			continue
@@ -356,7 +369,14 @@ func (e *emoji) publish() {
 	e.vars.set("emoji_on", "1")
 }
 
-func emojiColumn(list []string, offset, turn float64) []emojiGlyph {
+func emojiRingY(mirror bool) float64 {
+	if mirror {
+		return stripDrawH - emojiTop
+	}
+	return emojiTop
+}
+
+func emojiColumn(list []string, offset, turn float64, mirror bool) []emojiGlyph {
 	var glyphs []emojiGlyph
 	first := int(math.Floor(offset))
 	for i := first; i < len(list); i++ {
@@ -366,6 +386,9 @@ func emojiColumn(list []string, offset, turn float64) []emojiGlyph {
 		y := emojiTop + (float64(i)-offset)*emojiPitch
 		if y > stripDrawH+emojiPitch {
 			break
+		}
+		if mirror {
+			y = stripDrawH - y
 		}
 		glyphs = append(glyphs, emojiGlyph{text: list[i], y: y, size: emojiSize, alpha: 1, turn: turn})
 	}
