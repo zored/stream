@@ -54,7 +54,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 ## Left strip — track
 
 - default: current track rotated 90°, gray artist | bold title; a white ♥ when liked in Yandex Music, a white broken heart for 2 s after a dislike;
-  a dim progress bar behind it, bottom-up, tinted with the cover's color
+  a dim progress bar behind it, tinted with the cover's color; all bars (this one and the volume / brightness / seek bar) grow bottom-up on the device in every orientation (pages mirror them while the left strip is turned 180°, i.e. at 90° and 180°)
 - while volume / brightness / seek moves: a bar over the whole strip, fades out ~1 s after:
   white = volume or Mac brightness or seek, gray = the controller's own brightness
 - swipe up / down: volume, 0.4 % per px
@@ -113,6 +113,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - touch while open: types that emoji into the focused field
 - while open: the top item of each strip sits in a gray ring;
   left = recent emoji, then all of them; right = categories (🕘 recent, 😀, 👋, 🐻, 🍔, ⚽, 🚗, 💡, 🔣, 🏁), kept in sync with the left column: picking one jumps the left column to its start
+- emoji stand upright in every device orientation (turned per glyph; the orientation is read each time the picker opens)
 - strip swipe: scrolls its column, flicks keep coasting; tap on an item lower down brings it to the top; tap on the left top emoji types it
 - крутилка слева, ряд 1 / справа, ряд 1: turn scrolls its column (faster turns step more), press types the left top emoji; volume and brightness are off while the picker is open
 

@@ -197,7 +197,7 @@ int cal_text_lines(const char *text, double w, double size) {
     }
 }
 
-void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double size, double alpha) {
+void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double size, double alpha, double turn) {
     @autoreleasepool {
         CGContextRef ctx = ((canvas *)c)->ctx;
         double H = ((canvas *)c)->h;
@@ -208,6 +208,9 @@ void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double si
         CGRect b = CTLineGetBoundsWithOptions(line, kCTLineBoundsUseGlyphPathBounds);
         CGContextSaveGState(ctx);
         CGContextSetAlpha(ctx, alpha);
+        CGContextTranslateCTM(ctx, cx, H - cy);
+        CGContextRotateCTM(ctx, -turn * M_PI / 180);
+        CGContextTranslateCTM(ctx, -cx, -(H - cy));
         CGContextSetTextPosition(ctx, cx - b.origin.x - b.size.width / 2, H - cy - b.origin.y - b.size.height / 2);
         CTLineDraw(line, ctx);
         CGContextRestoreGState(ctx);

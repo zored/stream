@@ -34,6 +34,7 @@ type emojiGlyph struct {
 	text    string
 	y, size float64
 	alpha   float64
+	turn    float64
 }
 
 func emojiPNG(glyphs []emojiGlyph, ring bool) (string, error) {
@@ -43,7 +44,7 @@ func emojiPNG(glyphs []emojiGlyph, ring bool) (string, error) {
 	}
 	for _, g := range glyphs {
 		s := C.CString(g.text)
-		C.cal_canvas_glyph(c, s, stripDrawW/2, C.double(g.y), C.double(g.size), C.double(g.alpha))
+		C.cal_canvas_glyph(c, s, stripDrawW/2, C.double(g.y), C.double(g.size), C.double(g.alpha), C.double(g.turn))
 		C.free(unsafe.Pointer(s))
 	}
 	return canvasPNG(c)
@@ -52,7 +53,7 @@ func emojiPNG(glyphs []emojiGlyph, ring bool) (string, error) {
 func emojiTilePNG(text string, size float64) (string, error) {
 	c := C.cal_canvas_new(100, 100, 1, 0)
 	s := C.CString(text)
-	C.cal_canvas_glyph(c, s, 50, 50, C.double(size), 1)
+	C.cal_canvas_glyph(c, s, 50, 50, C.double(size), 1, 0)
 	C.free(unsafe.Pointer(s))
 	return canvasPNG(c)
 }

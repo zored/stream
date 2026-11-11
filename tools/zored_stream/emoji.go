@@ -40,6 +40,7 @@ type emojiStrip struct {
 	knobDown       bool
 	accel          accel
 	shown          string
+	turn           float64
 }
 
 type emoji struct {
@@ -53,12 +54,13 @@ type emoji struct {
 	tileText string
 	wake     chan struct{}
 	recents  func() ([]string, error)
+	orient   func() (int, error)
 	send     func(string) error
 	render   func(glyphs []emojiGlyph, ring bool) (string, error)
 }
 
 func newEmoji(v *vars) *emoji {
-	return &emoji{vars: v, idle: emojiIdle, wake: make(chan struct{}, 1), recents: emojiRecents, send: emojiType, render: emojiPNG,
+	return &emoji{vars: v, idle: emojiIdle, wake: make(chan struct{}, 1), recents: emojiRecents, orient: readOrientation, send: emojiType, render: emojiPNG,
 		strips: [2]*emojiStrip{{}, {}}}
 }
 
@@ -83,6 +85,11 @@ func (e *emoji) tile() error {
 		return e.sendLogged(s)
 	}
 	defer e.mu.Unlock()
+	o, err := e.orient()
+	if err != nil {
+		return err
+	}
+	e.strips[emojiLeft].turn, e.strips[emojiRight].turn = upright(o, false), upright(o, true)
 	recents, err := e.recents()
 	if err != nil {
 		log.Print(err)
@@ -331,7 +338,7 @@ func (e *emoji) publish() {
 			continue
 		}
 		s.shown = key
-		uri, err := e.render(emojiColumn(s.list, s.offset), true)
+		uri, err := e.render(emojiColumn(s.list, s.offset, s.turn), true)
 		if err != nil {
 			log.Print(err)
 			continue
@@ -349,7 +356,7 @@ func (e *emoji) publish() {
 	e.vars.set("emoji_on", "1")
 }
 
-func emojiColumn(list []string, offset float64) []emojiGlyph {
+func emojiColumn(list []string, offset, turn float64) []emojiGlyph {
 	var glyphs []emojiGlyph
 	first := int(math.Floor(offset))
 	for i := first; i < len(list); i++ {
@@ -360,7 +367,7 @@ func emojiColumn(list []string, offset float64) []emojiGlyph {
 		if y > stripDrawH+emojiPitch {
 			break
 		}
-		glyphs = append(glyphs, emojiGlyph{text: list[i], y: y, size: emojiSize, alpha: 1})
+		glyphs = append(glyphs, emojiGlyph{text: list[i], y: y, size: emojiSize, alpha: 1, turn: turn})
 	}
 	return glyphs
 }

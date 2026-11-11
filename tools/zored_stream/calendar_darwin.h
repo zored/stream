@@ -1,6 +1,6 @@
 char *cal_items(double from, double to, char **err);
 void *cal_canvas_new(double w, double h, double scale, int rotate);
-void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double size, double alpha);
+void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double size, double alpha, double turn);
 void cal_canvas_layer_begin(void *c, double alpha);
 void cal_canvas_layer_end(void *c);
 void cal_canvas_fill(void *c, unsigned rgb);
