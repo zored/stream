@@ -18,7 +18,8 @@ const (
 	hintClickFor  = 400 * time.Millisecond
 	hintCellW     = stripDrawW
 	hintCellH     = 86
-	hintInset     = 4
+	hintInset     = 5
+	hintEdgeY     = 10
 	hintIdle      = 0.3
 	hintLiveFor   = 700 * time.Millisecond
 	hintFadeIn    = 0.25
@@ -160,7 +161,7 @@ func (h *knobHints) step(dt float64) bool {
 		} else {
 			k.alpha += (hintIdle - k.alpha) * hintFadeOut
 		}
-		h.vars.set(k.cell, hintSVG(k.right, k.flip, k.angle, k.scale, k.alpha))
+		h.vars.set(k.cell, hintSVG(k.right, k.flip, k.row, k.angle, k.scale, k.alpha))
 	}
 	return moving
 }
@@ -179,7 +180,9 @@ func hintCell(right bool, row int, flip bool) string {
 	return fmt.Sprintf("hint_%c%d", side, row)
 }
 
-func hintSVG(right, flip bool, angle, scale, alpha float64) string {
+// hintSVG draws in the knob's own frame (the flip turn is undone by the fork): the top knob's chevron sits near the top, the bottom one's near the bottom.
+func hintSVG(right, flip bool, row int, angle, scale, alpha float64) string {
+	y := [3]int{hintEdgeY, hintCellH / 2, hintCellH - hintEdgeY}[row]
 	x, mirror := float64(hintCellW-hintInset), 1
 	if !right {
 		x, mirror = hintInset, -1
@@ -192,5 +195,5 @@ func hintSVG(right, flip bool, angle, scale, alpha float64) string {
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<g opacity="%.2f" transform="rotate(%d %d %d) translate(%g %d) rotate(%.1f) scale(%.2f %.2f)" fill="none" stroke-linecap="round" stroke-linejoin="round">`+
 		`<path d="%s" stroke="#000" stroke-width="5.5"/><path d="%s" stroke="#fff" stroke-width="2.5"/></g></svg>`,
-		hintCellW, hintCellH, alpha, turn, hintCellW/2, hintCellH/2, x, hintCellH/2, math.Round(angle*2)/2, scale*float64(mirror), scale, chevron, chevron))
+		hintCellW, hintCellH, alpha, turn, hintCellW/2, hintCellH/2, x, y, math.Round(angle*2)/2, scale*float64(mirror), scale, chevron, chevron))
 }

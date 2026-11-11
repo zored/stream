@@ -81,13 +81,16 @@ func TestKnobHintClickPulses(t *testing.T) {
 }
 
 func TestKnobHintSVGSideAndFlip(t *testing.T) {
-	right := decodeHint(t, hintSVG(true, false, 0, 1, 0.3))
-	if !strings.Contains(right, `opacity="0.30" transform="rotate(0 24 43) translate(44 43)`) || !strings.Contains(right, "scale(1.00 1.00)") {
+	right := decodeHint(t, hintSVG(true, false, 1, 0, 1, 0.3))
+	if !strings.Contains(right, `opacity="0.30" transform="rotate(0 24 43) translate(43 43)`) || !strings.Contains(right, "scale(1.00 1.00)") {
 		t.Fatal(right)
 	}
-	left := decodeHint(t, hintSVG(false, true, 12.3, 1.2, 1))
-	if !strings.Contains(left, "rotate(180 24 43) translate(4 43) rotate(12.5) scale(-1.20 1.20)") {
+	left := decodeHint(t, hintSVG(false, true, 2, 12.3, 1.2, 1))
+	if !strings.Contains(left, "rotate(180 24 43) translate(5 76) rotate(12.5) scale(-1.20 1.20)") {
 		t.Fatal(left)
+	}
+	if top := decodeHint(t, hintSVG(true, false, 0, 0, 1, 1)); !strings.Contains(top, "translate(43 10)") {
+		t.Fatal(top)
 	}
 }
 
