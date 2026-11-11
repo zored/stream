@@ -151,6 +151,9 @@ func (p *power) up() error {
 		if !p.session.active {
 			return p.start()
 		}
+		if err := displayHold(amphBridgeFor); err != nil {
+			return err
+		}
 		if err := p.end(); err != nil {
 			return err
 		}
