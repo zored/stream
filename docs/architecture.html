@@ -70,7 +70,7 @@ svg .g{stroke:var(--ok)!important}svg text.g{fill:var(--ok)}
 </svg></div>
 <ul>
 <li>Демон шлёт только изменившиеся значения и раз в 10 с (<code>resendEvery</code>) всё заново — Companion после рестарта лечится сам (<code>A4</code>). <span class="v">verified</span></li>
-<li>Форк <code>zored/companion-surface-loupedeck</code> (ветка <code>zored_stream</code>): вибрация, позиция пальца на стрипе, POST в демон напрямую (<code>/volume/drag</code>, <code>/ai/slide</code>) (<code>A10</code>). <span class="v">verified</span> роуты в <code>main.go</code>, остальное <span class="a">assumed</span></li>
+<li>Форк <code>zored/companion-surface-loupedeck</code> (ветка <code>zored_stream</code>): вибрация, позиция пальца на стрипе, POST в демон напрямую (<code>/volume/drag</code>, <code>/ai/slide</code>) (<code>A10</code>); поворот девайса 0/90/180/270° только здесь: картинки и касания поворачиваются перед девайсом, всё выше рисует для 0° (<code>A12</code>). <span class="v">verified</span> роуты в <code>main.go</code>, остальное <span class="a">assumed</span></li>
 <li>Один процесс держит serial-порт: Companion, Loupedeck app или <code>tools/sniff.py</code> (<code>A8</code>). <span class="a">assumed</span></li>
 </ul>
 

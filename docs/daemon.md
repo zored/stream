@@ -81,6 +81,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Emoji picker | `emoji.go`, `emoji_darwin.go`, `emoji_data.go`, [emoji.md](emoji.md) | `127.0.0.1:47128` (`-emoji`) | see emoji.md |
 | Timers + alarms | `timers.go`, [macos.md](macos.md) | `127.0.0.1:47129` (`-timers`) | see macos.md |
 | Weather | `weather.go`, `layers.go` (`tile_23`), [weather.md](weather.md) | `127.0.0.1:47131` (`-weather`) | see weather.md |
+| Orientation (read-only) | `orientation.go`, `stripflip.go`; the fork owns it ([companion.md](companion.md#loupedeck-surface-module-fork), A12) | — (reads `~/.config/zored-stream/orientation`, publishes `strip_flip` with the bars, turns emoji glyphs) | verified on the device (user) |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain

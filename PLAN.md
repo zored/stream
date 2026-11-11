@@ -18,7 +18,7 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 | left knobs `0/0` volume, `1/0` seek (press + turn = tracks, click = play / pause, hold = like), `2/0` chats browse; left strip `0–2/1` track + bar | — |
 | tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
 | buttons `3/0` KVM, `3/2` mic / `3/3` camera / `3/4` hang up in a call, `3/4` calendar outside a call, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/1`, `3/5`, `3/7`; `3/2`, `3/3` outside a call |
-| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness, `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
+| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness (hold 3 s = device orientation), `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
 ## Done
 
@@ -101,7 +101,11 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
   Codex (`738b917`); daemon binary kept out of git via `.gitignore` (`e0e5741`)
 - 2026-11-11: chats browse reads messages: крутилка справа, ряд 2 steps unread messages of the chat (mini avatar in group chats),
   ряд 3 scrolls a long one smoothly; hold 400 ms on the chats tile or крутилка слева, ряд 3 marks the chat read (Telegram
-  `messages.readHistory`, VK WorkSpace `rapi/setDlgState`) (`6a1581e`, checked over HTTP only)
+  `messages.readHistory`, VK WorkSpace `rapi/setDlgState`) (`6a1581e`, `3af6057`, verified on the device); device orientation for a
+  controller turned on its side: hold крутилка справа, ряд 1 3 s → 90 → 0 → 270 → 180, only in the module fork (pictures and touches
+  turned before the device, the upside-down strip's cells 180°, file `~/.config/zored-stream/orientation`, default 90), the daemon
+  reads it only for `strip_flip` (left-strip bars) and upright emoji glyphs; Companion's Surface Rotation stays off (it remaps the
+  grid); invariant A12 (fork `bf0ca30`, stream `05de107`…`1e2eff4`, verified on the device)
 
 ## Next
 
@@ -121,7 +125,10 @@ MEDIA page, `row/col` ([grid](docs/companion.md), names in [controls.md](docs/co
 - [ ] Date tile on the device; the 00:05 alarm seen once = a turn below 0 at the clock tile (assumed)
 - [ ] Screen panel after a real sleep: `screen.log` shows `sleep` / `wake`, no `Satellite closed`
 - [ ] Muted 1:1 VK WorkSpace chat shows gray on the chats tile (test + API only)
-- [ ] Chats browse on the device: message strip, smooth scroll, hold = read really clears Telegram / VK WorkSpace
+- [ ] Emoji picker turned: knob direction inverted while the device is turned + left strip mirrored — uncommitted in the tree
+  (`emoji.go`, `emoji_darwin.go`, `emoji_test.go`, `docs/emoji.md`, `docs/controls.md`), session «Эмодзи на полосках в повороте»
+  waits for the user's device check and «коммить»
+- [ ] Orientation 0° / 180° / 270° on the device (90° is the one used daily)
 - [ ] 2026-11-05 batch on the device: green calendar before an event + list opening on the shown event; agents 16 dots / slide / hollow dot for a chat not on the tile; крутилка слева, ряд 2 (tracks, like) and ряд 3 (chats); jirabot in the gray (muted) mode; the `3d` / `h:mm` label size; chats animation smoothness
 
 ### More buttons and actions
