@@ -31,6 +31,7 @@ installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with 
     `np_svg` (base64 SVG data URI for the track strip: like mark (a heart as wide as the strip, 6% inset), lowercase gray artist `|` bold title, each cut to 30 characters with `…`, split into two lines when one line would be tiny; the heart is an SVG path (skia has no emoji fallback), reset on track change; an empty title is held back for 3 s; an image layer can't take raw SVG,
     Companion cuts data at the first `=`),
     polled every 0.5 s by the perl child (below), sent to the daemon as JSON lines on change; `publish` is serialized (`publishMu`): the 3 s hold timer and a new track used to interleave their writes and leave the old strip until the 10 s resend *(assumed cause of a stale track; natural transitions ×3 and next ×1 measured < 1 s, 2026-11-04)*
+  - `strip_flip` (`1` at orientation 90°/180° = the fork turns the left strip 180°, else `0`): `stripflip.go` reads `~/.config/zored-stream/orientation` on every `bar` / progress publish; the left-strip bars (`volume_cell`) mirror their fill by it so they still grow bottom-up on the device. The AI bar on the right strip is not mirrored.
   - `np_progress` (0–100) — playback position, drawn bottom-up in `np_tint` behind the track text on the left strip.
     The perl child sends `duration`, `elapsed`, `rate`, `at` (unix time of `elapsed`) from MediaRemote; the daemon extrapolates
     `elapsed + (now − at) × rate` every 3 s, so no extra polling; paused or no duration → the value doesn't change, nothing is sent.

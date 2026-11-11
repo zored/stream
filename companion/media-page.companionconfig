@@ -285,7 +285,7 @@
          "isExpression": false
         },
         "y": {
-         "value": "100 - max(0, min(100, ($(custom:np_progress) - 66.67) * 3))",
+         "value": "(1 - ($(custom:strip_flip) == 1 ? 1 : 0)) * (100 - max(0, min(100, ($(custom:np_progress) - (2 - (0 + ($(custom:strip_flip) == 1 ? 1 : 0) * 2)) * 100 / 3) * 3)))",
          "isExpression": true
         },
         "width": {
@@ -293,7 +293,7 @@
          "isExpression": false
         },
         "height": {
-         "value": "max(0, min(100, ($(custom:np_progress) - 66.67) * 3))",
+         "value": "max(0, min(100, ($(custom:np_progress) - (2 - (0 + ($(custom:strip_flip) == 1 ? 1 : 0) * 2)) * 100 / 3) * 3))",
          "isExpression": true
         },
         "rotation": {
@@ -454,7 +454,7 @@
          "isExpression": false
         },
         "y": {
-         "value": "100 - max(0, min(100, ($(custom:bar_value) - 66.67) * 3))",
+         "value": "(1 - ($(custom:strip_flip) == 1 ? 1 : 0)) * (100 - max(0, min(100, ($(custom:bar_value) - (2 - (0 + ($(custom:strip_flip) == 1 ? 1 : 0) * 2)) * 100 / 3) * 3)))",
          "isExpression": true
         },
         "width": {
@@ -462,7 +462,7 @@
          "isExpression": false
         },
         "height": {
-         "value": "max(0, min(100, ($(custom:bar_value) - 66.67) * 3))",
+         "value": "max(0, min(100, ($(custom:bar_value) - (2 - (0 + ($(custom:strip_flip) == 1 ? 1 : 0) * 2)) * 100 / 3) * 3))",
          "isExpression": true
         },
         "rotation": {
@@ -2356,7 +2356,7 @@
          "isExpression": false
         },
         "y": {
-         "value": "100 - max(0, min(100, ($(custom:np_progress) - 33.33) * 3))",
+         "value": "(1 - ($(custom:strip_flip) == 1 ? 1 : 0)) * (100 - max(0, min(100, ($(custom:np_progress) - (2 - (1 + ($(custom:strip_flip) == 1 ? 1 : 0) * 0)) * 100 / 3) * 3)))",
          "isExpression": true
         },
         "width": {
@@ -2364,7 +2364,7 @@
          "isExpression": false
         },
         "height": {
-         "value": "max(0, min(100, ($(custom:np_progress) - 33.33) * 3))",
+         "value": "max(0, min(100, ($(custom:np_progress) - (2 - (1 + ($(custom:strip_flip) == 1 ? 1 : 0) * 0)) * 100 / 3) * 3))",
          "isExpression": true
         },
         "rotation": {
@@ -2525,7 +2525,7 @@
          "isExpression": false
         },
         "y": {
-         "value": "100 - max(0, min(100, ($(custom:bar_value) - 33.33) * 3))",
+         "value": "(1 - ($(custom:strip_flip) == 1 ? 1 : 0)) * (100 - max(0, min(100, ($(custom:bar_value) - (2 - (1 + ($(custom:strip_flip) == 1 ? 1 : 0) * 0)) * 100 / 3) * 3)))",
          "isExpression": true
         },
         "width": {
@@ -2533,7 +2533,7 @@
          "isExpression": false
         },
         "height": {
-         "value": "max(0, min(100, ($(custom:bar_value) - 33.33) * 3))",
+         "value": "max(0, min(100, ($(custom:bar_value) - (2 - (1 + ($(custom:strip_flip) == 1 ? 1 : 0) * 0)) * 100 / 3) * 3))",
          "isExpression": true
         },
         "rotation": {
@@ -4459,7 +4459,7 @@
          "isExpression": false
         },
         "y": {
-         "value": "100 - max(0, min(100, ($(custom:np_progress) - 0.00) * 3))",
+         "value": "(1 - ($(custom:strip_flip) == 1 ? 1 : 0)) * (100 - max(0, min(100, ($(custom:np_progress) - (2 - (2 + ($(custom:strip_flip) == 1 ? 1 : 0) * -2)) * 100 / 3) * 3)))",
          "isExpression": true
         },
         "width": {
@@ -4467,7 +4467,7 @@
          "isExpression": false
         },
         "height": {
-         "value": "max(0, min(100, ($(custom:np_progress) - 0.00) * 3))",
+         "value": "max(0, min(100, ($(custom:np_progress) - (2 - (2 + ($(custom:strip_flip) == 1 ? 1 : 0) * -2)) * 100 / 3) * 3))",
          "isExpression": true
         },
         "rotation": {
@@ -4628,7 +4628,7 @@
          "isExpression": false
         },
         "y": {
-         "value": "100 - max(0, min(100, ($(custom:bar_value) - 0.00) * 3))",
+         "value": "(1 - ($(custom:strip_flip) == 1 ? 1 : 0)) * (100 - max(0, min(100, ($(custom:bar_value) - (2 - (2 + ($(custom:strip_flip) == 1 ? 1 : 0) * -2)) * 100 / 3) * 3)))",
          "isExpression": true
         },
         "width": {
@@ -4636,7 +4636,7 @@
          "isExpression": false
         },
         "height": {
-         "value": "max(0, min(100, ($(custom:bar_value) - 0.00) * 3))",
+         "value": "max(0, min(100, ($(custom:bar_value) - (2 - (2 + ($(custom:strip_flip) == 1 ? 1 : 0) * -2)) * 100 / 3) * 3))",
          "isExpression": true
         },
         "rotation": {

@@ -88,6 +88,7 @@ func (b *bar) publish() {
 	b.vars.set("bar_mode", mode)
 	b.vars.set("bar_value", fmt.Sprintf("%.1f", shown))
 	b.vars.set("bar_alpha", fmt.Sprintf("%.0f", alpha))
+	publishStripFlip(b.vars)
 }
 
 type accel struct {

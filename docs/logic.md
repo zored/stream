@@ -151,9 +151,9 @@ Skip arrow (`skip.go`): `np_skip` = `1`/`-1` while flying, `0` after; `np_skip_x
 
 Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom to top:
 
-1. `progress` box: colour `np_tint`, height `np_progress` % (bottom-up, each cell takes its third), opacity `100 − bar_alpha`.
+1. `progress` box: colour `np_tint`, height `np_progress` % (each cell takes its third; bottom-up in the page, top-down while `strip_flip` = 1), opacity `100 − bar_alpha`.
 2. `np` image: `np_svg` rotated 90°, opacity `(100 − bar_alpha) × np_fade / 100`.
-3. `track` black box + `fill` box when the bar is visible: opacity `bar_alpha`, height `bar_value` %, colour gray
+3. `track` black box + `fill` box when the bar is visible: opacity `bar_alpha`, height `bar_value` % (mirrored the same way by `strip_flip`), colour gray
    `#8E8E93` when `bar_mode == "ctl"`, else white.
 4. bottom cell only: skip arrows (`np_skip`, `np_skip_x`).
 5. emoji column overlay while `emoji_on == 1` (mac only).

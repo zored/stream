@@ -190,6 +190,7 @@ func (n *nowPlaying) publishProgress() {
 		progress = t.position(time.Now()) / t.Duration * 100
 	}
 	n.vars.set("np_progress", fmt.Sprintf("%.1f", progress))
+	publishStripFlip(n.vars)
 }
 
 func (n *nowPlaying) snapshot() track {

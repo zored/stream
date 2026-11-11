@@ -32,7 +32,7 @@ WEATHER_URL = "http://127.0.0.1:47131"
 HOLD_MS = 400
 BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
 CUSTOM_VARIABLES = {name: "" for name in (
-    "volume", "bar_value", "bar_alpha", "bar_mode", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
+    "volume", "bar_value", "bar_alpha", "bar_mode", "strip_flip", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
     "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
     if not (WINDOWS and name in ("call_cam", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
@@ -202,23 +202,28 @@ def strip_image(layer_id, var, row, rotation, opacity=None):
                  y=v(round((center_y - cell_w / 2) / cell_h * 100, 2)), height=v(round(cell_w / cell_h * 100, 2)))
 
 
-def cell_fill(var, row):
-    base = (2 - row) * 100 / 3
-    return f"max(0, min(100, ($(custom:{var}) - {base:.2f}) * 3))"
+STRIP_FLIP = "($(custom:strip_flip) == 1 ? 1 : 0)"
+
+
+def flipped_fill(var, row):
+    mirrored = f"({row} + {STRIP_FLIP} * {2 - 2 * row})"
+    base = f"(2 - {mirrored}) * 100 / 3"
+    fill = f"max(0, min(100, ($(custom:{var}) - {base}) * 3))"
+    return fill, f"(1 - {STRIP_FLIP}) * (100 - {fill})"
 
 
 def volume_cell(row):
-    fill = cell_fill("bar_value", row)
-    progress = cell_fill("np_progress", row)
+    fill, fill_y = flipped_fill("bar_value", row)
+    progress, progress_y = flipped_fill("np_progress", row)
     visible = expr(BAR_ALPHA)
     hidden = expr(f"100 - {BAR_ALPHA}")
     color = expr(f'$(custom:bar_mode) == "ctl" ? {0x8E8E93} : {0xFFFFFF}')
     return button([
         canvas(),
-        box("progress", expr("$(custom:np_tint)"), opacity=hidden, y=expr(f"100 - {progress}"), height=expr(progress)),
+        box("progress", expr("$(custom:np_tint)"), opacity=hidden, y=expr(progress_y), height=expr(progress)),
         strip_image("np", "np_svg", row, 90, expr(f"(100 - {BAR_ALPHA}) * {FADE} / 100")),
         box("track", 0x000000, opacity=visible),
-        box("fill", color, opacity=visible, y=expr(f"100 - {fill}"), height=expr(fill)),
+        box("fill", color, opacity=visible, y=expr(fill_y), height=expr(fill)),
         *(skip_arrows() if row == 2 else ()),
         *emoji_strip("emoji_l", row),
     ])
