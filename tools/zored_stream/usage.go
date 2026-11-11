@@ -107,10 +107,7 @@ type stripFrame struct {
 	dots   [5]float64
 }
 
-type stripNote struct {
-	text, color string
-	arrow       bool
-}
+type stripNote struct{ text, color string }
 
 type stripLabel struct{ model, effort, state string }
 
@@ -506,11 +503,8 @@ func aiStripSVG(f stripFrame) string {
 			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.note, f.dots, ink), w/2, stripTextY, stripFont, stripValueFont, fill, html.EscapeString(f.text))
 	}
 	dot := ""
-	if f.note.arrow {
-		dot = fmt.Sprintf(`<path d="M%d 24l6 6-6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`, w/2-3)
-	}
 	if f.failed {
-		dot += fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="%s"/>`, w-4, red)
+		dot = fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="%s"/>`, w-4, red)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+

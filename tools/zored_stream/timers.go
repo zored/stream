@@ -157,6 +157,12 @@ func (t *timers) knob(down bool) (bool, error) {
 	return true, t.commitLocked(now)
 }
 
+func (t *timers) capturing() bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.editing(time.Now())
+}
+
 func (t *timers) turn(direction int) bool {
 	t.mu.Lock()
 	defer t.mu.Unlock()

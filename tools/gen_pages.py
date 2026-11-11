@@ -31,11 +31,12 @@ UNREAD = "http://127.0.0.1:47130"
 WEATHER_URL = "http://127.0.0.1:47131"
 HOLD_MS = 400
 BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
+HINTS = ("hint_l2", "hint_r0", "hint_r1", "hint_r2")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "strip_flip", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam", "call_peek",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "call_peek", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile"))}
+    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *HINTS, *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "call_peek", "ym_like", "dictation", "power_svg", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *HINTS))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -226,6 +227,7 @@ def volume_cell(row):
         box("fill", color, opacity=visible, y=expr(fill_y), height=expr(fill)),
         *(skip_arrows() if row == 2 else ()),
         *emoji_strip("emoji_l", row),
+        *knob_hint(f"hint_l{row}"),
     ])
 
 
@@ -392,7 +394,13 @@ def ai_switch():
 def ai_strip(row):
     return button([canvas(), box("box0", 0x000000),
                    image("strip", expr("$(custom:ai_strip_svg)"), "fill", y=v(-100 * row), height=v(300)),
-                   *emoji_strip("emoji_r", row)])
+                   *emoji_strip("emoji_r", row), *knob_hint(f"hint_r{row}")])
+
+
+def knob_hint(var):
+    if WINDOWS or var not in HINTS:
+        return ()
+    return (image("hint", expr(f"$(custom:{var})"), "fill"),)
 
 
 def emoji_strip(var, row):

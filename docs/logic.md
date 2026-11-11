@@ -60,6 +60,7 @@ device ──serial── Companion (+ Loupedeck module fork) ──exec curl─
 | tile layers `slot` | `layers.go` | ordered layers `{name, active(), press(), up()}`; the first active one wins, the last is the default. `publish` sets the slot variable to the winning name every 250 ms; `press` routes to the winner and remembers it, `up` goes to the same layer even if another one won meanwhile (F23) |
 | `frame` | `frame.go` | caches a rendered image by a string key; re-renders only when the key changes |
 | orientation | `orientation.go`, `stripflip.go`, fork `src/orientation.ts` | the device can stand at 0/90/180/270° (file `~/.config/zored-stream/orientation`, missing = 90, written only by the fork on a 3 s hold of крутилка справа, ряд 1). Everything upstream of the fork draws and reads touches for 0° (A12); the daemon reads the file only for `strip_flip` (left-strip bars mirrored at 90/180) and the emoji glyph turn. Portable as is |
+| knob hint `knobHints` | `knobhint.go` | mac only. One image layer `hint` on top of the strip cell next to each knob a tile can take: `hint_l2`, `hint_r0`, `hint_r1`, `hint_r2` (48×86 SVG, empty SVG when hidden). Owners per knob: l2 weather browse (not while chats browse), r0 keep-awake length edit + wi-fi pick, r1 chats browse, r2 timer edit + calendar list + chats browse; emoji is not an owner. Every daemon POST kicks a 60 Hz loop that runs while any hint shows: it asks the owners, shows / hides the chevron, and steps two springs (k = 360, c = 17): angle (each detent +650 °/s in the turn direction, clamp ±70°, clockwise = clockwise) and scale (target 1.4 while the knob is pressed, 1 after; a click < 400 ms without a turn kicks +9/s). The chevron sits 7 px from the outer edge, white with a black halo, pointing at the knob; turned 180° when the fork turns that strip (`stripFlipped`, orientation read when it appears). Turns and presses of a hidden hint are ignored |
 | palette | `palette.go`, top of `gen_pages.py` | white values, gray `#8E8E93` secondary, green `#30D158`, amber `#FFD60A`, red `#FF453A` (D1); content inset 6 % (D2) |
 
 ### Holds and haptics
@@ -315,6 +316,7 @@ One 48×258 SVG `ai_strip_svg` (pure Go `aiStripSVG`), each cell shows its third
 - stale (F10): last fetch failed, never happened, or older than 2 intervals → gray bar; a limit past its `resets_at` → empty.
   A red dot = the last fetch failed.
 - `covered`: other modules can put a picture over the whole strip (calendar list, agents note, wi-fi pick, chats browse).
+  The wi-fi note (`say`) is text only; the knob hint chevron is a separate layer (`knobhint.go`).
 - slide → `/ai/slide?y=`: emoji right column, else the model by position (mac).
 - Win: keep the strip and variables, Codex as the source (usage module below).
 

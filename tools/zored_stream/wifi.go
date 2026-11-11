@@ -40,7 +40,6 @@ type wifi struct {
 	phone    bool
 	joining  string
 	joinTill time.Time
-	turned   bool
 	on       bool
 	ssid     string
 	online   bool
@@ -158,7 +157,7 @@ func (w *wifi) touch() error {
 	}
 	w.pick, w.waitJoin = slices.Index(w.list, w.ssid), false
 	w.pickTill = time.Now().Add(wifiPickFor)
-	w.loading, w.turned = true, false
+	w.loading = true
 	w.showLocked()
 	w.mu.Unlock()
 	go w.scan()
@@ -201,6 +200,12 @@ func (w *wifi) picking() bool {
 	return time.Now().Before(w.pickTill)
 }
 
+func (w *wifi) capturing() bool {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.picking()
+}
+
 func (w *wifi) turn(direction int) bool {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -211,7 +216,6 @@ func (w *wifi) turn(direction int) bool {
 		w.pick = (max(w.pick, 0) + direction + len(w.list)) % len(w.list)
 	}
 	w.pickTill = time.Now().Add(wifiPickFor)
-	w.turned = true
 	if w.join != nil {
 		w.join.Stop()
 	}
@@ -229,7 +233,7 @@ func (w *wifi) showLocked() {
 	if w.loading {
 		color = amber
 	}
-	w.strip(stripNote{text: wifiLabel(name), color: color, arrow: !w.turned}, time.Until(w.pickTill))
+	w.strip(stripNote{text: wifiLabel(name), color: color}, time.Until(w.pickTill))
 }
 
 func (w *wifi) joinPick() {

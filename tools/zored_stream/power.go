@@ -191,6 +191,12 @@ func (p *power) end() error {
 	return nil
 }
 
+func (p *power) sizing() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.session.active && p.session.timed && time.Now().Before(p.editTill)
+}
+
 func (p *power) turn(direction int) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()

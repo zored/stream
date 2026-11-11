@@ -160,6 +160,12 @@ func (c *calendar) press() error {
 	return nil
 }
 
+func (c *calendar) capturing() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.browsing()
+}
+
 func (c *calendar) turn(direction int) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
