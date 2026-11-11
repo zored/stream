@@ -139,7 +139,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 - shows: one dot per Claude Code session: amber = needs input, white = done and unread (a Desktop chat stays white while its sidebar shows the blue dot), gray = working, up to 16 in a 4×4 grid; the active one (chat in front, else last focused) is bigger with a white ring,
   the ring slides over in 150 ms; a number above 16; a hollow gray circle when none
-- order: top-level chats as circles, then sub-sessions as squares, each newest activity first
+- order: needs input, done, working, read; inside a group oldest update first; all circles
 - press (on release): focus the next session in that order, next press moves on and wraps;
   none waiting → opens a new Code session
 - hold: new Claude Desktop Code session
@@ -162,9 +162,9 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 ### тайл ряд 3, колонка 2 — camera (VK WorkSpace call) / weather
 
 - in a call: tap toggles the camera (takes 1–3 s, amber `…` meanwhile), same colors as the mic tile; same as кнопка 4
-- outside a call: weather icon, `<temp> | <feels like>` below, gray when stale
+- outside a call: weather icon, weekday + date + part of day white on top (`чт 12 день`), below the temperature white and the feels-like one gray, no separator; all gray when stale
 - tap outside a call: 5 s browse, крутилка слева, ряд 3 walks the forecast (утро, день, вечер, ночь, next days),
-  date and part of day gray on top; a second tap or the knob press returns to now
+  the same top line shows the slot; a second tap or the knob press returns to now
 
 [vkcall.md](vkcall.md), [weather.md](weather.md)
 
@@ -172,7 +172,7 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 
 - one tile, two layers, top active wins: a VK WorkSpace call > the day; the daemon picks the layer (`tile_24`) and routes the tap to it
 - call: hang-up icon, tap ends the call. Same as кнопка 5 in a call. [vkcall.md](vkcall.md)
-- day: all white, left-aligned: the date `3 ноя`; below `+40m` / `+5h` / `+1d` until the nearest event or reminder, tomorrow or later if today is empty (for a running event: `25m` until its end) and its title, lowercase, wrapped (reminders get `○`)
+- day: all white, left-aligned: the date `3 ноя`; below the title of the nearest event or reminder, lowercase, wrapped (reminders get `○`), then gray `+40m` / `+5h` / `+1d` right after it, tomorrow or later if today is empty (for a running event: `25m` until its end)
 - titles keep emoji (drawn by CoreText into a PNG, the SVG renderer had none) and wrap by character; a recurring event is listed once, at its next occurrence
 - reminders: open ones due up to +7 days `○`, ones completed today `●`
 - dark green background from 5 min before an event (not reminders) until it ends; any calendar action (touch, кнопка 5, knob in the list) clears it for that event

@@ -254,14 +254,23 @@ func (a *agents) enrich(s *agentSession) {
 	}
 }
 
-func agentLess(x, y *agentSession) int {
-	if x.Child != y.Child {
-		if x.Child {
-			return 1
-		}
-		return -1
+func agentRank(kind string) int {
+	switch kind {
+	case agentInput:
+		return 0
+	case agentDone:
+		return 1
+	case agentWorking:
+		return 2
 	}
-	if c := y.Updated.Compare(x.Updated); c != 0 {
+	return 3
+}
+
+func agentLess(x, y *agentSession) int {
+	if c := agentRank(x.Kind) - agentRank(y.Kind); c != 0 {
+		return c
+	}
+	if c := x.Updated.Compare(y.Updated); c != 0 {
 		return c
 	}
 	return strings.Compare(x.ID, y.ID)
@@ -442,7 +451,7 @@ func (a *agents) publish() {
 	dots := make([]agentDotSpec, len(list))
 	current, prev := -1, -1
 	for i, s := range list {
-		dots[i] = agentDotSpec{s.Kind, s.Child}
+		dots[i] = agentDotSpec{s.Kind}
 		switch s.ID {
 		case a.ringTo:
 			current = i
@@ -558,16 +567,10 @@ func agentDot(i, n int) (x, y float64) {
 }
 
 type agentDotSpec struct {
-	kind  string
-	child bool
+	kind string
 }
 
-func agentShape(b *strings.Builder, x, y, r float64, child bool, paint string) {
-	if child {
-		h := r * 0.9
-		fmt.Fprintf(b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="1.5" %s/>`, x-h, y-h, 2*h, 2*h, paint)
-		return
-	}
+func agentShape(b *strings.Builder, x, y, r float64, paint string) {
 	fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" %s/>`, x, y, r, paint)
 }
 
@@ -601,10 +604,10 @@ func agentsSVG(dots []agentDotSpec, current, prev int, t float64) string {
 			case agentDone:
 				fill = "#fff"
 			case agentRead:
-				agentShape(&b, x, y, r-1, dot.child, `fill="none" stroke="`+gray+`" stroke-width="2"`)
+				agentShape(&b, x, y, r-1, `fill="none" stroke="`+gray+`" stroke-width="2"`)
 				continue
 			}
-			agentShape(&b, x, y, r, dot.child, `fill="`+fill+`"`)
+			agentShape(&b, x, y, r, `fill="`+fill+`"`)
 		}
 		if current >= 0 {
 			x, y := agentDot(current, n)

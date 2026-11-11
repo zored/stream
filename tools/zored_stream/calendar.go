@@ -300,7 +300,7 @@ func calDate(t time.Time) string {
 func calCardImage(now time.Time, it *calItem, bg uint32) string {
 	texts := []calText{{text: calDate(now), y: 68, w: 88, h: 20, size: captionSize, rgb: whiteRGB, center: true}}
 	if it != nil {
-		texts = append(texts, calText{text: calWhen(*it, now) + " " + calTitle(*it), w: 88, h: 64, size: 15, rgb: whiteRGB})
+		texts = append(texts, calText{text: calTitle(*it), tail: " " + calWhen(*it, now), w: 88, h: 64, size: 15, rgb: whiteRGB, tailRGB: grayRGB})
 	}
 	return calImageBg(88, 88, false, bg, texts...)
 }

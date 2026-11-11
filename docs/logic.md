@@ -184,7 +184,7 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 
 #### тайл ряд 2, колонка 4 — agents waiting (`1/5`, `:47120`)
 
-- release (short press) → `/agent/focus`: list sorted top-level first, then sub-sessions, each newest activity first; focus
+- release (short press) → `/agent/focus`: list sorted by state (input, done, working, read), inside a state oldest update first; focus
   the first entry after the cursor in that order (wraps; no cursor → the first). A `done` CLI session becomes `read` when
   focused. Empty list → open a new session.
 - hold 400 ms → `/agent/new`: open a new session.

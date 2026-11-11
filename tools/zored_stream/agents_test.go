@@ -20,7 +20,7 @@ func TestAgentOrder(t *testing.T) {
 	for _, s := range list {
 		got = append(got, s.ID)
 	}
-	if want := []string{"new", "mid", "old", "kid-new", "kid-old"}; !slices.Equal(got, want) {
+	if want := []string{"kid-old", "old", "kid-new", "new", "mid"}; !slices.Equal(got, want) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }

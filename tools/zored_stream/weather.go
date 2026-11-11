@@ -103,9 +103,25 @@ func parseOpenMeteo(data []byte) (weatherHour, []weatherHour, error) {
 	return now, hours, nil
 }
 
+func weatherLabel(t time.Time, part string) string {
+	return fmt.Sprintf("%s %d %s", weekdays[t.Weekday()], t.Day(), part)
+}
+
+func weatherPartOf(hour int) string {
+	switch {
+	case hour >= 5 && hour < 11:
+		return "утро"
+	case hour >= 11 && hour < 17:
+		return "день"
+	case hour >= 17 && hour < 23:
+		return "вечер"
+	}
+	return "ночь"
+}
+
 // weatherSlots: now, then every part of the day after now while the hourly data lasts.
 func weatherSlots(now weatherHour, hours []weatherHour) []weatherSlot {
-	slots := []weatherSlot{{hour: now}}
+	slots := []weatherSlot{{label: weatherLabel(now.at, weatherPartOf(now.at.Hour())), hour: now}}
 	byTime := map[time.Time]weatherHour{}
 	for _, h := range hours {
 		byTime[h.at] = h
@@ -127,7 +143,7 @@ func weatherSlots(now weatherHour, hours []weatherHour) []weatherSlot {
 			}
 			found = true
 			if t.After(now.at) {
-				slots = append(slots, weatherSlot{label: fmt.Sprintf("%s %d %s", weekdays[t.Weekday()], t.Day(), p.name), hour: h})
+				slots = append(slots, weatherSlot{label: weatherLabel(t, p.name), hour: h})
 			}
 		}
 		if !found && day > 0 {
@@ -173,19 +189,19 @@ func weatherDegrees(t float64) string {
 }
 
 func weatherSVG(s weatherSlot, stale bool) string {
-	color := "#fff"
+	color, feels := "#fff", gray
 	if stale {
 		color = gray
 	}
 	top := ""
 	if s.label != "" {
 		top = fmt.Sprintf(`<text x="50" y="12" text-anchor="middle" font-family="%s" font-size="12" fill="%s">%s</text>`,
-			stripFont, gray, html.EscapeString(s.label))
+			stripFont, color, html.EscapeString(s.label))
 	}
 	return dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
 		iconAt(weatherIcon(s.hour.code, s.hour.day), color, 50, iconCY, iconSize) + top +
-		fmt.Sprintf(`<text x="50" y="%g" text-anchor="middle" font-family="%s" font-size="%g" fill="%s">%s | %s</text>`,
-			captionY, stripFont, captionSize, color, weatherDegrees(s.hour.temp), weatherDegrees(s.hour.app)) + `</svg>`)
+		fmt.Sprintf(`<text x="50" y="%g" text-anchor="middle" font-family="%s" font-size="%g" fill="%s">%s <tspan fill="%s">%s</tspan></text>`,
+			captionY, stripFont, captionSize, color, weatherDegrees(s.hour.temp), feels, weatherDegrees(s.hour.app)) + `</svg>`)
 }
 
 func (w *weather) fetch() error {

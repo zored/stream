@@ -27,7 +27,7 @@ func TestWeatherSlots(t *testing.T) {
 	for _, s := range weatherSlots(now, hours) {
 		got = append(got, fmt.Sprintf("%s=%s", s.label, weatherDegrees(s.hour.temp)))
 	}
-	want := "=4,чт 5 вечер=18,чт 5 ночь=23,пт 6 утро=32,пт 6 день=37,пт 6 вечер=42,пт 6 ночь=47"
+	want := "чт 5 день=4,чт 5 вечер=18,чт 5 ночь=23,пт 6 утро=32,пт 6 день=37,пт 6 вечер=42,пт 6 ночь=47"
 	if strings.Join(got, ",") != want {
 		t.Fatalf("got %s", strings.Join(got, ","))
 	}

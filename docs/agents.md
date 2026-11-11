@@ -5,7 +5,7 @@ Claude Code sessions (Desktop Code tab and CLI) that need an answer or have fini
 
 ## Controls
 
-- тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working; Desktop sub-sessions (`spawnedFrom` in the session file) are squares after the top-level chats, each group newest activity first (`lastActivityAt`, CLI: last hook), up to 16 in a 4×4 grid; the active one (the chat in front, else the last focused) is drawn bigger with a white ring, the ring slides to the next one in 150 ms; a number above 16; a hollow gray circle when none.
+- тайл ряд 2, колонка 4: one dot per session: amber = needs input, white = done, gray = working; hollow gray = read; sorted by state (needs input, done, working, read), inside a state oldest update first (`lastActivityAt`, CLI: last hook); every session is a circle, sub-sessions are not told apart, up to 16 in a 4×4 grid; the active one (the chat in front, else the last focused) is drawn bigger with a white ring, the ring slides to the next one in 150 ms; a number above 16; a hollow gray circle when none.
 - Press the tile: focus the next session in tile order, the next press moves on and wraps. A knob turn with the chat in front not on the tile adds it as a hollow dot first (1 min).
   A Desktop "done" session stays until Desktop marks it read (see Unread); a CLI one drops when focused; "needs input" stays until the agent resumes. With none waiting, a press opens a new Code session (`claude://code/new`). Holding the tile or кнопка 6 (400 ms) always opens a new Code session; both focus on release.
 
