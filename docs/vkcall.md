@@ -98,6 +98,6 @@ with self) is QML with no accessibility inside. `voip.go` / `voip_darwin.go` in 
   arrival of `/mic/down` and `/mic/up`, not after the lock; measuring after the lock turned every tap into a hold
   (⇧⌘A on, ⇧⌘A off ~0.9 s later, verified in `voip_*.log`).
 - Hang up: press the `In call` window's AX close button (returns `-25204` but opens «End call — Are you sure?»), wait 0.8 s,
-  keypad Enter (keycode 76) to the pid confirms Yes. No focus needed. Return (36) does not confirm it, ⌘W only sometimes opens it.
+  keypad Enter (keycode 76) to the pid confirms Yes. The app must be active: while another app is frontmost the close press returns 0 and no dialog appears (client 27.1, verified 2026-11-11), so the daemon activates VK WorkSpace first and restores the previous front app after. Return (36) does not confirm it, ⌘W only sometimes opens it.
 - Focus: a hotkey posted to the pid is sometimes ignored until the call window is key. Each press activates VK WorkSpace, raises the `In call` window (AXMain + AXFocused), sends the key and reactivates the previous front app (~0.3 s flicker). Hang up: icons go `pending` at once, the dialog appears ~1 s after close, a full hang up takes ~2 s.
 - Dead ends: Return / mouse clicks posted to the pid on the dialog, no hang-up shortcut in the binary, DevTools on `127.0.0.1:3333` lists web tabs only.

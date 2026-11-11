@@ -126,6 +126,14 @@ func voipKey(pid, key int) {
 }
 
 func voipCloseCallWindow(pid int) error {
+	front := C.voip_front_pid()
+	C.voip_activate(C.pid_t(pid))
+	time.Sleep(100 * time.Millisecond)
+	defer func() {
+		if front > 0 && int(front) != pid {
+			C.voip_activate(front)
+		}
+	}()
 	if C.voip_call_window(C.pid_t(pid), 1) == 0 {
 		return errors.New("no In call window")
 	}
