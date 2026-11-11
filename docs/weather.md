@@ -2,7 +2,7 @@
 
 Module `weather` of `zored_stream`, port 47131 (`POST /tile/23/press`), file `weather.go`.
 
-- Source: [Open-Meteo](https://open-meteo.com/) forecast API, free, no key, reachable without the proxy (verified).
+- Source: [Open-Meteo](https://open-meteo.com/) forecast API, free, no key. Direct access timed out on 2026-11-12 (the tile went gray), so the daemon goes through the `-usage-proxy` HTTP proxy (verified: 0.7 s).
   `current` + `hourly` `temperature_2m`, `apparent_temperature`, `weather_code`, `is_day`, 3 days, `timezone=auto`.
   Rejected: Yandex Weather (key, paid tiers), wttr.in (often down), MET Norway (fewer condition codes).
 - Location: flags `-weather-lat` / `-weather-lon`, default Moscow. CoreLocation would need a permission grant.

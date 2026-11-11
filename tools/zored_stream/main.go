@@ -145,7 +145,7 @@ func main() {
 	kvmWOL := flag.String("kvm-wol", "192.168.4.255:9", "Wake-on-LAN broadcast address")
 	companionDB := flag.String("companion-db", filepath.Join(home, "Library/Application Support/companion/v5.1/db.sqlite"), "Companion database with the surface brightness")
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
-	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com")
+	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com and Open-Meteo")
 	npScript := flag.String("nowplaying-script", filepath.Join(home, ".local/share/zored-stream/nowplaying.pl"), "perl loader for the Now Playing dylib")
 	npLib := flag.String("nowplaying-lib", filepath.Join(home, ".local/lib/libnowplaying.dylib"), "Now Playing dylib")
 	flag.Parse()
@@ -414,7 +414,10 @@ func main() {
 		{name: "unread", press: cs.down, up: cs.up},
 	}}
 	go every(pollEvery, tile22.publish)
-	wx := newWeather(v, *weatherLat, *weatherLon)
+	wx, err := newWeather(v, *weatherLat, *weatherLon, *usageProxy)
+	if err != nil {
+		log.Fatal(err)
+	}
 	go wx.run()
 	go every(time.Second, wx.publish)
 	tile23 := &slot{vars: v, name: "tile_23", layers: []layer{

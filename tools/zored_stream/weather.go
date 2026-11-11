@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -52,11 +53,19 @@ type weather struct {
 	frame    frame
 }
 
-func newWeather(v *vars, lat, lon float64) *weather {
-	return &weather{vars: v, http: &http.Client{Timeout: 20 * time.Second},
+func newWeather(v *vars, lat, lon float64, proxy string) (*weather, error) {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	if proxy != "" {
+		u, err := url.Parse(proxy)
+		if err != nil {
+			return nil, fmt.Errorf("weather proxy: %w", err)
+		}
+		transport.Proxy = http.ProxyURL(u)
+	}
+	return &weather{vars: v, http: &http.Client{Timeout: 20 * time.Second, Transport: transport},
 		url: fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%g&longitude=%g&timezone=auto&forecast_days=%d"+
 			"&current=temperature_2m,apparent_temperature,weather_code,is_day"+
-			"&hourly=temperature_2m,apparent_temperature,weather_code,is_day", lat, lon, weatherDays)}
+			"&hourly=temperature_2m,apparent_temperature,weather_code,is_day", lat, lon, weatherDays)}, nil
 }
 
 type openMeteo struct {
