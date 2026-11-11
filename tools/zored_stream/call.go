@@ -180,6 +180,8 @@ type call struct {
 	changed   chan struct{}
 	voipID    string
 	voipMedia [2]bool
+	peek      bool
+	peekAt    time.Time
 }
 
 func (d *call) notify() {
@@ -194,6 +196,9 @@ func (d *call) setLocked(mic, cam string) {
 		log.Printf("call %q: mic %s, cam %s", d.callID, mic, cam)
 	}
 	d.mic, d.cam = mic, cam
+	if mic == none {
+		d.peek = false
+	}
 	d.notify()
 }
 
@@ -492,7 +497,7 @@ func (d *call) micDown() error {
 	now := time.Now()
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	if !known(d.mic) {
+	if d.peek || !known(d.mic) {
 		return errNoCall
 	}
 	d.pressed, d.micWas = now, d.isOn(0)
@@ -515,13 +520,43 @@ func (d *call) micUp() error {
 }
 
 func (d *call) camDown() error {
-	return d.change(func(mic, cam bool) (bool, bool) { return mic, !cam })
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.peek {
+		return errNoCall
+	}
+	return d.changeLocked(func(mic, cam bool) (bool, bool) { return mic, !cam })
+}
+
+func (d *call) peekDown() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.mic == none {
+		return errNoCall
+	}
+	d.peekAt, d.peek = time.Now(), !d.peek
+	d.notify()
+	return nil
+}
+
+func (d *call) peekUp() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.peekAt.IsZero() {
+		return nil
+	}
+	if time.Since(d.peekAt) >= holdMin {
+		d.peek = !d.peek
+		d.notify()
+	}
+	d.peekAt = time.Time{}
+	return nil
 }
 
 func (d *call) inCall() bool {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	return d.mic != none
+	return d.mic != none && !d.peek
 }
 
 func (d *call) publish() {
@@ -535,6 +570,10 @@ func (d *call) publish() {
 		}
 		d.mu.Lock()
 		values := map[string]string{"call_mic": d.mic, "call_cam": d.cam}
+		values["call_peek"] = "0"
+		if d.peek {
+			values = map[string]string{"call_mic": none, "call_cam": none, "call_peek": "1"}
+		}
 		d.mu.Unlock()
 		for name, value := range values {
 			if sent[name] == value {

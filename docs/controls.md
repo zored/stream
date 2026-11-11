@@ -34,7 +34,7 @@ MEDIA page, `row/col` ([grid](companion.md)):
 |---|---|
 | left knobs `0/0` volume, `1/0` seek (press + turn = tracks, click = play / pause, hold = like), `2/0` chats browse; left strip `0–2/1` track + bar | — |
 | tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
-| buttons `3/0` KVM, `3/2` mic / `3/3` camera / `3/4` hang up in a call, `3/4` calendar outside a call, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/1`, `3/5`, `3/7`; `3/2`, `3/3` outside a call |
+| buttons `3/0` KVM, `3/1` call layer (tap toggles, hold peeks), `3/2` mic / `3/3` camera / `3/4` hang up in a call, `3/4` calendar outside a call, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/5`, `3/7`; `3/2`, `3/3` outside a call |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness (hold 3 s = device orientation), `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
 
@@ -196,7 +196,7 @@ LED color = state. In choice mode (below) кнопки 1–8 answer Claude inste
 | Button | Does | LED |
 |---|---|---|
 | кнопка 1 | KVM → Windows: press = Wake-on-LAN to the PC, then monitor input DisplayPort (`m1ddc set input 15`), the monitor moves USB and the controller with it; back only from Windows or the monitor menu. Hold = toggle PIP | pink, white 0.3 s on press |
-| кнопка 2 | free | off |
+| кнопка 2 | in a call: tap hides / shows the call layer (тайлы ряд 3, колонки 1–3 and кнопки 3/4/5 show and act as outside a call; the call goes on); hold ≥ 300 ms shows the other layer until release; a new call starts shown | blinks dim white while a call goes on, off outside a call |
 | кнопка 3 | in a call: mic, tap toggles, hold ≥ 300 ms = push-to-talk (same as тайл ряд 3, колонка 1); otherwise free | in a call: red (dims 1 s every 4 s) = on, dim white = off, yellow = switching, blinking yellow = unknown; off = no call |
 | кнопка 4 | camera toggle in a call | as кнопка 3 |
 | кнопка 5 | outside a call: the calendar of тайл ряд 3, колонка 3, tap = open the list / act on the item; in a call: hang up | white, green = browsing; white in a call |

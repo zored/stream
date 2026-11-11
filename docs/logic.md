@@ -237,7 +237,7 @@ the LED colour becomes `choice_on == 1 ? choice_N : <own colour>`. The windows p
 | Button | mac | Windows profile |
 |---|---|---|
 | кнопка 1 (`3/0`) | KVM: tap → `:47125/kvm/windows` (Wake-on-LAN + monitor input DP), hold → `/kvm/pip`; LED `kvm_led` pink, white 0.3 s | removed |
-| кнопка 2 (`3/1`) | free | free |
+| кнопка 2 (`3/1`) | down/up → `:47114/peek/down|up`: down flips `peek`, up after ≥ 300 ms flips it back (like push-to-talk); no call → `409`. While `peek` `call` publishes `call_mic`/`call_cam` = `none` and `call_peek` = `1`, `inCall()` is false (slots and кнопка 5 route to the normal layer), `/mic` `/cam` → `409`; `call_mic` → `none` clears `peek`. LED blinks dim white while `call_mic ≠ none` or `call_peek == 1` | free |
 | кнопка 3 (`3/2`) | mic: `:47114/mic/down|up` (logic as the mic tile); LED by `call_mic`: `on` red blinking dark 1 s in 4, `off` `#303030`, `pending` amber, `unknown` amber blinking 1 Hz, else black | **kept**: same routes, same LED |
 | кнопка 4 (`3/3`) | camera: `:47114/cam/down` toggles the camera; LED by `call_cam` | removed |
 | кнопка 5 (`3/4`) | `:47126/button/5/press`: in a call hang up, else the calendar tap; LED white in a call, else `cal_led` (green browsing, white) | removed |
