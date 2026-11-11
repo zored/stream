@@ -83,6 +83,10 @@ func newTimers(v *vars, file string) (*timers, error) {
 	if err := json.Unmarshal(b, &t.items); err != nil {
 		return nil, fmt.Errorf("%s: %w", file, err)
 	}
+	if len(t.items) > 1 {
+		slices.SortFunc(t.items, func(a, b timerItem) int { return a.At.Compare(b.At) })
+		t.items = t.items[:1]
+	}
 	return t, nil
 }
 
@@ -128,8 +132,8 @@ func (t *timers) up() error {
 		if len(t.items) == 0 {
 			return nil
 		}
-		t.items = t.items[1:]
-		log.Printf("timers: cancel nearest, %d left", len(t.items))
+		t.items = nil
+		log.Print("timers: cancel")
 		return t.saveLocked()
 	}
 	t.edit, t.alarm, t.editTill = 0, time.Time{}, now.Add(timerEditFor)
@@ -189,8 +193,7 @@ func (t *timers) commitLocked(now time.Time) error {
 	default:
 		return nil
 	}
-	t.items = append(t.items, it)
-	slices.SortFunc(t.items, func(a, b timerItem) int { return a.At.Compare(b.At) })
+	t.items = []timerItem{it}
 	log.Printf("timers: set %s", it.At.Format("15:04"))
 	return t.saveLocked()
 }
@@ -255,9 +258,6 @@ func (t *timers) line(now time.Time) (string, string) {
 	s := timerLeft(it.At.Sub(now))
 	if it.Alarm {
 		s = it.At.Format("15:04")
-	}
-	if n := len(t.items) - 1; n > 0 {
-		s += fmt.Sprintf(" +%d", n)
 	}
 	return s, "#fff"
 }

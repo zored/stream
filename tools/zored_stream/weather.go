@@ -274,6 +274,9 @@ func (w *weather) publish() {
 	}
 	stale := time.Since(w.fetched) > weatherStale
 	s := slots[pick]
+	if !w.browsingLocked() {
+		s.label = ""
+	}
 	key := fmt.Sprintf("%s|%v|%d|%d|%g|%g|%v", s.label, s.hour.at, s.hour.code, pick, s.hour.temp, s.hour.app, stale)
 	w.vars.set("weather_svg", w.frame.render(key, func() string { return weatherSVG(s, stale) }))
 }

@@ -12,6 +12,6 @@ Module `weather` of `zored_stream`, port 47131 (`POST /tile/23/press`), file `we
 - Look: Bootstrap icon by WMO code (`sun`/`moon`, `cloud-sun`/`cloud-moon`, `clouds`, `cloud-fog2`, `cloud-drizzle`,
   `cloud-rain`, `cloud-rain-heavy`, `cloud-sleet`, `cloud-snow`, `cloud-lightning-rain`), caption `<temp> <feels like>` rounded (temperature white, feels-like gray, no separator), no units, layout as the keep-awake tile.
 - Tap: 5 s browse. Крутилка слева, ряд 3 walks the slots: now, then утро 08, день 13, вечер 18, ночь 23 of each day
-  after now; the slot shows white on top as `пт 6 утро`; now carries the label too (`чт 12 день`: утро 5–11, день 11–17, вечер 17–23, ночь). Each turn extends the window; a second tap, a knob press or
+  after now; the slot shows white on top as `пт 6 утро`; now carries the label too, and outside a browse no label is drawn (`чт 12 день`: утро 5–11, день 11–17, вечер 17–23, ночь). Each turn extends the window; a second tap, a knob press or
   5 s idle returns to now. While chats browse, the knob stays with chats.
 - Companion's SVG renderer ignores `paint-order`: a stroked label drew black over its fill, so labels have no stroke.
