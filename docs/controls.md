@@ -223,6 +223,9 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 - turn: Mac display brightness (built-in display); while the emoji picker is open, its categories; for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4); for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
 - press + turn: the controller's own brightness, never below 10 %
+- hold 3 s without a turn: the picture turns 90° clockwise, then again every 2 s while held: device orientation 90° → 0° → 270° → 180° → 90° (how far the device itself is turned clockwise; 90° by default), a haptic tap on each switch; survives restarts.
+  90°: tile pictures turn 90° counter-clockwise, the left strip (track) 180°, the right strip stays. 180°: everything 180°. 270°: tiles 90° clockwise, the right strip 180°, the left stays.
+  Taps and strip slides follow the picture, tile swipes follow the turned device. The tiles keep their places and controls: only the picture turns. The emoji picker strips are not turned yet
 - shows: the left strip bar for 1 s, white = Mac, gray = controller
 
 [macos.md](macos.md)

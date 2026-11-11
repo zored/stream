@@ -149,5 +149,12 @@ Fork commits (surface settings, `plugin_cfg_*`):
   (Makefile `HAPTIC_HOLD_CONTROLS`, now `encoder-1-0` = the TRACK knob; knob ids: `encoder-<row>-<0|7>`, buttons `button-1…8`). The driver has `vibrate(pattern)`, upstream never calls it. Patterns: `LoupedeckVibratePattern` in `@loupedeck/core`.
 - touch position in buttons mode: sliding a strip updates the fader value variables, upstream only did that in slider mode.
 - left strip swipe → `POST zored_stream /volume/drag?dy=<px>` (`:47113`); right strip → `POST /ai/slide?y=<px>` (`:47117`, absolute position).
+- orientation (`src/orientation.ts`): holding `encoder-0-7` 3 s without a turn, then every 2 s while held, steps 90 → 0 → 270 → 180 → 90 (device turned clockwise; each step turns the picture 90° clockwise),
+  saved in `~/.config/zored-stream/orientation` (missing = 90, anything else = error). Tile buffers turn the other way before
+  `drawKeyBuffer`; the strip that ends up upside down (left at 90, right at 270, both at 180) gets each cell turned 180° and drawn in the
+  mirrored slot, and its touch y becomes `270 − y` (cells, fader variables, `/volume/drag`, `/ai/slide`, `/emoji/*`); tile swipe
+  directions turn with the device. Cached images are redrawn on a switch. Pages, the daemon and the screen panel always draw for 0°.
+  Companion's own Surface Rotation (5.1.1: `surface90`/`surface-90`/`surface180`) remaps the grid 4×8 → 8×4 and turns strips
+  like tiles, so it stays off.
 
 The changes stay in the fork: no upstream PR (bitfocus/companion-surface-loupedeck#36 was opened and closed).

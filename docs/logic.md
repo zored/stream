@@ -256,6 +256,10 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
   `bar.show("mac", value)`; knob held → controller brightness `+= accel`, clamped **10**–100 (F17), `bar.show("ctl", value)`.
 - press → `/brightness/hold`: emoji open → types the right top emoji; else `controller = true`, shows the gray bar.
 - release → `/brightness/release`: `controller = false`.
+- hold 3 s without a turn, then every 2 s while held (fork, no daemon): orientation 90 → 0 → 270 → 180 → 90, file `~/.config/zored-stream/orientation`
+  (missing = 90). 90: tiles drawn turned 270° clockwise, left strip cells turned 180° into mirrored slots, left strip touch
+  `y → 270 − y`, swipe `u r d l` → `r d l u`; 180: tiles 180°, both strips as the left one at 90, swipes → `d l u r`;
+  270: tiles 90°, the right strip as the left one at 90, swipes → `l u r d` ([companion.md](companion.md#loupedeck-surface-module-fork)).
 - start: the controller brightness is read once from Companion's DB (`surfaces.config.brightness` of the `loupedeck:%` row)
   via `/usr/bin/sqlite3`; must be exactly one row, else exit.
 - Win: keep. Display brightness: DDC/CI (`dxva2` `Get/SetMonitorBrightness`, slow: coalesce turns) or WMI for a laptop
