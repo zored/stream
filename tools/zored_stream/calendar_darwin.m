@@ -173,6 +173,30 @@ void cal_canvas_text(void *c, const char *text, const char *tail, double x, doub
     }
 }
 
+int cal_text_lines(const char *text, double w, double size) {
+    @autoreleasepool {
+        CTFontRef font = CTFontCreateWithName(CFSTR("JetBrains Mono"), size, NULL);
+        CTLineBreakMode wrap = kCTLineBreakByCharWrapping;
+        CGFloat lh = size * 1.25;
+        CTParagraphStyleSetting ps[] = {{kCTParagraphStyleSpecifierLineBreakMode, sizeof wrap, &wrap},
+                                        {kCTParagraphStyleSpecifierMinimumLineHeight, sizeof lh, &lh},
+                                        {kCTParagraphStyleSpecifierMaximumLineHeight, sizeof lh, &lh}};
+        CTParagraphStyleRef style = CTParagraphStyleCreate(ps, 3);
+        NSDictionary *attrs = @{(id)kCTFontAttributeName: (__bridge id)font, (id)kCTParagraphStyleAttributeName: (__bridge id)style};
+        NSAttributedString *as = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:text] attributes:attrs];
+        CTFramesetterRef fs = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)as);
+        CGPathRef path = CGPathCreateWithRect(CGRectMake(0, 0, w, 1e6), NULL);
+        CTFrameRef frame = CTFramesetterCreateFrame(fs, CFRangeMake(0, 0), path, NULL);
+        int n = (int)CFArrayGetCount(CTFrameGetLines(frame));
+        CFRelease(frame);
+        CGPathRelease(path);
+        CFRelease(fs);
+        CFRelease(style);
+        CFRelease(font);
+        return n;
+    }
+}
+
 void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double size, double alpha) {
     @autoreleasepool {
         CGContextRef ctx = ((canvas *)c)->ctx;

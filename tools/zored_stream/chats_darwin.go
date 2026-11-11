@@ -64,3 +64,9 @@ func chatsLayersPNG(w, h float64, layers []chatsLayer) string {
 	}
 	return uri
 }
+
+func chatsTextLines(text string, w, size float64) int {
+	s := C.CString(text)
+	defer C.free(unsafe.Pointer(s))
+	return int(C.cal_text_lines(s, C.double(w), C.double(size)))
+}

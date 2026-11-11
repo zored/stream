@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,7 +18,10 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-const tgDebounce = 2 * time.Second
+const (
+	tgDebounce       = 2 * time.Second
+	tgMutedHistEvery = time.Minute
+)
 
 func keychain(ctx context.Context, account string) (string, error) {
 	out, err := exec.CommandContext(ctx, "/usr/bin/security", "find-generic-password", "-s", "tg-digest", "-a", account, "-w").Output()
@@ -73,14 +77,34 @@ func tgChats(ctx context.Context, push func([]chatEntry)) error {
 			return fmt.Errorf("tg getState: %w", err)
 		}
 		av := &tgAvatars{c: c, cache: map[int64][]byte{}, home: c.Config().ThisDC}
+		hist := map[string]tgHist{}
 		for {
 			d, err := api.MessagesGetDialogs(ctx, &tg.MessagesGetDialogsRequest{OffsetPeer: &tg.InputPeerEmpty{}, Limit: 100})
 			if err != nil {
 				return fmt.Errorf("tg getDialogs: %w", err)
 			}
 			entries, _ := tgEntries(d, time.Now())
+			dialogs := tgDialogsByKey(d)
 			for i := range entries {
-				entries[i].avatar = av.get(ctx, d, entries[i].id)
+				e := &entries[i]
+				e.avatar = av.get(ctx, d, e.id)
+				peer, _, _ := tgPeer(d, e.id)
+				dl := dialogs[e.id]
+				if peer == nil || dl == nil {
+					continue
+				}
+				h := hist[e.id]
+				if (h.top != dl.TopMessage || h.read != dl.ReadInboxMaxID) && (!e.muted || time.Since(h.at) >= tgMutedHistEvery) {
+					msgs, err := tgUnread(ctx, api, av, peer, dl, e.id)
+					if err != nil {
+						log.Printf("tg: history %s: %v", e.id, err)
+					} else {
+						h = tgHist{top: dl.TopMessage, read: dl.ReadInboxMaxID, at: time.Now(), msgs: msgs}
+						hist[e.id] = h
+					}
+				}
+				e.msgs = h.msgs
+				e.read = tgReader(api, peer, dl)
 			}
 			push(entries)
 			select {
@@ -262,6 +286,123 @@ func tgText(m *tg.Message) string {
 	return "media"
 }
 
+type tgHist struct {
+	top  int
+	read int
+	at   time.Time
+	msgs []chatMsg
+}
+
+func tgDialogsByKey(d tg.MessagesDialogsClass) map[string]*tg.Dialog {
+	out := map[string]*tg.Dialog{}
+	ds, ok := d.(tgDialogs)
+	if !ok {
+		return out
+	}
+	for _, dc := range ds.GetDialogs() {
+		if dl, ok := dc.(*tg.Dialog); ok {
+			out[tgKey(dl.Peer)] = dl
+		}
+	}
+	return out
+}
+
+// tgUnread: unread incoming messages of a dialog, oldest first; a dialog only marked unread gives its top message. Senders only in groups.
+func tgUnread(ctx context.Context, api *tg.Client, av *tgAvatars, peer tg.InputPeerClass, dl *tg.Dialog, key string) ([]chatMsg, error) {
+	r, err := api.MessagesGetHistory(ctx, &tg.MessagesGetHistoryRequest{Peer: peer, Limit: min(max(dl.UnreadCount, 1), chatsMsgsMax)})
+	if err != nil {
+		return nil, err
+	}
+	mm, ok := r.AsModified()
+	if !ok {
+		return nil, fmt.Errorf("history not modified")
+	}
+	users := map[int64]*tg.User{}
+	for _, u := range mm.GetUsers() {
+		if u, ok := u.(*tg.User); ok {
+			users[u.ID] = u
+		}
+	}
+	group := !strings.HasPrefix(key, "u")
+	var out []chatMsg
+	for _, mc := range mm.GetMessages() {
+		m, ok := mc.(*tg.Message)
+		if !ok || m.Out || dl.UnreadCount > 0 && m.ID <= dl.ReadInboxMaxID {
+			continue
+		}
+		cm := chatMsg{text: tgText(m)}
+		if from, ok := m.FromID.(*tg.PeerUser); ok && group {
+			if u := users[from.UserID]; u != nil {
+				if p, ok := u.Photo.(*tg.UserProfilePhoto); ok {
+					cm.sender = av.photo(ctx, "u"+strconv.FormatInt(u.ID, 10), u.AsInputPeer(), p.PhotoID, p.DCID)
+				}
+			}
+		}
+		out = append(out, cm)
+		if dl.UnreadCount == 0 {
+			break
+		}
+	}
+	slices.Reverse(out)
+	return out, nil
+}
+
+func tgReader(api *tg.Client, peer tg.InputPeerClass, dl *tg.Dialog) func(context.Context) error {
+	top, mark := dl.TopMessage, dl.UnreadMark
+	return func(ctx context.Context) error {
+		if mark {
+			if _, err := api.MessagesMarkDialogUnread(ctx, &tg.MessagesMarkDialogUnreadRequest{Peer: &tg.InputDialogPeer{Peer: peer}}); err != nil {
+				return fmt.Errorf("tg markDialogUnread: %w", err)
+			}
+		}
+		if ch, ok := peer.(*tg.InputPeerChannel); ok {
+			if _, err := api.ChannelsReadHistory(ctx, &tg.ChannelsReadHistoryRequest{Channel: &tg.InputChannel{ChannelID: ch.ChannelID, AccessHash: ch.AccessHash}, MaxID: top}); err != nil {
+				return fmt.Errorf("tg channels.readHistory: %w", err)
+			}
+			return nil
+		}
+		if _, err := api.MessagesReadHistory(ctx, &tg.MessagesReadHistoryRequest{Peer: peer, MaxID: top}); err != nil {
+			return fmt.Errorf("tg messages.readHistory: %w", err)
+		}
+		return nil
+	}
+}
+
+// tgPeer finds the input peer of a dialog key and its photo (0 without one).
+func tgPeer(d tg.MessagesDialogsClass, key string) (tg.InputPeerClass, int64, int) {
+	ds, ok := d.(tgDialogs)
+	if !ok {
+		return nil, 0, 0
+	}
+	for _, u := range ds.GetUsers() {
+		if u, ok := u.(*tg.User); ok && "u"+strconv.FormatInt(u.ID, 10) == key {
+			if p, ok := u.Photo.(*tg.UserProfilePhoto); ok {
+				return u.AsInputPeer(), p.PhotoID, p.DCID
+			}
+			return u.AsInputPeer(), 0, 0
+		}
+	}
+	for _, c := range ds.GetChats() {
+		switch c := c.(type) {
+		case *tg.Chat:
+			if "c"+strconv.FormatInt(c.ID, 10) == key {
+				if p, ok := c.Photo.(*tg.ChatPhoto); ok {
+					return &tg.InputPeerChat{ChatID: c.ID}, p.PhotoID, p.DCID
+				}
+				return &tg.InputPeerChat{ChatID: c.ID}, 0, 0
+			}
+		case *tg.Channel:
+			if "ch"+strconv.FormatInt(c.ID, 10) == key {
+				if p, ok := c.Photo.(*tg.ChatPhoto); ok {
+					return c.AsInputPeer(), p.PhotoID, p.DCID
+				}
+				return c.AsInputPeer(), 0, 0
+			}
+		}
+	}
+	return nil, 0, 0
+}
+
 type tgAvatars struct {
 	c     *telegram.Client
 	home  int
@@ -270,32 +411,14 @@ type tgAvatars struct {
 }
 
 func (a *tgAvatars) get(ctx context.Context, d tg.MessagesDialogsClass, key string) []byte {
-	ds := d.(tgDialogs)
-	var peer tg.InputPeerClass
-	var photoID int64
-	var dc int
-	for _, u := range ds.GetUsers() {
-		if u, ok := u.(*tg.User); ok && "u"+strconv.FormatInt(u.ID, 10) == key {
-			if p, ok := u.Photo.(*tg.UserProfilePhoto); ok {
-				peer, photoID, dc = u.AsInputPeer(), p.PhotoID, p.DCID
-			}
-		}
-	}
-	for _, c := range ds.GetChats() {
-		switch c := c.(type) {
-		case *tg.Chat:
-			if p, ok := c.Photo.(*tg.ChatPhoto); ok && "c"+strconv.FormatInt(c.ID, 10) == key {
-				peer, photoID, dc = &tg.InputPeerChat{ChatID: c.ID}, p.PhotoID, p.DCID
-			}
-		case *tg.Channel:
-			if p, ok := c.Photo.(*tg.ChatPhoto); ok && "ch"+strconv.FormatInt(c.ID, 10) == key {
-				peer, photoID, dc = c.AsInputPeer(), p.PhotoID, p.DCID
-			}
-		}
-	}
-	if peer == nil {
+	peer, photoID, dc := tgPeer(d, key)
+	if peer == nil || photoID == 0 {
 		return nil
 	}
+	return a.photo(ctx, key, peer, photoID, dc)
+}
+
+func (a *tgAvatars) photo(ctx context.Context, key string, peer tg.InputPeerClass, photoID int64, dc int) []byte {
 	if b, ok := a.cache[photoID]; ok {
 		return b
 	}

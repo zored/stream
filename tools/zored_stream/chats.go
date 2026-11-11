@@ -20,7 +20,18 @@ const (
 	chatsLedIdle    = 0xFFFFFF
 	chatsLedBrowse  = 0x00FF00
 	chatsMutedAlpha = 0.4
+	chatsHoldFor    = 400 * time.Millisecond
+	chatsReadFor    = 10 * time.Second
+	chatsMsgsMax    = 50
+	chatsTextSize   = 12
+	chatsLineH      = chatsTextSize * 1.25
+	chatsTextView   = 46
 )
+
+type chatMsg struct {
+	text   string
+	sender []byte
+}
 
 type chatEntry struct {
 	app    string
@@ -33,6 +44,8 @@ type chatEntry struct {
 	sender []byte
 	open   string
 	muted  bool
+	msgs   []chatMsg
+	read   func(context.Context) error
 }
 
 type chatSource func(ctx context.Context, push func([]chatEntry)) error
@@ -51,10 +64,19 @@ type chats struct {
 	opener     func(url string) error
 	slideGen   int
 	sliding    bool
+	msg        int
+	scrollTo   float64
+	scrollAt   float64
+	kick       chan struct{}
+	holdGen    int
+	holding    bool
+	held       bool
+	hidden     map[string]time.Time
 }
 
 func newChats(v *vars, release func(), strip func(string)) *chats {
-	return &chats{vars: v, release: release, strip: strip, byApp: map[string][]chatEntry{}, opener: openURL}
+	return &chats{vars: v, release: release, strip: strip, byApp: map[string][]chatEntry{}, opener: openURL,
+		kick: make(chan struct{}, 1), hidden: map[string]time.Time{}}
 }
 
 func (c *chats) run(ctx context.Context, app string, src chatSource) {
@@ -73,9 +95,36 @@ func (c *chats) set(app string, list []chatEntry) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.byApp[app] = list
-	c.list = chatsMerge(c.byApp)
-	c.pick = min(c.pick, max(len(c.list)-1, 0))
+	c.mergeLocked()
 	c.publishLocked()
+}
+
+func chatsKey(e chatEntry) string {
+	return e.app + "/" + e.id
+}
+
+// mergeLocked hides chats marked read here until their source drops them or a newer message comes.
+func (c *chats) mergeLocked() {
+	live := map[string]bool{}
+	var out []chatEntry
+	for _, e := range chatsMerge(c.byApp) {
+		k := chatsKey(e)
+		live[k] = true
+		if at, ok := c.hidden[k]; ok {
+			if !e.at.After(at) {
+				continue
+			}
+			delete(c.hidden, k)
+		}
+		out = append(out, e)
+	}
+	for k := range c.hidden {
+		if !live[k] {
+			delete(c.hidden, k)
+		}
+	}
+	c.list = out
+	c.pick = min(c.pick, max(len(c.list)-1, 0))
 }
 
 func chatsMerge(byApp map[string][]chatEntry) []chatEntry {
@@ -117,8 +166,8 @@ func (c *chats) publishLocked() {
 	}
 	if c.browsing() {
 		c.covered = true
-		svg = chatsPickImage(c.list, c.pick, now)
-		c.strip(chatsStripImage(c.list, c.pick))
+		svg = chatsPickImage(c.list, c.pick, c.msg, now)
+		c.strip(c.stripLocked())
 	} else {
 		if c.covered {
 			c.covered = false
@@ -129,12 +178,86 @@ func (c *chats) publishLocked() {
 	c.vars.set("unread_svg", svg)
 }
 
+func (c *chats) stripLocked() string {
+	if c.pick >= len(c.list) {
+		return chatsTextStrip("·", 0)
+	}
+	return chatsTextStrip(chatsView(c.list[c.pick], c.msg).text, c.scrollAt)
+}
+
+// down arms the hold: 400 ms held while browsing marks the picked chat read and eats the release.
 func (c *chats) down() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.holdGen++
+	c.held = false
+	c.holding = c.browsing()
+	if c.holding {
+		gen := c.holdGen
+		time.AfterFunc(chatsHoldFor, func() { c.holdRead(gen) })
+	}
 	return nil
 }
 
 func (c *chats) up() error {
+	c.mu.Lock()
+	held := c.held
+	c.holdGen++
+	c.holding, c.held = false, false
+	c.mu.Unlock()
+	if held {
+		return nil
+	}
 	return c.press()
+}
+
+func (c *chats) holdRead(gen int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if gen != c.holdGen || !c.holding || !c.browsing() {
+		return
+	}
+	c.held = true
+	c.markReadLocked()
+}
+
+func (c *chats) markReadLocked() {
+	if c.pick >= len(c.list) {
+		return
+	}
+	e := c.list[c.pick]
+	k := chatsKey(e)
+	if e.read == nil {
+		log.Printf("chats: %s has no read call", k)
+		return
+	}
+	c.hidden[k] = e.at
+	c.mergeLocked()
+	c.resetMsgLocked()
+	if len(c.list) == 0 {
+		c.browseTill = time.Time{}
+	} else {
+		c.browseTill = time.Now().Add(chatsBrowseFor)
+	}
+	c.publishLocked()
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), chatsReadFor)
+		defer cancel()
+		if err := e.read(ctx); err != nil {
+			log.Printf("chats: mark %s read: %v", k, err)
+			c.mu.Lock()
+			delete(c.hidden, k)
+			c.mergeLocked()
+			c.publishLocked()
+			c.mu.Unlock()
+			return
+		}
+		log.Printf("chats: marked %s read", k)
+	}()
+}
+
+func (c *chats) resetMsgLocked() {
+	c.msg, c.scrollTo, c.scrollAt = 0, 0, 0
 }
 
 func (c *chats) press() error {
@@ -149,6 +272,7 @@ func (c *chats) press() error {
 		return nil
 	}
 	c.pick, c.browseTill = 0, time.Now().Add(chatsBrowseFor)
+	c.resetMsgLocked()
 	go c.release()
 	c.publishLocked()
 	c.mu.Unlock()
@@ -157,7 +281,7 @@ func (c *chats) press() error {
 
 // knobTurn: a turn outside browse starts it on the first chat.
 func (c *chats) knobTurn(direction int) error {
-	if c.turn(direction) {
+	if c.step(direction) {
 		return nil
 	}
 	c.mu.Lock()
@@ -166,17 +290,81 @@ func (c *chats) knobTurn(direction int) error {
 		return nil
 	}
 	c.pick, c.browseTill = 0, time.Now().Add(chatsBrowseFor)
+	c.resetMsgLocked()
 	c.publishLocked()
 	return nil
 }
 
+// turn scrolls the shown message (крутилка справа, ряд 3) while browsing.
 func (c *chats) turn(direction int) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.browsing() {
 		return false
 	}
-	from := c.pick
+	c.browseTill = time.Now().Add(chatsBrowseFor)
+	if c.pick >= len(c.list) || c.sliding {
+		return true
+	}
+	lines := chatsTextLines(chatsView(c.list[c.pick], c.msg).text, stripDrawH-8, chatsTextSize)
+	top := max(float64(lines)*chatsLineH-chatsTextView, 0)
+	c.scrollTo = min(max(c.scrollTo+float64(direction)*chatsLineH/2, 0), top)
+	select {
+	case c.kick <- struct{}{}:
+	default:
+	}
+	return true
+}
+
+// msgTurn walks the unread messages of the picked chat (крутилка справа, ряд 2) while browsing.
+func (c *chats) msgTurn(direction int) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.browsing() {
+		return false
+	}
+	c.browseTill = time.Now().Add(chatsBrowseFor)
+	if c.pick >= len(c.list) || c.sliding {
+		return true
+	}
+	n := len(c.list[c.pick].msgs)
+	to := min(max(c.msg+direction, 0), max(n-1, 0))
+	if to != c.msg {
+		c.msg, c.scrollTo, c.scrollAt = to, 0, 0
+		c.publishLocked()
+	}
+	return true
+}
+
+func (c *chats) animate() {
+	for range c.kick {
+		ticker := time.NewTicker(time.Second / animationHz)
+		for c.scrollStep() {
+			<-ticker.C
+		}
+		ticker.Stop()
+	}
+}
+
+func (c *chats) scrollStep() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.browsing() || c.sliding {
+		return false
+	}
+	moving := ease(&c.scrollAt, c.scrollTo, 0.5)
+	c.strip(c.stripLocked())
+	return moving
+}
+
+// step moves to the next or previous chat while browsing.
+func (c *chats) step(direction int) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.browsing() {
+		return false
+	}
+	from, fromMsg := c.pick, c.msg
 	if n := len(c.list); n > 0 {
 		c.pick = min(max(c.pick+direction, 0), n-1)
 	}
@@ -185,10 +373,11 @@ func (c *chats) turn(direction int) bool {
 		c.publishLocked()
 		return true
 	}
+	c.resetMsgLocked()
 	c.slideGen++
 	c.sliding = true
-	c.strip(chatsStripImage(c.list, c.pick))
-	go c.slide(c.slideGen, c.list[from], c.list[c.pick], direction)
+	c.strip(c.stripLocked())
+	go c.slide(c.slideGen, chatsView(c.list[from], fromMsg), chatsView(c.list[c.pick], 0), direction)
 	return true
 }
 
@@ -278,8 +467,24 @@ func chatsBadges(e chatEntry, x, y, w, r, size float64, now time.Time) ([]chatsD
 		count = grayRGB
 	}
 	cx, top, bottom := x+w-r, y+r, y+w-r
-	return []chatsDisc{{cx: cx, cy: top, r: r, rgb: count}, {cx: cx, cy: bottom, r: r, rgb: chatsDark}},
-		[]calText{chatsLabel(capped(e.unread, 99), cx, top, size, whiteRGB), chatsLabel(ago(e.at, now), cx, bottom, size*0.85, whiteRGB)}
+	discs := []chatsDisc{{cx: cx, cy: bottom, r: r, rgb: chatsDark}}
+	texts := []calText{chatsLabel(ago(e.at, now), cx, bottom, size*0.85, whiteRGB)}
+	if e.unread > 0 {
+		discs = append(discs, chatsDisc{cx: cx, cy: top, r: r, rgb: count})
+		texts = append(texts, chatsLabel(capped(e.unread, 99), cx, top, size, whiteRGB))
+	}
+	return discs, texts
+}
+
+// chatsView is the browse card of one message: its text and sender, the red badge counts the messages after it.
+func chatsView(e chatEntry, msg int) chatEntry {
+	if len(e.msgs) == 0 {
+		return e
+	}
+	msg = min(max(msg, 0), len(e.msgs)-1)
+	m := e.msgs[msg]
+	e.text, e.sender, e.unread = m.text, m.sender, len(e.msgs)-1-msg
+	return e
 }
 
 func chatsSender(e chatEntry, x, y, w, r float64) []chatsDisc {
@@ -372,11 +577,11 @@ func chatsCard(e chatEntry, dx float64, now time.Time) ([]chatsDisc, []calText) 
 	return append(append([]chatsDisc{d}, chatsSender(e, dx, 0, 88, 13)...), bd...), append(t, bt...)
 }
 
-func chatsPickImage(list []chatEntry, pick int, now time.Time) string {
+func chatsPickImage(list []chatEntry, pick, msg int, now time.Time) string {
 	if pick >= len(list) {
 		return unreadSVG(nil, now)
 	}
-	d, t := chatsCard(list[pick], 0, now)
+	d, t := chatsCard(chatsView(list[pick], msg), 0, now)
 	return chatsPNG(88, 88, d, t)
 }
 
@@ -391,15 +596,12 @@ func chatsLine(s string) string {
 	return strings.Join(strings.Fields(s), " ")
 }
 
-func chatsStripImage(list []chatEntry, pick int) string {
+func chatsTextStrip(text string, offset float64) string {
 	const w, h = stripDrawH, stripDrawW
-	if pick >= len(list) {
-		return calImage(w, h, true, calText{text: "·", y: 12, w: w, h: 24, size: 16, rgb: grayRGB, center: true})
+	text = chatsLine(text)
+	if !utf8.ValidString(text) || text == "" {
+		text = "·"
 	}
-	e := list[pick]
-	title := strings.ToLower(chatsLine(e.title))
-	if !utf8.ValidString(title) || title == "" {
-		title = "·"
-	}
-	return calImage(w, h, true, calText{text: title, tail: " " + chatsLine(e.text), x: 4, y: 1, w: w - 8, h: 46, size: 12, rgb: grayRGB, tailRGB: whiteRGB})
+	lines := chatsTextLines(text, w-8, chatsTextSize)
+	return calImage(w, h, true, calText{text: text, x: 4, y: 1 - offset, w: w - 8, h: max(float64(lines)*chatsLineH, chatsTextView), size: chatsTextSize, rgb: whiteRGB})
 }

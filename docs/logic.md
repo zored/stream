@@ -142,6 +142,8 @@ Skip arrow (`skip.go`): `np_skip` = `1`/`-1` while flying, `0` after; `np_skip_x
   chats browse (first turn opens the browse on the first chat, then one chat per detent).
 - press → `/knob/down`: weather browsing → back to now (and the matching `/knob/up` is swallowed); else = tap on the chats tile.
 - release → `/knob/up`: chats tile release.
+- hold: the chats `down` arms a 400 ms daemon timer while browsing; when it fires the picked chat is marked read (source
+  call async, the chat hidden at once, browse moves on) and the matching `up` does nothing. Outside browse no timer: `up` = tap.
 - Win: the windows page still has this knob and posts to `:47130`, but no chats/weather variables exist there. Either drop
   `2/0` from the windows profile, or serve `:47130 /knob/*` with `409` *(decision open, see §5)*.
 
@@ -194,6 +196,8 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 
 - mac: posts `:47130/tile/22/down|up`; the `tile_22` slot routes to the call layer (`/mic/down|up` logic) while
   `call_mic ≠ none`, else to the chats layer. Draws the call layers when `tile_22 == call`, `unread_svg` when `unread`.
+- Chats layer: `down` arms the 400 ms read hold (see крутилка слева, ряд 3), `up` = tap unless the hold fired. The hold is timed
+  in the daemon, not in Companion, so the call layer keeps getting `up` for push-to-talk.
 - Win: the windows profile draws only the call layers and posts straight to `:47114/mic/down|up` (no slot).
 - Mic logic (`call.go`), the same on both: `down` remembers `was = isOn` and the press time, sets mic to `!was` at once;
   `up`: held ≥ 300 ms → set mic back to `was` (push-to-talk, F5); shorter → keep. No call / unknown state → `409`.
@@ -260,7 +264,9 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 
 #### крутилка справа, ряд 2 — agents walk / AI model (`1/7`, `:47117`)
 
-- turn → `/ai/turn?d=±1`: if the knob is held (mac AI switch) → model + effort step; else → agents walk: adds the Claude chat
+- turn → `/ai/turn?d=±1`: chats browsing (mac) → next / previous unread message of the picked chat (clamped), the tile
+  badge = messages after it, the sender's small avatar in groups, the strip shows it from the top; else if the knob is held
+  (mac AI switch) → model + effort step; else → agents walk: adds the Claude chat
   in front as a hollow dot if missing, moves the cursor by `d` (wraps), opens that session at once, shows its title + folder
   on the right strip for 2 s.
 - press → `/ai/down`; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
@@ -274,7 +280,8 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 
 #### крутилка справа, ряд 3 — scroll (`2/7`, `:47121`)
 
-Before the scroller, each input is offered to timers, then calendar, then chats (knob capture, mac only). Scroller (`scroll.go`):
+Before the scroller, each input is offered to timers, then calendar, then chats (knob capture, mac only). Chats while
+browsing: turn = scroll the shown message by half a line (eased at 60 Hz while moving), press = open the chat. Scroller (`scroll.go`):
 
 | Input | Mode | Effect |
 |---|---|---|

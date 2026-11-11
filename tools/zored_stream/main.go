@@ -224,6 +224,7 @@ func main() {
 	go dict.run()
 	go every(dictatePollEvery, dict.poll)
 	var ag *agents
+	var cs *chats
 	go serve(*aiAddr, func(mux *http.ServeMux) {
 		handle(mux, "/dictation/down", func() error { return dict.push(true) })
 		handle(mux, "/dictation/up", func() error { return dict.push(false) })
@@ -233,9 +234,11 @@ func main() {
 				http.Error(w, "d: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			if ai.holding() {
+			switch {
+			case cs.msgTurn(d):
+			case ai.holding():
 				ai.turn(d)
-			} else {
+			default:
 				ag.step(d)
 			}
 			w.WriteHeader(http.StatusNoContent)
@@ -401,7 +404,8 @@ func main() {
 			return cal.press()
 		})
 	})
-	cs := newChats(v, sc.release, us.cover)
+	cs = newChats(v, sc.release, us.cover)
+	go cs.animate()
 	go cs.run(context.Background(), "tg", tgChats)
 	go cs.run(context.Background(), "vkws", vkwsChats)
 	go every(time.Second, cs.publish)

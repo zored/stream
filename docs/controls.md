@@ -46,7 +46,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 ### крутилка слева, ряд 3 — chats
 
 - turn: browse the unread chats of тайл ряд 3, колонка 1 (the first turn opens the first chat, then each detent moves one)
-- press: same as a tap on that tile: browse, or open the chat shown
+- press: same as a tap on that tile: browse, or open the chat shown; hold 400 ms while browsing marks the chat read
 - while the weather tile browses: turn walks the forecast, press returns to now
 
 [unread.md](unread.md), [weather.md](weather.md)
@@ -138,8 +138,9 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
 - in a call shows: white mic on red = on, white crossed mic on black = off, amber `…` = switching, amber `?` = unknown
 - no call: up to 4 unread chats (Telegram + VK WorkSpace, via their APIs, push), normal ones first, then muted (muted or archived in Telegram, muted or archived in VK WorkSpace), each group newest first; muted chats sit at 40% opacity with a gray count badge; one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid of squares on black: avatar, or without one the first words of the name in 2–3 lowercase lines on dark gray, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
-- tap: browse for 5 s, крутилка слева, ряд 3 (or справа, ряд 3) scrolls the chats (same order) with a slide animation; the tile shows the chat's avatar at full opacity over the whole square with the same badges, the right strip its name gray and last message white, up to 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
-- no hold
+- tap: browse for 5 s (any action below extends it), крутилка слева, ряд 3 scrolls the chats (same order) with a slide animation; the tile shows the chat's avatar at full opacity over the whole square, the right strip the first unread message in white, 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
+- while browsing: крутилка справа, ряд 2 walks the unread messages of that chat, oldest first, stops at the ends; the red badge counts the messages after the shown one (none on the last), a group chat shows the author's small avatar bottom-left; крутилка справа, ряд 3 scrolls the message smoothly, half a line per detent. Both knobs work as before once browse closes
+- hold 400 ms while browsing (this tile or крутилка слева, ряд 3): marks the shown chat read in Telegram / VK WorkSpace, browse moves on to the next chat; the release does nothing; no second haptic. Outside browse a hold is a plain tap
 - кнопка 3 does the same in a call, крутилка слева, ряд 3 outside a call
 - [unread.md](unread.md) [vkcall.md](vkcall.md)
 
@@ -229,6 +230,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 ### крутилка справа, ряд 2 — agent chats, AI model + effort
 
 - turn: walks the agent chats (see тайл ряд 2, колонка 4); click: same as that tile
+- while the chats browse (тайл ряд 3, колонка 1): turn walks the messages of the shown chat
 
 - press + turn: walks Sonnet·Low … Sonnet·High → Opus·Low … → Fable·High (9 stops, stops at the ends)
 - applies 400 ms after the knob rests, only on the Claude Desktop new-chat screen in front;
@@ -242,6 +244,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - wheel mode, turn: mouse wheel under the cursor, clockwise = down; 1 / 2 / 4 / 8 lines per detent by speed
 - tab mode, turn: Ctrl held, clockwise = Tab, counter-clockwise = Shift+Tab; Ctrl is released 500 ms after the last detent
 - press + turn: wheel mode = horizontal wheel, clockwise = right; tab mode = Cmd held while pressed, clockwise = Cmd+Tab, counter-clockwise = Cmd+Shift+Tab (the system app switcher), release picks; for 3 s after that (extended by each detent) a turn without press = Cmd+` / Cmd+Shift+` through windows of the picked app, then back to Ctrl+Tab; no mode switch
+- while the chats browse (тайл ряд 3, колонка 1): turn scrolls the shown message, press opens the chat
 - while the clock list is open: turn scrolls the list, press = clock hold
 - while a timer is being set (clock tap): turn sets it, press starts it; scroll is back after
 
