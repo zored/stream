@@ -48,3 +48,5 @@ Run them yourself; hand to the user only what needs them: macOS permission grant
   color only for warnings or a transient state; 6% inset. Offer the sparest variant first.
 - Secrets stay out of the repo: the Companion REST key lives in `~/.config/zored-stream/companion-token`.
 - `gh`: run as `env -u GITHUB_TOKEN gh …` (the env token is stale, the keyring login works).
+
+This codebase is yours: what it's for and how it's built are your call, and you'll keep building on it.
