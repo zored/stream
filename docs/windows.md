@@ -41,7 +41,7 @@ Names as in [companion.md](companion.md): тайл ряд R, колонка C; �
 | device orientation 0/90/180/270 (hold крутилка справа, ряд 1) | module fork `src/orientation.ts` + daemon `orientation.go` | keep | both read `~/.config/zored-stream/orientation` from the home dir: `%USERPROFILE%\.config\zored-stream\orientation` on Windows (assumed, `os.homedir()` / `os.UserHomeDir()`) |
 | keyboard layout, wi-fi, headphones, emoji, day / calendar tiles, timers, кнопка 1 KVM | daemon (mac-only cgo / AppleScript) | drop (freed) | not in the windows profile (`gen_pages.py` drops their variables) |
 
-Freed on Windows: тайл ряд 1, колонка 4, тайл ряд 3, колонки 2–3, кнопки 3, 4, 7, plus the free ones from `PLAN.md`. Candidates: `Win+Alt+K`
+Freed on Windows: тайл ряд 1, колонка 4, тайл ряд 3, колонки 2–3, кнопки 3, 4, 7, plus the free ones from `docs/controls.md`. Candidates: `Win+Alt+K`
 (Windows 11 "mute in call", assumed), keystrokes, a Codex "new session" button.
 
 ### Codex limits (verified shape, on the Mac)

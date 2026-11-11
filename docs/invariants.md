@@ -88,9 +88,9 @@ nothing automatic, **doc** = a written rule only. *(unconfirmed)* = taken from a
 
 | # | Rule | Enforced |
 |---|---|---|
-| R1 | New features go on the MEDIA page as buttons; a new page only once it runs out; take free controls from the map in `PLAN.md` and update it in the same commit | doc |
+| R1 | New features go on the MEDIA page as buttons; a new page only once it runs out; take free controls from the map in `docs/controls.md` and update it in the same commit | doc |
 | R2 | Commit only your own paths: `git -C <absolute repo> commit -m main -- <paths>`; message is `main`; a git-guard hook enforces absolute `-C` and explicit paths | hook |
-| R3 | Each new task gets a fresh child session; `PLAN.md` is kept by the master session | doc |
+| R3 | Each new task gets a fresh child session; the plan is kept by the master session (`/master` skill, `zored/desktop` `ai/master/zored-stream/`) | doc |
 | R4 | Findings are marked verified (observed) or assumed (read) in docs | doc |
 | R5 | Windows has only Codex, its own players, no VK WorkSpace; plan for it never changes the Mac setup (A6) | doc [windows.md](windows.md) |
 | R6 | Before reporting done: `make test`, then the device checks from `CLAUDE.md` (inputs, state, looks) | doc |

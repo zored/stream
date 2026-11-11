@@ -24,6 +24,20 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 Everywhere: a short haptic tap on every press of a knob, tile or button, no haptics while sliding along a strip.
 Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed; the release after it does nothing. The haptic list (`companion/hold-controls.txt`) is generated from every control with a hold. Exceptions timed on release: keep-awake sleep, push-to-talk, dictation.
 
+## Free controls
+
+New features take free controls from this map; update it in the same commit.
+
+MEDIA page, `row/col` ([grid](companion.md)):
+
+| Used | Free |
+|---|---|
+| left knobs `0/0` volume, `1/0` seek (press + turn = tracks, click = play / pause, hold = like), `2/0` chats browse; left strip `0–2/1` track + bar | — |
+| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
+| buttons `3/0` KVM, `3/2` mic / `3/3` camera / `3/4` hang up in a call, `3/4` calendar outside a call, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/1`, `3/5`, `3/7`; `3/2`, `3/3` outside a call |
+| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness (hold 3 s = device orientation), `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
+
+
 ## Left knobs
 
 ### крутилка слева, ряд 1 — volume

@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Config-as-code for a Razer Stream Controller (= Loupedeck Live) driven by Bitfocus Companion, on macOS now, Windows next.
-Status and next steps: `PLAN.md`. Prompt for a new master session: `docs/master-prompt.md`.
+Status, plan and master session: `/master` skill, kept in `~/git/github.com/zored/desktop/ai/master/zored-stream/`.
 
 **Must-read before any change: `docs/invariants.md`** — what must stay true, where it is enforced, how to change a rule.
 
@@ -39,7 +39,7 @@ Run them yourself; hand to the user only what needs them: macOS permission grant
 
 ## Rules
 
-- Parallel sessions: only one at a time edits `tools/gen_pages.py` or runs `make deploy`; claim controls from the free map in `PLAN.md`.
+- Parallel sessions: only one at a time edits `tools/gen_pages.py` or runs `make deploy`; claim controls from the free map in `docs/controls.md`.
 - Commit only your files: `git -C <absolute repo> commit -m main -- <paths>`.
 - One process owns the serial port: Companion, Loupedeck or `sniff.py`.
 - Firmware: flash or send update commands only after explicit confirmation in chat (bricking risk). Vendor binaries stay out of git.

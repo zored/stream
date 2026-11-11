@@ -69,4 +69,4 @@ Requirements: Xcode Command Line Tools (`clang`), `m1ddc` (KVM), Go, Node 22+ wi
 
 All of them are host-side clients: the device only draws and reports input. No public custom firmware exists; see [device.md](docs/device.md).
 
-Status: [PLAN.md](PLAN.md). Not affiliated with Razer, Loupedeck, Logitech or Bitfocus.
+Status: kept by the master session outside the repo. Not affiliated with Razer, Loupedeck, Logitech or Bitfocus.
