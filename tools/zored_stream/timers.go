@@ -259,7 +259,7 @@ func (t *timers) line(now time.Time) (string, string) {
 	if it.Alarm {
 		s = it.At.Format("15:04")
 	}
-	return s, "#fff"
+	return s, gray
 }
 
 func timerLeft(d time.Duration) string {
