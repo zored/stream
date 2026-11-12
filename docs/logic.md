@@ -109,7 +109,7 @@ Each entry: **input → daemon route → what the daemon does → variables → 
 - turn → `/volume/up` | `/volume/down`: if the emoji picker is open, it scrolls the left emoji column instead (`em.turn`).
   Else `volume += accel.step(dir)` (1–4 %), clamped 0–100; any step > 0 while muted unmutes; writes the system volume;
   `bar.show("volume", level)` (level = 0 while muted).
-- press → `/volume/mute`: emoji picker open → types the left top emoji. Else toggles mute, shows the bar.
+- press → `/volume/mute`: emoji picker open → types the left top emoji; window switcher open → a press starts (release `/volume/release` = click, hold = close window / quit app). Else toggles mute, shows the bar.
 - external changes (keyboard, OS slider) arrive by OS notification, not a poll, and also show the bar.
 - variables: `volume` (`"0"…"100"` or `MUTE`, not drawn), `bar_*`.
 - macOS: CoreAudio `VirtualMainVolume` + mute on the default output, property listeners incl. default-device changes.
@@ -223,7 +223,7 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 | ряд 1, колонка 3 — layout (`0/4`) | `:47127` | tap = next keyboard layout; `input_svg` crossfades 0.3 s (12 frames) |
 | ряд 1, колонка 4 — keep-awake (`0/5`) | `:47122` | down/up timed in the daemon: < 1 s toggles a 1 h session; 1–3 s then release = end + sleep; > 3 s nothing (F16); `power_svg`; each second: all displays asleep → `screen_off = 1` + white moon (every other MEDIA control blacked out), screen locked → white lock; system sleep → the fork's `close()` draws the moon |
 | ряд 2, колонка 2 — emoji (`1/3`) | `:47128` | picker 4 s on both strips + knobs 1 (F22) |
-| ряд 2, колонка 3 — window switcher (`1/4`) | `:47132` | idle: 2×2 icons of the 4 newest apps, dot = Dock badge, checked every 2 s; open: apps on the left strip, the ring window's title (two lines) on the right, the picked app's big icon on the tile, 4 s, raise on settle; knobs 1 step the columns ([windows-switch.md](windows-switch.md)) |
+| ряд 2, колонка 3 — window switcher (`1/4`) | `:47132` | idle: 2×2 icons of the 4 newest apps, dot = Dock badge, checked every 2 s; open: apps on the left strip (windowless last), window titles one per line on the right (ring white, others gray), the picked app's big icon on the tile, 4 s; raise only on a tap / knob click / tile tap; hold 0.4 s closes the ring window, +2 s quits the app; knobs 1 step the columns, chevrons on both ([windows-switch.md](windows-switch.md)) |
 | ряд 3, колонка 2 — camera / weather (`2/3`) | `:47131` | `tile_23` slot: call → `/cam/down`; else weather 5 s browse |
 | ряд 3, колонка 3 — day / hang-up (`2/4`) | `:47126` | `tile_24` slot: call → hang up; else calendar list 5 s (F19) |
 
@@ -353,7 +353,7 @@ All addresses are `127.0.0.1:<port>`, set by a flag with that default in `main.g
 | 47128 | `-emoji` | emoji picker | `/emoji/tile`, `/emoji/{start,end}?s=&y=` | `emoji_on`, `emoji_l`, `emoji_r`, `emoji_tile` | off |
 | 47129 | `-timers` | timers + alarms | `/timer/{down,up}` | `timer_svg`, `timer_ring` | off |
 | 47130 | `-unread` | unread chats, `tile_22`, left knob 3 | `/tile/22/{down,up}`, `/knob/{down,up,forward,back}` | `unread_svg`, `tile_22` | off (but see §5) |
-| 47132 | `-switch` | window switcher | `/switch/tile` | `switch_tile` (+ shared `emoji_on`, `emoji_l`, `emoji_r`) | off |
+| 47132 | `-switch` | window switcher | `/switch/tile/{down,up}` | `switch_tile` (+ shared `emoji_on`, `emoji_l`, `emoji_r`) | off |
 | 47131 | `-weather` | weather, `tile_23` | `/tile/23/press` | `weather_svg`, `tile_23` | off |
 
 ### Ported modules (Windows on)

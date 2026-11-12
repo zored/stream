@@ -13,6 +13,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -83,7 +84,7 @@ func switchIcon(pid string, turn float64, px int) ([]byte, error) {
 	return icon, nil
 }
 
-func switchPNG(side int, glyphs []emojiGlyph, ringY float64) (string, error) {
+func switchPNG(glyphs []emojiGlyph, ringY float64) (string, error) {
 	c := C.cal_canvas_new(stripDrawW, stripDrawH, 1.25, 0)
 	var failed error
 	for _, g := range glyphs {
@@ -99,9 +100,37 @@ func switchPNG(side int, glyphs []emojiGlyph, ringY float64) (string, error) {
 	return uri, errors.Join(err, failed)
 }
 
-func switchCardPNG(text string) (string, error) {
-	const w, h = stripDrawH, stripDrawW
-	return calPNG(w, h, true, 0, []calText{{text: text, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB}})
+func switchClose(pid, window int) error {
+	if code := C.sw_close(C.int(pid), C.int(window)); code != 0 {
+		return fmt.Errorf("sw_close: %d", code)
+	}
+	return nil
+}
+
+func switchQuit(pid int) error {
+	if C.sw_quit(C.int(pid)) == 0 {
+		return fmt.Errorf("sw_quit: pid %d refused", pid)
+	}
+	return nil
+}
+
+func switchListPNG(rows []string, offset float64) (string, error) {
+	const w, h, size = stripDrawH, stripDrawW, 15
+	lh := size * 1.25
+	pick := int(math.Round(offset))
+	texts := make([]calText, 0, 4)
+	for i, row := range rows {
+		y := (h-2*lh)/2 + (float64(i)-offset)*lh
+		if y <= -lh || y >= h {
+			continue
+		}
+		rgb := uint32(grayRGB)
+		if i == pick {
+			rgb = whiteRGB
+		}
+		texts = append(texts, calText{text: row, x: 4, y: y, w: w - 8, h: lh, size: size, rgb: rgb})
+	}
+	return calPNG(w, h, true, 0, texts)
 }
 
 func switchAvatar(c unsafe.Pointer, pid int, cx, cy, r float64) error {

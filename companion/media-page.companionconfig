@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "_I1aV8WrNGTETuS7s2d88",
+  "id": "fpeNMzIziIk2GcY0Egcuv",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -233,11 +233,37 @@
           "upgradeIndex": null
          }
         ],
-        "up": [],
-        "rotate_left": [
+        "up": [
          {
           "type": "action",
           "id": "qonFCmF8HKJi6o2hezx79",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47113/volume/release",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "rotate_left": [
+         {
+          "type": "action",
+          "id": "i6pWHunOEqrL7PMfCLvAl",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -264,7 +290,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "i6pWHunOEqrL7PMfCLvAl",
+          "id": "pWWe_Xp0KNq8MlQx9j2zk",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -990,7 +1016,7 @@
         "down": [
          {
           "type": "action",
-          "id": "loUSyX7da2SaAIlfUShy1",
+          "id": "suZT4K48nLo9xH_aWsX1n",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1227,7 +1253,7 @@
         "up": [
          {
           "type": "action",
-          "id": "n2FEXX9BQGpzKJEh1PLkZ",
+          "id": "eF5P9PJ9V8j0XtY--hKpe",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1254,7 +1280,7 @@
         "400": [
          {
           "type": "action",
-          "id": "-9Ctfutp7uupreH1p3yL6",
+          "id": "Xt1tCZjj-h_-NVOAg_rJt",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1491,7 +1517,7 @@
         "down": [
          {
           "type": "action",
-          "id": "eF5P9PJ9V8j0XtY--hKpe",
+          "id": "UQzGzTBQQRpPvhT6NZntI",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1670,7 +1696,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Xt1tCZjj-h_-NVOAg_rJt",
+          "id": "p7tPRLhAAiH2GRmhC0EeE",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1697,7 +1723,7 @@
         "up": [
          {
           "type": "action",
-          "id": "UQzGzTBQQRpPvhT6NZntI",
+          "id": "8zzxhcugey0pICBLd8xFu",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -2309,7 +2335,7 @@
         "down": [
          {
           "type": "action",
-          "id": "brfkm_MUo4mUmwwWWq5Wt",
+          "id": "Qja8eYVJtNuXe6fpv6QRa",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -2322,7 +2348,7 @@
            "default": [
             {
              "type": "action",
-             "id": "NEhc6wXoN3o_aiQS9jWA8",
+             "id": "mMrZcky5FM1UeeGfia7qg",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -2347,7 +2373,7 @@
             },
             {
              "type": "action",
-             "id": "mMrZcky5FM1UeeGfia7qg",
+             "id": "brfkm_MUo4mUmwwWWq5Wt",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -2370,7 +2396,7 @@
         "up": [
          {
           "type": "action",
-          "id": "orEK-XRU3YpRVeEcc0vHh",
+          "id": "M1o6Ned4hSsSEIYWcLtHa",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -2383,7 +2409,7 @@
            "default": [
             {
              "type": "action",
-             "id": "Qja8eYVJtNuXe6fpv6QRa",
+             "id": "2lZ9rQOque2qDf7cmoH-d",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -2408,7 +2434,7 @@
             },
             {
              "type": "action",
-             "id": "2lZ9rQOque2qDf7cmoH-d",
+             "id": "orEK-XRU3YpRVeEcc0vHh",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -2431,7 +2457,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "qxmzuHopdhXhcsgpacI73",
+          "id": "U90v7nzPSelYvCvNQDpmj",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -2444,7 +2470,7 @@
            "default": [
             {
              "type": "action",
-             "id": "M1o6Ned4hSsSEIYWcLtHa",
+             "id": "8G1QbehFwMFU_ubBAQsdP",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -2469,7 +2495,7 @@
             },
             {
              "type": "action",
-             "id": "8G1QbehFwMFU_ubBAQsdP",
+             "id": "qxmzuHopdhXhcsgpacI73",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -2492,7 +2518,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "BKKE1FcsLSILewn-UqyxH",
+          "id": "Z45oQuBVcZ4xuutI_OyyK",
           "connectionId": "internal",
           "definitionId": "action_group",
           "options": {
@@ -2505,7 +2531,7 @@
            "default": [
             {
              "type": "action",
-             "id": "U90v7nzPSelYvCvNQDpmj",
+             "id": "vbIh3s9XoYHXY5dPPZxYB",
              "connectionId": "internal",
              "definitionId": "exec",
              "options": {
@@ -2530,7 +2556,7 @@
             },
             {
              "type": "action",
-             "id": "vbIh3s9XoYHXY5dPPZxYB",
+             "id": "BKKE1FcsLSILewn-UqyxH",
              "connectionId": "internal",
              "definitionId": "set_brightness",
              "options": {
@@ -2763,7 +2789,7 @@
         "down": [
          {
           "type": "action",
-          "id": "pWWe_Xp0KNq8MlQx9j2zk",
+          "id": "gOLteHv5tVF5fqfRXZcXv",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -2790,7 +2816,7 @@
         "up": [
          {
           "type": "action",
-          "id": "gOLteHv5tVF5fqfRXZcXv",
+          "id": "-ck5z3AlqQvS55zABgygQ",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -2817,7 +2843,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "-ck5z3AlqQvS55zABgygQ",
+          "id": "pM0synbVbFjUZS-ES98Wl",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -2844,7 +2870,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "pM0synbVbFjUZS-ES98Wl",
+          "id": "XPvqhIi00a3KY_wdHYBO7",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3735,7 +3761,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Z45oQuBVcZ4xuutI_OyyK",
+          "id": "ltkz_dYFyZeEI9yCDckMr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3762,7 +3788,7 @@
         "up": [
          {
           "type": "action",
-          "id": "ltkz_dYFyZeEI9yCDckMr",
+          "id": "6uH4VZl66JZ_VpGmsKcNu",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -3789,7 +3815,7 @@
         "400": [
          {
           "type": "action",
-          "id": "6uH4VZl66JZ_VpGmsKcNu",
+          "id": "bfw71wmNoS7XBmX6UndQD",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4026,7 +4052,7 @@
         "down": [
          {
           "type": "action",
-          "id": "suZT4K48nLo9xH_aWsX1n",
+          "id": "9XMZPsgkQNjCcw-1DjY9i",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4262,12 +4288,12 @@
         "down": [
          {
           "type": "action",
-          "id": "9XMZPsgkQNjCcw-1DjY9i",
+          "id": "n2FEXX9BQGpzKJEh1PLkZ",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47132/switch/tile",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47132/switch/tile/down",
             "isExpression": false
            },
            "cwd": {
@@ -4286,7 +4312,33 @@
           "upgradeIndex": null
          }
         ],
-        "up": []
+        "up": [
+         {
+          "type": "action",
+          "id": "-9Ctfutp7uupreH1p3yL6",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47132/switch/tile/up",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ]
        },
        "options": {
         "runWhileHeld": []
@@ -4499,7 +4551,7 @@
         "up": [
          {
           "type": "action",
-          "id": "70QJio7ZU4gUmPVkoWjtL",
+          "id": "gVJ02FKOioexkUL1trMIr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4526,7 +4578,7 @@
         "400": [
          {
           "type": "action",
-          "id": "gVJ02FKOioexkUL1trMIr",
+          "id": "loUSyX7da2SaAIlfUShy1",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5140,7 +5192,7 @@
         "down": [
          {
           "type": "action",
-          "id": "eS5oJpyGVKTurplzq_yfA",
+          "id": "c2zWJ3eJKUa06XnNNaWPd",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5167,7 +5219,7 @@
         "up": [
          {
           "type": "action",
-          "id": "c2zWJ3eJKUa06XnNNaWPd",
+          "id": "R3n-qcRIty8D4JiI8KM8D",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5194,7 +5246,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "R3n-qcRIty8D4JiI8KM8D",
+          "id": "YNA8kUk_Mt79yNBm7b1z2",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5221,7 +5273,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "YNA8kUk_Mt79yNBm7b1z2",
+          "id": "5FJuPMPcMZniNBTZVwymy",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5458,7 +5510,7 @@
         "down": [
          {
           "type": "action",
-          "id": "XPvqhIi00a3KY_wdHYBO7",
+          "id": "ZUFP98x9D3Dav21qpmNt5",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5485,7 +5537,7 @@
         "up": [
          {
           "type": "action",
-          "id": "ZUFP98x9D3Dav21qpmNt5",
+          "id": "WUftSx60QPUkjoE3kxzDy",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5512,7 +5564,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "WUftSx60QPUkjoE3kxzDy",
+          "id": "8_Oz4CMoARGhR_gE0jKei",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -5539,7 +5591,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "8_Oz4CMoARGhR_gE0jKei",
+          "id": "NEhc6wXoN3o_aiQS9jWA8",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6567,7 +6619,7 @@
         "down": [
          {
           "type": "action",
-          "id": "bfw71wmNoS7XBmX6UndQD",
+          "id": "TA9r-cCCjME82zOSAALce",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -6594,7 +6646,7 @@
         "up": [
          {
           "type": "action",
-          "id": "TA9r-cCCjME82zOSAALce",
+          "id": "zaKhF6dzRoF2c3yckVPr_",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7078,7 +7130,7 @@
         "down": [
          {
           "type": "action",
-          "id": "zaKhF6dzRoF2c3yckVPr_",
+          "id": "lt3NJEPQ_B8plQW6Dtexw",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7424,7 +7476,7 @@
         "down": [
          {
           "type": "action",
-          "id": "lt3NJEPQ_B8plQW6Dtexw",
+          "id": "HSzztGETWyhDRLd2QQout",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7715,7 +7767,7 @@
         "down": [
          {
           "type": "action",
-          "id": "HSzztGETWyhDRLd2QQout",
+          "id": "BmKVMTI1k7ej2S99T5Wxr",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -7742,7 +7794,7 @@
         "up": [
          {
           "type": "action",
-          "id": "BmKVMTI1k7ej2S99T5Wxr",
+          "id": "eS5oJpyGVKTurplzq_yfA",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8354,7 +8406,7 @@
         "down": [
          {
           "type": "action",
-          "id": "5FJuPMPcMZniNBTZVwymy",
+          "id": "GsUaCH6Cq9_adVXbrHSYH",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8381,7 +8433,7 @@
         "up": [
          {
           "type": "action",
-          "id": "GsUaCH6Cq9_adVXbrHSYH",
+          "id": "X1UuxRPtxEusuggvtq2rD",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8408,7 +8460,7 @@
         "rotate_left": [
          {
           "type": "action",
-          "id": "X1UuxRPtxEusuggvtq2rD",
+          "id": "eS6Fum16PeYiojl0PTnwz",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8435,7 +8487,7 @@
         "rotate_right": [
          {
           "type": "action",
-          "id": "eS6Fum16PeYiojl0PTnwz",
+          "id": "70QJio7ZU4gUmPVkoWjtL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8617,7 +8669,7 @@
         "down": [
          {
           "type": "action",
-          "id": "UUuaZkswN9ud5PAPapMpW",
+          "id": "4bjSxODAm1Fnx1nEN90-6",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8644,7 +8696,7 @@
         "up": [
          {
           "type": "action",
-          "id": "mw6Aoeumb4cqbejYVNQd0",
+          "id": "8jmrkllUzNPJY6CS8ZsyP",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8671,7 +8723,7 @@
         "400": [
          {
           "type": "action",
-          "id": "4bjSxODAm1Fnx1nEN90-6",
+          "id": "f7k9xQwOdXw1Qb3tafqaL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8853,7 +8905,7 @@
         "down": [
          {
           "type": "action",
-          "id": "8jmrkllUzNPJY6CS8ZsyP",
+          "id": "1w6V81qLrUqm_Yq0eB7DV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8880,7 +8932,7 @@
         "up": [
          {
           "type": "action",
-          "id": "f7k9xQwOdXw1Qb3tafqaL",
+          "id": "BoJoXiNj-b0uo0jRSctp5",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9060,7 +9112,7 @@
         "down": [
          {
           "type": "action",
-          "id": "1w6V81qLrUqm_Yq0eB7DV",
+          "id": "tNM4h_30k5rzbNPfAccl7",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9087,7 +9139,7 @@
         "up": [
          {
           "type": "action",
-          "id": "BoJoXiNj-b0uo0jRSctp5",
+          "id": "DfEvaASc8m9uu4Dm5rhyn",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9267,7 +9319,7 @@
         "down": [
          {
           "type": "action",
-          "id": "tNM4h_30k5rzbNPfAccl7",
+          "id": "yK9rN837stCdSb4uOOBKY",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9294,7 +9346,7 @@
         "up": [
          {
           "type": "action",
-          "id": "DfEvaASc8m9uu4Dm5rhyn",
+          "id": "Vr3ZMVC6MhWYxzSJerJlh",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9474,7 +9526,7 @@
         "down": [
          {
           "type": "action",
-          "id": "yK9rN837stCdSb4uOOBKY",
+          "id": "sGkbE15Cm9SHYOS-W34At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9501,7 +9553,7 @@
         "up": [
          {
           "type": "action",
-          "id": "Vr3ZMVC6MhWYxzSJerJlh",
+          "id": "xHQwMNTKuTn1ui4pSjZI0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9681,7 +9733,7 @@
         "down": [
          {
           "type": "action",
-          "id": "sGkbE15Cm9SHYOS-W34At",
+          "id": "qc26706JsftfcZpxhSaDV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9708,7 +9760,7 @@
         "up": [
          {
           "type": "action",
-          "id": "xHQwMNTKuTn1ui4pSjZI0",
+          "id": "pVNrSQy9qPf7BIHPMCrVM",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9888,7 +9940,7 @@
         "down": [
          {
           "type": "action",
-          "id": "qc26706JsftfcZpxhSaDV",
+          "id": "-yPVMPbWzLMGwQ3cpGr5-",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9915,7 +9967,7 @@
         "up": [
          {
           "type": "action",
-          "id": "pVNrSQy9qPf7BIHPMCrVM",
+          "id": "TtBVN9_5DOABuhLPDn81a",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -10095,7 +10147,7 @@
         "down": [
          {
           "type": "action",
-          "id": "-yPVMPbWzLMGwQ3cpGr5-",
+          "id": "_I1aV8WrNGTETuS7s2d88",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -10122,7 +10174,7 @@
         "up": [
          {
           "type": "action",
-          "id": "TtBVN9_5DOABuhLPDn81a",
+          "id": "qoKuQn6qdTzCXyhghjF6v",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

@@ -420,7 +420,7 @@ def emoji_tile():
 
 def switch_tile():
     return button([canvas(), box("box0", 0x000000), image("switch", expr("$(custom:switch_tile)"), "fill")],
-                  down=[post(SWITCH + "/switch/tile")])
+                  down=[post(SWITCH + "/switch/tile/down")], up=[post(SWITCH + "/switch/tile/up")])
 
 
 def agents_tile():
@@ -508,7 +508,7 @@ def test_page():
 
 def media_page():
     grid = {
-        (0, 0): button(glyph("volume-up-fill"), down=streamd("/volume/mute"),
+        (0, 0): button(glyph("volume-up-fill"), down=streamd("/volume/mute"), up=streamd("/volume/release"),
                        left=streamd("/volume/down"), right=streamd("/volume/up")),
         (1, 0): button(glyph("music-note-beamed"), down=[post(SEEK + "/track/down")], up=[post(SEEK + "/track/up")],
                        left=[post(SEEK + "/seek/back")], right=[post(SEEK + "/seek/forward")]),

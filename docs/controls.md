@@ -139,13 +139,17 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 ### тайл ряд 2, колонка 3 — window switcher
 
 - idle: 2×2 icons of the apps with the newest windows (the frontmost first, then by z-order); a small white dot on an app with a Dock badge
-- touch: opens the switcher for 4 s, every action below extends it; touch while open closes it
-- while open: left strip = icons of the apps that have windows, the current one in the gray ring, then by how recently they were on top;
-  right strip = the title of the window in the ring, lowercase, up to two lines along the strip like the calendar list (the app name when it has none);
-  the tile shows the picked app's icon, large
-- switching is immediate: the app or window in the ring comes to the front as soon as the strip stops; nothing to confirm
-- strip swipe: scrolls its column, flicks keep coasting; tap on an item lower down brings it to the ring
-- крутилка слева, ряд 1 / справа, ряд 1: turn steps its column one item per detent (direction inverted when the device is turned), press closes the switcher; volume and brightness are off while it is open
+- touch: opens the switcher for 4 s, every action below extends it; a tap while open brings the pick (window in the right ring,
+  or the app in the left ring when its windows are not shown) to the front and closes the switcher
+- hold (tile or крутилка слева / справа, ряд 1) while open: at 0.4 s closes the window in the right ring, 2 s more quits the picked app;
+  the switcher stays open
+- while open: left strip = icons of the apps, the current one in the gray ring, then by how recently they were on top, apps
+  without windows last; right strip = one line per window title, lowercase, the ring one white, the next ones gray, scrolling
+  smoothly (the app name for a window without a title); the tile shows the picked app's icon, large; chevrons by both knobs
+- scrolling raises nothing: the left strip only loads the windows of the app it stops on
+- strip tap: left = brings the tapped app to the ring and to the front; right = raises the ring window; the switcher stays open
+- strip swipe: scrolls its column, flicks keep coasting
+- крутилка слева, ряд 1 / справа, ряд 1: turn steps its column one item per detent (direction inverted when the device is turned), click = like a tile tap; volume and brightness are off while it is open
 - icons stand upright in every device orientation; the left strip is mirrored when the fork flips it
 
 [windows-switch.md](windows-switch.md)

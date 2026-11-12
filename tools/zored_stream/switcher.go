@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"log"
 	"math"
@@ -15,6 +16,8 @@ const (
 	switchIconSize  = 30
 	switchRecent    = 4
 	switchIdleEvery = 2 * time.Second
+	switchHoldClose = 400 * time.Millisecond
+	switchHoldQuit  = 2 * time.Second
 )
 
 type switchApp struct {
@@ -22,14 +25,24 @@ type switchApp struct {
 	name string
 }
 
+type switchJobKind string
+
+const (
+	jobList   switchJobKind = "list"
+	jobApp    switchJobKind = "activate"
+	jobWindow switchJobKind = "raise"
+	jobClose  switchJobKind = "close"
+	jobQuit   switchJobKind = "quit"
+)
+
 type switchJob struct {
-	pid      int
-	window   int
-	activate bool
-	asked    time.Time
+	kind   switchJobKind
+	pid    int
+	window int
+	asked  time.Time
 }
 
-// switcher: the left strip picks an app, the right one a window of it; a pick comes to the front as soon as the strip settles.
+// switcher: the left strip picks an app, the right one a window of it; a tap, a knob click or a tile tap brings the pick to the front.
 type switcher struct {
 	mu       sync.Mutex
 	vars     *vars
@@ -41,22 +54,26 @@ type switcher struct {
 	app      int
 	titles   []string
 	loaded   bool
-	window   int
+	want     [2]int
 	tile     string
-	card     string
 	front    int
 	idleKey  string
 	idleTile string
 	recent   []switchApp
 	knobDown [2]bool
+	tileHeld bool
+	held     bool
+	holdGen  int
 	wake     chan struct{}
 	jobs     chan switchJob
 	orient   func() (int, error)
 	list     func() ([]switchApp, error)
 	windows  func(pid int) ([]string, error)
 	raise    func(pid, window int) error
-	render   func(side int, glyphs []emojiGlyph, ringY float64) (string, error)
-	cardPNG  func(text string) (string, error)
+	closeWin func(pid, window int) error
+	quit     func(pid int) error
+	render   func(glyphs []emojiGlyph, ringY float64) (string, error)
+	listPNG  func(rows []string, offset float64) (string, error)
 	bigPNG   func(pid int) (string, error)
 	idlePNG  func(apps []switchApp, badges []bool) (string, error)
 	badges   func() map[string]string
@@ -66,9 +83,10 @@ type switcher struct {
 var switchIdle = tileIcon("window-stack", "#fff")
 
 func newSwitcher(v *vars, o *stripOverlay) *switcher {
-	return &switcher{vars: v, overlay: o, wake: make(chan struct{}, 1), jobs: make(chan switchJob, 1), strips: [2]*emojiStrip{{}, {}},
-		idleTile: switchIdle, orient: readOrientation, list: switchApps, windows: switchWindows, raise: switchRaise, render: switchPNG,
-		cardPNG: switchCardPNG, bigPNG: switchBigPNG, idlePNG: switchRecentPNG, badges: unreadBadges, frontPid: switchFrontPid}
+	return &switcher{vars: v, overlay: o, wake: make(chan struct{}, 1), jobs: make(chan switchJob, 4), strips: [2]*emojiStrip{{}, {}},
+		idleTile: switchIdle, orient: readOrientation, list: switchApps, windows: switchWindows, raise: switchRaise,
+		closeWin: switchClose, quit: switchQuit, render: switchPNG, listPNG: switchListPNG, bigPNG: switchBigPNG,
+		idlePNG: switchRecentPNG, badges: unreadBadges, frontPid: switchFrontPid}
 }
 
 func (w *switcher) open() bool {
@@ -96,14 +114,30 @@ func (w *switcher) touch() {
 	}
 }
 
-func (w *switcher) pressTile() error {
+func (w *switcher) tileDown() error {
 	w.mu.Lock()
 	if w.open() {
+		w.tileHeld = true
+		w.holdStart()
 		w.mu.Unlock()
-		w.close()
 		return nil
 	}
 	defer w.mu.Unlock()
+	return w.openLocked()
+}
+
+func (w *switcher) tileUp() error {
+	w.mu.Lock()
+	took := w.tileHeld
+	w.tileHeld = false
+	w.mu.Unlock()
+	if took {
+		w.click()
+	}
+	return nil
+}
+
+func (w *switcher) openLocked() error {
 	o, err := w.orient()
 	if err != nil {
 		return err
@@ -113,59 +147,77 @@ func (w *switcher) pressTile() error {
 		return err
 	}
 	if len(apps) == 0 {
-		return fmt.Errorf("switcher: no apps with windows")
+		return fmt.Errorf("switcher: no apps")
 	}
 	left, right := w.strips[emojiLeft], w.strips[emojiRight]
 	*left = emojiStrip{turn: upright(o, false), mirror: stripFlipped(o, false)}
-	*right = emojiStrip{turn: upright(o, true)}
+	*right = emojiStrip{}
 	w.turned = o != 0
 	w.apps = apps
 	for _, a := range apps {
 		left.list = append(left.list, strconv.Itoa(a.pid))
 	}
-	w.app, w.window, w.titles, w.loaded, w.tile, w.card, w.front = 0, 0, nil, false, "", "", -1
-	w.post(switchJob{pid: apps[0].pid, window: -1})
+	w.app, w.titles, w.loaded, w.tile, w.front, w.want = 0, nil, false, "", -1, [2]int{-1, -1}
+	w.post(switchJob{kind: jobList, pid: apps[0].pid})
 	w.touch()
 	return nil
 }
 
 func (w *switcher) post(j switchJob) {
 	j.asked = time.Now()
-	select {
-	case <-w.jobs:
-	default:
+	for {
+		select {
+		case w.jobs <- j:
+			return
+		default:
+		}
+		select {
+		case <-w.jobs:
+		default:
+		}
 	}
-	w.jobs <- j
 }
 
-// work runs every AX call on one goroutine: the window list of the picked app, then the raises.
+// work runs every AX call on one goroutine, in order.
 func (w *switcher) work() {
 	for j := range w.jobs {
-		if j.window >= 0 {
-			w.raiseLogged(j)
+		var err error
+		switch j.kind {
+		case jobWindow:
+			err = w.raise(j.pid, j.window)
+		case jobApp:
+			err = w.raise(j.pid, -1)
+		case jobClose:
+			err = w.closeWin(j.pid, j.window)
+		case jobQuit:
+			err = w.quit(j.pid)
+		}
+		if j.kind != jobList {
+			log.Printf("switcher: %s pid %d window %d in %s: %v", j.kind, j.pid, j.window, time.Since(j.asked).Round(time.Millisecond), err)
+		}
+		if j.kind == jobWindow || j.kind == jobQuit {
 			continue
 		}
-		if j.activate {
-			w.raiseLogged(j)
-		}
+		read := time.Now()
 		titles, err := w.windows(j.pid)
-		if err != nil {
-			log.Printf("switcher: windows of %d: %v", j.pid, err)
+		if took := time.Since(read); err != nil || took > 100*time.Millisecond {
+			log.Printf("switcher: %d windows of %d in %s: %v", len(titles), j.pid, took.Round(time.Millisecond), err)
 		}
 		w.mu.Lock()
-		if w.app < len(w.apps) && w.apps[w.app].pid == j.pid {
+		if w.open() && w.app >= 0 && w.app < len(w.apps) && w.apps[w.app].pid == j.pid {
+			keep := 0.0
+			if j.kind == jobClose {
+				keep = w.strips[emojiRight].target
+			}
 			right := w.strips[emojiRight]
-			*right = emojiStrip{turn: right.turn, list: make([]string, len(titles))}
-			w.titles, w.loaded, w.window = titles, true, 0
+			*right = emojiStrip{list: make([]string, len(titles))}
+			right.offset = right.clamp(keep)
+			right.target = right.offset
+			w.titles, w.loaded = titles, true
 			w.touch()
 		}
 		w.mu.Unlock()
 	}
-}
-
-func (w *switcher) raiseLogged(j switchJob) {
-	err := w.raise(j.pid, j.window)
-	log.Printf("switcher: raise pid %d window %d in %s: %v", j.pid, j.window, time.Since(j.asked).Round(time.Millisecond), err)
 }
 
 func (w *switcher) turn(side, direction int) bool {
@@ -184,21 +236,88 @@ func (w *switcher) turn(side, direction int) bool {
 
 func (w *switcher) press(side int) (bool, error) {
 	w.mu.Lock()
+	defer w.mu.Unlock()
 	w.knobDown[side] = w.open()
-	took := w.knobDown[side]
-	w.mu.Unlock()
-	if took {
-		w.close()
+	if w.knobDown[side] {
+		w.holdStart()
 	}
-	return took, nil
+	return w.knobDown[side], nil
 }
 
 func (w *switcher) release(side int) bool {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	took := w.knobDown[side]
 	w.knobDown[side] = false
+	w.mu.Unlock()
+	if took {
+		w.click()
+	}
 	return took
+}
+
+// click ends a press: a short one brings the ring pick to the front and closes the switcher, a hold has acted already.
+func (w *switcher) click() {
+	w.mu.Lock()
+	w.holdGen++
+	held := w.held
+	if !held && w.open() {
+		w.commit()
+	}
+	w.mu.Unlock()
+	if !held {
+		w.close()
+	}
+}
+
+func (w *switcher) ring(side int) int {
+	return int(math.Round(w.strips[side].target))
+}
+
+func (w *switcher) commit() {
+	app := w.ring(emojiLeft)
+	if app != w.app || !w.loaded || len(w.titles) == 0 {
+		w.post(switchJob{kind: jobApp, pid: w.apps[app].pid})
+		return
+	}
+	w.post(switchJob{kind: jobWindow, pid: w.apps[app].pid, window: w.ring(emojiRight)})
+}
+
+func (w *switcher) holdStart() {
+	w.holdGen++
+	w.held = false
+	gen := w.holdGen
+	time.AfterFunc(switchHoldClose, func() { w.holdStep(gen, false) })
+}
+
+// holdStep: a held tile or knob closes the ring window, held switchHoldQuit longer it quits the app.
+func (w *switcher) holdStep(gen int, quit bool) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if gen != w.holdGen || !w.open() || w.app < 0 {
+		return
+	}
+	w.held = true
+	w.touch()
+	pid := w.apps[w.app].pid
+	if !quit {
+		if w.loaded && len(w.titles) > 0 {
+			w.post(switchJob{kind: jobClose, pid: pid, window: w.ring(emojiRight)})
+		}
+		time.AfterFunc(switchHoldQuit, func() { w.holdStep(gen, true) })
+		return
+	}
+	w.post(switchJob{kind: jobQuit, pid: pid})
+	w.apps = append(w.apps[:w.app:w.app], w.apps[w.app+1:]...)
+	left := w.strips[emojiLeft]
+	left.list = append(left.list[:w.app:w.app], left.list[w.app+1:]...)
+	if len(w.apps) == 0 {
+		w.openTill = time.Time{}
+		return
+	}
+	left.offset = left.clamp(left.offset)
+	left.target = left.clamp(left.target)
+	*w.strips[emojiRight] = emojiStrip{}
+	w.app, w.titles, w.loaded = -1, nil, false
 }
 
 func (w *switcher) start(side int, y float64) {
@@ -233,6 +352,7 @@ func (w *switcher) drag(side int, dy float64) bool {
 	return true
 }
 
+// end: a tap on the left strip brings the tapped app to the ring and to the front; a tap on the right one raises the ring window.
 func (w *switcher) end(side int) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -241,7 +361,10 @@ func (w *switcher) end(side int) error {
 	}
 	s := w.strips[side]
 	if tap, rows := s.finish(); tap {
-		s.knob(int(rows))
+		if side == emojiLeft {
+			s.knob(int(rows))
+		}
+		w.want[side] = w.ring(side)
 	}
 	w.touch()
 	return nil
@@ -273,30 +396,37 @@ func (w *switcher) frame() bool {
 	return open
 }
 
+// pick: a settled left strip loads the windows of its app; only a tap raises anything.
 func (w *switcher) pick() {
-	if app, ok := w.strips[emojiLeft].settled(); ok && app != w.app {
-		right := w.strips[emojiRight]
-		*right = emojiStrip{turn: right.turn}
-		w.app, w.window, w.titles, w.loaded = app, 0, nil, false
-		w.post(switchJob{pid: w.apps[app].pid, window: -1, activate: true})
-		return
+	if app, ok := w.strips[emojiLeft].settled(); ok {
+		tapped := w.want[emojiLeft] == app
+		w.want[emojiLeft] = -1
+		switch {
+		case app != w.app:
+			*w.strips[emojiRight] = emojiStrip{}
+			w.app, w.titles, w.loaded = app, nil, false
+			kind := jobList
+			if tapped {
+				kind = jobApp
+			}
+			w.post(switchJob{kind: kind, pid: w.apps[app].pid})
+			return
+		case tapped:
+			w.post(switchJob{kind: jobApp, pid: w.apps[app].pid})
+		}
 	}
-	if window, ok := w.strips[emojiRight].settled(); ok && w.loaded && window != w.window {
-		w.window = window
-		w.post(switchJob{pid: w.apps[w.app].pid, window: window})
+	if window, ok := w.strips[emojiRight].settled(); ok && w.loaded && w.want[emojiRight] == window {
+		w.want[emojiRight] = -1
+		w.post(switchJob{kind: jobWindow, pid: w.apps[w.app].pid, window: window})
 	}
 }
 
-func (w *switcher) cardText() string {
-	s := w.strips[emojiRight]
-	if len(s.list) == 0 {
-		return ""
+func (w *switcher) rows() []string {
+	rows := make([]string, len(w.titles))
+	for i, t := range w.titles {
+		rows[i] = strings.ToLower(cmp.Or(t, w.apps[w.app].name))
 	}
-	i := int(math.Round(s.clamp(s.offset)))
-	if i < len(w.titles) && w.titles[i] != "" {
-		return strings.ToLower(w.titles[i])
-	}
-	return strings.ToLower(w.apps[w.app].name)
+	return rows
 }
 
 // idle redraws the closed tile: the apps of the newest windows; the list is read again only when the front app changes or the switcher closes.
@@ -359,29 +489,27 @@ func (w *switcher) publish() {
 		w.vars.set("switch_tile", w.idleTile)
 		return
 	}
-	if text := w.cardText(); text != w.card {
-		w.card = text
-		uri, err := w.cardPNG(text)
-		if err != nil {
-			log.Print(err)
-		}
-		w.vars.set("emoji_r", uri)
-	}
 	for side, s := range w.strips {
-		if side == emojiRight {
-			continue
-		}
-		key := fmt.Sprintf("%.2f %d", s.offset, len(s.list))
+		key := fmt.Sprintf("%.2f %d %d", s.offset, len(s.list), w.app)
 		if s.shown == key {
 			continue
 		}
 		s.shown = key
-		uri, err := w.render(side, emojiColumn(s.list, s.offset, s.turn, s.mirror), emojiRingY(s.mirror))
+		var uri string
+		var err error
+		if side == emojiLeft {
+			uri, err = w.render(emojiColumn(s.list, s.offset, s.turn, s.mirror), emojiRingY(s.mirror))
+		} else {
+			uri, err = w.listPNG(w.rows(), s.offset)
+		}
 		if err != nil {
 			log.Print(err)
 			continue
 		}
 		w.vars.set([2]string{"emoji_l", "emoji_r"}[side], uri)
+	}
+	if w.app < 0 {
+		return
 	}
 	if pid := strconv.Itoa(w.apps[w.app].pid); pid != w.tile {
 		w.tile = pid

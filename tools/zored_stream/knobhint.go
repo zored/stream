@@ -64,6 +64,7 @@ type knobHints struct {
 
 func newKnobHints(v *vars, orient func() (int, error)) *knobHints {
 	h := &knobHints{vars: v, orient: orient, knobs: map[string]*knobHint{}}
+	h.knobs["l0"] = &knobHint{row: 0}
 	h.knobs["l2"] = &knobHint{row: 2}
 	for row := range 3 {
 		h.knobs[fmt.Sprintf("r%d", row)] = &knobHint{right: true, row: row}

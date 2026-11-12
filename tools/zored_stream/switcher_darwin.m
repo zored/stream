@@ -29,6 +29,7 @@ char *sw_apps(int front) {
         add_app(out, seen, front);
         add_owners(out, seen, kCGWindowListOptionOnScreenOnly);
         add_owners(out, seen, kCGWindowListOptionAll);
+        for (NSRunningApplication *app in NSWorkspace.sharedWorkspace.runningApplications) add_app(out, seen, app.processIdentifier);
         return strdup(out.UTF8String);
     }
 }
@@ -110,5 +111,23 @@ int sw_raise(int pid, int index) {
         }
         if (_SLPSSetFrontProcessWithOptions(&psn, window, SLPS_USER_GENERATED) != kCGErrorSuccess) return -4;
         return !w || AXUIElementPerformAction(w, kAXRaiseAction) == kAXErrorSuccess ? 0 : -5;
+    }
+}
+
+int sw_close(int pid, int index) {
+    @autoreleasepool {
+        if (pid != kept_pid || index < 0 || index >= CFArrayGetCount(kept)) return -2;
+        AXUIElementRef w = (AXUIElementRef)CFArrayGetValueAtIndex(kept, index);
+        CFTypeRef button = NULL;
+        if (AXUIElementCopyAttributeValue(w, kAXCloseButtonAttribute, &button) != kAXErrorSuccess || !button) return -3;
+        AXError error = AXUIElementPerformAction((AXUIElementRef)button, kAXPressAction);
+        CFRelease(button);
+        return error == kAXErrorSuccess ? 0 : -4;
+    }
+}
+
+int sw_quit(int pid) {
+    @autoreleasepool {
+        return [[NSRunningApplication runningApplicationWithProcessIdentifier:pid] terminate];
     }
 }

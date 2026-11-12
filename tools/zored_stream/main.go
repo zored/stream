@@ -180,7 +180,8 @@ func main() {
 	go sw.work()
 	go every(switchIdleEvery, sw.idle)
 	go serve(*switchAddr, func(mux *http.ServeMux) {
-		handle(mux, "/switch/tile", sw.pressTile)
+		handle(mux, "/switch/tile/down", sw.tileDown)
+		handle(mux, "/switch/tile/up", sw.tileUp)
 	})
 	pk := pickers{em, sw}
 	go serve(*emojiAddr, func(mux *http.ServeMux) {
@@ -451,6 +452,8 @@ func main() {
 	}}
 	go every(pollEvery, tile23.publish)
 	hints.own("l2", func() bool { return wx.browsing() && !cs.capturing() })
+	hints.own("l0", sw.isOpen)
+	hints.own("r0", sw.isOpen)
 	hints.own("r0", pw.sizing)
 	hints.own("r0", wf.capturing)
 	hints.own("r1", cs.capturing)
@@ -595,22 +598,30 @@ func main() {
 	})
 	go serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error {
+			hints.turn("l0", 1)
 			if pk.turn(emojiLeft, 1) {
 				return nil
 			}
 			return vol.step(1)
 		})
 		handle(mux, "/volume/down", func() error {
+			hints.turn("l0", -1)
 			if pk.turn(emojiLeft, -1) {
 				return nil
 			}
 			return vol.step(-1)
 		})
 		handle(mux, "/volume/mute", func() error {
+			hints.press("l0", true)
 			if took, err := pk.press(emojiLeft); took {
 				return err
 			}
 			return vol.toggleMute()
+		})
+		handle(mux, "/volume/release", func() error {
+			hints.press("l0", false)
+			pk.release(emojiLeft)
+			return nil
 		})
 		handle(mux, "/nowplaying/show", func() error { np.glyph.show(); return nil })
 		handle(mux, "/nowplaying/next", func() error { sk.show(1); return nil })
