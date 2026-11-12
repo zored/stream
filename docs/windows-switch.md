@@ -7,8 +7,9 @@ Not to be confused with [windows.md](windows.md), the Windows port.
 
 - `POST /switch/tile` (тайл ряд 2, колонка 3): closed → open for 4 s; open → close.
 - Left strip = apps, right strip = windows of the picked app. A pick is the item in the ring once its strip stands still
-  (no finger, no coasting; a knob detent counts at once): a new app is activated, then its windows are read; a new window is
-  raised. Opening raises nothing: the top app is the frontmost one.
+  (no finger, no coasting, the snap to the item is over, ~250 ms after the last knob detent): a new app is activated, then its
+  windows are read; a new window is raised. Opening raises nothing: the top app is the frontmost one. Without the wait a fast
+  turn activated every app on the way, 7 a second, and the desktop stuttered (verified in the log).
 - Input comes the way the emoji picker gets it ([emoji.md](emoji.md)): `pickers` in `picker.go` offers every knob turn, strip
   drag and touch edge to the emoji picker, then to the switcher; `modes.go` keeps at most one of them open. Both draw into the
   same strip layers (`emoji_l`, `emoji_r`, shown by `emoji_on`, owned by `stripOverlay`); the strip physics (`emojiStrip`) is shared.
@@ -22,9 +23,10 @@ Not to be confused with [windows.md](windows.md), the Windows port.
 - Windows: AX `AXWindows` of the picked app, subrole `AXStandardWindow` or `AXDialog`, title from `AXTitle` (empty → the app
   name on the tile). Read only for the picked app: 10–90 ms per app, 415 ms for all 11 (verified). The elements are kept until
   the next read, so the right strip keeps its order while raises reorder the app's windows.
-- Raise: `AXMinimized = false`, `AXRaise`, `NSRunningApplication.activate`. Measured from a background process: the call
-  returns in 2–73 ms, the app has focus after 11–120 ms, the window is on top after 220–315 ms. The private
-  `_SLPSSetFrontProcessWithOptions` + `AXRaise` put the window on top in 57–106 ms; not used, the public pair is fast enough to follow a knob.
+- Raise: `AXMinimized = false`, the private `_SLPSSetFrontProcessWithOptions(psn, window id, user generated)` (window id from
+  `_AXUIElementGetWindow`, 0 for a whole app), then `AXRaise`. Measured from a background process: the window is on top after 57–147 ms.
+  The public `NSRunningApplication.activate` is not used: it only asks, and macOS 14+ may ignore a background process (verified:
+  it returned YES and the app stayed behind; after Enpass took focus with secure input on, nothing else came forward), and it was slower (220–360 ms).
 - Icons: `NSRunningApplication.icon` as a PNG, already turned for the device orientation, cached per pid and turn
   (250 ms for 11 icons cold, verified).
 - Permission: the daemon's Accessibility grant (A11).

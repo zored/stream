@@ -2,7 +2,7 @@ package main
 
 /*
 #cgo CFLAGS: -fobjc-arc
-#cgo LDFLAGS: -framework AppKit -framework ApplicationServices -framework ImageIO
+#cgo LDFLAGS: -F/System/Library/PrivateFrameworks -framework SkyLight -framework AppKit -framework ApplicationServices -framework ImageIO
 #include <stdlib.h>
 #include "ax_darwin.h"
 #include "calendar_darwin.h"

@@ -1,6 +1,12 @@
 #import <AppKit/AppKit.h>
 #include "switcher_darwin.h"
 
+extern AXError _AXUIElementGetWindow(AXUIElementRef element, CGWindowID *window);
+extern CGError _SLPSSetFrontProcessWithOptions(ProcessSerialNumber *psn, CGWindowID window, uint32_t mode);
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+enum { SLPS_USER_GENERATED = 0x200 };
+
 static void add_app(NSMutableString *out, NSMutableSet *seen, int pid) {
     if (pid <= 0 || [seen containsObject:@(pid)]) return;
     [seen addObject:@(pid)];
@@ -92,14 +98,17 @@ char *sw_windows(int pid) {
 
 int sw_raise(int pid, int index) {
     @autoreleasepool {
-        NSRunningApplication *app = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
-        if (!app) return -1;
+        ProcessSerialNumber psn;
+        if (GetProcessForPID(pid, &psn) != noErr) return -1;
+        AXUIElementRef w = NULL;
+        CGWindowID window = 0;
         if (index >= 0) {
             if (pid != kept_pid || index >= CFArrayGetCount(kept)) return -2;
-            AXUIElementRef w = (AXUIElementRef)CFArrayGetValueAtIndex(kept, index);
+            w = (AXUIElementRef)CFArrayGetValueAtIndex(kept, index);
             AXUIElementSetAttributeValue(w, kAXMinimizedAttribute, kCFBooleanFalse);
-            if (AXUIElementPerformAction(w, kAXRaiseAction) != kAXErrorSuccess) return -3;
+            if (_AXUIElementGetWindow(w, &window) != kAXErrorSuccess) return -3;
         }
-        return [app activateWithOptions:0] ? 0 : -4;
+        if (_SLPSSetFrontProcessWithOptions(&psn, window, SLPS_USER_GENERATED) != kCGErrorSuccess) return -4;
+        return !w || AXUIElementPerformAction(w, kAXRaiseAction) == kAXErrorSuccess ? 0 : -5;
     }
 }

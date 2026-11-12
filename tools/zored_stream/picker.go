@@ -177,6 +177,7 @@ func (s *emojiStrip) step() {
 	}
 }
 
+// settled: the strip stands on an item, the snap animation is over.
 func (s *emojiStrip) settled() (int, bool) {
-	return int(math.Round(s.target)), !s.touching && s.vel == 0
+	return int(math.Round(s.target)), !s.touching && s.vel == 0 && s.offset == s.target
 }
