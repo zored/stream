@@ -55,9 +55,12 @@ the daemon (`ai_strip_svg`, `aiStripSVG`); each cell shows its third (`gen_pages
 - right, 16 px: the weekly bar of the selected model: its `weekly_scoped` limit when one exists (`display_name` starts with the
   model, today only Fable), else `weekly_all`. Behind it a dark gray bar up to how far the week may be by the end of today:
   `100 × workdays since the window start / 5` (Mon–Fri, 1…5). There is one 5 h limit for all models (verified: no scoped `session`).
-- colours as the Hammerspoon overlay: < 50 light green `#99F299`, ≤ 80 white, > 80 yellow `#FFD94D`, > 90 red `#FF6666`. The 5 h
-  bar by its %, the weekly bar by `d` (its % of today's allowance), so yellow = ahead of the pace.
-- the rotated model + effort dots sit over the 5 h bar: white outside it, black where the bar is under them. No time text.
+- colours as the Hammerspoon overlay: < 50 light green `#99F299`, ≤ 80 white, > 80 yellow `#FFD94D`, > 90 red `#FF6666` (5 h bar,
+  by its %). The weekly bar goes by `d` (its % of today's allowance, `weekLevelOf`): < 50 light green, ≤ 80 white, > 80 red
+  `#FF6666` (near today's limit), > 100 dark red `#B3261E` (over it).
+- the rotated model + effort dots sit over the 5 h bar: white outside it, black where the bar is under them. On the same line,
+  at the bottom edge, time left in the 5 h window (`1:20`); in the weekly bar, at the bottom, time left in the week (`1d 5h`,
+  `5h` under a day, `40m` under an hour). Same inversion; over a dark red weekly bar the text stays white.
 - no animation: a model or effort change redraws at once.
 
 Bars over 100 % stay full. A red dot in the corner means the last fetch failed. The calendar list covers the whole strip while open (`usage.cover`, see controls.md, clock).

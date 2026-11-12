@@ -36,12 +36,14 @@ const (
 	stripSessionW      = 32
 	tilePx             = 90
 	stripAllowed       = "#48484A"
+	stripClockFont     = 12.8
+	stripDaysFont      = 10
 )
 
 var (
 	aiStateColors = map[string]string{"ok": "#fff", "pending": gray, "preview": gray, "idle": "#fff", "other": amber, "error": red}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
-	levelColors   = map[string]string{"low": "#99F299", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
+	levelColors   = map[string]string{"low": "#99F299", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666", "over": "#B3261E"}
 )
 
 type limit struct {
@@ -100,6 +102,8 @@ type stripFrame struct {
 	week    float64
 	allowed float64
 	weekLvl string
+	left5h  string
+	leftW   string
 }
 
 type stripNote struct{ text, color string }
@@ -427,15 +431,59 @@ func stripFrameFor(limits []limit, label stripLabel, now time.Time) stripFrame {
 	f := stripFrame{label: label, failed: len(limits) == 0}
 	if s := findLimit(limits, "session"); current(s, now) {
 		f.session = s.Percent
+		if s.ResetsAt != nil {
+			f.left5h = clockLeft(s.ResetsAt.Sub(now))
+		}
 	}
 	week := scopedFor(limits, label.model)
 	if week == nil {
 		week = findLimit(limits, "weekly_all")
 	}
 	if current(week, now) {
-		f.week, f.allowed, f.weekLvl = week.Percent, allowedPct(*week, now), levelOf(dayPct(*week, now))
+		f.week, f.allowed, f.weekLvl = week.Percent, allowedPct(*week, now), weekLevelOf(dayPct(*week, now))
+		if week.ResetsAt != nil {
+			f.leftW = daysLeft(week.ResetsAt.Sub(now))
+		}
 	}
 	return f
+}
+
+func weekLevelOf(n float64) string {
+	switch {
+	case n > 100:
+		return "over"
+	case n > 80:
+		return "critical"
+	case n < 50:
+		return "low"
+	}
+	return "normal"
+}
+
+func clockLeft(d time.Duration) string {
+	m := int(math.Ceil(max(0, d.Minutes())))
+	return fmt.Sprintf("%d:%02d", m/60, m%60)
+}
+
+func daysLeft(d time.Duration) string {
+	h := int(math.Ceil(max(0, d.Hours())))
+	switch {
+	case d < time.Hour:
+		return fmt.Sprintf("%dm", int(math.Ceil(max(0, d.Minutes()))))
+	case h < 24:
+		return fmt.Sprintf("%dh", h)
+	case h%24 == 0:
+		return fmt.Sprintf("%dd", h/24)
+	}
+	return fmt.Sprintf("%dd %dh", h/24, h%24)
+}
+
+func stripText(x, size float64, text, ink string) string {
+	if text == "" {
+		return ""
+	}
+	return fmt.Sprintf(`<text transform="translate(%.1f %d) rotate(-90)" font-family="%s" font-size="%g" fill="%s">%s</text>`,
+		x, stripDrawH-6, stripFont, size, ink, html.EscapeString(text))
 }
 
 func aiStripSVG(f stripFrame) string {
@@ -453,9 +501,20 @@ func aiStripSVG(f stripFrame) string {
 	}
 	sessionBar := rect(0, w5, f.session, sessionColor)
 	k := min(float64(h)/svgMinWidth, float64(w5)/svgHeight)
+	weekBar := rect(w5, w-w5, f.week, weekColor)
+	clip := sessionBar
+	if f.weekLvl != "over" {
+		clip += weekBar
+	}
 	label := func(ink string) string {
+		fill := "#fff"
+		if ink != "" {
+			fill = ink
+		}
 		return fmt.Sprintf(`<g transform="translate(0 %.1f) rotate(-90) scale(%.4f)">%s</g>`,
-			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.note, ink))
+			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.note, ink)) +
+			stripText(float64(svgHeight/2+svgFont*35/100)*k, stripClockFont, f.left5h, fill) +
+			stripText(float64(w5)+float64(w-w5)/2+stripDaysFont*0.35, stripDaysFont, f.leftW, fill)
 	}
 	dot := ""
 	if f.failed {
@@ -464,8 +523,8 @@ func aiStripSVG(f stripFrame) string {
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar">%s</clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
 		`%s%s%s%s<g clip-path="url(#bar)">%s</g>%s</svg>`,
-		w, h, sessionBar, w, h,
-		rect(w5, w-w5, f.allowed, stripAllowed), rect(w5, w-w5, f.week, weekColor), sessionBar,
+		w, h, clip, w, h,
+		rect(w5, w-w5, f.allowed, stripAllowed), weekBar, sessionBar,
 		label(""), label("#000"), dot))
 }
 

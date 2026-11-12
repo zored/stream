@@ -70,11 +70,32 @@ func TestStripFrame(t *testing.T) {
 		t.Errorf("opus: got %+v", f)
 	}
 	f = stripFrameFor(limits, stripLabel{model: "fable"}, now)
-	if f.week != 50 || f.weekLvl != "critical" {
+	if f.week != 50 || f.weekLvl != "over" || f.left5h != "1:00" || f.leftW != "5d 9h" {
 		t.Errorf("fable: got %+v", f)
 	}
 	if f := stripFrameFor(nil, stripLabel{}, now); !f.failed {
 		t.Errorf("no limits: got %+v", f)
+	}
+}
+
+func TestWeekLevel(t *testing.T) {
+	for n, want := range map[float64]string{49: "low", 80: "normal", 81: "critical", 100: "critical", 101: "over"} {
+		if got := weekLevelOf(n); got != want {
+			t.Errorf("%v: got %s want %s", n, got, want)
+		}
+	}
+}
+
+func TestTimeLeft(t *testing.T) {
+	for d, want := range map[time.Duration]string{102 * time.Minute: "1:42", 59 * time.Minute: "0:59", -time.Minute: "0:00"} {
+		if got := clockLeft(d); got != want {
+			t.Errorf("clock %v: got %s want %s", d, got, want)
+		}
+	}
+	for d, want := range map[time.Duration]string{29 * time.Hour: "1d 5h", 48 * time.Hour: "2d", 4*time.Hour + time.Minute: "5h", 40 * time.Minute: "40m"} {
+		if got := daysLeft(d); got != want {
+			t.Errorf("days %v: got %s want %s", d, got, want)
+		}
 	}
 }
 
