@@ -822,7 +822,7 @@ func agentEmoji(b *strings.Builder, x, y, r float64, dot agentDotSpec) {
 		opacity = 0.4
 	}
 	fmt.Fprintf(b, `<text x="%.1f" y="%.1f" dy="0.35em" text-anchor="middle" font-family="Apple Color Emoji" font-size="%.1f" opacity="%g">%s</text>`,
-		x, y+r*0.4, r*2.1, opacity, html.EscapeString(dot.emoji))
+		x, y+r*0.6, r*2.1, opacity, html.EscapeString(dot.emoji))
 }
 
 func agentShape(b *strings.Builder, x, y, r float64, paint string) {
