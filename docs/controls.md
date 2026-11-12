@@ -182,8 +182,8 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 
 - in a call: tap toggles the camera (takes 1–3 s, amber `…` meanwhile), same colors as the mic tile; same as кнопка 4
 - outside a call: weather icon, below the temperature white and the feels-like one gray, no separator; all gray when stale
-- tap outside a call: 5 s browse (the date and part of day show only now), крутилка слева, ряд 3 walks the forecast (утро, день, вечер, ночь, next days),
-  weekday, date and part of day (`чт 12 день`) white on top, only while browsing; a second tap or the knob press returns to now
+- tap outside a call: 5 s browse (the label shows only while browsing), крутилка слева, ряд 3 walks the forecast (утро, день, вечер, ночь, next days),
+  weekday, date and part of day (`чт 12 день`; now: `чт 12`, no part) white on top, only while browsing; a second tap or the knob press returns to now
 
 [vkcall.md](vkcall.md), [weather.md](weather.md)
 

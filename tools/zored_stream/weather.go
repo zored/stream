@@ -113,24 +113,16 @@ func parseOpenMeteo(data []byte) (weatherHour, []weatherHour, error) {
 }
 
 func weatherLabel(t time.Time, part string) string {
-	return fmt.Sprintf("%s %d %s", weekdays[t.Weekday()], t.Day(), part)
-}
-
-func weatherPartOf(hour int) string {
-	switch {
-	case hour >= 5 && hour < 11:
-		return "утро"
-	case hour >= 11 && hour < 17:
-		return "день"
-	case hour >= 17 && hour < 23:
-		return "вечер"
+	label := fmt.Sprintf("%s %d", weekdays[t.Weekday()], t.Day())
+	if part == "" {
+		return label
 	}
-	return "ночь"
+	return label + " " + part
 }
 
 // weatherSlots: now, then every part of the day after now while the hourly data lasts.
 func weatherSlots(now weatherHour, hours []weatherHour) []weatherSlot {
-	slots := []weatherSlot{{label: weatherLabel(now.at, weatherPartOf(now.at.Hour())), hour: now}}
+	slots := []weatherSlot{{label: weatherLabel(now.at, ""), hour: now}}
 	byTime := map[time.Time]weatherHour{}
 	for _, h := range hours {
 		byTime[h.at] = h
