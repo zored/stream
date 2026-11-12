@@ -570,11 +570,12 @@ type agentDotSpec struct {
 	emoji string
 }
 
-var emojiSet = sync.OnceValue(func() map[string]bool {
-	set := map[string]bool{}
+var emojiSet = sync.OnceValue(func() map[string]string {
+	set := map[string]string{}
 	for _, g := range emojiGroups {
 		for _, e := range g {
-			set[e] = true
+			set[e] = e
+			set[strings.ReplaceAll(e, "\uFE0F", "")] = e
 		}
 	}
 	return set
@@ -583,8 +584,8 @@ var emojiSet = sync.OnceValue(func() map[string]bool {
 func titleEmoji(title string) string {
 	r := []rune(strings.TrimSpace(title))
 	for n := min(len(r), 10); n > 0; n-- {
-		if emojiSet()[string(r[:n])] {
-			return string(r[:n])
+		if e, ok := emojiSet()[string(r[:n])]; ok {
+			return e
 		}
 	}
 	return ""
@@ -602,7 +603,7 @@ func agentEmoji(b *strings.Builder, x, y, r float64, dot agentDotSpec) {
 	}
 	fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="%s" stroke-width="1.5" opacity="%g"/>`, x, y, r+1, stroke, opacity)
 	fmt.Fprintf(b, `<text x="%.1f" y="%.1f" dy="0.35em" text-anchor="middle" font-family="Apple Color Emoji" font-size="%.1f" opacity="%g">%s</text>`,
-		x, y+r*0.2, r*2.1, opacity, html.EscapeString(dot.emoji))
+		x, y+r*0.4, r*2.1, opacity, html.EscapeString(dot.emoji))
 }
 
 func agentShape(b *strings.Builder, x, y, r float64, paint string) {
