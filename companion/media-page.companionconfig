@@ -68,8 +68,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -140,6 +140,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -656,6 +713,63 @@
          "value": "fill",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -735,8 +849,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -807,6 +921,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -914,8 +1085,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -986,6 +1157,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -1122,8 +1350,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -1194,6 +1422,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -1506,8 +1791,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -1747,6 +2032,63 @@
          "value": "fill",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -1826,8 +2168,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -1898,6 +2240,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -2223,8 +2622,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -2295,6 +2694,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -2782,6 +3238,63 @@
          "value": "fill",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -2861,8 +3374,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -3155,6 +3668,63 @@
          "value": "fill",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -3315,8 +3885,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -3387,6 +3957,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -3592,8 +4219,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -3664,6 +4291,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -3800,8 +4484,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -4041,6 +4725,63 @@
          "value": "fill",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -4120,8 +4861,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -4192,6 +4933,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -4381,8 +5179,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -4453,6 +5251,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -5105,6 +5960,63 @@
          "value": "fill",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -5184,7 +6096,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_mic) == \"on\" ? 16729402 : 0",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:call_mic) == \"on\" ? 16729402 : 0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -5450,6 +6362,63 @@
          "value": "fit",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -5581,7 +6550,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:call_cam) == \"on\" ? 16729402 : 0",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:call_cam) == \"on\" ? 16729402 : 0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -5904,6 +6873,63 @@
          "value": "fit",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -6009,8 +7035,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -6193,6 +7219,63 @@
          "value": "fit",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -6298,7 +7381,7 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:timer_ring) == 1 && $(internal:time_unix) % 2 == 0 ? 16777215 : 0",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:timer_ring) == 1 && $(internal:time_unix) % 2 == 0 ? 16777215 : 0)",
          "isExpression": true
         },
         "cornerRadius": {
@@ -6425,6 +7508,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -6558,8 +7698,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -6799,6 +7939,63 @@
          "value": "fill",
          "isExpression": false
         }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
        }
       ]
      },
@@ -6878,8 +8075,8 @@
          "isExpression": false
         },
         "color": {
-         "value": 0,
-         "isExpression": false
+         "value": "$(custom:screen_off) == 1 ? 0 : (0)",
+         "isExpression": true
         },
         "cornerRadius": {
          "value": 0,
@@ -6950,6 +8147,63 @@
         },
         "fillMode": {
          "value": "fit",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
          "isExpression": false
         }
        }
@@ -7139,8 +8393,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_1) : ($(custom:kvm_led))",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_1) : ($(custom:kvm_led)))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -7318,8 +8629,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_2) : ($(custom:call_mic) != \"none\" || $(custom:call_peek) == \"1\" ? ($(internal:time_unix) % 2 == 0 ? 3158064 : 0) : 0)",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_2) : ($(custom:call_mic) != \"none\" || $(custom:call_peek) == \"1\" ? ($(internal:time_unix) % 2 == 0 ? 3158064 : 0) : 0))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -7468,8 +8836,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_3) : ($(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 4194304 : 16711680) : ($(custom:call_mic) == \"off\" ? (3158064) : ($(custom:call_mic) == \"pending\" ? (16766474) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16766474 : 0) : (0)))))",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_3) : ($(custom:call_mic) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 4194304 : 16711680) : ($(custom:call_mic) == \"off\" ? (3158064) : ($(custom:call_mic) == \"pending\" ? (16766474) : ($(custom:call_mic) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16766474 : 0) : (0))))))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -7618,8 +9043,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_4) : ($(custom:call_cam) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 4194304 : 16711680) : ($(custom:call_cam) == \"off\" ? (3158064) : ($(custom:call_cam) == \"pending\" ? (16766474) : ($(custom:call_cam) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16766474 : 0) : (0)))))",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_4) : ($(custom:call_cam) == \"on\" ? ($(internal:time_unix) % 4 == 0 ? 4194304 : 16711680) : ($(custom:call_cam) == \"off\" ? (3158064) : ($(custom:call_cam) == \"pending\" ? (16766474) : ($(custom:call_cam) == \"unknown\" ? ($(internal:time_unix) % 2 == 0 ? 16766474 : 0) : (0))))))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -7768,8 +9250,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_5) : ($(custom:call_mic) != \"none\" ? 16777215 : $(custom:cal_led))",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_5) : ($(custom:call_mic) != \"none\" ? 16777215 : $(custom:cal_led)))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -7918,8 +9457,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_6) : (0)",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_6) : (0))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -8068,8 +9664,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_7) : ($(custom:dictation) == \"on\" ? ($(internal:time_unix) % 2 == 0 ? 65280 : 0) : ($(custom:dictation) == \"off\" ? (16777215) : (0)))",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_7) : ($(custom:dictation) == \"on\" ? ($(internal:time_unix) % 2 == 0 ? 65280 : 0) : ($(custom:dictation) == \"off\" ? (16777215) : (0))))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,
@@ -8218,8 +9871,65 @@
          "isExpression": false
         },
         "color": {
-         "value": "$(custom:choice_on) == 1 ? $(custom:choice_8) : (0)",
+         "value": "$(custom:screen_off) == 1 ? 0 : ($(custom:choice_on) == 1 ? $(custom:choice_8) : (0))",
          "isExpression": true
+        },
+        "cornerRadius": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderWidth": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderColor": {
+         "value": 0,
+         "isExpression": false
+        },
+        "borderPosition": {
+         "value": "inside",
+         "isExpression": false
+        }
+       },
+       {
+        "id": "dark",
+        "name": "dark",
+        "usage": "auto",
+        "type": "box",
+        "pinnedProperties": [
+         "color"
+        ],
+        "enabled": {
+         "value": true,
+         "isExpression": false
+        },
+        "opacity": {
+         "value": "$(custom:screen_off) == 1 ? 100 : 0",
+         "isExpression": true
+        },
+        "x": {
+         "value": 0,
+         "isExpression": false
+        },
+        "y": {
+         "value": 0,
+         "isExpression": false
+        },
+        "width": {
+         "value": 100,
+         "isExpression": false
+        },
+        "height": {
+         "value": 100,
+         "isExpression": false
+        },
+        "rotation": {
+         "value": 0,
+         "isExpression": false
+        },
+        "color": {
+         "value": 0,
+         "isExpression": false
         },
         "cornerRadius": {
          "value": 0,

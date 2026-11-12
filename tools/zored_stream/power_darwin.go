@@ -34,6 +34,27 @@ static IOReturn holdDisplay(IOPMAssertionID *id) {
 	return IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleDisplaySleep, kIOPMAssertionLevelOn, CFSTR("zored_stream keep-awake restart"), id);
 }
 
+static int screensAsleep(void) {
+	CGDirectDisplayID ids[16];
+	uint32_t n = 0;
+	if (CGGetOnlineDisplayList(16, ids, &n) != kCGErrorSuccess) {
+		return -1;
+	}
+	for (uint32_t i = 0; i < n; i++) {
+		if (!CGDisplayIsAsleep(ids[i])) return 0;
+	}
+	return 1;
+}
+
+static int sessionLocked(void) {
+	CFDictionaryRef session = CGSessionCopyCurrentDictionary();
+	if (!session) return -1;
+	CFBooleanRef locked = CFDictionaryGetValue(session, CFSTR("CGSSessionScreenIsLocked"));
+	int r = locked && CFBooleanGetValue(locked);
+	CFRelease(session);
+	return r;
+}
+
 static int amphAsserted(void) {
 	CFDictionaryRef byPid = NULL;
 	if (IOPMCopyAssertionsByProcess(&byPid) != kIOReturnSuccess || !byPid) {
@@ -70,6 +91,26 @@ func sleepSystem() error {
 		return fmt.Errorf("IOPMSleepSystem: 0x%x", uint32(r))
 	}
 	return nil
+}
+
+func displaysAsleep() (bool, error) {
+	switch C.screensAsleep() {
+	case 1:
+		return true, nil
+	case 0:
+		return false, nil
+	}
+	return false, errors.New("CGGetOnlineDisplayList failed")
+}
+
+func screenLocked() (bool, error) {
+	switch C.sessionLocked() {
+	case 1:
+		return true, nil
+	case 0:
+		return false, nil
+	}
+	return false, errors.New("CGSessionCopyCurrentDictionary failed")
 }
 
 func declareUserActivity() error {

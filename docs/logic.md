@@ -221,7 +221,7 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 | ряд 1, колонка 1 — headphones (`0/2`) | `:47123` | tap toggles Bluetooth headset ↔ speakers; auto-route to `Logi*` / USB mic on arrival; `headphones_svg` |
 | ряд 1, колонка 2 — wi-fi (`0/3`) | `:47124` | hold 400 ms = wi-fi power (F21); tap opens a 5 s network pick on крутилка справа, ряд 1, join after a 1 s pause; `wifi_svg` |
 | ряд 1, колонка 3 — layout (`0/4`) | `:47127` | tap = next keyboard layout; `input_svg` crossfades 0.3 s (12 frames) |
-| ряд 1, колонка 4 — keep-awake (`0/5`) | `:47122` | down/up timed in the daemon: < 1 s toggles a 1 h session; 1–3 s then release = end + sleep; > 3 s nothing (F16); `power_svg` |
+| ряд 1, колонка 4 — keep-awake (`0/5`) | `:47122` | down/up timed in the daemon: < 1 s toggles a 1 h session; 1–3 s then release = end + sleep; > 3 s nothing (F16); `power_svg`; each second: all displays asleep → `screen_off = 1` + gray moon (every other MEDIA control blacked out), screen locked → gray lock; system sleep → the fork's `close()` draws the moon |
 | ряд 2, колонка 2 — emoji (`1/3`) | `:47128` | picker 4 s on both strips + knobs 1 (F22) |
 | ряд 3, колонка 2 — camera / weather (`2/3`) | `:47131` | `tile_23` slot: call → `/cam/down`; else weather 5 s browse |
 | ряд 3, колонка 3 — day / hang-up (`2/4`) | `:47126` | `tile_24` slot: call → hang up; else calendar list 5 s (F19) |
@@ -343,7 +343,7 @@ All addresses are `127.0.0.1:<port>`, set by a flag with that default in `main.g
 | 47119 | `-seek` | seek + track knob | `/seek/{forward,back}`, `/track/{down,up}` | `bar_*`, `np_progress`, `np_skip*` | on |
 | 47120 | `-agents` | agents waiting, choice mode | `POST /agent/event`, `GET /agents`, `/agent/{focus,new}`, `GET /choice`, `/choice/{down,up}?b=` | `agents_svg`, `choice_on`, `choice_1…8` | on, Codex; choice off |
 | 47121 | `-scroll` | scroll, Ctrl+Tab | `/scroll/{down,up,forward,back}` | — | on |
-| 47122 | `-power` | keep-awake, sleep | `/power/{down,up}` | `power_svg` | off |
+| 47122 | `-power` | keep-awake, sleep | `/power/{down,up}` | `power_svg`, `screen_off` | off |
 | 47123 | `-headphones` | headphones | `/headphones/toggle` | `headphones_svg` | off |
 | 47124 | `-wifi` | wi-fi + VPN | `/wifi/{touch,power}` | `wifi_svg` | off |
 | 47125 | `-kvm` | monitor input switch | `/kvm/{windows,pip}` | `kvm_led` | off |

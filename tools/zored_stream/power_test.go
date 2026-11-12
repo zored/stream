@@ -26,8 +26,10 @@ func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
 	systemSleep = func() error { calls = append(calls, "sleep"); return nil }
 	displayHold = func(time.Duration) error { calls = append(calls, "hold"); return nil }
 	postVar = func(string, string) error { return nil }
+	screensOff = func() (bool, error) { return false, nil }
+	locked = func() (bool, error) { return false, nil }
 	t.Cleanup(func() {
-		postVar = post
+		postVar, screensOff, locked = post, displaysAsleep, screenLocked
 		amphStart, amphEnd, userActivity, systemSleep, displayHold = startAmphetamine, endAmphetamine, declareUserActivity, sleepSystem, bridgeDisplay
 	})
 	p := newPower(&vars{sent: map[string]string{}})
@@ -58,5 +60,28 @@ func TestTouchRateLimited(t *testing.T) {
 	a.touch()
 	if calls != 2 {
 		t.Fatalf("calls = %d, want 2", calls)
+	}
+}
+
+func TestScreensOffMoonThenLock(t *testing.T) {
+	sent := map[string]string{}
+	postVar = func(name, value string) error { sent[name] = value; return nil }
+	screensOff = func() (bool, error) { return true, nil }
+	locked = func() (bool, error) { return true, nil }
+	t.Cleanup(func() { postVar, screensOff, locked = post, displaysAsleep, screenLocked })
+	p := newPower(&vars{sent: map[string]string{}})
+	p.publish()
+	if sent["screen_off"] != "1" || sent["power_svg"] != powerSVG("sleep", "") {
+		t.Errorf("screen_off = %q, power_svg sleep = %v", sent["screen_off"], sent["power_svg"] == powerSVG("sleep", ""))
+	}
+	screensOff = func() (bool, error) { return false, nil }
+	p.publish()
+	if sent["screen_off"] != "0" || sent["power_svg"] != powerSVG("lock", "") {
+		t.Errorf("locked after wake: screen_off = %q", sent["screen_off"])
+	}
+	locked = func() (bool, error) { return false, nil }
+	p.publish()
+	if sent["power_svg"] != powerSVG("off", "") {
+		t.Error("unlocked: want the sun")
 	}
 }

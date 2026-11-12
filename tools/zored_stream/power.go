@@ -28,6 +28,8 @@ var (
 	userActivity = declareUserActivity
 	displayHold  = bridgeDisplay
 	systemSleep  = sleepSystem
+	screensOff   = displaysAsleep
+	locked       = screenLocked
 )
 
 const touchEvery = 5 * time.Second
@@ -79,10 +81,23 @@ func (p *power) publish() {
 
 func (p *power) publishLocked() {
 	held := time.Since(p.downAt)
+	dark, err := screensOff()
+	if err != nil {
+		log.Print(err)
+	}
+	lock, err := locked()
+	if err != nil {
+		log.Print(err)
+	}
+	p.vars.set("screen_off", map[bool]string{true: "1", false: "0"}[dark])
 	state, left := "on", ""
 	switch {
 	case !p.downAt.IsZero() && held >= sleepArmAfter && held < sleepCancelAfter:
 		state = "arm"
+	case dark:
+		state = "sleep"
+	case lock:
+		state = "lock"
 	case !p.session.active:
 		state = "off"
 	case p.session.timed:
@@ -264,11 +279,18 @@ func awakeLeft(left time.Duration, editing bool) string {
 func powerSVG(state, below string) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
-	name := map[string]string{"arm": "moon-fill", "on": "sun-fill"}[state]
-	if name == "" {
-		name = "sun"
+	switch state {
+	case "sleep":
+		b.WriteString(iconAt("moon-fill", gray, 50, 50, iconSize))
+	case "lock":
+		b.WriteString(iconAt("lock-fill", gray, 50, 50, iconSize))
+	case "arm":
+		b.WriteString(iconAt("moon-fill", "#fff", 50, iconCY, iconSize))
+	case "on":
+		b.WriteString(iconAt("sun-fill", "#fff", 50, iconCY, iconSize))
+	default:
+		b.WriteString(iconAt("sun", "#fff", 50, iconCY, iconSize))
 	}
-	b.WriteString(iconAt(name, "#fff", 50, iconCY, iconSize))
 	b.WriteString(below)
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())

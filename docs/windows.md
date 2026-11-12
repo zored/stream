@@ -70,7 +70,7 @@ and `companion/windows/` (verified generated). The windows profile:
 
 - media keys: `curl … :47113/key/<name>`, same as mac;
 - `exec` goes through `cmd.exe` there (assumed), so URLs with `?` are double-quoted instead of single-quoted;
-- no Yandex Music hold, no keep-awake, camera, hang-up, dictation controls; no `call_cam`, `ym_like`, `dictation`, `power_svg` variables;
+- no Yandex Music hold, no keep-awake, camera, hang-up, dictation controls; no `call_cam`, `ym_like`, `dictation`, `power_svg`, `screen_off` variables;
 - no choice-mode gate on the buttons;
 - the AI knob (`1/7`) is still there and posts to `:47117`, which the Windows daemon doesn't serve: drop it or give it the Codex switch (open);
 - everything else, ports and variables identical.

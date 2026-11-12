@@ -104,7 +104,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 4 — keep awake / sleep
 
-- shows: outline sun = off; filled sun + time left `h:mm` below = an Amphetamine session, the display won't sleep; white moon = release now to sleep
+- shows: outline sun = off; filled sun + time left `h:mm` below = an Amphetamine session, the display won't sleep; white moon = release now to sleep; gray lock = the screen is locked; gray moon = the screens are off (the rest of the device goes black until they wake) or the Mac sleeps (the module fork draws it as Companion closes the surface)
 - touch shorter than 1 s: keep-awake on for 1 h / off
 - right after turning on, крутилка справа, ряд 1 sets the length for 5 s (time turns white): 15 min per detent, 15 min – 12 h;
   every turn extends the 5 s, then the knob is brightness again
