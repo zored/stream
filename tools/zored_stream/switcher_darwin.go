@@ -59,8 +59,12 @@ func switchRaise(pid, window int) error {
 
 var switchIcons sync.Map
 
-func switchIcon(pid string, turn float64) ([]byte, error) {
-	key := fmt.Sprintf("%s %g", pid, turn)
+func switchFrontPid() int {
+	return int(C.ax_front_pid())
+}
+
+func switchIcon(pid string, turn float64, px int) ([]byte, error) {
+	key := fmt.Sprintf("%s %g %d", pid, turn, px)
 	if icon, ok := switchIcons.Load(key); ok {
 		return icon.([]byte), nil
 	}
@@ -69,7 +73,7 @@ func switchIcon(pid string, turn float64) ([]byte, error) {
 		return nil, err
 	}
 	var size C.int
-	p := C.sw_icon(C.int(n), C.double(turn), switchIconSize*4, &size)
+	p := C.sw_icon(C.int(n), C.double(turn), C.int(px), &size)
 	if p == nil {
 		return nil, fmt.Errorf("switcher: no icon for pid %s", pid)
 	}
@@ -83,11 +87,7 @@ func switchPNG(side int, glyphs []emojiGlyph, ringY float64) (string, error) {
 	c := C.cal_canvas_new(stripDrawW, stripDrawH, 1.25, 0)
 	var failed error
 	for _, g := range glyphs {
-		if side == emojiRight {
-			C.cal_canvas_ring(c, stripDrawW/2, C.double(g.y), switchDot/2.0, switchDot, 0xffffff)
-			continue
-		}
-		icon, err := switchIcon(g.text, g.turn)
+		icon, err := switchIcon(g.text, g.turn, switchIconSize*4)
 		if err != nil {
 			failed = err
 			continue
@@ -99,11 +99,39 @@ func switchPNG(side int, glyphs []emojiGlyph, ringY float64) (string, error) {
 	return uri, errors.Join(err, failed)
 }
 
-func switchTitlePNG(text string) (string, error) {
-	c := C.cal_canvas_new(100, 100, 1, 0)
-	s, tail := C.CString(text), C.CString("")
-	defer C.free(unsafe.Pointer(s))
-	defer C.free(unsafe.Pointer(tail))
-	C.cal_canvas_text(c, s, tail, 6, 6, 88, 88, 15, 0xffffff, 0xffffff, 0)
-	return canvasPNG(c)
+func switchCardPNG(text string) (string, error) {
+	const w, h = stripDrawH, stripDrawW
+	return calPNG(w, h, true, 0, []calText{{text: text, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB}})
+}
+
+func switchAvatar(c unsafe.Pointer, pid int, cx, cy, r float64) error {
+	icon, err := switchIcon(strconv.Itoa(pid), 0, int(r*8))
+	if err != nil {
+		return err
+	}
+	C.cal_canvas_avatar(c, unsafe.Pointer(&icon[0]), C.int(len(icon)), C.double(cx), C.double(cy), C.double(r), 0, 1)
+	return nil
+}
+
+func switchBigPNG(pid int) (string, error) {
+	c := C.cal_canvas_new(100, 100, 2, 0)
+	failed := switchAvatar(c, pid, 50, 50, 44)
+	uri, err := canvasPNG(c)
+	return uri, errors.Join(err, failed)
+}
+
+func switchRecentPNG(apps []switchApp, badges []bool) (string, error) {
+	const r, dot = 20, 4
+	c := C.cal_canvas_new(100, 100, 2, 0)
+	var failed []error
+	for i, a := range apps {
+		cx, cy := 28+44*float64(i%2), 28+44*float64(i/2)
+		failed = append(failed, switchAvatar(c, a.pid, cx, cy, r))
+		if badges[i] {
+			C.cal_canvas_avatar(c, nil, 0, C.double(cx+r-dot), C.double(cy-r+dot), dot+1.5, 0, 0)
+			C.cal_canvas_avatar(c, nil, 0, C.double(cx+r-dot), C.double(cy-r+dot), dot, whiteRGB, 0)
+		}
+	}
+	uri, err := canvasPNG(c)
+	return uri, errors.Join(append(failed, err)...)
 }

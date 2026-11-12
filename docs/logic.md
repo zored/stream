@@ -223,7 +223,7 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 | ряд 1, колонка 3 — layout (`0/4`) | `:47127` | tap = next keyboard layout; `input_svg` crossfades 0.3 s (12 frames) |
 | ряд 1, колонка 4 — keep-awake (`0/5`) | `:47122` | down/up timed in the daemon: < 1 s toggles a 1 h session; 1–3 s then release = end + sleep; > 3 s nothing (F16); `power_svg`; each second: all displays asleep → `screen_off = 1` + white moon (every other MEDIA control blacked out), screen locked → white lock; system sleep → the fork's `close()` draws the moon |
 | ряд 2, колонка 2 — emoji (`1/3`) | `:47128` | picker 4 s on both strips + knobs 1 (F22) |
-| ряд 2, колонка 3 — window switcher (`1/4`) | `:47132` | apps on the left strip, windows on the right, 4 s, raise on settle; knobs 1 step the columns ([windows-switch.md](windows-switch.md)) |
+| ряд 2, колонка 3 — window switcher (`1/4`) | `:47132` | idle: 2×2 icons of the 4 newest apps, dot = Dock badge, checked every 2 s; open: apps on the left strip, the ring window's title (two lines) on the right, the picked app's big icon on the tile, 4 s, raise on settle; knobs 1 step the columns ([windows-switch.md](windows-switch.md)) |
 | ряд 3, колонка 2 — camera / weather (`2/3`) | `:47131` | `tile_23` slot: call → `/cam/down`; else weather 5 s browse |
 | ряд 3, колонка 3 — day / hang-up (`2/4`) | `:47126` | `tile_24` slot: call → hang up; else calendar list 5 s (F19) |
 

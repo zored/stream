@@ -35,11 +35,18 @@ Not to be confused with [windows.md](windows.md), the Windows port.
 ## Orientation
 
 As in the emoji picker: icons are turned to stand upright, the left strip is mirrored when the fork flips it, knob turns are
-inverted when the device is turned; the orientation file is read on every open. The dots of the right strip need no turn.
+inverted when the device is turned; the orientation file is read on every open. The title card of the right strip and the tiles are turned by the fork only (A12), like the calendar card.
 
 ## Rendering
 
 - 60 Hz ticker only while open; a strip PNG is rendered only when its offset or length changes (P3).
-- Left strip: 30 pt icons, 43 pt pitch, gray ring on the pick. Right strip: one white dot per window, the pick in the ring.
-- Tile: idle = Bootstrap `window-stack`; open = the picked window's title, JetBrains Mono 15, 6 % inset, wrapped by character.
+- Left strip: 30 pt icons, 43 pt pitch, gray ring on the pick. Right strip: one card, the title of the window at the rounded
+  offset, lowercase, JetBrains Mono 15, two lines along the strip, drawn as the calendar list card (`calPNG` rotated); redrawn
+  only when the title changes; drag and knob still step one window per 43 pt / detent.
+- Tile open: the picked app's icon, 88 pt (6 % inset), redrawn when the app changes.
+- Tile idle: the first 4 apps of the switcher order (frontmost, then on-screen z-order) as a 2×2 grid of 40 pt icons; a white
+  dot with a black edge on the top-right of an app whose Dock item has a badge (`AXStatusLabel`, matched by app name).
+  `idle` runs every 2 s while closed: the Dock read (~0.6 ms) every time, the app list (`CGWindowListCopyWindowInfo`, ~4 ms)
+  only when the frontmost pid changed or after the switcher was open; the tile is re-rendered only when the pids, names or
+  badges change (verified: 3–4 ms list, 0.6 ms Dock, test process). Not verified: a badge on the device.
   Vars: `switch_tile` plus the shared `emoji_on`, `emoji_l`, `emoji_r`.

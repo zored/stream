@@ -2,6 +2,7 @@ package main
 
 import (
 	"slices"
+	"strconv"
 	"testing"
 )
 
@@ -15,8 +16,21 @@ func TestSwitcher(t *testing.T) {
 	raised := make(chan [2]int, 8)
 	w.raise = func(pid, window int) error { raised <- [2]int{pid, window}; return nil }
 	w.render = func(int, []emojiGlyph, float64) (string, error) { return "strip", nil }
-	var titles []string
-	w.title = func(text string) (string, error) { titles = append(titles, text); return text, nil }
+	var tiles, cards []string
+	w.bigPNG = func(pid int) (string, error) { tiles = append(tiles, strconv.Itoa(pid)); return "big", nil }
+	w.cardPNG = func(text string) (string, error) { cards = append(cards, text); return text, nil }
+	w.badges = func() map[string]string { return map[string]string{"two": "3"} }
+	w.frontPid = func() int { return 1 }
+	var idles [][]bool
+	w.idlePNG = func(apps []switchApp, badges []bool) (string, error) {
+		idles = append(idles, badges)
+		return "recent", nil
+	}
+	w.idle()
+	w.idle()
+	if len(idles) != 1 || !slices.Equal(idles[0], []bool{false, true}) || v.sent["switch_tile"] != "recent" {
+		t.Fatalf("idle tile drawn %v, want once with the badge on app two", idles)
+	}
 	go w.work()
 	settle := func() {
 		for range 100 {
@@ -57,8 +71,11 @@ func TestSwitcher(t *testing.T) {
 	if got := <-raised; got != [2]int{2, 2} {
 		t.Errorf("raised %v, want window 2 of app 2", got)
 	}
-	if want := []string{"two", "a", "two"}; len(titles) < 3 || !slices.Equal(titles[len(titles)-3:], want) {
-		t.Errorf("titles %q, want them to end with %q", titles, want)
+	if want := []string{"1", "2"}; !slices.Equal(tiles, want) {
+		t.Errorf("tiles %q, want %q", tiles, want)
+	}
+	if !slices.Contains(cards, "b") || cards[len(cards)-1] != "two" {
+		t.Errorf("cards %q, want them to pass b and end with the app name for an untitled window", cards)
 	}
 	if v.sent["emoji_on"] != "1" {
 		t.Error("strip overlay must be on while open")
@@ -66,7 +83,7 @@ func TestSwitcher(t *testing.T) {
 	if err := w.pressTile(); err != nil {
 		t.Fatal(err)
 	}
-	if v.sent["emoji_on"] != "0" || v.sent["switch_tile"] != switchIdle {
+	if v.sent["emoji_on"] != "0" || v.sent["switch_tile"] != "recent" {
 		t.Error("a tap on the open tile must close the switcher")
 	}
 }

@@ -3,15 +3,18 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
 const (
-	switchOpenFor  = 4 * time.Second
-	switchIconSize = 30
-	switchDot      = 3
+	switchOpenFor   = 4 * time.Second
+	switchIconSize  = 30
+	switchRecent    = 4
+	switchIdleEvery = 2 * time.Second
 )
 
 type switchApp struct {
@@ -40,6 +43,11 @@ type switcher struct {
 	loaded   bool
 	window   int
 	tile     string
+	card     string
+	front    int
+	idleKey  string
+	idleTile string
+	recent   []switchApp
 	knobDown [2]bool
 	wake     chan struct{}
 	jobs     chan switchJob
@@ -48,14 +56,19 @@ type switcher struct {
 	windows  func(pid int) ([]string, error)
 	raise    func(pid, window int) error
 	render   func(side int, glyphs []emojiGlyph, ringY float64) (string, error)
-	title    func(text string) (string, error)
+	cardPNG  func(text string) (string, error)
+	bigPNG   func(pid int) (string, error)
+	idlePNG  func(apps []switchApp, badges []bool) (string, error)
+	badges   func() map[string]string
+	frontPid func() int
 }
 
 var switchIdle = tileIcon("window-stack", "#fff")
 
 func newSwitcher(v *vars, o *stripOverlay) *switcher {
 	return &switcher{vars: v, overlay: o, wake: make(chan struct{}, 1), jobs: make(chan switchJob, 1), strips: [2]*emojiStrip{{}, {}},
-		orient: readOrientation, list: switchApps, windows: switchWindows, raise: switchRaise, render: switchPNG, title: switchTitlePNG}
+		idleTile: switchIdle, orient: readOrientation, list: switchApps, windows: switchWindows, raise: switchRaise, render: switchPNG,
+		cardPNG: switchCardPNG, bigPNG: switchBigPNG, idlePNG: switchRecentPNG, badges: unreadBadges, frontPid: switchFrontPid}
 }
 
 func (w *switcher) open() bool {
@@ -110,7 +123,7 @@ func (w *switcher) pressTile() error {
 	for _, a := range apps {
 		left.list = append(left.list, strconv.Itoa(a.pid))
 	}
-	w.app, w.window, w.titles, w.loaded, w.tile = 0, 0, nil, false, ""
+	w.app, w.window, w.titles, w.loaded, w.tile, w.card, w.front = 0, 0, nil, false, "", "", -1
 	w.post(switchJob{pid: apps[0].pid, window: -1})
 	w.touch()
 	return nil
@@ -274,11 +287,68 @@ func (w *switcher) pick() {
 	}
 }
 
-func (w *switcher) text() string {
-	if w.window < len(w.titles) && w.titles[w.window] != "" {
-		return w.titles[w.window]
+func (w *switcher) cardText() string {
+	s := w.strips[emojiRight]
+	if len(s.list) == 0 {
+		return ""
 	}
-	return w.apps[w.app].name
+	i := int(math.Round(s.clamp(s.offset)))
+	if i < len(w.titles) && w.titles[i] != "" {
+		return strings.ToLower(w.titles[i])
+	}
+	return strings.ToLower(w.apps[w.app].name)
+}
+
+// idle redraws the closed tile: the apps of the newest windows; the list is read again only when the front app changes or the switcher closes.
+func (w *switcher) idle() {
+	w.mu.Lock()
+	if w.open() {
+		w.mu.Unlock()
+		return
+	}
+	front := w.frontPid()
+	relist := w.idleKey == "" || front != w.front
+	w.mu.Unlock()
+	var apps []switchApp
+	if relist {
+		all, err := w.list()
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		apps = all[:min(len(all), switchRecent)]
+	} else {
+		apps = w.recentApps()
+	}
+	dock := w.badges()
+	badges := make([]bool, len(apps))
+	key := ""
+	for i, a := range apps {
+		badges[i] = dock[a.name] != ""
+		key += fmt.Sprintf("%d %s %t\n", a.pid, a.name, badges[i])
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.open() {
+		return
+	}
+	w.front = front
+	if key == w.idleKey {
+		return
+	}
+	uri, err := w.idlePNG(apps, badges)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	w.idleKey, w.idleTile, w.recent = key, uri, apps
+	w.vars.set("switch_tile", uri)
+}
+
+func (w *switcher) recentApps() []switchApp {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.recent
 }
 
 func (w *switcher) publish() {
@@ -286,10 +356,21 @@ func (w *switcher) publish() {
 	defer w.mu.Unlock()
 	if !w.open() {
 		w.overlay.show("switch", false)
-		w.vars.set("switch_tile", switchIdle)
+		w.vars.set("switch_tile", w.idleTile)
 		return
 	}
+	if text := w.cardText(); text != w.card {
+		w.card = text
+		uri, err := w.cardPNG(text)
+		if err != nil {
+			log.Print(err)
+		}
+		w.vars.set("emoji_r", uri)
+	}
 	for side, s := range w.strips {
+		if side == emojiRight {
+			continue
+		}
 		key := fmt.Sprintf("%.2f %d", s.offset, len(s.list))
 		if s.shown == key {
 			continue
@@ -302,9 +383,9 @@ func (w *switcher) publish() {
 		}
 		w.vars.set([2]string{"emoji_l", "emoji_r"}[side], uri)
 	}
-	if text := w.text(); text != w.tile {
-		w.tile = text
-		uri, err := w.title(text)
+	if pid := strconv.Itoa(w.apps[w.app].pid); pid != w.tile {
+		w.tile = pid
+		uri, err := w.bigPNG(w.apps[w.app].pid)
 		if err != nil {
 			log.Print(err)
 		}

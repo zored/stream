@@ -138,10 +138,11 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 2, колонка 3 — window switcher
 
-- idle: Bootstrap `window-stack`
+- idle: 2×2 icons of the apps with the newest windows (the frontmost first, then by z-order); a small white dot on an app with a Dock badge
 - touch: opens the switcher for 4 s, every action below extends it; touch while open closes it
 - while open: left strip = icons of the apps that have windows, the current one in the gray ring, then by how recently they were on top;
-  right strip = one dot per window of the picked app; the tile shows the picked window's title (the app name when it has none)
+  right strip = the title of the window in the ring, lowercase, up to two lines along the strip like the calendar list (the app name when it has none);
+  the tile shows the picked app's icon, large
 - switching is immediate: the app or window in the ring comes to the front as soon as the strip stops; nothing to confirm
 - strip swipe: scrolls its column, flicks keep coasting; tap on an item lower down brings it to the ring
 - крутилка слева, ряд 1 / справа, ряд 1: turn steps its column one item per detent (direction inverted when the device is turned), press closes the switcher; volume and brightness are off while it is open

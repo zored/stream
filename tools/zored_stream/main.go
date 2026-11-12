@@ -178,6 +178,7 @@ func main() {
 	sw.publish()
 	go sw.animate()
 	go sw.work()
+	go every(switchIdleEvery, sw.idle)
 	go serve(*switchAddr, func(mux *http.ServeMux) {
 		handle(mux, "/switch/tile", sw.pressTile)
 	})
