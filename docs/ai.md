@@ -39,7 +39,8 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
   No route (`dial`/`proxyconnect` errors: the VPN is off and `squid.ai-proxy.vk.team` does not resolve) also retries every minute
   and does not grow the backoff: nothing reaches the server. Before 2026-11-10 it backed off to 1 h, so the red dot stayed up to
   an hour after the VPN came back (verified in the log).
-- `GET /usage`: `{"limits": [...as upstream...], "fetched_at", "error", "next_at"}` from the cache, never fetches.
+- `GET /usage`: `{"limits": [...as upstream...], "fetched_at", "error", "next_at", "context"}` from the cache, never fetches.
+  `context` = `{"tokens", "window", "percent", "model"}` of the active chat (agents ring), see [Context](#context).
 - `POST /usage/refresh`: fetch now, ignored within a minute of the last fetch.
 - Variables: `ai_strip_svg` (right strip top cell), `ai_session`, `ai_session_reset`, `ai_day`, `ai_week`, `ai_week_reset`, `ai_level`
   (`low` < 50, `normal`, `high` > 80, `critical` > 90, from `ai_day`). The strip pictures are re-rendered with the 10 s resend, so time left stays current.
@@ -47,23 +48,32 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 
 ## Right strip
 
-No tile (removed 2026-11-02). The whole right strip is one 48×258 SVG (the drawable area, see [companion.md](companion.md)) from the daemon (`ai_strip_svg`, `aiStripSVG`); each
-cell shows its third (`gen_pages.py` `ai_strip`). A white bar fills the strip bottom-up like the volume bar; on top of it the
-rotated model + effort dots and a value near the bottom (baseline 8 px above the bottom, `stripTextY`; sized like the gray captions on tiles, `stripValueFont` from `captionSize`), gray like the date. Everything is drawn twice — normal, and black clipped to the bar — so the
-text inverts where the bar is under it (verified in the web preview: full bar → black `opus ●`).
+No tile (removed 2026-11-02). The whole right strip is one 48×258 SVG (the drawable area, see [companion.md](companion.md)) from
+the daemon (`ai_strip_svg`, `aiStripSVG`); each cell shows its third (`gen_pages.py` `ai_strip`). Since 2026-11-12, full bleed:
 
-| When | Text | Bar |
-|---|---|---|
-| default | time left in the 5h session, `1:42` | session usage |
-| while the model is switching (knob or strip) | the word `day` | `d` of the selected model |
-| after the switch: while the label is in `preview`, or 5 s after an applied switch | whole days left in the week, `3d` (`h:mm` under a day) | `w` of the selected model |
+- left, 32 px: the 5 h session bar, bottom-up.
+- right, 16 px: the weekly bar of the selected model: its `weekly_scoped` limit when one exists (`display_name` starts with the
+  model, today only Fable), else `weekly_all`. Behind it a dark gray bar up to how far the week may be by the end of today:
+  `100 × workdays since the window start / 5` (Mon–Fri, 1…5). There is one 5 h limit for all models (verified: no scoped `session`).
+- colours as the Hammerspoon overlay: < 50 light green `#99F299`, ≤ 80 white, > 80 yellow `#FFD94D`, > 90 red `#FF6666`. The 5 h
+  bar by its %, the weekly bar by `d` (its % of today's allowance), so yellow = ahead of the pace.
+- the rotated model + effort dots sit over the 5 h bar: white outside it, black where the bar is under them. No time text.
+- no animation: a model or effort change redraws at once.
 
-The selected model uses its `weekly_scoped` limit when one exists (`display_name` starts with the model), else `weekly_all`.
-Bars over 100 % stay full. The bar and the effort dots ease to new values at 60 fps (`animateStrip`, `stripHz`), so a change takes ~0.2 s. A red dot in the corner means the last fetch failed. The calendar list covers the whole strip while open (`usage.cover`, see controls.md, clock).
-Stale data is never shown as current: once a limit's `resets_at` has passed, its value and bar are cleared; when the last fetch
-failed or is older than 2 intervals, the bar is gray instead of white.
+Bars over 100 % stay full. A red dot in the corner means the last fetch failed. The calendar list covers the whole strip while open (`usage.cover`, see controls.md, clock).
+Stale data is never shown as current: once a limit's `resets_at` has passed, its bar is cleared; when the last fetch
+failed or is older than 2 intervals, both bars are gray.
+
+## Context
+
+The agents tile (тайл ряд 2, колонка 4) draws a 4 px bar along its top edge: how full the context of the ringed chat is
+(`context.go`). Source: the chat's transcript `~/.claude/projects/*/<id>.jsonl` (`id` = `cliSessionId` for Desktop, the hook
+`session_id` for CLI), last 512 KB, the newest `message.usage`: `input_tokens + cache_read_input_tokens + cache_creation_input_tokens`
+(verified 2026-11-12: matches the request that produced it). Re-read only when the file's size or mtime changes.
+Window: 1M, 200k for Haiku. Assumed from the transcripts: Opus 5.5 reached 627k, Fable 5.1 848k, Sonnet 5.5 213k, Haiku 5.5
+at most 120k; no file states the window. Same colours as the strip.
 
 ## Hammerspoon overlay
 
 `~/.hammerspoon/usage_overlay.lua` reads `GET http://127.0.0.1:47116/usage` every minute instead of calling the API itself,
-so one fetch serves both.
+so one fetch serves both. A last line `ctx: 21%` shows `context.percent` when the daemon has one.

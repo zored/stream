@@ -29,24 +29,21 @@ const (
 	usageOfflineRetry  = time.Minute
 	workdays           = 5
 	day                = 24 * time.Hour
-	sessionHours       = 5
-	weekShowFor        = 5 * time.Second
-	weekHoldMax        = 15 * time.Second
 	stripHz            = 60
 	stripEasing        = 0.293
 	stripDrawW         = 48
 	stripDrawH         = 258
-	stripTextY         = stripDrawH - 8
-	stripValueFont     = captionSize * tilePx * 0.88 / 100
+	stripSessionW      = 32
 	tilePx             = 90
+	stripTrack         = "#1C1C1E"
+	stripAllowed       = "#48484A"
 )
 
 var (
-	aiStateColors = map[string]string{"ok": gray, "pending": gray, "preview": gray, "idle": gray, "other": amber, "error": red}
+	aiStateColors = map[string]string{"ok": "#fff", "pending": gray, "preview": gray, "idle": "#fff", "other": amber, "error": red}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
+	levelColors   = map[string]string{"low": "#99F299", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666"}
 )
-
-var levelColors = map[string]string{"low": "#fff", "normal": "#fff", "high": amber, "critical": red}
 
 type limit struct {
 	Kind     string      `json:"kind"`
@@ -91,30 +88,24 @@ type usage struct {
 	note         stripNote
 	noteTill     time.Time
 	covered      string
-	stripMode
-	target  stripFrame
-	shown   stripFrame
-	animate chan struct{}
+	frame        stripFrame
+	context      *chatContext
 }
 
 type stripFrame struct {
-	label  stripLabel
-	note   stripNote
-	text   string
-	failed bool
-	stale  bool
-	pct    float64
-	dots   [5]float64
+	label   stripLabel
+	note    stripNote
+	failed  bool
+	stale   bool
+	session float64
+	week    float64
+	allowed float64
+	weekLvl string
 }
 
 type stripNote struct{ text, color string }
 
 type stripLabel struct{ model, effort, state string }
-
-type stripMode struct {
-	switching bool
-	weekUntil time.Time
-}
 
 func newUsage(v *vars, every time.Duration, proxy string) (*usage, error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -125,7 +116,7 @@ func newUsage(v *vars, every time.Duration, proxy string) (*usage, error) {
 		}
 		transport.Proxy = http.ProxyURL(u)
 	}
-	return &usage{every: every, vars: v, wake: make(chan struct{}, 1), animate: make(chan struct{}, 1),
+	return &usage{every: every, vars: v, wake: make(chan struct{}, 1),
 		http: &http.Client{Timeout: 20 * time.Second, Transport: transport}}, nil
 }
 
@@ -171,20 +162,9 @@ func (u *usage) refresh() error {
 }
 
 func (u *usage) focus(label stripLabel) {
-	switching := label.state == "pending"
 	u.mu.Lock()
 	changed := u.label != label
-	now := time.Now()
-	switch {
-	case label.state == "preview" && u.label.state != "preview":
-		u.weekUntil = now.Add(weekHoldMax)
-	case u.label.state == "preview" && label.state != "preview" && !switching:
-		u.weekUntil = now
-	case u.switching && !switching:
-		u.weekUntil = now.Add(weekShowFor)
-		time.AfterFunc(weekShowFor, u.publish)
-	}
-	u.label, u.switching = label, switching
+	u.label = label
 	u.mu.Unlock()
 	if changed {
 		u.publish()
@@ -203,35 +183,18 @@ func (u *usage) cover(uri string) {
 	u.mu.Lock()
 	u.covered = uri
 	u.mu.Unlock()
-	u.stripStep()
+	u.draw()
 }
 
-func (u *usage) animateStrip() {
-	for range u.animate {
-		ticker := time.NewTicker(time.Second / stripHz)
-		for u.stripStep() {
-			<-ticker.C
-		}
-		ticker.Stop()
-	}
-}
-
-func (u *usage) stripStep() bool {
+func (u *usage) draw() {
 	u.mu.Lock()
-	moving := ease(&u.shown.pct, u.target.pct, 0.3)
-	for i := range u.shown.dots {
-		moving = ease(&u.shown.dots[i], u.target.dots[i], 0.02) || moving
-	}
-	t := u.target
-	t.pct, t.dots = u.shown.pct, u.shown.dots
-	covered := u.covered
+	f, covered := u.frame, u.covered
 	u.mu.Unlock()
 	if covered != "" {
 		u.vars.set("ai_strip_svg", covered)
-		return moving
+		return
 	}
-	u.vars.set("ai_strip_svg", aiStripSVG(t))
-	return moving
+	u.vars.set("ai_strip_svg", aiStripSVG(f))
 }
 
 func ease(shown *float64, target, snap float64) bool {
@@ -329,7 +292,10 @@ func (u *usage) get() ([]json.RawMessage, []limit, time.Duration, error) {
 
 func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 	u.mu.Lock()
-	body, err := json.Marshal(u.snap)
+	body, err := json.Marshal(struct {
+		usageSnapshot
+		Context *chatContext `json:"context"`
+	}{u.snap, u.context})
 	u.mu.Unlock()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -339,13 +305,19 @@ func (u *usage) serveJSON(w http.ResponseWriter, _ *http.Request) {
 	w.Write(body)
 }
 
+func (u *usage) setContext(ctx *chatContext) {
+	u.mu.Lock()
+	u.context = ctx
+	u.mu.Unlock()
+}
+
 func limitsStale(failed bool, fetched *time.Time, now time.Time, every time.Duration) bool {
 	return failed || fetched == nil || now.Sub(*fetched) > 2*every
 }
 
 func (u *usage) publish() {
 	u.mu.Lock()
-	limits, failed, label, mode := u.limits, u.snap.Error != "", u.label, u.stripMode
+	limits, failed, label := u.limits, u.snap.Error != "", u.label
 	fetched := u.snap.FetchedAt
 	var note stripNote
 	if time.Now().Before(u.noteTill) {
@@ -353,24 +325,16 @@ func (u *usage) publish() {
 	}
 	u.mu.Unlock()
 	now := time.Now()
-	stale := limitsStale(failed, fetched, now, u.every)
-	week := scopedFor(limits, label.model)
-	if week == nil {
-		week = findLimit(limits, "weekly_all")
-	}
-	frame := stripFrame{label: label, note: note, failed: true, dots: dotTargets(label.effort)}
-	if week != nil {
-		frame.text, frame.pct = stripValue(limits, *week, mode, now)
-		frame.failed, frame.stale = failed, stale
+	frame := stripFrameFor(limits, label, now)
+	frame.note = note
+	if !frame.failed {
+		frame.failed, frame.stale = failed, limitsStale(failed, fetched, now, u.every)
 	}
 	u.mu.Lock()
-	u.target = frame
+	u.frame = frame
 	u.mu.Unlock()
-	select {
-	case u.animate <- struct{}{}:
-	default:
-	}
-	if week == nil {
+	u.draw()
+	if frame.failed && len(limits) == 0 {
 		return
 	}
 	if s := findLimit(limits, "session"); s != nil {
@@ -439,80 +403,74 @@ func workdayIndex(start, now time.Time) int {
 	return min(workdays, max(1, count))
 }
 
-func dayPct(l limit, now time.Time) float64 {
+func weekDay(l limit, now time.Time) float64 {
 	now = now.Local()
 	start := midnight(now, -((int(now.Weekday()) + 6) % 7))
 	if l.ResetsAt != nil {
 		start = l.ResetsAt.Local().Add(-7 * day)
 	}
-	return workdays * l.Percent / float64(workdayIndex(start, now))
+	return float64(workdayIndex(start, now))
 }
 
-func stripValue(limits []limit, week limit, mode stripMode, now time.Time) (string, float64) {
-	if week.ResetsAt != nil && !now.Before(*week.ResetsAt) {
-		return "", 0
-	}
-	switch {
-	case mode.switching:
-		return "day", dayPct(week, now)
-	case now.Before(mode.weekUntil):
-		left := ""
-		if week.ResetsAt != nil {
-			left = daysLeft(week.ResetsAt.Sub(now))
-		}
-		return left, week.Percent
-	}
-	text, pct := clockLeft(sessionHours*time.Hour), 0.0
-	if s := findLimit(limits, "session"); s != nil {
-		if s.ResetsAt != nil && !now.Before(*s.ResetsAt) {
-			return "", 0
-		}
-		pct = s.Percent
-		if s.ResetsAt != nil {
-			text = clockLeft(s.ResetsAt.Sub(now))
-		}
-	}
-	return text, pct
+func dayPct(l limit, now time.Time) float64 {
+	return workdays * l.Percent / weekDay(l, now)
 }
 
-func dotTargets(effort string) [5]float64 {
-	var dots [5]float64
-	n := slices.Index(aiEffortDots, strings.ToLower(effort)) + 1
-	for i := range n {
-		dots[i] = 1
+func allowedPct(l limit, now time.Time) float64 {
+	return 100 * weekDay(l, now) / workdays
+}
+
+func current(l *limit, now time.Time) bool {
+	return l != nil && (l.ResetsAt == nil || now.Before(*l.ResetsAt))
+}
+
+func stripFrameFor(limits []limit, label stripLabel, now time.Time) stripFrame {
+	f := stripFrame{label: label, failed: len(limits) == 0}
+	if s := findLimit(limits, "session"); current(s, now) {
+		f.session = s.Percent
 	}
-	return dots
+	week := scopedFor(limits, label.model)
+	if week == nil {
+		week = findLimit(limits, "weekly_all")
+	}
+	if current(week, now) {
+		f.week, f.allowed, f.weekLvl = week.Percent, allowedPct(*week, now), levelOf(dayPct(*week, now))
+	}
+	return f
 }
 
 func aiStripSVG(f stripFrame) string {
-	const w, h = stripDrawW, stripDrawH
-	barH := h * min(max(f.pct, 0), 100) / 100
-	barColor := "#fff"
-	if f.stale {
-		barColor = gray
+	const w, h, w5 = stripDrawW, stripDrawH, stripSessionW
+	rect := func(x, width int, pct float64, color string) string {
+		bh := float64(h) * min(max(pct, 0), 100) / 100
+		return fmt.Sprintf(`<rect x="%d" y="%.1f" width="%d" height="%.1f" fill="%s"/>`, x, h-bh, width, bh, color)
 	}
-	bar := fmt.Sprintf(`x="0" y="%.1f" width="%d" height="%.1f"`, h-barH, w, barH)
-	k := min(float64(h)/svgMinWidth, float64(w)/svgHeight)
-	content := func(ink string) string {
-		fill := gray
-		if ink != "" {
-			fill = ink
-		}
-		return fmt.Sprintf(`<g transform="translate(0 %.1f) rotate(-90) scale(%.4f)">%s</g>`+
-			`<text x="%d" y="%d" text-anchor="middle" font-family="%s" font-size="%g" fill="%s">%s</text>`,
-			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.note, f.dots, ink), w/2, stripTextY, stripFont, stripValueFont, fill, html.EscapeString(f.text))
+	sessionColor, weekColor := levelColors[levelOf(f.session)], levelColors[f.weekLvl]
+	if f.stale {
+		sessionColor, weekColor = gray, gray
+	}
+	if f.weekLvl == "" {
+		weekColor = gray
+	}
+	sessionBar := rect(0, w5, f.session, sessionColor)
+	k := min(float64(h)/svgMinWidth, float64(w5)/svgHeight)
+	label := func(ink string) string {
+		return fmt.Sprintf(`<g transform="translate(0 %.1f) rotate(-90) scale(%.4f)">%s</g>`,
+			(float64(h)+svgMinWidth*k)/2, k, labelMarkup(f.label, f.note, ink))
 	}
 	dot := ""
 	if f.failed {
 		dot = fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="%s"/>`, w-4, red)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
-		`<defs><clipPath id="bar"><rect %s/></clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
-		`%s<rect %s fill="%s"/><g clip-path="url(#bar)">%s</g>%s</svg>`,
-		w, h, bar, w, h, content(""), bar, barColor, content("#000"), dot))
+		`<defs><clipPath id="bar">%s</clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
+		`<rect width="%d" height="%d" fill="%s"/>%s%s%s%s<g clip-path="url(#bar)">%s</g>%s</svg>`,
+		w, h, sessionBar, w, h, w, h, stripTrack,
+		rect(w5, w-w5, f.allowed, stripAllowed), rect(w5, w-w5, f.week, weekColor), sessionBar,
+		label(""), label("#000"), dot))
 }
 
-func labelMarkup(l stripLabel, note stripNote, dots [5]float64, ink string) string {
+func labelMarkup(l stripLabel, note stripNote, ink string) string {
 	if note.text != "" {
 		fill := note.color
 		if ink != "" {
@@ -537,41 +495,15 @@ func labelMarkup(l stripLabel, note stripNote, dots [5]float64, ink string) stri
 	var b strings.Builder
 	fmt.Fprintf(&b, `<text x="%d" y="%d" text-anchor="end" font-family="%s" font-size="%d" fill="%s">%s</text>`,
 		anchor, y, stripFont, svgFont, modelColor, html.EscapeString(strings.ToLower(l.model)))
-	if !slices.Contains(aiEffortDots, strings.ToLower(l.effort)) {
+	effort := strings.ToLower(l.effort)
+	if !slices.Contains(aiEffortDots, effort) {
 		fmt.Fprintf(&b, `<text x="%d" y="%d" font-family="%s" font-size="%d" font-weight="bold" fill="%s">%s</text>`,
-			anchor+2*gap, y, stripFont, svgFont, dotColor, html.EscapeString(strings.ToLower(l.effort)))
+			anchor+2*gap, y, stripFont, svgFont, dotColor, html.EscapeString(effort))
 	}
-	var xs [len(dots)]float64
-	x := float64(anchor + 2*gap + r)
-	for i, p := range dots {
-		if i > 0 {
-			x += p * (2*r + gap)
-		}
-		xs[i] = x
-	}
-	for i := len(dots) - 1; i >= 0; i-- {
-		if dots[i] <= 0.01 {
-			continue
-		}
-		radius := float64(r)
-		if i == 0 {
-			radius *= dots[0]
-		}
-		fmt.Fprintf(&b, `<circle cx="%.1f" cy="%d" r="%.1f" fill="%s"/>`, xs[i], svgHeight/2, radius, dotColor)
+	for i := range slices.Index(aiEffortDots, effort) + 1 {
+		fmt.Fprintf(&b, `<circle cx="%d" cy="%d" r="%d" fill="%s"/>`, anchor+2*gap+r+i*(2*r+gap), svgHeight/2, r, dotColor)
 	}
 	return b.String()
-}
-
-func clockLeft(d time.Duration) string {
-	m := int(math.Ceil(max(0, d.Minutes())))
-	return fmt.Sprintf("%d:%02d", m/60, m%60)
-}
-
-func daysLeft(d time.Duration) string {
-	if d >= day {
-		return fmt.Sprintf("%dd", int(d/day))
-	}
-	return clockLeft(d)
 }
 
 func dataURI(svg string) string {

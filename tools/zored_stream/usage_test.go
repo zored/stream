@@ -52,19 +52,6 @@ func TestLevel(t *testing.T) {
 	}
 }
 
-func TestTimeLeft(t *testing.T) {
-	for d, want := range map[time.Duration]string{102 * time.Minute: "1:42", 2 * time.Hour: "2:00", 59 * time.Minute: "0:59", -time.Minute: "0:00"} {
-		if got := clockLeft(d); got != want {
-			t.Errorf("clock %v: got %s want %s", d, got, want)
-		}
-	}
-	for d, want := range map[time.Duration]string{95 * time.Hour: "3d", 24 * time.Hour: "1d", 5*time.Hour + 20*time.Minute: "5:20"} {
-		if got := daysLeft(d); got != want {
-			t.Errorf("days %v: got %s want %s", d, got, want)
-		}
-	}
-}
-
 func TestScopedFor(t *testing.T) {
 	limits := []limit{lim("weekly_all", 1, "", nil), lim("weekly_scoped", 2, "Fable", nil)}
 	if l := scopedFor(limits, "Fable"); l == nil || l.Percent != 2 {
@@ -75,33 +62,27 @@ func TestScopedFor(t *testing.T) {
 	}
 }
 
-func TestStripValue(t *testing.T) {
-	now := at(19, 12)
-	limits := []limit{lim("session", 30, "", ptr(now.Add(102*time.Minute))), lim("weekly_all", 23, "", ptr(at(23, 18)))}
-	for name, c := range map[string]struct {
-		mode stripMode
-		text string
-		pct  float64
-	}{
-		"session":   {stripMode{}, "1:42", 30},
-		"switching": {stripMode{switching: true}, "day", 115},
-		"week":      {stripMode{weekUntil: now.Add(time.Second)}, "4d", 23},
-	} {
-		if text, pct := stripValue(limits, limits[1], c.mode, now); text != c.text || pct != c.pct {
-			t.Errorf("%s: got %q %v want %q %v", name, text, pct, c.text, c.pct)
-		}
+func TestStripFrame(t *testing.T) {
+	now := at(20, 15)
+	limits := []limit{lim("session", 30, "", ptr(now.Add(time.Hour))), lim("weekly_all", 30, "", ptr(at(26, 0))), lim("weekly_scoped", 50, "Fable", ptr(at(26, 0)))}
+	f := stripFrameFor(limits, stripLabel{model: "opus"}, now)
+	if f.session != 30 || f.week != 30 || f.allowed != 40 || f.weekLvl != "normal" || f.failed {
+		t.Errorf("opus: got %+v", f)
+	}
+	f = stripFrameFor(limits, stripLabel{model: "fable"}, now)
+	if f.week != 50 || f.weekLvl != "critical" {
+		t.Errorf("fable: got %+v", f)
+	}
+	if f := stripFrameFor(nil, stripLabel{}, now); !f.failed {
+		t.Errorf("no limits: got %+v", f)
 	}
 }
 
-func TestStripValueAfterReset(t *testing.T) {
+func TestStripFrameAfterReset(t *testing.T) {
 	now := at(19, 12)
-	week := lim("weekly_all", 23, "", ptr(at(23, 18)))
-	if text, pct := stripValue([]limit{lim("session", 38, "", ptr(now.Add(-time.Minute))), week}, week, stripMode{}, now); text != "" || pct != 0 {
-		t.Errorf("session reset passed: got %q %v", text, pct)
-	}
-	old := lim("weekly_all", 23, "", ptr(now.Add(-time.Hour)))
-	if text, pct := stripValue([]limit{old}, old, stripMode{switching: true}, now); text != "" || pct != 0 {
-		t.Errorf("week reset passed: got %q %v", text, pct)
+	limits := []limit{lim("session", 38, "", ptr(now.Add(-time.Minute))), lim("weekly_all", 23, "", ptr(now.Add(-time.Hour)))}
+	if f := stripFrameFor(limits, stripLabel{}, now); f.session != 0 || f.week != 0 || f.allowed != 0 || f.weekLvl != "" {
+		t.Errorf("resets passed: got %+v", f)
 	}
 }
 

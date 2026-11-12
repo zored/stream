@@ -105,6 +105,9 @@ type agents struct {
 	rowTitle             string
 	rowPos               []float64
 	overlay              *stripOverlay
+	contexts             *contexts
+	onContext            func(*chatContext)
+	contextErr           string
 }
 
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
@@ -634,8 +637,28 @@ func (a *agents) publish() {
 		}
 	}
 	t := a.slideT()
+	ctx := a.cursorContext()
 	a.mu.Unlock()
-	a.vars.set("agents_svg", agentsSVG(dots, sizes, current, prev, t))
+	if a.onContext != nil {
+		a.onContext(ctx)
+	}
+	a.vars.set("agents_svg", agentsSVG(dots, sizes, current, prev, t, ctx))
+}
+
+func (a *agents) cursorContext() *chatContext {
+	if a.cursor == nil || a.contexts == nil {
+		return nil
+	}
+	ctx, err := a.contexts.of(a.cursor.ID)
+	if err != nil {
+		if msg := err.Error(); msg != a.contextErr {
+			a.contextErr = msg
+			log.Printf("agents: context: %v", err)
+		}
+		return nil
+	}
+	a.contextErr = ""
+	return &ctx
 }
 
 func (a *agents) slideT() float64 {
@@ -806,9 +829,13 @@ func agentShape(b *strings.Builder, x, y, r float64, paint string) {
 	fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" %s/>`, x, y, r, paint)
 }
 
-func agentsSVG(dots []agentDotSpec, sizes []int, current, prev int, t float64) string {
+func agentsSVG(dots []agentDotSpec, sizes []int, current, prev int, t float64, ctx *chatContext) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
+	if ctx != nil {
+		fmt.Fprintf(&b, `<rect width="100" height="%d" fill="%s"/><rect width="%.1f" height="%d" fill="%s"/>`,
+			contextBarH, stripTrack, min(ctx.Percent, 100), contextBarH, levelColors[levelOf(ctx.Percent)])
+	}
 	switch n := len(dots); {
 	case n == 0:
 		fmt.Fprintf(&b, `<circle cx="50" cy="50" r="7" fill="none" stroke="%s" stroke-width="2.5"/>`, gray)

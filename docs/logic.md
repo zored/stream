@@ -192,7 +192,9 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 - hold 400 ms → `/agent/new`: open a new session.
 - draws `agents_svg` (pure Go SVG): one dot per session, up to 16 in a 4×4 grid, amber = `input`, white = `done`, gray =
   `working`, hollow gray = `read`; circles for top-level, squares for children; the cursor dot is bigger with a white ring
-  that slides 150 ms; a count when > 16; a hollow gray circle when none. A Desktop chat whose title starts with an emoji shows that emoji instead of the dot: drawn over the status dot (amber / white / gray, hollow and dimmed when read); no emoji in the title (CLI, `misc:`) → the dot. Layout (since 2026-11-12): sessions of one family (a parent and the chats it spawned, by `spawnedFrom`) with 2+ on the tile sit together on a small circle; families are ordered freshest update first, inside a family children first (deepest level first, then by update), the parent last; the knob walks the same order, the press still goes by state. Dots grow when there are few and shrink to fit; the white ring follows the active one. On a knob step the left strip shows the emoji column of that order (picker layers: `emoji_l`, families split by an 18 px gap; `emoji_r` carries the title, since `emoji_on` blacks out both strips) for 2 s, the right strip the title.
+  that slides 150 ms; a count when > 16; a hollow gray circle when none. A 4 px bar along the top edge = context of the ringed chat
+  (`context.go`): the last `message.usage` (input + cache read + cache creation) in `~/.claude/projects/*/<id>.jsonl`, over a
+  1M window (200k for Haiku), coloured like the AI strip levels; no bar when the transcript has no usage yet. A Desktop chat whose title starts with an emoji shows that emoji instead of the dot: drawn over the status dot (amber / white / gray, hollow and dimmed when read); no emoji in the title (CLI, `misc:`) → the dot. Layout (since 2026-11-12): sessions of one family (a parent and the chats it spawned, by `spawnedFrom`) with 2+ on the tile sit together on a small circle; families are ordered freshest update first, inside a family children first (deepest level first, then by update), the parent last; the knob walks the same order, the press still goes by state. Dots grow when there are few and shrink to fit; the white ring follows the active one. On a knob step the left strip shows the emoji column of that order (picker layers: `emoji_l`, families split by an 18 px gap; `emoji_r` carries the title, since `emoji_on` blacks out both strips) for 2 s, the right strip the title.
 - Win: keep, Codex as the source (see the agents module). Focus = bring the Codex window / Windows Terminal to front.
 
 #### тайл ряд 3, колонка 1 — mic in a call / unread chats (`2/2`)
@@ -312,10 +314,14 @@ posted once at start (covers a crash).
 
 One 48×258 SVG `ai_strip_svg` (pure Go `aiStripSVG`), each cell shows its third.
 
-- default: white bar bottom-up = 5 h session %, text = time left in the session `h:mm`; rotated model + effort dots (1–5).
-- while switching the model: text `day`, bar = weekly % scaled to the workday; after a switch, for 5 s (or while previewing,
-  up to 15 s): days left in the week `3d`, bar = weekly %.
-- stale (F10): last fetch failed, never happened, or older than 2 intervals → gray bar; a limit past its `resets_at` → empty.
+- full bleed, no inset: left 32 px bar bottom-up = 5 h session %, right 16 px bar = weekly % of the selected model
+  (`weekly_scoped` when its `display_name` starts with the model, else `weekly_all`); behind the weekly bar a dark gray bar up
+  to where the week may be today (`100 × workday index / 5`, `allowedPct`); dark track `#1C1C1E` behind both.
+- bar colours by level (`levelColors`, as the Hammerspoon overlay): < 50 light green, ≤ 80 white, > 80 yellow, > 90 red; 5 h by its
+  %, the weekly bar by `dayPct` (its % of today's allowance). No time text.
+- rotated model + effort dots (1–5) centred over the 5 h bar: white outside it, black where the bar is under them; model gray
+  while previewing, dots amber / red for other / error. No animation: a model or effort change redraws at once.
+- stale (F10): last fetch failed, never happened, or older than 2 intervals → gray bars; a limit past its `resets_at` → empty.
   A red dot = the last fetch failed.
 - `covered`: other modules can put a picture over the whole strip (calendar list, agents note, wi-fi pick, chats browse).
   The wi-fi note (`say`) is text only; the knob hint chevron is a separate layer (`knobhint.go`).
@@ -405,7 +411,8 @@ the windows page depends on it.
 
 - Fetch on start, then every `-usage-every` (15 min); errors back off ×2 up to 1 h, honouring `Retry-After`; waits in ≤ 1 min
   ticks against the wall clock (timers stop while asleep). `POST /usage/refresh` = fetch now unless the last fetch was < 1 min ago.
-- `GET /usage` → `{"limits":[…], "fetched_at", "error", "next_at"}` from the cache, never fetches.
+- `GET /usage` → `{"limits":[…], "fetched_at", "error", "next_at", "context"}` from the cache, never fetches; `context` =
+  the active chat's context (below) or `null`.
 - Limits model: `kind` `session` (5 h window), `weekly_all`, `weekly_scoped` (per model, matched by `scope.model.display_name`
   prefix), `percent`, `resets_at`.
 - Variables: `ai_session` (%), `ai_session_reset` (`15:04`), `ai_week` (%), `ai_week_reset` (`Mon 15:04`), `ai_day` =

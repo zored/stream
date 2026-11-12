@@ -239,15 +239,13 @@ unless the track or player changed or playback was started meanwhile.
 
 ## Right strip — AI limits + model
 
-- shows: a white bar bottom-up = Claude 5h session usage, time left in the session near the bottom (`1:42`);
-  the model rotated (reads bottom-up), effort as gray dots (low 1 … max 5), on a change new dots slide out of the previous one and slide back in; a red dot in the corner = the last fetch failed
-- while switching the model: the word `day` and the bar = workday-scaled weekly usage of the selected model;
-  right after: days left in the week (`3d`) and the bar = weekly usage
-- model white, gray while previewing; effort dots gray, amber = outside the knob's list, red = switch failed
+- shows, edge to edge: a wide bar bottom-up = Claude 5h session usage; next to it a narrow bar = weekly usage of the selected model (Fable has its own week, the rest share one), over a dark gray bar = how far the week may be by tonight;
+  bars light green < 50, white, yellow > 80, red > 90 (weekly: of today's allowance); the model rotated (reads bottom-up) with effort dots (low 1 … max 5) over the wide bar, white, black where the bar is under them; a red dot in the corner = the last fetch failed
+- model white, gray while previewing; effort dots white, amber = outside the knob's list, red = switch failed; changes show at once
 - slide: picks the model + effort by position, bottom Sonnet·Low → top Fable·High *(on the device: assumed)*
 - tap: nothing
 
-- stale: gray bar = the numbers are old (fetch failed or >30 min); after a reset the bar and the time clear until the next fetch
+- stale: gray bars = the numbers are old (fetch failed or >30 min); after a reset that bar clears until the next fetch
 
 Limits refresh every 15 min; the daemon renews the Claude Code login token itself. [ai.md](ai.md), [ai-switch.md](ai-switch.md)
 

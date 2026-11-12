@@ -127,7 +127,7 @@ func TestTitleEmoji(t *testing.T) {
 }
 
 func TestAgentsSVGEmoji(t *testing.T) {
-	uri := agentsSVG([]agentDotSpec{{agentInput, "🟢"}, {agentRead, ""}}, []int{1, 1}, -1, -1, 1)
+	uri := agentsSVG([]agentDotSpec{{agentInput, "🟢"}, {agentRead, ""}}, []int{1, 1}, -1, -1, 1, nil)
 	raw, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(uri, "data:image/svg+xml;base64,"))
 	if err != nil {
 		t.Fatal(err)

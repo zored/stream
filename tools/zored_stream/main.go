@@ -232,7 +232,6 @@ func main() {
 		log.Fatal(err)
 	}
 	go us.run()
-	go us.animateStrip()
 	go serve(*usageAddr, func(mux *http.ServeMux) {
 		mux.HandleFunc("GET /usage", us.serveJSON)
 		handle(mux, "/usage/refresh", us.refresh)
@@ -292,6 +291,7 @@ func main() {
 	}
 	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir))
 	ag.strip = us.cover
+	ag.contexts, ag.onContext = newContexts(home), us.setContext
 	ag.overlay = overlay
 	ch := newChoice(v, func() (*choiceCard, choiceTarget, string, error) { return readChoiceCard(ag) })
 	go ch.run()
