@@ -157,7 +157,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 ### тайл ряд 2, колонка 4 — agents waiting
 
 - shows: one dot per Claude Code session: amber = needs input, white = done and unread (a Desktop chat stays white while its sidebar shows the blue dot), gray = working, up to 16 in a 4×4 grid; the active one (chat in front, else last focused) is bigger with a white ring,
-  the ring slides over in 150 ms; a number above 16; a hollow gray circle when none; a Desktop chat whose title starts with an emoji shows it instead of the dot (ringed in the dot's color: amber, white, gray; dimmed when read)
+  the ring slides over in 150 ms; a number above 16; a hollow gray circle when none; a Desktop chat whose title starts with an emoji shows it instead of the dot (over the status dot; only the active one has a ring)
 - order: needs input, done, working, read; inside a group oldest update first; all circles
 - press (on release): focus the next session in that order, next press moves on and wraps;
   none waiting → opens a new Code session

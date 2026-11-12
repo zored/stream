@@ -112,7 +112,7 @@ func TestAgentsSVGEmoji(t *testing.T) {
 		t.Fatal(err)
 	}
 	svg := string(raw)
-	if !strings.Contains(svg, ">🟢</text>") || !strings.Contains(svg, `stroke="`+amber+`"`) || !strings.Contains(svg, `stroke="`+gray+`"`) {
+	if !strings.Contains(svg, ">🟢</text>") || !strings.Contains(svg, `fill="`+amber+`"`) || !strings.Contains(svg, `stroke="`+gray+`"`) {
 		t.Fatalf("want amber-backed emoji and a hollow dot: %s", svg)
 	}
 }
