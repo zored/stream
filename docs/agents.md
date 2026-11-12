@@ -28,10 +28,31 @@ The ring follows the chat in front, not only presses (`watchFront`, every 1 s, `
 (`agentStep`), the right strip shows the Desktop title (`title` in its session file) white and the cwd folder gray for 2 s
 (`usage.cover`, `calImage` as the calendar list), each detent opens its chat at once; a click = a tile press (`focus`). Press + turn goes to the model switch (the press hides the ring and the title; a 400 ms hold without a turn = `/agent/new`, via `/ai/hold`). Verified 2026-11-05 through the HTTP API.
 
+## Pins
+
+Since 2026-11-12. A click on the tile or on крутилка справа, ряд 2 within 2 s of a knob step (`agentStripFor`, while the
+title is on the right strip) toggles the pin of the chat under the ring instead of focusing the next one (`agents.click`,
+`armClick` / `armedClick`: the knob takes the browse state at `/ai/down`, since the press hides the strip). The toggle
+re-shows the title for 2 s, so a second click undoes it.
+
+- Store: `~/.config/zored-stream/agent-pins.json` (`-pins-file`), a list of Desktop session ids (`local_…`); the daemon's
+  list is the truth for the tile. Toggle = map flip + atomic file write + `publish`, tens of µs before the redraw (see the log line `agents: pin … in …`).
+- Tile: a pin draws a pink (`#FF375F`) disc 2 px wider behind the dot or emoji. `expire` never drops a pinned, not archived
+  chat and adds a missing one as `read`; an archived chat keeps its pin but is not shown. Children are pinned on their own.
+  CLI / iTerm2 sessions cannot be pinned (logged error).
+- Desktop sidebar mirror, best effort, one worker in the background (`syncSidebar`, `pins_darwin.go`): AX `AXPopUpButton`
+  described `More options for <title>` in the focused Claude window → `AXPress` → wait for `AXMenuItem` `Pin` / `Unpin`
+  (≤ 1 s, 20 ms polls) → press; the opposite item present = already in that state, Escape. Verified 2026-11-12 on a live chat:
+  the menu holds `Open in, Pin|Unpin, Mark as unread, Rename, Fork, …`, the whole round ~200 ms. A chat without a sidebar row
+  (collapsed under a parent, filtered out) is logged and left as is.
+- Desktop's own pins live in `claude_desktop_config.json` → `preferences.epitaxyPrefs["dframe-local-slice"].pinnedOrder`,
+  written by the claude.ai frontend from memory; `app.asar` does not watch the file (read), so writing it from outside is lost.
+  An AX pin did not change the file within 1 s (verified). The daemon does not read it.
+
 ## Read chats
 
 A "done" chat that gets read (Desktop file says read, or a CLI one focused) turns `read`: ranked last, a hollow gray
-circle, dropped by `expire` 1 min later (`agentReadFor`), or back to done if Desktop marks it unread again.
+circle, dropped by `expire` 1 min later (`agentReadFor`, never while pinned), or back to done if Desktop marks it unread again.
 
 ## Flow
 
@@ -85,7 +106,7 @@ Variables: `agents_svg` (tile). кнопка 6 has no agents role since 2026-11-
 
 ## Focus
 
-- Desktop: `open claude://code/continue?session=local_…`. The app's URL handler takes `/continue?session=` with a `local_` id
+- Desktop: `claude://code/continue?session=local_…` through `LSOpenCFURLRef` in the daemon (since 2026-11-12; a forked `/usr/bin/open` took 200–300 ms, LaunchServices in process ~10 ms, verified). The app's URL handler takes `/continue?session=` with a `local_` id
   and routes to that session (read in `app.asar`; also `/needs-input`, `/new`). It is ignored when the app's "entry points" setting is off.
 - iTerm2: `ITERM_SESSION_ID` `w0t1p0:<uuid>`, AppleScript selects the window, tab and session by `unique id`.
   The first press asks for Automation permission (`zored_stream` → iTerm2).

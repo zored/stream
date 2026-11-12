@@ -138,6 +138,7 @@ func main() {
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
 	inputAddr := flag.String("input", "127.0.0.1:47127", "keyboard layout HTTP address")
 	timersAddr := flag.String("timers", "127.0.0.1:47129", "timers + alarms HTTP address")
+	pinsFile := flag.String("pins-file", filepath.Join(home, ".config/zored-stream/agent-pins.json"), "pinned Claude Desktop chats")
 	timersFile := flag.String("timers-file", filepath.Join(home, ".config/zored-stream/timers.json"), "pending timers and alarms")
 	emojiAddr := flag.String("emoji", "127.0.0.1:47128", "emoji picker HTTP address")
 	switchAddr := flag.String("switch", "127.0.0.1:47132", "window switcher HTTP address")
@@ -276,6 +277,7 @@ func main() {
 		})
 		handle(mux, "/ai/down", func() error {
 			hints.press("r1", true)
+			ag.armClick()
 			ag.hideStrip()
 			return ai.down()
 		})
@@ -290,14 +292,19 @@ func main() {
 			if ai.up() {
 				return nil
 			}
-			return ag.focus()
+			return ag.armedClick()
 		})
 	})
 	configDir, err := os.UserConfigDir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir))
+	pins, err := loadPins(*pinsFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir), pins)
+	go ag.syncSidebar(sidebarPinChat)
 	ag.strip = us.cover
 	ag.contexts, ag.onContext = newContexts(home), us.setContext
 	ag.overlay = overlay
@@ -319,7 +326,7 @@ func main() {
 	go serve(*agentsAddr, func(mux *http.ServeMux) {
 		mux.HandleFunc("POST /agent/event", ag.serveEvent)
 		mux.HandleFunc("GET /agents", ag.serveJSON)
-		handle(mux, "/agent/focus", ag.focus)
+		handle(mux, "/agent/focus", ag.click)
 		handle(mux, "/agent/new", newChat)
 		mux.HandleFunc("GET /choice", ch.serveJSON)
 		mux.HandleFunc("POST /choice/{edge}", func(w http.ResponseWriter, r *http.Request) {

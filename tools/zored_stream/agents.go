@@ -53,6 +53,7 @@ type agentSession struct {
 	Pid     int       `json:"pid,omitempty"`
 	Updated time.Time `json:"updated"`
 	Child   bool      `json:"child,omitempty"`
+	Pinned  bool      `json:"pinned,omitempty"`
 	choicePayload
 }
 
@@ -108,10 +109,20 @@ type agents struct {
 	contexts             *contexts
 	onContext            func(*chatContext)
 	contextErr           string
+	pins                 *agentPins
+	browsedAt            time.Time
+	clickArm             bool
+	sidebar              chan sidebarPin
 }
 
-func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
-	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, slide: make(chan struct{}, 1), rowWake: make(chan struct{}, 1), desktop: desktop}
+type sidebarPin struct {
+	title string
+	on    bool
+}
+
+func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions, pins *agentPins) *agents {
+	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, slide: make(chan struct{}, 1), rowWake: make(chan struct{}, 1),
+		desktop: desktop, pins: pins, sidebar: make(chan sidebarPin, 16)}
 }
 
 func (s *agentSession) desktopDone() bool {
@@ -223,10 +234,11 @@ func (a *agents) expire() {
 	hosts := map[string]bool{}
 	for id, s := range a.sessions {
 		rec, known := recs[s.Host]
+		pinned := known && !rec.IsArchived && a.pins.has(s.Host)
 		var drop bool
 		switch {
 		case s.Kind == agentRead:
-			drop = time.Since(s.Since) > agentReadFor || known && rec.unread()
+			drop = !pinned && time.Since(s.Since) > agentReadFor || known && rec.unread()
 		case known && s.desktopDone():
 			if !rec.unread() {
 				s.markRead()
@@ -246,11 +258,21 @@ func (a *agents) expire() {
 		hosts[s.Host] = true
 	}
 	for host, rec := range recs {
-		if rec.unread() && !hosts[host] {
+		if hosts[host] {
+			continue
+		}
+		switch {
+		case rec.unread():
 			s := rec.session()
 			a.sessions[s.ID] = s
 			changed = true
 			log.Printf("agents: %s unread %s", s.ID, filepath.Base(s.Cwd))
+		case !rec.IsArchived && a.pins.has(host):
+			s := rec.session()
+			s.markRead()
+			a.sessions[s.ID] = s
+			changed = true
+			log.Printf("agents: %s pinned %s", s.ID, filepath.Base(s.Cwd))
 		}
 	}
 	a.mu.Unlock()
@@ -401,6 +423,7 @@ func (a *agents) step(d int) {
 	i := agentStep(slices.IndexFunc(list, func(s *agentSession) bool { return a.cursor != nil && s.ID == a.cursor.ID }), d, len(list))
 	a.cursor = list[i]
 	a.manual = time.Now()
+	a.browsedAt = a.manual
 	target := *list[i]
 	a.showStrip(target)
 	go func() {
@@ -411,6 +434,83 @@ func (a *agents) step(d int) {
 	}()
 	a.mu.Unlock()
 	a.publish()
+}
+
+func (a *agents) browsing() bool {
+	return time.Since(a.browsedAt) < agentStripFor
+}
+
+func (a *agents) click() error {
+	a.mu.Lock()
+	browsing := a.browsing()
+	a.mu.Unlock()
+	if browsing {
+		return a.togglePin()
+	}
+	return a.focus()
+}
+
+func (a *agents) armClick() {
+	a.mu.Lock()
+	a.clickArm = a.browsing()
+	a.mu.Unlock()
+}
+
+func (a *agents) armedClick() error {
+	a.mu.Lock()
+	armed := a.clickArm
+	a.clickArm = false
+	a.mu.Unlock()
+	if armed {
+		return a.togglePin()
+	}
+	return a.focus()
+}
+
+func (a *agents) togglePin() error {
+	start := time.Now()
+	a.mu.Lock()
+	if a.cursor == nil {
+		a.mu.Unlock()
+		return errors.New("agents: pin: no chat under the ring")
+	}
+	s := *a.cursor
+	if !desktopSession.MatchString(s.Host) {
+		a.mu.Unlock()
+		return fmt.Errorf("agents: pin %s: not a Desktop chat", s.ID)
+	}
+	on, err := a.pins.toggle(s.Host)
+	if err != nil {
+		a.mu.Unlock()
+		return fmt.Errorf("agents: pin %s: %w", s.Host, err)
+	}
+	rec, _ := a.desktop.record(s.Host)
+	a.browsedAt = time.Now()
+	a.showStrip(s)
+	a.mu.Unlock()
+	a.publish()
+	log.Printf("agents: pin %s %v %s in %s", s.Host, on, filepath.Base(s.Cwd), time.Since(start).Round(time.Microsecond))
+	if rec.Title == "" {
+		log.Printf("agents: pin %s: no title, sidebar left as is", s.Host)
+		return nil
+	}
+	select {
+	case a.sidebar <- sidebarPin{rec.Title, on}:
+	default:
+		log.Printf("agents: pin %s: sidebar queue full, sidebar left as is", s.Host)
+	}
+	return nil
+}
+
+func (a *agents) syncSidebar(pin func(title string, on bool) error) {
+	for p := range a.sidebar {
+		start := time.Now()
+		if err := pin(p.title, p.on); err != nil {
+			log.Printf("agents: sidebar pin %q %v: %v", p.title, p.on, err)
+			continue
+		}
+		log.Printf("agents: sidebar pin %q %v in %s", p.title, p.on, time.Since(start).Round(time.Millisecond))
+	}
 }
 
 func (a *agents) showStrip(s agentSession) {
@@ -573,7 +673,7 @@ func (s agentSession) open() error {
 	var cmd *exec.Cmd
 	switch {
 	case desktopSession.MatchString(s.Host):
-		cmd = exec.Command("/usr/bin/open", "claude://code/continue?session="+s.Host)
+		return launchURL("claude://code/continue?session=" + s.Host)
 	case itermSession.MatchString(s.ITerm):
 		cmd = exec.Command("/usr/bin/osascript", "-e", fmt.Sprintf(itermFocus, itermSession.FindStringSubmatch(s.ITerm)[1]))
 	case bundleID.MatchString(s.App):
@@ -588,7 +688,7 @@ func (s agentSession) open() error {
 }
 
 func newChat() error {
-	return run(exec.Command("/usr/bin/open", "claude://code/new"))
+	return launchURL("claude://code/new")
 }
 
 func run(cmd *exec.Cmd) error {
@@ -633,7 +733,7 @@ func (a *agents) publish() {
 	current, prev := -1, -1
 	for i, s := range list {
 		rec, _ := a.desktop.record(s.Host)
-		dots[i] = agentDotSpec{s.Kind, titleEmoji(rec.Title)}
+		dots[i] = agentDotSpec{s.Kind, titleEmoji(rec.Title), a.pins.has(s.Host)}
 		switch s.ID {
 		case a.ringTo:
 			current = i
@@ -788,8 +888,9 @@ func agentLayout(sizes []int) []agentPos {
 }
 
 type agentDotSpec struct {
-	kind  string
-	emoji string
+	kind   string
+	emoji  string
+	pinned bool
 }
 
 var emojiSet = sync.OnceValue(func() map[string]string {
@@ -857,6 +958,9 @@ func agentsSVG(dots []agentDotSpec, sizes []int, current, prev int, t float64, c
 		pos := agentLayout(sizes)
 		for i, dot := range dots {
 			p := pos[i]
+			if dot.pinned {
+				agentShape(&b, p.x, p.y, p.r+2, `fill="`+pink+`"`)
+			}
 			if dot.emoji != "" {
 				agentEmoji(&b, p.x, p.y, p.r, dot)
 				continue
@@ -893,6 +997,7 @@ func (a *agents) serveJSON(w http.ResponseWriter, _ *http.Request) {
 	for i, s := range list {
 		out[i] = *s
 		out[i].Cwd = filepath.Base(s.Cwd)
+		out[i].Pinned = a.pins.has(s.Host)
 	}
 	a.mu.Unlock()
 	w.Header().Set("Content-Type", "application/json")

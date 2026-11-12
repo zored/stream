@@ -127,13 +127,13 @@ func TestTitleEmoji(t *testing.T) {
 }
 
 func TestAgentsSVGEmoji(t *testing.T) {
-	uri := agentsSVG([]agentDotSpec{{agentInput, "🟢"}, {agentRead, ""}}, []int{1, 1}, -1, -1, 1, nil)
+	uri := agentsSVG([]agentDotSpec{{agentInput, "🟢", false}, {agentRead, "", true}}, []int{1, 1}, -1, -1, 1, nil)
 	raw, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(uri, "data:image/svg+xml;base64,"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	svg := string(raw)
-	if !strings.Contains(svg, ">🟢</text>") || !strings.Contains(svg, `fill="`+amber+`"`) || !strings.Contains(svg, `stroke="`+gray+`"`) {
+	if !strings.Contains(svg, ">🟢</text>") || !strings.Contains(svg, `fill="`+amber+`"`) || !strings.Contains(svg, `stroke="`+gray+`"`) || !strings.Contains(svg, `fill="`+pink+`"`) {
 		t.Fatalf("want amber-backed emoji and a hollow dot: %s", svg)
 	}
 }

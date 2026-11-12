@@ -164,6 +164,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 - hold: new Claude Desktop Code session
 - крутилка справа, ряд 2: turn moves the ring and wraps, the right strip shows the chat title white + folder gray for 2 s (as the calendar list), the chat opens at once (hollow dots of read chats help to step back); click = tile press
 - a chat read in Desktop (or a CLI one focused) stays for 1 min at the end as a hollow gray circle
+- pin (since 2026-11-12): while the chat title is on the right strip (2 s after a knob step), a click on this tile or on крутилка справа, ряд 2 pins or unpins the chat under the ring instead of moving on; the title stays 2 s more, so a second click undoes it. A pinned chat has a pink disc behind its dot and never leaves the tile (shown as read when nothing else holds it), until unpinned or archived. Children are pinned one by one; a parent's pin does not keep its children. Only Claude Desktop chats; the same Pin/Unpin is pressed in Desktop's sidebar in the background (~0.2 s, the menu flashes); a chat with no sidebar row stays pinned on the tile only.
 
 A knob turn with the chat in front not on the tile adds it as a hollow dot for 1 min. [agents.md](agents.md)
 
@@ -265,7 +266,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 2 — agent chats, AI model + effort
 
-- turn: walks the agent chats (see тайл ряд 2, колонка 4); click: same as that tile
+- turn: walks the agent chats (see тайл ряд 2, колонка 4); click: same as that tile, so within 2 s of a turn it pins / unpins the chat under the ring
 - while the chats browse (тайл ряд 3, колонка 1): turn walks the messages of the shown chat
 
 - press: hides the chat ring and the chat title from the strips at once, so the model + effort label shows
