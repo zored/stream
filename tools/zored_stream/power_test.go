@@ -63,6 +63,25 @@ func TestTouchRateLimited(t *testing.T) {
 	}
 }
 
+func TestAmphetamineSuppressesScreensOff(t *testing.T) {
+	sent := map[string]string{}
+	postVar = func(name, value string) error { sent[name] = value; return nil }
+	screensOff = func() (bool, error) { return true, nil }
+	locked = func() (bool, error) { return false, nil }
+	t.Cleanup(func() { postVar, screensOff, locked = post, displaysAsleep, screenLocked })
+	p := newPower(&vars{sent: map[string]string{}})
+	p.session = amphSession{active: true}
+	p.publish()
+	if sent["screen_off"] != "0" || sent["power_svg"] != powerSVG("on", "") {
+		t.Errorf("active session, screens off: screen_off = %q, want 0 and the filled sun", sent["screen_off"])
+	}
+	p.session = amphSession{}
+	p.publish()
+	if sent["screen_off"] != "1" || sent["power_svg"] != powerSVG("sleep", "") {
+		t.Errorf("no session, screens off: screen_off = %q, want 1 and the moon", sent["screen_off"])
+	}
+}
+
 func TestScreensOffMoonThenLock(t *testing.T) {
 	sent := map[string]string{}
 	postVar = func(name, value string) error { sent[name] = value; return nil }

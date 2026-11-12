@@ -85,6 +85,7 @@ func (p *power) publishLocked() {
 	if err != nil {
 		log.Print(err)
 	}
+	dark = dark && !p.session.active
 	lock, err := locked()
 	if err != nil {
 		log.Print(err)
