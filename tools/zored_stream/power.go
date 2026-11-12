@@ -281,9 +281,9 @@ func powerSVG(state, below string) string {
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
 	switch state {
 	case "sleep":
-		b.WriteString(iconAt("moon-fill", gray, 50, 50, iconSize))
+		b.WriteString(iconAt("moon-fill", "#fff", 50, 50, iconSize))
 	case "lock":
-		b.WriteString(iconAt("lock-fill", gray, 50, 50, iconSize))
+		b.WriteString(iconAt("lock-fill", "#fff", 50, 50, iconSize))
 	case "arm":
 		b.WriteString(iconAt("moon-fill", "#fff", 50, iconCY, iconSize))
 	case "on":

@@ -156,6 +156,6 @@ Fork commits (surface settings, `plugin_cfg_*`):
   directions turn with the device. Cached images are redrawn on a switch. Pages, the daemon and the screen panel always draw for 0°.
   Companion's own Surface Rotation (5.1.1: `surface90`/`surface-90`/`surface180`) remaps the grid 4×8 → 8×4 and turns strips
   like tiles, so it stays off.
-- sleep moon (`src/moon.ts`): `close()` blanks the device, then draws a gray crescent on the tile at row 0, column 5 (тайл ряд 1, колонка 4); Companion closes surfaces on system sleep, so the moon stays while the Mac sleeps.
+- sleep moon (`src/moon.ts`): `close()` blanks the device, then draws a white crescent on the tile at row 0, column 5 (тайл ряд 1, колонка 4); Companion closes surfaces on system sleep, so the moon stays while the Mac sleeps.
 
 The changes stay in the fork: no upstream PR (bitfocus/companion-surface-loupedeck#36 was opened and closed).

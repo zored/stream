@@ -36,7 +36,7 @@ MEDIA page, `row/col` ([grid](companion.md)):
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` seek (press + turn = tracks, click = play / pause, hold = like), `2/0` chats browse; left strip `0–2/1` track + bar | — |
-| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | tile `1/4` |
+| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/4` window switcher, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | — |
 | buttons `3/0` KVM, `3/1` call layer (tap toggles, hold peeks), `3/2` mic / `3/3` camera / `3/4` hang up in a call, `3/4` calendar outside a call, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/5`, `3/7`; `3/2`, `3/3` outside a call |
 | right strip `0–2/6` AI limits + model, right knobs `0/7` brightness (hold 3 s = device orientation), `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
 
@@ -104,7 +104,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 4 — keep awake / sleep
 
-- shows: outline sun = off; filled sun + time left `h:mm` below = an Amphetamine session, the display won't sleep; white moon = release now to sleep; gray lock = the screen is locked; gray moon = the screens are off (the rest of the device goes black until they wake) or the Mac sleeps (the module fork draws it as Companion closes the surface)
+- shows: outline sun = off; filled sun + time left `h:mm` below = an Amphetamine session, the display won't sleep; white moon = release now to sleep; white lock = the screen is locked; white moon, centered = the screens are off (the rest of the device goes black until they wake) or the Mac sleeps (the module fork draws it as Companion closes the surface)
 - touch shorter than 1 s: keep-awake on for 1 h / off
 - right after turning on, крутилка справа, ряд 1 sets the length for 5 s (time turns white): 15 min per detent, 15 min – 12 h;
   every turn extends the 5 s, then the knob is brightness again
@@ -136,7 +136,18 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 [emoji.md](emoji.md)
 
-### тайл ряд 2, колонка 3 — free
+### тайл ряд 2, колонка 3 — window switcher
+
+- idle: Bootstrap `window-stack`
+- touch: opens the switcher for 4 s, every action below extends it; touch while open closes it
+- while open: left strip = icons of the apps that have windows, the current one in the gray ring, then by how recently they were on top;
+  right strip = one dot per window of the picked app; the tile shows the picked window's title (the app name when it has none)
+- switching is immediate: the app or window in the ring comes to the front as soon as the strip stops; nothing to confirm
+- strip swipe: scrolls its column, flicks keep coasting; tap on an item lower down brings it to the ring
+- крутилка слева, ряд 1 / справа, ряд 1: turn steps its column one item per detent (direction inverted when the device is turned), press closes the switcher; volume and brightness are off while it is open
+- icons stand upright in every device orientation; the left strip is mirrored when the fork flips it
+
+[windows-switch.md](windows-switch.md)
 
 ### тайл ряд 2, колонка 4 — agents waiting
 
