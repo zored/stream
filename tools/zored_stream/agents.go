@@ -446,13 +446,18 @@ func (a *agents) showStrip(s agentSession) {
 	if a.stripOff != nil {
 		a.stripOff.Stop()
 	}
-	a.stripOff = time.AfterFunc(agentStripFor, func() {
-		a.mu.Lock()
-		a.rowShown = false
-		a.mu.Unlock()
-		a.overlay.show("agents", false)
-		a.strip("")
-	})
+	a.stripOff = time.AfterFunc(agentStripFor, a.hideStrip)
+}
+
+func (a *agents) hideStrip() {
+	a.mu.Lock()
+	if a.stripOff != nil {
+		a.stripOff.Stop()
+	}
+	a.rowShown = false
+	a.mu.Unlock()
+	a.overlay.show("agents", false)
+	a.strip("")
 }
 
 func agentStripImage(title, cwd string) string {

@@ -256,6 +256,7 @@ func main() {
 			switch {
 			case cs.msgTurn(d):
 			case ai.holding():
+				ag.hideStrip()
 				ai.turn(d)
 			default:
 				ag.step(d)
@@ -275,7 +276,14 @@ func main() {
 		})
 		handle(mux, "/ai/down", func() error {
 			hints.press("r1", true)
+			ag.hideStrip()
 			return ai.down()
+		})
+		handle(mux, "/ai/hold", func() error {
+			if ai.hold() {
+				return newChat()
+			}
+			return nil
 		})
 		handle(mux, "/ai/up", func() error {
 			hints.press("r1", false)

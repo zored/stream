@@ -1,1 +1,1 @@
-button-0-3,button-1,button-1-2,button-1-5
+button-0-3,button-1,button-1-2,button-1-5,encoder-1-7

@@ -267,6 +267,8 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - turn: walks the agent chats (see тайл ряд 2, колонка 4); click: same as that tile
 - while the chats browse (тайл ряд 3, колонка 1): turn walks the messages of the shown chat
 
+- press: hides the chat ring and the chat title from the strips at once, so the model + effort label shows
+- hold 400 ms without a turn (haptic): new Code session, as a hold on the agents tile; the release then does nothing
 - press + turn: walks Sonnet·Low … Sonnet·High → Opus·Low … → Fable·High (9 stops, stops at the ends)
 - applies 400 ms after the knob rests, only on the Claude Desktop new-chat screen in front;
   elsewhere it previews for 5 s (gray label, the strip shows that model's limits), then shows the real model again

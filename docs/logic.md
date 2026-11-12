@@ -279,7 +279,7 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
   (mac AI switch) → model + effort step; else → agents walk: adds the Claude chat
   in front as a hollow dot if missing, moves the cursor by `d` (wraps), opens that session at once, shows its title + folder
   on the right strip for 2 s.
-- press → `/ai/down`; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
+- press → `/ai/down` (also hides the chats ring and title cover, `agents.hideStrip`, so the model label shows; a held turn hides it too); hold 400 ms (Companion `held`, mac only) → `/ai/hold`: if no turn happened since the press → new Code session (`claude://code/new`) and the release is consumed; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
   (`/agent/focus`).
 - mac model switch (F12): 9 stops Sonnet·Low … Fable·High, applied 400 ms after the knob rests, only on Claude Desktop's
   new-chat screen in front; elsewhere a 5 s gray preview. Variables `ai_model`, `ai_effort`, `ai_state`

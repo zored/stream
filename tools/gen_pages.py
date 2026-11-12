@@ -389,7 +389,8 @@ def day_tile():
 
 
 def ai_switch():
-    return button(glyph("robot"), down=ai("/ai/down"), up=ai("/ai/up"), left=ai("/ai/turn?d=-1"), right=ai("/ai/turn?d=1"))
+    return button(glyph("robot"), down=ai("/ai/down"), up=ai("/ai/up"), left=ai("/ai/turn?d=-1"), right=ai("/ai/turn?d=1"),
+                  held=None if WINDOWS else ai("/ai/hold"))
 
 
 def ai_strip(row):

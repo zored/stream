@@ -110,6 +110,16 @@ func (a *aiSwitch) up() (turned bool) {
 	return a.turned
 }
 
+func (a *aiSwitch) hold() (fire bool) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if !a.held || a.turned {
+		return false
+	}
+	a.turned = true
+	return true
+}
+
 func (a *aiSwitch) holding() bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
