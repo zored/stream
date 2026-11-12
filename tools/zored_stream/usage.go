@@ -35,7 +35,6 @@ const (
 	stripDrawH         = 258
 	stripSessionW      = 32
 	tilePx             = 90
-	stripTrack         = "#1C1C1E"
 	stripAllowed       = "#48484A"
 )
 
@@ -464,8 +463,8 @@ func aiStripSVG(f stripFrame) string {
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
 		`<defs><clipPath id="bar">%s</clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
-		`<rect width="%d" height="%d" fill="%s"/>%s%s%s%s<g clip-path="url(#bar)">%s</g>%s</svg>`,
-		w, h, sessionBar, w, h, w, h, stripTrack,
+		`%s%s%s%s<g clip-path="url(#bar)">%s</g>%s</svg>`,
+		w, h, sessionBar, w, h,
 		rect(w5, w-w5, f.allowed, stripAllowed), rect(w5, w-w5, f.week, weekColor), sessionBar,
 		label(""), label("#000"), dot))
 }

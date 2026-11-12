@@ -316,7 +316,7 @@ One 48×258 SVG `ai_strip_svg` (pure Go `aiStripSVG`), each cell shows its third
 
 - full bleed, no inset: left 32 px bar bottom-up = 5 h session %, right 16 px bar = weekly % of the selected model
   (`weekly_scoped` when its `display_name` starts with the model, else `weekly_all`); behind the weekly bar a dark gray bar up
-  to where the week may be today (`100 × workday index / 5`, `allowedPct`); dark track `#1C1C1E` behind both.
+  to where the week may be today (`100 × workday index / 5`, `allowedPct`).
 - bar colours by level (`levelColors`, as the Hammerspoon overlay): < 50 light green, ≤ 80 white, > 80 yellow, > 90 red; 5 h by its
   %, the weekly bar by `dayPct` (its % of today's allowance). No time text.
 - rotated model + effort dots (1–5) centred over the 5 h bar: white outside it, black where the bar is under them; model gray

@@ -834,8 +834,7 @@ func agentsSVG(dots []agentDotSpec, sizes []int, current, prev int, t float64, c
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
 	if ctx != nil {
-		fmt.Fprintf(&b, `<rect width="100" height="%d" fill="%s"/><rect width="%.1f" height="%d" fill="%s"/>`,
-			contextBarH, stripTrack, min(ctx.Percent, 100), contextBarH, levelColors[levelOf(ctx.Percent)])
+		fmt.Fprintf(&b, `<rect width="%.1f" height="%d" fill="%s"/>`, min(ctx.Percent, 100), contextBarH, levelColors[levelOf(ctx.Percent)])
 	}
 	switch n := len(dots); {
 	case n == 0:
