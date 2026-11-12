@@ -42,7 +42,11 @@ var (
 	errNoMenuItem = errors.New("menu item not found")
 )
 
-const aiHeldMax = 8 * time.Second
+const (
+	aiHeldMax    = 8 * time.Second
+	aiSlideGap   = 300 * time.Millisecond
+	aiSlidePitch = stripHeight / 9
+)
 
 type aiChoice struct{ model, effort string }
 
@@ -62,6 +66,8 @@ type aiSwitch struct {
 	onShow  func(stripLabel)
 	popup   C.AXUIElementRef
 	missAt  time.Time
+	slideY  float64
+	slidAt  time.Time
 }
 
 func newAISwitch(v *vars, onShow func(stripLabel)) *aiSwitch {
@@ -79,19 +85,31 @@ func (a *aiSwitch) show(c aiChoice, state string) {
 	a.onShow(stripLabel{c.model, c.effort, state})
 }
 
-func (a *aiSwitch) turn(d int) {
+func (a *aiSwitch) markTurned() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.turned, a.heldAt = true, time.Now()
-	a.index = min(max(a.index+d, 0), len(aiModels)*len(aiEfforts)-1)
-	a.schedule()
+}
+
+func aiSlideSteps(anchor, y float64) (int, float64) {
+	steps := int((anchor - y) / aiSlidePitch)
+	return steps, anchor - float64(steps)*aiSlidePitch
 }
 
 func (a *aiSwitch) slide(y float64) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	steps := len(aiModels) * len(aiEfforts)
-	index := min(max(int((stripHeight-y)/stripHeight*float64(steps)), 0), steps-1)
+	now := time.Now()
+	if now.Sub(a.slidAt) > aiSlideGap {
+		a.slideY = y
+	}
+	a.slidAt = now
+	var steps int
+	steps, a.slideY = aiSlideSteps(a.slideY, y)
+	if steps == 0 {
+		return
+	}
+	index := min(max(a.index+steps, 0), len(aiModels)*len(aiEfforts)-1)
 	if index == a.index && a.pending {
 		return
 	}

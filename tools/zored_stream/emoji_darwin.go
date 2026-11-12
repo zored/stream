@@ -35,12 +35,17 @@ type emojiGlyph struct {
 	y, size float64
 	alpha   float64
 	turn    float64
+	pin     bool
 }
 
 func emojiPNG(glyphs []emojiGlyph, ringY float64) (string, error) {
 	c := C.cal_canvas_new(stripDrawW, stripDrawH, 1.25, 0)
 	C.cal_canvas_ring(c, stripDrawW/2, C.double(ringY), emojiRing, 2, grayRGB)
 	for _, g := range glyphs {
+		if g.pin {
+			r := g.size * 0.62
+			C.cal_canvas_ring(c, stripDrawW/2, C.double(g.y), C.double(r/2), C.double(r), pinkRGB)
+		}
 		s := C.CString(g.text)
 		C.cal_canvas_glyph(c, s, stripDrawW/2, C.double(g.y), C.double(g.size), C.double(g.alpha), C.double(g.turn))
 		C.free(unsafe.Pointer(s))

@@ -2,80 +2,72 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
-	"slices"
+	"time"
 )
 
-type agentPins struct {
-	file string
-	set  map[string]bool
+const pinPendingFor = 30 * time.Second
+
+type pinWant struct {
+	on bool
+	at time.Time
 }
 
-func loadPins(file string) (*agentPins, error) {
-	p := &agentPins{file: file, set: map[string]bool{}}
-	b, err := os.ReadFile(file)
-	if errors.Is(err, fs.ErrNotExist) {
-		return p, nil
-	}
+type agentPins struct {
+	file    string
+	mod     time.Time
+	starred map[string]bool
+	pending map[string]pinWant
+}
+
+func newPins(desktopConfig string) *agentPins {
+	return &agentPins{file: desktopConfig, starred: map[string]bool{}, pending: map[string]pinWant{}}
+}
+
+func (p *agentPins) refresh() error {
+	st, err := os.Stat(p.file)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var hosts []string
-	if err := json.Unmarshal(b, &hosts); err != nil {
-		return nil, fmt.Errorf("%s: %w", file, err)
+	if !st.ModTime().Equal(p.mod) {
+		b, err := os.ReadFile(p.file)
+		if err != nil {
+			return err
+		}
+		var cfg struct {
+			Preferences struct {
+				EpitaxyPrefs struct {
+					Starred []string `json:"starred-local-code-sessions"`
+				} `json:"epitaxyPrefs"`
+			} `json:"preferences"`
+		}
+		if err := json.Unmarshal(b, &cfg); err != nil {
+			return fmt.Errorf("%s: %w", p.file, err)
+		}
+		p.mod = st.ModTime()
+		clear(p.starred)
+		for _, h := range cfg.Preferences.EpitaxyPrefs.Starred {
+			p.starred[h] = true
+		}
 	}
-	for _, h := range hosts {
-		p.set[h] = true
+	for h, w := range p.pending {
+		if p.starred[h] == w.on || time.Since(w.at) > pinPendingFor {
+			delete(p.pending, h)
+		}
 	}
-	return p, nil
+	return nil
 }
 
 func (p *agentPins) has(host string) bool {
-	return host != "" && p.set[host]
+	if w, ok := p.pending[host]; ok {
+		return w.on
+	}
+	return p.starred[host]
 }
 
-func (p *agentPins) toggle(host string) (bool, error) {
-	on := !p.set[host]
-	if on {
-		p.set[host] = true
-	} else {
-		delete(p.set, host)
-	}
-	if err := p.save(); err != nil {
-		if on {
-			delete(p.set, host)
-		} else {
-			p.set[host] = true
-		}
-		return !on, err
-	}
-	return on, nil
-}
-
-func (p *agentPins) list() []string {
-	hosts := make([]string, 0, len(p.set))
-	for h := range p.set {
-		hosts = append(hosts, h)
-	}
-	slices.Sort(hosts)
-	return hosts
-}
-
-func (p *agentPins) save() error {
-	b, err := json.Marshal(p.list())
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(p.file), 0o755); err != nil {
-		return err
-	}
-	tmp := p.file + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp, p.file)
+func (p *agentPins) toggle(host string) bool {
+	on := !p.has(host)
+	p.pending[host] = pinWant{on, time.Now()}
+	return on
 }

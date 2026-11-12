@@ -1,49 +1,72 @@
 package main
 
 import (
+	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 )
 
-func testAgents(t *testing.T) (*agents, string) {
+func writeDesktopConfig(t *testing.T, dir string, starred ...string) string {
+	t.Helper()
+	p := filepath.Join(dir, "Claude", "claude_desktop_config.json")
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	b := `{"preferences":{"epitaxyPrefs":{"starred-local-code-sessions":[`
+	for i, h := range starred {
+		if i > 0 {
+			b += ","
+		}
+		b += `"` + h + `"`
+	}
+	if err := os.WriteFile(p, []byte(b+`]}}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	later := time.Now().Add(time.Duration(len(starred)+1) * time.Second)
+	if err := os.Chtimes(p, later, later); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+func testAgents(t *testing.T, starred ...string) (*agents, string) {
 	t.Helper()
 	old := postVar
 	postVar = func(string, string) error { return nil }
 	t.Cleanup(func() { postVar = old })
 	dir := t.TempDir()
-	pins, err := loadPins(filepath.Join(dir, "pins.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return newAgents(&vars{sent: map[string]string{}}, time.Hour, newDesktopSessions(dir), pins), dir
+	cfg := writeDesktopConfig(t, dir, starred...)
+	return newAgents(&vars{sent: map[string]string{}}, time.Hour, newDesktopSessions(dir), newPins(cfg)), dir
 }
 
-func TestAgentPinsPersist(t *testing.T) {
-	file := filepath.Join(t.TempDir(), "sub", "pins.json")
-	p, err := loadPins(file)
-	if err != nil {
-		t.Fatal(err)
+func TestAgentPinsFollowDesktop(t *testing.T) {
+	dir := t.TempDir()
+	p := newPins(writeDesktopConfig(t, dir, "local_a"))
+	if err := p.refresh(); err != nil || !p.has("local_a") || p.has("local_b") {
+		t.Fatalf("starred not read: %v %v", p.starred, err)
 	}
-	if on, err := p.toggle("local_a"); err != nil || !on {
-		t.Fatalf("toggle on = %v, %v", on, err)
+	if !p.toggle("local_b") || p.toggle("local_a") {
+		t.Fatal("toggle did not flip")
 	}
-	if p, err = loadPins(file); err != nil || !p.has("local_a") {
-		t.Fatalf("reloaded pins %v, %v", p, err)
+	if err := p.refresh(); err != nil || !p.has("local_b") || p.has("local_a") {
+		t.Fatal("pending toggles lost before Desktop wrote them")
 	}
-	if on, err := p.toggle("local_a"); err != nil || on {
-		t.Fatalf("toggle off = %v, %v", on, err)
+	writeDesktopConfig(t, dir, "local_b")
+	if err := p.refresh(); err != nil || len(p.pending) != 0 || !p.has("local_b") {
+		t.Fatalf("Desktop agreement did not settle pending: %v", p.pending)
 	}
-	if p, _ = loadPins(file); p.has("local_a") {
-		t.Error("unpinned chat still saved")
+	p.pending["local_c"] = pinWant{true, time.Now().Add(-2 * pinPendingFor)}
+	if p.refresh(); p.has("local_c") {
+		t.Error("stale pending pin kept")
 	}
 }
 
 func TestAgentPinnedStaysOnTile(t *testing.T) {
-	a, dir := testAgents(t)
-	writeDesktop(t, dir, "local_p", `{"sessionId":"local_p","cliSessionId":"cli-p","lastFocusedAt":5,"lastTurnEdgeAt":2}`)
+	a, dir := testAgents(t, "local_p", "local_z")
+	writeDesktop(t, dir, "local_p", `{"sessionId":"local_p","cliSessionId":"cli-p","lastFocusedAt":5,"lastTurnEdgeAt":2,"spawnedFrom":{"sessionId":"local_root"}}`)
 	writeDesktop(t, dir, "local_z", `{"sessionId":"local_z","isArchived":true,"lastFocusedAt":5,"lastTurnEdgeAt":2}`)
-	a.pins.set["local_p"], a.pins.set["local_z"] = true, true
 	a.expire()
 	s := a.sessions["cli-p"]
 	if s == nil || s.Kind != agentRead || len(a.sessions) != 1 {
@@ -54,7 +77,7 @@ func TestAgentPinnedStaysOnTile(t *testing.T) {
 	if a.sessions["cli-p"] == nil {
 		t.Fatal("pinned chat expired")
 	}
-	delete(a.pins.set, "local_p")
+	a.pins.toggle("local_p")
 	a.expire()
 	if a.sessions["cli-p"] != nil {
 		t.Error("unpinned read chat kept past agentReadFor")
@@ -88,5 +111,42 @@ func TestAgentClickPinsWhileBrowsing(t *testing.T) {
 	a.cursor = &agentSession{ID: "cli", Kind: agentDone}
 	if err := a.togglePin(); err == nil {
 		t.Error("pinned a chat that is not a Desktop one")
+	}
+}
+
+func TestDesktopFamilyPreorder(t *testing.T) {
+	dir := t.TempDir()
+	writeDesktop(t, dir, "local_r", `{"sessionId":"local_r","lastActivityAt":1}`)
+	writeDesktop(t, dir, "local_a", `{"sessionId":"local_a","lastActivityAt":2,"spawnedFrom":{"sessionId":"local_r"}}`)
+	writeDesktop(t, dir, "local_b", `{"sessionId":"local_b","lastActivityAt":5,"spawnedFrom":{"sessionId":"local_r"}}`)
+	writeDesktop(t, dir, "local_b1", `{"sessionId":"local_b1","lastActivityAt":3,"spawnedFrom":{"sessionId":"local_b"}}`)
+	writeDesktop(t, dir, "local_x", `{"sessionId":"local_x","isArchived":true,"spawnedFrom":{"sessionId":"local_r"}}`)
+	writeDesktop(t, dir, "local_o", `{"sessionId":"local_o"}`)
+	d := newDesktopSessions(dir)
+	if _, err := d.scan(); err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, r := range d.family("local_b1") {
+		got = append(got, r.SessionID)
+	}
+	if want := []string{"local_r", "local_b", "local_b1", "local_a"}; !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestAISlideSteps(t *testing.T) {
+	for _, c := range []struct {
+		anchor, y float64
+		steps     int
+		rest      float64
+	}{
+		{100, 90, 0, 100},
+		{100, 100 - aiSlidePitch, 1, 100 - aiSlidePitch},
+		{100, 100 + 2.5*aiSlidePitch, -2, 100 + 2*aiSlidePitch},
+	} {
+		if steps, rest := aiSlideSteps(c.anchor, c.y); steps != c.steps || rest != c.rest {
+			t.Errorf("aiSlideSteps(%v, %v) = %d, %v; want %d, %v", c.anchor, c.y, steps, rest, c.steps, c.rest)
+		}
 	}
 }

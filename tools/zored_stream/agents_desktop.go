@@ -1,12 +1,15 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 )
@@ -164,4 +167,41 @@ func (d *desktopSessions) scanLocked() (map[string]desktopRecord, error) {
 	}
 	d.files, d.dirs, d.recs = files, dirs, recs
 	return recs, nil
+}
+
+func (d *desktopSessions) family(host string) []desktopRecord {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	root := host
+	for range 16 {
+		r, ok := d.recs[root]
+		if !ok || r.parent() == "" {
+			break
+		}
+		root = r.parent()
+	}
+	kids := map[string][]desktopRecord{}
+	for _, r := range d.recs {
+		if p := r.parent(); p != "" && !r.IsArchived && r.ScheduledTaskID == "" {
+			kids[p] = append(kids[p], r)
+		}
+	}
+	var out []desktopRecord
+	var walk func(id string, depth int)
+	walk = func(id string, depth int) {
+		r, ok := d.recs[id]
+		if !ok || depth > 16 {
+			return
+		}
+		out = append(out, r)
+		k := kids[id]
+		slices.SortFunc(k, func(x, y desktopRecord) int {
+			return cmp.Or(cmp.Compare(max(y.LastActivityAt, y.LastTurnEdgeAt), max(x.LastActivityAt, x.LastTurnEdgeAt)), strings.Compare(x.SessionID, y.SessionID))
+		})
+		for _, c := range k {
+			walk(c.SessionID, depth+1)
+		}
+	}
+	walk(root, 0)
+	return out
 }

@@ -138,7 +138,6 @@ func main() {
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
 	inputAddr := flag.String("input", "127.0.0.1:47127", "keyboard layout HTTP address")
 	timersAddr := flag.String("timers", "127.0.0.1:47129", "timers + alarms HTTP address")
-	pinsFile := flag.String("pins-file", filepath.Join(home, ".config/zored-stream/agent-pins.json"), "pinned Claude Desktop chats")
 	timersFile := flag.String("timers-file", filepath.Join(home, ".config/zored-stream/timers.json"), "pending timers and alarms")
 	emojiAddr := flag.String("emoji", "127.0.0.1:47128", "emoji picker HTTP address")
 	switchAddr := flag.String("switch", "127.0.0.1:47132", "window switcher HTTP address")
@@ -257,8 +256,8 @@ func main() {
 			switch {
 			case cs.msgTurn(d):
 			case ai.holding():
-				ag.hideStrip()
-				ai.turn(d)
+				ai.markTurned()
+				ag.familyStep(d)
 			default:
 				ag.step(d)
 			}
@@ -299,11 +298,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	pins, err := loadPins(*pinsFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir), pins)
+	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir), newPins(filepath.Join(configDir, "Claude", "claude_desktop_config.json")))
 	go ag.syncSidebar(sidebarPinChat)
 	ag.strip = us.cover
 	ag.contexts, ag.onContext = newContexts(home), us.setContext

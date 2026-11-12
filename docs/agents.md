@@ -26,7 +26,7 @@ The ring follows the chat in front, not only presses (`watchFront`, every 1 s, `
 
 крутилка справа, ряд 2 (`/ai/turn`, `/ai/down`, `/ai/up`, routed in `main.go`): a plain turn steps the cursor and wraps
 (`agentStep`), the right strip shows the Desktop title (`title` in its session file) white and the cwd folder gray for 2 s
-(`usage.cover`, `calImage` as the calendar list), each detent opens its chat at once; a click = a tile press (`focus`). Press + turn goes to the model switch (the press hides the ring and the title; a 400 ms hold without a turn = `/agent/new`, via `/ai/hold`). Verified 2026-11-05 through the HTTP API.
+(`usage.cover`, `calImage` as the calendar list), each detent opens its chat at once; a click = a tile press (`focus`). Press + turn (since 2026-11-12) walks the family of the chat under the ring in tree order (`desktopSessions.family`: the root, then each child followed by its own children, freshest child first, archived and routine runs left out), clockwise = towards children, clamped at both ends; a chat not on the tile joins as `read`; the model is picked only on the strip ([ai-switch.md](ai-switch.md)). The press hides the ring and the title; a 400 ms hold without a turn = `/agent/new`, via `/ai/hold`). Verified 2026-11-05 through the HTTP API.
 
 ## Pins
 
@@ -35,9 +35,12 @@ title is on the right strip) toggles the pin of the chat under the ring instead 
 `armClick` / `armedClick`: the knob takes the browse state at `/ai/down`, since the press hides the strip). The toggle
 re-shows the title for 2 s, so a second click undoes it.
 
-- Store: `~/.config/zored-stream/agent-pins.json` (`-pins-file`), a list of Desktop session ids (`local_…`); the daemon's
-  list is the truth for the tile. Toggle = map flip + atomic file write + `publish`, tens of µs before the redraw (see the log line `agents: pin … in …`).
-- Tile: a pin draws a pink (`#FF375F`) disc 2 px wider behind the dot or emoji. `expire` never drops a pinned, not archived
+- Store: Desktop's own sidebar pins, `claude_desktop_config.json` → `preferences.epitaxyPrefs["starred-local-code-sessions"]`
+  (session ids; found 2026-11-12, the chat pinned in the sidebar was there). Re-read in `expire` (10 s) when the file's mtime moves, so a pin
+  made in the sidebar shows within 10 s. A click flips a pending value at once (`pinPendingFor`, 30 s): it wins over the file until
+  Desktop writes the same, or for 30 s; a failed sidebar mirror therefore reverts the pin after 30 s. Toggle measured 10.7 ms on the
+  daemon (log `agents: pin … in …`, most of it the strip title render), sidebar mirror 257 ms (verified 2026-11-12).
+- Tile: a pin draws a pink (`#FF375F`) disc behind the dot or emoji, wider by 45 % of the radius (≤ 6 px). The left strip's emoji column on a knob step draws the same disc behind a pinned chat's emoji. `expire` never drops a pinned, not archived
   chat and adds a missing one as `read`; an archived chat keeps its pin but is not shown. Children are pinned on their own.
   CLI / iTerm2 sessions cannot be pinned (logged error).
 - Desktop sidebar mirror, best effort, one worker in the background (`syncSidebar`, `pins_darwin.go`): AX `AXPopUpButton`
@@ -45,9 +48,8 @@ re-shows the title for 2 s, so a second click undoes it.
   (≤ 1 s, 20 ms polls) → press; the opposite item present = already in that state, Escape. Verified 2026-11-12 on a live chat:
   the menu holds `Open in, Pin|Unpin, Mark as unread, Rename, Fork, …`, the whole round ~200 ms. A chat without a sidebar row
   (collapsed under a parent, filtered out) is logged and left as is.
-- Desktop's own pins live in `claude_desktop_config.json` → `preferences.epitaxyPrefs["dframe-local-slice"].pinnedOrder`,
-  written by the claude.ai frontend from memory; `app.asar` does not watch the file (read), so writing it from outside is lost.
-  An AX pin did not change the file within 1 s (verified). The daemon does not read it.
+- `pinnedOrder` in `epitaxyPrefs["dframe-local-slice"]` is something else (9 archived chats, unchanged by a sidebar pin). The
+  claude.ai frontend writes the prefs from memory and `app.asar` does not watch the file (read), so the daemon never writes it.
 
 ## Read chats
 

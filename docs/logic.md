@@ -29,7 +29,7 @@ device ──serial── Companion (+ Loupedeck module fork) ──exec curl─
    (`gen_pages.py` `ai()`); `curl.exe` ships with Windows 10+ *(assumed)*.
 3. **Module fork → daemon** (no Companion action involved, OS-independent JS in the fork, A10):
    - left strip slide: `POST :47113/volume/drag?dy=<px>` (relative, positive = down the strip *(assumed sign)*);
-   - right strip slide: `POST :47117/ai/slide?y=<px>` (absolute position along the strip);
+   - right strip slide: `POST :47117/ai/slide?y=<px>` (position along the strip; the daemon uses the travel, ~30 px per model stop);
    - centre tiles swipe: `POST :47113/tile/swipe?id=<control>&dir=l|r|u|d`, once per touch, when the touch moved ≥ 40 px
      from its start within 400 ms ([device.md](device.md#touch)); `404` = this tile has no swipes, the touch goes on as a press;
      anything else = the fork releases the tile right after the answer;
@@ -277,10 +277,10 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 
 - turn → `/ai/turn?d=±1`: chats browsing (mac) → next / previous unread message of the picked chat (clamped), the tile
   badge = messages after it, the sender's small avatar in groups, the strip shows it from the top; else if the knob is held
-  (mac AI switch) → model + effort step; else → agents walk: adds the Claude chat
+  → walk the family of the ringed chat in tree order (`agents.familyStep`, clamped); else → agents walk: adds the Claude chat
   in front as a hollow dot if missing, moves the cursor by `d` (wraps), opens that session at once, shows its title + folder
   on the right strip for 2 s.
-- press → `/ai/down` (also hides the chats ring and title cover, `agents.hideStrip`, so the model label shows; a held turn hides it too); hold 400 ms (Companion `held`, mac only) → `/ai/hold`: if no turn happened since the press → new Code session (`claude://code/new`) and the release is consumed (the press ends there); a press with no turn or release for 8 s (`aiHeldMax`) is dropped; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
+- press → `/ai/down` (also hides the chats ring and title cover, `agents.hideStrip`, so the model label shows); hold 400 ms (Companion `held`, mac only) → `/ai/hold`: if no turn happened since the press → new Code session (`claude://code/new`) and the release is consumed (the press ends there); a press with no turn or release for 8 s (`aiHeldMax`) is dropped; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
   (`/agent/focus`), with the browse state taken at `/ai/down` (`armClick`), so a click within 2 s of a turn pins.
 - mac model switch (F12): 9 stops Sonnet·Low … Fable·High, applied 400 ms after the knob rests, only on Claude Desktop's
   new-chat screen in front; elsewhere a 5 s gray preview. Variables `ai_model`, `ai_effort`, `ai_state`
@@ -444,7 +444,7 @@ scroller mode, pressed/turned, held modifier, release timer, app-windows deadlin
 - **Expiry** every 10 s: `read` entries go after 1 min; others after the TTL (`-agents-ttl`, 4 h) or when the pid is gone.
   Claude Desktop chats are also discovered and marked read from Desktop's session files (F14), mac/Claude only.
 - **Order** (F13): top-level before children, then newest activity first, then id.
-- **Pins**: a set of Desktop session ids in `~/.config/zored-stream/agent-pins.json`; toggled by a click while browsing; a pinned, not archived chat is never expired and is added as `read` when missing; drawn with a pink disc behind the dot. Mirror to Desktop's sidebar via AX (`More options for <title>` → `Pin`/`Unpin`), mac only, best effort. Win: keep the set, no sidebar mirror.
+- **Pins**: Desktop's `starred-local-code-sessions` in `claude_desktop_config.json` plus 30 s pending toggles; toggled by a click while browsing; a pinned, not archived chat is never expired and is added as `read` when missing; drawn with a pink disc behind the dot. Mirror to Desktop's sidebar via AX (`More options for <title>` → `Pin`/`Unpin`), mac only, best effort. Win: keep the set, no sidebar mirror.
 - **Focus**: Desktop chat → `claude://code/continue?session=<id>` via `LSOpenCFURLRef` (Win: `ShellExecute`); iTerm2 → AppleScript select; else `open -b <bundle>`;
   new session → `open claude://code/new`. The chat in front becomes the cursor (polled 1 s while Claude is "hot", 3 s cold).
 - Win (Codex): feed `/agent/event` from Codex `notify` (`agent-turn-complete` → send as `Stop` = `done`) and, if Codex hooks

@@ -60,10 +60,10 @@ Companion API (`rotate-right`/`rotate-left` on `1/1/7`): Sonnet·Medium → Sonn
   showed `ok`). Applying stays new-chat only: a turn in an open session, or while Claude is not frontmost, previews the choice for 5 s (gray label, the strip shows that
   model's limits, state `preview`), then the poll brings back the real model: read from the focused window, or the last one read or applied (`known`) while Claude
   is in the background. Claude Code CLI is not synced (user: not needed).
-- Sliding along the right strip picks the same list by position, bottom `Sonnet·Low` to top `Fable·High`: the module fork posts
-  `POST /ai/slide?y=<px>` (0 = top of the 270 px strip) on every touch move, the daemon maps it to one of the 9 stops and schedules
-  the switch like a turn (verified with curl: y=10 → Fable·High, y=260 → Sonnet·Low; on the device: not confirmed yet).
-- The knob walks the choice only while pressed (press + turn); the press hides the chat ring and title from the strips so the label is visible, a 400 ms hold without a turn opens a new Code session (`/ai/hold`); a plain turn and a click belong to the agent chats ([agents.md](agents.md)).
+- Sliding along the right strip is the only way to walk the list: the module fork posts `POST /ai/slide?y=<px>`
+  (0 = top of the 270 px strip) on every touch move; the daemon moves the choice relative, like a mouse wheel (since 2026-11-12): every 30 px (270 / 9) of travel moves one stop, up = towards Fable·High, clamped at the ends; a new touch starts after a 300 ms pause in the moves (`aiSlideSteps`), and schedules the switch.
+  Until 2026-11-12 the position picked the stop absolutely (verified with curl then).
+- The knob no longer walks the model (since 2026-11-12, user): press + turn walks the chat family ([agents.md](agents.md#knob)); the press still hides the chat ring and title so the label is visible, a 400 ms hold without a turn opens a new Code session (`/ai/hold`).
   Companion sends `down`/`up`/`turn` as separate `curl` processes, so API calls fired back to back can arrive out of order
   (seen in a test burst); by hand the press comes first.
 - Label: part of `ai_strip_svg` (see [ai.md](ai.md)), drawn across the right strip like the track on the left strip but rotated 270° so it reads bottom-up:

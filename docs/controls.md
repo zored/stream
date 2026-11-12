@@ -244,7 +244,7 @@ unless the track or player changed or playback was started meanwhile.
   5h bar light green < 50, white, yellow > 80, red > 90; weekly bar (of today's allowance) light green < 50, white, red > 80, dark red = over;
   at the bottom, rotated: time left in the 5h window (`1:20`) under the model, time left in the week (`1d 5h`) in the narrow bar; the model rotated (reads bottom-up) with effort dots (low 1 … max 5) over the wide bar, white, black where the bar is under them; a red dot in the corner = the last fetch failed
 - model white, gray while previewing; effort dots white, amber = outside the knob's list, red = switch failed; changes show at once
-- slide: picks the model + effort by position, bottom Sonnet·Low → top Fable·High *(on the device: assumed)*
+- slide: changes model + effort relative to the current one, like a mouse wheel: ~30 px per stop, up = Sonnet·Low → Fable·High, stops at the ends *(on the device: assumed)*
 - tap: nothing
 
 - stale: gray bars = the numbers are old (fetch failed or >30 min); after a reset that bar clears until the next fetch
@@ -271,8 +271,8 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 - press: hides the chat ring and the chat title from the strips at once, so the model + effort label shows
 - hold 400 ms without a turn (haptic): new Code session, as a hold on the agents tile; the release then does nothing, and turns after it walk the chats again; a press with no release for 8 s (lost `up`) is dropped, so a plain turn never stays on the model switch
-- press + turn: walks Sonnet·Low … Sonnet·High → Opus·Low … → Fable·High (9 stops, stops at the ends)
-- applies 400 ms after the knob rests, only on the Claude Desktop new-chat screen in front;
+- press + turn: walks the family of the chat under the ring, parent → children (tree order, freshest child first; clockwise = deeper), stops at the ends; each step opens the chat and shows its title; a chat not on the tile joins as a hollow dot for 1 min
+- model + effort: only by the right strip slide; applies 400 ms after it rests, only on the Claude Desktop new-chat screen in front;
   elsewhere it previews for 5 s (gray label, the strip shows that model's limits), then shows the real model again
 
 [ai-switch.md](ai-switch.md)

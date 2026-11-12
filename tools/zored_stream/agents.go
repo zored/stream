@@ -98,6 +98,7 @@ type agents struct {
 	strip                func(uri string)
 	stripOff             *time.Timer
 	row                  []string
+	rowPins              []bool
 	rowWake              chan struct{}
 	rowShown             bool
 	rowOffset, rowTarget float64
@@ -230,6 +231,9 @@ func (a *agents) expire() {
 		log.Printf("agents: desktop sessions: %v", err)
 	}
 	a.mu.Lock()
+	if err := a.pins.refresh(); err != nil {
+		log.Printf("agents: desktop pins: %v", err)
+	}
 	changed := false
 	hosts := map[string]bool{}
 	for id, s := range a.sessions {
@@ -421,10 +425,48 @@ func (a *agents) step(d int) {
 		return
 	}
 	i := agentStep(slices.IndexFunc(list, func(s *agentSession) bool { return a.cursor != nil && s.ID == a.cursor.ID }), d, len(list))
-	a.cursor = list[i]
+	a.goTo(list[i])
+	a.mu.Unlock()
+	a.publish()
+}
+
+func (a *agents) familyStep(d int) {
+	a.addFront()
+	a.mu.Lock()
+	if a.cursor == nil || a.cursor.Host == "" {
+		a.mu.Unlock()
+		log.Printf("agents: family step: no Desktop chat under the ring")
+		return
+	}
+	fam := a.desktop.family(a.cursor.Host)
+	i := slices.IndexFunc(fam, func(r desktopRecord) bool { return r.SessionID == a.cursor.Host })
+	j := min(max(i+d, 0), len(fam)-1)
+	if i < 0 || j == i {
+		a.mu.Unlock()
+		return
+	}
+	host := fam[j].SessionID
+	var next *agentSession
+	for _, s := range a.sessions {
+		if s.Host == host {
+			next = s
+		}
+	}
+	if next == nil {
+		next = fam[j].session()
+		next.markRead()
+		a.sessions[next.ID] = next
+	}
+	a.goTo(next)
+	a.mu.Unlock()
+	a.publish()
+}
+
+func (a *agents) goTo(s *agentSession) {
+	a.cursor = s
 	a.manual = time.Now()
 	a.browsedAt = a.manual
-	target := *list[i]
+	target := *s
 	a.showStrip(target)
 	go func() {
 		log.Printf("agents: knob %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
@@ -432,8 +474,6 @@ func (a *agents) step(d int) {
 			log.Printf("agents: %v", err)
 		}
 	}()
-	a.mu.Unlock()
-	a.publish()
 }
 
 func (a *agents) browsing() bool {
@@ -479,11 +519,7 @@ func (a *agents) togglePin() error {
 		a.mu.Unlock()
 		return fmt.Errorf("agents: pin %s: not a Desktop chat", s.ID)
 	}
-	on, err := a.pins.toggle(s.Host)
-	if err != nil {
-		a.mu.Unlock()
-		return fmt.Errorf("agents: pin %s: %w", s.Host, err)
-	}
+	on := a.pins.toggle(s.Host)
 	rec, _ := a.desktop.record(s.Host)
 	a.browsedAt = time.Now()
 	a.showStrip(s)
@@ -522,10 +558,12 @@ func (a *agents) showStrip(s agentSession) {
 	a.strip(a.rowTitle)
 	list, sizes := a.grouped()
 	a.row = make([]string, len(list))
+	a.rowPins = make([]bool, len(list))
 	a.rowPos = agentRowPos(sizes)
 	for i, l := range list {
 		r, _ := a.desktop.record(l.Host)
 		a.row[i] = cmp.Or(titleEmoji(r.Title), agentRowDot[l.Kind], "⚪")
+		a.rowPins[i] = a.pins.has(l.Host)
 		if l.ID == s.ID {
 			a.rowTarget = a.rowPos[i]
 		}
@@ -585,7 +623,7 @@ func agentRowPos(sizes []int) []float64 {
 	return pos
 }
 
-func agentColumn(row []string, pos []float64, offset, turn float64, mirror bool) []emojiGlyph {
+func agentColumn(row []string, pins []bool, pos []float64, offset, turn float64, mirror bool) []emojiGlyph {
 	var out []emojiGlyph
 	for i, e := range row {
 		y := emojiTop + pos[i] - offset
@@ -595,7 +633,7 @@ func agentColumn(row []string, pos []float64, offset, turn float64, mirror bool)
 		if mirror {
 			y = stripDrawH - y
 		}
-		out = append(out, emojiGlyph{text: e, y: y, size: emojiSize, alpha: 1, turn: turn})
+		out = append(out, emojiGlyph{text: e, y: y, size: emojiSize, alpha: 1, turn: turn, pin: pins[i]})
 	}
 	return out
 }
@@ -617,10 +655,10 @@ func (a *agents) animateRow() {
 			} else {
 				a.rowOffset += d * 0.3
 			}
-			row, pos, offset, done := a.row, a.rowPos, a.rowOffset, a.rowOffset == a.rowTarget
+			row, pins, pos, offset, done := a.row, a.rowPins, a.rowPos, a.rowOffset, a.rowOffset == a.rowTarget
 			turn, mirror, title := a.rowTurn, a.rowMirror, a.rowTitle
 			a.mu.Unlock()
-			uri, err := emojiPNG(agentColumn(row, pos, offset, turn, mirror), emojiRingY(mirror))
+			uri, err := emojiPNG(agentColumn(row, pins, pos, offset, turn, mirror), emojiRingY(mirror))
 			if err != nil {
 				log.Print(err)
 				break
@@ -959,7 +997,7 @@ func agentsSVG(dots []agentDotSpec, sizes []int, current, prev int, t float64, c
 		for i, dot := range dots {
 			p := pos[i]
 			if dot.pinned {
-				agentShape(&b, p.x, p.y, p.r+2, `fill="`+pink+`"`)
+				agentShape(&b, p.x, p.y, p.r+min(p.r*0.45, 6), `fill="`+pink+`"`)
 			}
 			if dot.emoji != "" {
 				agentEmoji(&b, p.x, p.y, p.r, dot)
