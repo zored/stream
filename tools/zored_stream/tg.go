@@ -20,6 +20,8 @@ import (
 
 const (
 	tgDebounce       = 2 * time.Second
+	tgPoll           = 30 * time.Second
+	tgCallTimeout    = 30 * time.Second
 	tgMutedHistEvery = time.Minute
 )
 
@@ -55,7 +57,7 @@ func tgClient(ctx context.Context, h telegram.UpdateHandler) (*telegram.Client, 
 	return telegram.NewClient(apiID, creds[1], telegram.Options{SessionStorage: store, UpdateHandler: h}), nil
 }
 
-// tgChats keeps no state on disk: dialogs are refetched on any pushed update, debounced.
+// tgChats keeps no state on disk: dialogs are refetched on any pushed update, debounced, and every tgPoll (pushes stop after network flaps).
 func tgChats(ctx context.Context, push func([]chatEntry)) error {
 	kick := make(chan struct{}, 1)
 	h := telegram.UpdateHandlerFunc(func(ctx context.Context, u tg.UpdatesClass) error {
@@ -79,7 +81,9 @@ func tgChats(ctx context.Context, push func([]chatEntry)) error {
 		av := &tgAvatars{c: c, cache: map[int64][]byte{}, home: c.Config().ThisDC}
 		hist := map[string]tgHist{}
 		for {
-			d, err := api.MessagesGetDialogs(ctx, &tg.MessagesGetDialogsRequest{OffsetPeer: &tg.InputPeerEmpty{}, Limit: 100})
+			callCtx, cancel := context.WithTimeout(ctx, tgCallTimeout)
+			d, err := api.MessagesGetDialogs(callCtx, &tg.MessagesGetDialogsRequest{OffsetPeer: &tg.InputPeerEmpty{}, Limit: 100})
+			cancel()
 			if err != nil {
 				return fmt.Errorf("tg getDialogs: %w", err)
 			}
@@ -111,6 +115,7 @@ func tgChats(ctx context.Context, push func([]chatEntry)) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-kick:
+			case <-time.After(tgPoll):
 			}
 			select {
 			case <-ctx.Done():

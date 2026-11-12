@@ -186,7 +186,7 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 ### тайл ряд 3, колонка 4 — clock + timers
 
 - shows: `HH:MM` white, vertically centered when no timer; below it the timer gray, to the minute: `12m`, `1h05`, an alarm `07:30`; one timer at a time
-- tap: set a timer for 5 s, крутилка справа, ряд 3 sets it: 1 min per detent, a fast continuous spin speeds up every 4 detents to 2 / 5 / 10 / 15 / 30 / 60 min (the value snaps to the step); a pause or reversing drops back to 1 min, the value white; a second tap, the knob press or 5 s idle starts it (replacing the running one), 0 = nothing
+- tap: set a timer for 5 s, крутилка справа, ряд 3 sets it: 1 min per detent, a fast continuous spin speeds up every 4 detents to 2 / 5 / 10 / 15 / 30 / 60 min (the value snaps to the step); a pause or reversing drops back to 1 min, the value white; a second tap, the knob press or 5 s idle starts it (replacing the running one), 0 = nothing (under the clock the line stays empty at 0; it shows from 1m)
 - turn left from 0: an alarm instead, time of day from the next 5 min, 5 min per detent, speeding up the same way
 - hold ≥ 400 ms: cancel the timer
 - due: the timer is cleared, the tile blinks white and Glass plays every 2 s for 1 min; a tap silences it
