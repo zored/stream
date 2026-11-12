@@ -102,6 +102,7 @@ type agents struct {
 	rowOffset, rowTarget float64
 	rowTurn              float64
 	rowMirror            bool
+	rowTitle             string
 	overlay              *stripOverlay
 }
 
@@ -413,7 +414,8 @@ func (a *agents) showStrip(s agentSession) {
 		return
 	}
 	rec, _ := a.desktop.record(s.Host)
-	a.strip(agentStripImage(rec.Title, filepath.Base(s.Cwd)))
+	a.rowTitle = agentStripImage(rec.Title, filepath.Base(s.Cwd))
+	a.strip(a.rowTitle)
 	list := a.sorted()
 	a.row = make([]string, len(list))
 	for i, l := range list {
@@ -474,7 +476,7 @@ func (a *agents) animateRow() {
 				a.rowOffset += d * 0.3
 			}
 			row, offset, done := a.row, a.rowOffset, a.rowOffset == a.rowTarget
-			turn, mirror := a.rowTurn, a.rowMirror
+			turn, mirror, title := a.rowTurn, a.rowMirror, a.rowTitle
 			a.mu.Unlock()
 			uri, err := emojiPNG(emojiColumn(row, offset, turn, mirror), emojiRingY(mirror))
 			if err != nil {
@@ -482,7 +484,7 @@ func (a *agents) animateRow() {
 				break
 			}
 			a.vars.set("emoji_l", uri)
-			a.vars.set("emoji_r", "")
+			a.vars.set("emoji_r", title)
 			a.overlay.show("agents", true)
 			if done {
 				break
