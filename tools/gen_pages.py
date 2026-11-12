@@ -26,6 +26,7 @@ KVM = "http://127.0.0.1:47125"
 CALENDAR = "http://127.0.0.1:47126"
 INPUT = "http://127.0.0.1:47127"
 EMOJI = "http://127.0.0.1:47128"
+SWITCH = "http://127.0.0.1:47132"
 TIMERS = "http://127.0.0.1:47129"
 UNREAD = "http://127.0.0.1:47130"
 WEATHER_URL = "http://127.0.0.1:47131"
@@ -35,8 +36,8 @@ HINTS = ("hint_l0", "hint_l2", "hint_r0", "hint_r1", "hint_r2")
 CUSTOM_VARIABLES = {name: "" for name in (
     "volume", "bar_value", "bar_alpha", "bar_mode", "strip_flip", "ctl_brightness", "np_playing", "np_title", "np_artist", "np_track", "np_svg", "np_app", "np_art", "np_glyph", "np_progress", "np_tint", "np_skip", "np_skip_x", "np_fade", "ym_like", "call_mic", "call_cam", "call_peek",
     "ai_strip_svg", "ai_session", "ai_session_reset", "ai_day", "ai_week", "ai_week_reset", "ai_level",
-    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "screen_off", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *HINTS, *(f"choice_{b}" for b in range(1, 9)))
-    if not (WINDOWS and name in ("call_cam", "call_peek", "ym_like", "dictation", "power_svg", "screen_off", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", *HINTS))}
+    "ai_model", "ai_effort", "ai_state", "agents_svg", "dictation", "choice_on", "power_svg", "screen_off", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", "switch_tile", *HINTS, *(f"choice_{b}" for b in range(1, 9)))
+    if not (WINDOWS and name in ("call_cam", "call_peek", "ym_like", "dictation", "power_svg", "screen_off", "headphones_svg", "wifi_svg", "kvm_led", "cal_card", "cal_browse", "cal_icon", "cal_led", "tile_24", "tile_23", "tile_22", "weather_svg", "unread_svg", "timer_svg", "timer_ring", "input_svg", "emoji_on", "emoji_l", "emoji_r", "emoji_tile", "switch_tile", *HINTS))}
 BAR_ALPHA = "$(custom:bar_alpha)"
 PLAYING = "$(custom:np_playing) == 1"
 NO_ART = '$(custom:np_art) == ""'
@@ -417,6 +418,11 @@ def emoji_tile():
                   down=[post(EMOJI + "/emoji/tile")])
 
 
+def switch_tile():
+    return button([canvas(), box("box0", 0x000000), image("switch", expr("$(custom:switch_tile)"), "fill")],
+                  down=[post(SWITCH + "/switch/tile")])
+
+
 def agents_tile():
     return button([canvas(), box("box0", 0x000000),
                    image("dots", expr("$(custom:agents_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
@@ -523,6 +529,7 @@ def media_page():
         (1, 5): agents_tile(),
         (0, 2): headphones_tile(),
         (1, 3): emoji_tile(),
+        (1, 4): switch_tile(),
         (0, 3): wifi_tile(),
         (0, 4): input_tile(),
         (0, 5): awake_tile(),
@@ -534,7 +541,7 @@ def media_page():
         (3, 0): kvm_led(),
     }
     if WINDOWS:
-        for cell in ((3, 0), (3, 1), (1, 3), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 3), (3, 4), (3, 6)):
+        for cell in ((3, 0), (3, 1), (1, 3), (1, 4), (0, 2), (0, 3), (0, 4), (0, 5), (2, 3), (2, 4), (3, 3), (3, 4), (3, 6)):
             del grid[cell]
     else:
         for c in range(8):

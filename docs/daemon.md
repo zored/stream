@@ -80,6 +80,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Keyboard layout | `input.go`, `input_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47127` (`-input`) | see macos.md |
 | Emoji picker | `emoji.go`, `emoji_darwin.go`, `emoji_data.go`, [emoji.md](emoji.md) | `127.0.0.1:47128` (`-emoji`) | see emoji.md |
 | Timers + alarms | `timers.go`, [macos.md](macos.md) | `127.0.0.1:47129` (`-timers`) | see macos.md |
+| Window switcher | `switcher.go`, `switcher_darwin.go`, `switcher_darwin.m`, `picker.go` (input routing shared with emoji), [windows-switch.md](windows-switch.md) | `127.0.0.1:47132` (`-switch`) | see windows-switch.md |
 | Weather | `weather.go`, `layers.go` (`tile_23`), [weather.md](weather.md) | `127.0.0.1:47131` (`-weather`) | see weather.md |
 | Orientation (read-only) | `orientation.go`, `stripflip.go`; the fork owns it ([companion.md](companion.md#loupedeck-surface-module-fork), A12) | — (reads `~/.config/zored-stream/orientation`, publishes `strip_flip` with the bars, turns emoji glyphs) | verified on the device (user) |
 

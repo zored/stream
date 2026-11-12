@@ -140,6 +140,7 @@ func main() {
 	timersAddr := flag.String("timers", "127.0.0.1:47129", "timers + alarms HTTP address")
 	timersFile := flag.String("timers-file", filepath.Join(home, ".config/zored-stream/timers.json"), "pending timers and alarms")
 	emojiAddr := flag.String("emoji", "127.0.0.1:47128", "emoji picker HTTP address")
+	switchAddr := flag.String("switch", "127.0.0.1:47132", "window switcher HTTP address")
 	unreadAddr := flag.String("unread", "127.0.0.1:47130", "unread chats HTTP address")
 	weatherAddr := flag.String("weather", "127.0.0.1:47131", "weather HTTP address")
 	weatherLat := flag.Float64("weather-lat", 55.7558, "weather latitude")
@@ -169,9 +170,18 @@ func main() {
 
 	v := &vars{sent: map[string]string{}}
 	hints := newKnobHints(v, readOrientation)
-	em := newEmoji(v)
+	overlay := newStripOverlay(v)
+	em := newEmoji(v, overlay)
 	em.publish()
 	go em.animate()
+	sw := newSwitcher(v, overlay)
+	sw.publish()
+	go sw.animate()
+	go sw.work()
+	go serve(*switchAddr, func(mux *http.ServeMux) {
+		handle(mux, "/switch/tile", sw.pressTile)
+	})
+	pk := pickers{em, sw}
 	go serve(*emojiAddr, func(mux *http.ServeMux) {
 		handle(mux, "/emoji/tile", em.tile)
 		mux.HandleFunc("POST /emoji/{edge}", func(w http.ResponseWriter, r *http.Request) {
@@ -188,9 +198,9 @@ func main() {
 					http.Error(w, "y: "+err.Error(), http.StatusBadRequest)
 					return
 				}
-				em.start(s, y)
+				pk.start(s, y)
 			case "end":
-				if err := em.end(s); err != nil {
+				if err := pk.end(s); err != nil {
 					log.Printf("/emoji/end: %v", err)
 					http.Error(w, err.Error(), http.StatusConflict)
 					return
@@ -257,7 +267,7 @@ func main() {
 				http.Error(w, "y: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			if !em.slide(emojiRight, y) {
+			if !pk.slide(emojiRight, y) {
 				ai.slide(y)
 			}
 			w.WriteHeader(http.StatusNoContent)
@@ -342,28 +352,28 @@ func main() {
 	go serve(*brightnessAddr, func(mux *http.ServeMux) {
 		handleValue(mux, "/brightness/up", func() (int, error) {
 			hints.turn("r0", 1)
-			if pw.turn(1) || wf.turn(1) || em.turn(emojiRight, 1) {
+			if pw.turn(1) || wf.turn(1) || pk.turn(emojiRight, 1) {
 				return br.level(), nil
 			}
 			return br.turn(1)
 		})
 		handleValue(mux, "/brightness/down", func() (int, error) {
 			hints.turn("r0", -1)
-			if pw.turn(-1) || wf.turn(-1) || em.turn(emojiRight, -1) {
+			if pw.turn(-1) || wf.turn(-1) || pk.turn(emojiRight, -1) {
 				return br.level(), nil
 			}
 			return br.turn(-1)
 		})
 		handleValue(mux, "/brightness/hold", func() (int, error) {
 			hints.press("r0", true)
-			if took, err := em.press(emojiRight); took {
+			if took, err := pk.press(emojiRight); took {
 				return br.level(), err
 			}
 			return br.hold()
 		})
 		handleValue(mux, "/brightness/release", func() (int, error) {
 			hints.press("r0", false)
-			if em.release(emojiRight) {
+			if pk.release(emojiRight) {
 				return br.level(), nil
 			}
 			return br.release()
@@ -451,6 +461,7 @@ func main() {
 		{"wifi", wf.capturing, wf.close},
 		{"awake", pw.sizing, pw.close},
 		{"emoji", em.isOpen, em.close},
+		{"switch", sw.isOpen, sw.close},
 		{"chats", cs.capturing, cs.close},
 		{"weather", wx.browsing, wx.close},
 		{"calendar", cal.capturing, cal.close},
@@ -579,22 +590,23 @@ func main() {
 		tm.publish()
 		in.publish()
 		em.publish()
+		sw.publish()
 	})
 	go serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error {
-			if em.turn(emojiLeft, 1) {
+			if pk.turn(emojiLeft, 1) {
 				return nil
 			}
 			return vol.step(1)
 		})
 		handle(mux, "/volume/down", func() error {
-			if em.turn(emojiLeft, -1) {
+			if pk.turn(emojiLeft, -1) {
 				return nil
 			}
 			return vol.step(-1)
 		})
 		handle(mux, "/volume/mute", func() error {
-			if took, err := em.press(emojiLeft); took {
+			if took, err := pk.press(emojiLeft); took {
 				return err
 			}
 			return vol.toggleMute()
@@ -617,7 +629,7 @@ func main() {
 				http.Error(w, "dy: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			if em.drag(emojiLeft, dy) {
+			if pk.drag(emojiLeft, dy) {
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}

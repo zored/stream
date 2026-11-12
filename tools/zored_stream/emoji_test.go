@@ -4,7 +4,8 @@ import "testing"
 
 func TestEmojiPicker(t *testing.T) {
 	var sent []string
-	e := newEmoji(&vars{sent: map[string]string{}})
+	v := &vars{sent: map[string]string{}}
+	e := newEmoji(v, newStripOverlay(v))
 	e.recents = func() ([]string, error) { return []string{"🔥"}, nil }
 	e.orient = func() (int, error) { return 90, nil }
 	e.send = func(s string) error { sent = append(sent, s); return nil }

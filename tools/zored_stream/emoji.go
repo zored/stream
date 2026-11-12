@@ -47,6 +47,7 @@ type emojiStrip struct {
 type emoji struct {
 	mu       sync.Mutex
 	vars     *vars
+	overlay  *stripOverlay
 	openTill time.Time
 	strips   [2]*emojiStrip
 	active   int
@@ -61,8 +62,8 @@ type emoji struct {
 	render   func(glyphs []emojiGlyph, ringY float64) (string, error)
 }
 
-func newEmoji(v *vars) *emoji {
-	return &emoji{vars: v, idle: emojiIdle, wake: make(chan struct{}, 1), recents: emojiRecents, orient: readOrientation, send: emojiType, render: emojiPNG,
+func newEmoji(v *vars, o *stripOverlay) *emoji {
+	return &emoji{vars: v, overlay: o, idle: emojiIdle, wake: make(chan struct{}, 1), recents: emojiRecents, orient: readOrientation, send: emojiType, render: emojiPNG,
 		strips: [2]*emojiStrip{{}, {}}}
 }
 
@@ -155,8 +156,7 @@ func (e *emoji) turn(side, direction int) bool {
 	if e.turned {
 		direction = -direction
 	}
-	s.vel = 0
-	s.target = e.clamp(s, math.Round(s.target)+float64(s.accel.step(direction)))
+	s.knob(s.accel.step(direction))
 	e.active = side
 	e.touch()
 	return true
@@ -191,10 +191,7 @@ func (e *emoji) start(side int, y float64) {
 	if !e.open() {
 		return
 	}
-	s := e.strips[side]
-	s.touching, s.hasY, s.lastY, s.moved, s.vel = true, true, y, 0, 0
-	s.lastMove = time.Now()
-	s.target = s.offset
+	e.strips[side].begin(y)
 	e.active = side
 	e.touch()
 }
@@ -205,11 +202,9 @@ func (e *emoji) slide(side int, y float64) bool {
 	if !e.open() {
 		return false
 	}
-	s := e.strips[side]
-	if s.hasY {
-		e.dragLocked(side, s.lastY-y)
-	}
-	s.hasY, s.lastY = true, y
+	e.strips[side].slideTo(y)
+	e.active = side
+	e.touch()
 	return true
 }
 
@@ -224,22 +219,7 @@ func (e *emoji) drag(side int, dy float64) bool {
 }
 
 func (e *emoji) dragLocked(side int, dy float64) {
-	s := e.strips[side]
-	now := time.Now()
-	items := dy / emojiPitch
-	if s.mirror {
-		items = -items
-	}
-	if dt := now.Sub(s.lastMove).Seconds(); dt > 0 && dt < 0.1 {
-		s.vel = 0.5*s.vel + 0.5*items/dt
-	} else {
-		s.vel = 0
-	}
-	s.lastMove = now
-	s.touching = true
-	s.moved += math.Abs(dy)
-	s.offset = e.clamp(s, s.offset+items)
-	s.target = s.offset
+	e.strips[side].dragBy(dy)
 	e.active = side
 	e.touch()
 }
@@ -251,35 +231,21 @@ func (e *emoji) end(side int) error {
 		return nil
 	}
 	s := e.strips[side]
-	tap := s.moved < emojiTapPx
-	y := s.lastY * stripDrawH / stripHeight
-	if s.mirror {
-		y = stripDrawH - y
-	}
-	s.touching, s.hasY = false, false
-	if time.Since(s.lastMove) > 100*time.Millisecond || math.Abs(s.vel) < emojiFling {
-		s.vel = 0
-	}
-	s.target = math.Round(s.offset)
+	tap, rows := s.finish()
 	e.touch()
 	if !tap {
 		e.mu.Unlock()
 		return nil
 	}
-	rows := math.Round((y - emojiTop) / emojiPitch)
 	if rows == 0 && side == emojiLeft {
 		text := e.top(emojiLeft)
 		e.mu.Unlock()
 		return e.sendLogged(text)
 	}
-	s.target, s.vel = e.clamp(s, math.Round(s.offset)+rows), 0
+	s.knob(int(rows))
 	e.active = side
 	e.mu.Unlock()
 	return nil
-}
-
-func (e *emoji) clamp(s *emojiStrip, offset float64) float64 {
-	return min(max(offset, 0), float64(max(len(s.list)-1, 0)))
 }
 
 func (e *emoji) animate() {
@@ -298,7 +264,7 @@ func (e *emoji) frame() bool {
 	e.mu.Lock()
 	open := e.open()
 	for _, s := range e.strips {
-		e.step(s)
+		s.step()
 	}
 	e.sync()
 	e.mu.Unlock()
@@ -330,31 +296,11 @@ func (e *emoji) sync() {
 	}
 }
 
-func (e *emoji) step(s *emojiStrip) {
-	if s.touching {
-		return
-	}
-	if s.vel != 0 {
-		s.offset += s.vel / animationHz
-		s.vel *= emojiFriction
-		clamped := e.clamp(s, s.offset)
-		if clamped != s.offset || math.Abs(s.vel) < emojiFling {
-			s.offset, s.vel = clamped, 0
-			s.target = math.Round(s.offset)
-		}
-		return
-	}
-	s.offset += (s.target - s.offset) * emojiSnap
-	if math.Abs(s.target-s.offset) < 0.01 {
-		s.offset = s.target
-	}
-}
-
 func (e *emoji) publish() {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if !e.open() {
-		e.vars.set("emoji_on", "0")
+		e.overlay.show("emoji", false)
 		e.vars.set("emoji_tile", e.idle)
 		return
 	}
@@ -379,7 +325,7 @@ func (e *emoji) publish() {
 		e.tileText = text
 		e.vars.set("emoji_tile", emojiTileImage(text, emojiTileSize))
 	}
-	e.vars.set("emoji_on", "1")
+	e.overlay.show("emoji", true)
 }
 
 func emojiRingY(mirror bool) float64 {

@@ -6,7 +6,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DAEMON = os.path.join(ROOT, "tools", "zored_stream")
-MAC_ONLY_PORTS = {"47114": "/mic", "47115": None, "47122": None, "47123": None, "47124": None, "47125": None, "47126": None, "47128": None}
+MAC_ONLY_PORTS = {"47114": "/mic", "47115": None, "47122": None, "47123": None, "47124": None, "47125": None, "47126": None, "47128": None, "47132": None}
 COMPANION_SET = {"ctl_brightness"}
 errors = []
 
