@@ -412,7 +412,7 @@ the windows page depends on it.
 
 #### AI limits (47116)
 
-- Fetch on start, then every `-usage-every` (15 min); errors back off ×2 up to 1 h, honouring `Retry-After`; waits in ≤ 1 min
+- Fetch on start, then every `-usage-every` (15 min); HTTP errors back off from 1 min ×2 up to 1 h, honouring `Retry-After`; no route, timeout or keychain retry every minute; waits in ≤ 1 min
   ticks against the wall clock (timers stop while asleep). `POST /usage/refresh` = fetch now unless the last fetch was < 1 min ago.
 - `GET /usage` → `{"limits":[…], "fetched_at", "error", "next_at", "context"}` from the cache, never fetches; `context` =
   the active chat's context (below) or `null`.

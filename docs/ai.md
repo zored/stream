@@ -34,11 +34,14 @@ The response has `limits[]`: `kind` (`session`, `weekly_all`, `weekly_scoped`), 
 | `-usage-every` | `15m` | fetch interval |
 | `-usage-proxy` | empty | HTTP proxy for `api.anthropic.com` |
 
-- Fetch on start, then every `-usage-every`. Network/HTTP errors back off: interval × 2ⁿ, at most 1 h, at least `Retry-After`.
+- Fetch on start, then every `-usage-every`. HTTP errors back off: 1 min × 2ⁿ⁻¹, at most 1 h, at least `Retry-After`.
   Keychain problems (no item, no refresh token) retry every minute: a local read, no network.
   No route (`dial`/`proxyconnect` errors: the VPN is off and `squid.ai-proxy.vk.team` does not resolve) also retries every minute
   and does not grow the backoff: nothing reaches the server. Before 2026-11-10 it backed off to 1 h, so the red dot stayed up to
   an hour after the VPN came back (verified in the log).
+  A client timeout (20 s, no headers) retries every minute too. Before 2026-11-12 it counted as a server error and the first
+  backoff was 30 min: one slow request right after a daemon restart left the strip on a red dot with no limits for half an hour
+  (verified in the log, 22:53 → next try 23:23).
 - `GET /usage`: `{"limits": [...as upstream...], "fetched_at", "error", "next_at", "context"}` from the cache, never fetches.
   `context` = `{"tokens", "window", "percent", "model"}` of the active chat (agents ring), see [Context](#context).
 - `POST /usage/refresh`: fetch now, ignored within a minute of the last fetch.

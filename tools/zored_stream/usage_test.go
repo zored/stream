@@ -142,6 +142,7 @@ func TestUsageRetryAfterOffline(t *testing.T) {
 	offline := fmt.Errorf("token refresh: %w", &url.Error{Op: "Post", URL: oauthTokenURL, Err: &net.OpError{
 		Op: "proxyconnect", Net: "tcp", Err: &net.OpError{Op: "dial", Net: "tcp", Err: &net.DNSError{Err: "no such host", Name: "squid.ai-proxy.vk.team", IsNotFound: true}},
 	}})
+	timeout := &url.Error{Op: "Get", URL: usageURL, Err: timeoutErr{}}
 	for _, c := range []struct {
 		name     string
 		err      error
@@ -150,13 +151,23 @@ func TestUsageRetryAfterOffline(t *testing.T) {
 		counted  bool
 	}{
 		{"offline", offline, 5, usageOfflineRetry, false},
+		{"timeout", timeout, 5, usageOfflineRetry, false},
 		{"keychain", fmt.Errorf("%w: no item", errKeychain), 5, usageKeychainRetry, false},
-		{"server", errors.New("503 Service Unavailable"), 1, 30 * time.Minute, true},
+		{"server", errors.New("503 Service Unavailable"), 1, time.Minute, true},
+		{"server again", errors.New("503 Service Unavailable"), 3, 4 * time.Minute, true},
 		{"server capped", errors.New("503 Service Unavailable"), 9, usageMaxBackoff, true},
 	} {
-		next, counted := usageNextTry(c.err, c.failures, 15*time.Minute, 0, now)
+		next, counted := usageNextTry(c.err, c.failures, 0, now)
 		if next.Sub(now) != c.want || counted != c.counted {
 			t.Errorf("%s: next in %v counted %v, want %v %v", c.name, next.Sub(now), counted, c.want, c.counted)
 		}
 	}
 }
+
+type timeoutErr struct{}
+
+func (timeoutErr) Error() string {
+	return "context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+}
+func (timeoutErr) Timeout() bool   { return true }
+func (timeoutErr) Temporary() bool { return true }

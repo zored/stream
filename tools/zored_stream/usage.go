@@ -27,6 +27,7 @@ const (
 	usageTick          = time.Minute
 	usageKeychainRetry = time.Minute
 	usageOfflineRetry  = time.Minute
+	usageMinRetry      = time.Minute
 	workdays           = 5
 	day                = 24 * time.Hour
 	stripHz            = 60
@@ -214,7 +215,7 @@ func (u *usage) fetch() {
 	u.mu.Lock()
 	if err != nil {
 		u.snap.Error = err.Error()
-		next, counted := usageNextTry(err, u.failures+1, u.every, retryAfter, now)
+		next, counted := usageNextTry(err, u.failures+1, retryAfter, now)
 		if counted {
 			u.failures++
 		}
@@ -229,20 +230,21 @@ func (u *usage) fetch() {
 	u.publish()
 }
 
-// Local failures (keychain, no route to the proxy) cost nothing to retry; only server errors back off.
-func usageNextTry(err error, failures int, every, retryAfter time.Duration, now time.Time) (time.Time, bool) {
+// Local failures (keychain, no route to the proxy) and timeouts retry every minute; server errors back off from a minute.
+func usageNextTry(err error, failures int, retryAfter time.Duration, now time.Time) (time.Time, bool) {
 	switch {
 	case errors.Is(err, errKeychain):
 		return now.Add(usageKeychainRetry), false
 	case offline(err):
 		return now.Add(usageOfflineRetry), false
 	}
-	return now.Add(max(min(every<<failures, usageMaxBackoff), retryAfter)), true
+	return now.Add(max(min(usageMinRetry<<(failures-1), usageMaxBackoff), retryAfter)), true
 }
 
 func offline(err error) bool {
 	var op *net.OpError
-	return errors.As(err, &op) && (op.Op == "dial" || op.Op == "proxyconnect")
+	var ne net.Error
+	return errors.As(err, &op) && (op.Op == "dial" || op.Op == "proxyconnect") || errors.As(err, &ne) && ne.Timeout()
 }
 
 func (u *usage) get() ([]json.RawMessage, []limit, time.Duration, error) {
