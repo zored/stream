@@ -12,20 +12,33 @@ import (
 )
 
 type desktopRecord struct {
-	SessionID       string `json:"sessionId"`
-	CliSessionID    string `json:"cliSessionId"`
-	Cwd             string `json:"cwd"`
+	SessionID       string          `json:"sessionId"`
+	CliSessionID    string          `json:"cliSessionId"`
+	Cwd             string          `json:"cwd"`
 	Title           string          `json:"title"`
 	LastActivityAt  int64           `json:"lastActivityAt"`
 	SpawnedFrom     json.RawMessage `json:"spawnedFrom"`
-	IsArchived      bool   `json:"isArchived"`
-	ScheduledTaskID string `json:"scheduledTaskId"`
-	LastFocusedAt   int64  `json:"lastFocusedAt"`
-	LastTurnEdgeAt  int64  `json:"lastTurnEdgeAt"`
+	IsArchived      bool            `json:"isArchived"`
+	ScheduledTaskID string          `json:"scheduledTaskId"`
+	LastFocusedAt   int64           `json:"lastFocusedAt"`
+	LastTurnEdgeAt  int64           `json:"lastTurnEdgeAt"`
 }
 
 func (r desktopRecord) unread() bool {
 	return !r.IsArchived && r.ScheduledTaskID == "" && r.LastTurnEdgeAt > r.LastFocusedAt
+}
+
+func (r desktopRecord) parent() string {
+	var from struct {
+		SessionID string `json:"sessionId"`
+	}
+	if !r.child() {
+		return ""
+	}
+	if err := json.Unmarshal(r.SpawnedFrom, &from); err != nil {
+		log.Printf("agents: %s spawnedFrom: %v", r.SessionID, err)
+	}
+	return from.SessionID
 }
 
 func (r desktopRecord) child() bool {

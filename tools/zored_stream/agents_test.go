@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"math"
 	"slices"
 	"strings"
 	"testing"
@@ -43,23 +44,43 @@ func TestDesktopDone(t *testing.T) {
 	}
 }
 
-func TestAgentDotGrid(t *testing.T) {
-	seen := map[[2]float64]bool{}
-	for i := range agentMaxDots {
-		x, y := agentDot(i, agentMaxDots)
-		if x-11.5 < 5 || x+11.5 > 95 || y-11.5 < 5 || y+11.5 > 95 {
-			t.Errorf("dot %d at %.1f,%.1f leaves the tile", i, x, y)
+func TestAgentLayout(t *testing.T) {
+	for _, sizes := range [][]int{{1}, {3}, {1, 1, 1, 1, 1}, {2, 1, 4, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}} {
+		pos := agentLayout(sizes)
+		for i, p := range pos {
+			if p.x-p.r-2.5 < 4 || p.x+p.r+2.5 > 96 || p.y-p.r-2.5 < 4 || p.y+p.r+2.5 > 96 {
+				t.Errorf("%v: dot %d %+v leaves the tile", sizes, i, p)
+			}
+			for j, q := range pos[:i] {
+				if math.Hypot(p.x-q.x, p.y-q.y) < p.r+q.r {
+					t.Errorf("%v: dots %d and %d overlap", sizes, j, i)
+				}
+			}
 		}
-		seen[[2]float64{x, y}] = true
 	}
-	if len(seen) != agentMaxDots {
-		t.Errorf("got %d distinct dots, want %d", len(seen), agentMaxDots)
+	if one, five := agentLayout([]int{1})[0].r, agentLayout([]int{1, 1, 1, 1, 1})[0].r; one <= five {
+		t.Errorf("a lone dot r=%.1f is not bigger than one of five r=%.1f", one, five)
 	}
-	if x, y := agentDot(0, 1); x != 50 || y != 50 {
-		t.Errorf("single dot at %.1f,%.1f", x, y)
+}
+
+func TestAgentGroups(t *testing.T) {
+	at := func(m int) time.Time { return time.Unix(int64(m)*60, 0) }
+	nodes := []agentNode{
+		{&agentSession{ID: "old", Updated: at(1)}, "old", 0},
+		{&agentSession{ID: "parent", Updated: at(2)}, "parent", 0},
+		{&agentSession{ID: "child", Updated: at(3)}, "parent", 1},
+		{&agentSession{ID: "grandchild", Updated: at(4)}, "parent", 2},
+		{&agentSession{ID: "child2", Updated: at(5)}, "parent", 1},
+		{&agentSession{ID: "mid", Updated: at(4)}, "mid", 0},
 	}
-	if x, _ := agentDot(4, 5); x != 50 {
-		t.Errorf("lone dot of row 2 at x=%.1f", x)
+	list, sizes := agentGroups(nodes)
+	var ids []string
+	for _, s := range list {
+		ids = append(ids, s.ID)
+	}
+	want := []string{"grandchild", "child2", "child", "parent", "mid", "old"}
+	if !slices.Equal(ids, want) || !slices.Equal(sizes, []int{4, 1, 1}) {
+		t.Errorf("got %v %v, want %v [4 1 1]", ids, sizes, want)
 	}
 }
 
@@ -106,7 +127,7 @@ func TestTitleEmoji(t *testing.T) {
 }
 
 func TestAgentsSVGEmoji(t *testing.T) {
-	uri := agentsSVG([]agentDotSpec{{agentInput, "🟢"}, {agentRead, ""}}, -1, -1, 1)
+	uri := agentsSVG([]agentDotSpec{{agentInput, "🟢"}, {agentRead, ""}}, []int{1, 1}, -1, -1, 1)
 	raw, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(uri, "data:image/svg+xml;base64,"))
 	if err != nil {
 		t.Fatal(err)

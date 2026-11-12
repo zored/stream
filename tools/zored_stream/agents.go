@@ -1,11 +1,13 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"html"
 	"log"
+	"math"
 	"net/http"
 	"os/exec"
 	"path/filepath"
@@ -79,25 +81,32 @@ type hookEvent struct {
 }
 
 type agents struct {
-	mu       sync.Mutex
-	sessions map[string]*agentSession
-	cursor   *agentSession
-	ttl      time.Duration
-	vars     *vars
-	slide    chan struct{}
-	desktop  *desktopSessions
-	ringFrom string
-	ringTo   string
-	ringAt   time.Time
-	front    int
-	polled   time.Time
-	manual   time.Time
-	strip    func(uri string)
-	stripOff *time.Timer
+	mu                   sync.Mutex
+	sessions             map[string]*agentSession
+	cursor               *agentSession
+	ttl                  time.Duration
+	vars                 *vars
+	slide                chan struct{}
+	desktop              *desktopSessions
+	ringFrom             string
+	ringTo               string
+	ringAt               time.Time
+	front                int
+	polled               time.Time
+	manual               time.Time
+	strip                func(uri string)
+	stripOff             *time.Timer
+	row                  []string
+	rowWake              chan struct{}
+	rowShown             bool
+	rowOffset, rowTarget float64
+	rowTurn              float64
+	rowMirror            bool
+	overlay              *stripOverlay
 }
 
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions) *agents {
-	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, slide: make(chan struct{}, 1), desktop: desktop}
+	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, slide: make(chan struct{}, 1), rowWake: make(chan struct{}, 1), desktop: desktop}
 }
 
 func (s *agentSession) desktopDone() bool {
@@ -277,7 +286,7 @@ func agentLess(x, y *agentSession) int {
 	return strings.Compare(x.ID, y.ID)
 }
 
-func (a *agents) sorted() []*agentSession {
+func (a *agents) ranked() []*agentSession {
 	list := make([]*agentSession, 0, len(a.sessions))
 	for _, s := range a.sessions {
 		list = append(list, s)
@@ -286,9 +295,73 @@ func (a *agents) sorted() []*agentSession {
 	return list
 }
 
+type agentNode struct {
+	s     *agentSession
+	root  string
+	depth int
+}
+
+func (a *agents) sorted() []*agentSession {
+	list, _ := a.grouped()
+	return list
+}
+
+func (a *agents) grouped() ([]*agentSession, []int) {
+	nodes := make([]agentNode, 0, len(a.sessions))
+	for _, s := range a.sessions {
+		root, depth := s.ID, 0
+		if s.Host != "" {
+			root = s.Host
+			for depth < 16 {
+				rec, ok := a.desktop.record(root)
+				if !ok || rec.parent() == "" {
+					break
+				}
+				root, depth = rec.parent(), depth+1
+			}
+		}
+		nodes = append(nodes, agentNode{s, root, depth})
+	}
+	return agentGroups(nodes)
+}
+
+func agentGroups(nodes []agentNode) ([]*agentSession, []int) {
+	fresh := map[string]time.Time{}
+	for _, n := range nodes {
+		if n.s.Updated.After(fresh[n.root]) {
+			fresh[n.root] = n.s.Updated
+		}
+	}
+	slices.SortFunc(nodes, func(x, y agentNode) int {
+		if x.root != y.root {
+			if c := fresh[y.root].Compare(fresh[x.root]); c != 0 {
+				return c
+			}
+			return strings.Compare(x.root, y.root)
+		}
+		if c := y.depth - x.depth; c != 0 {
+			return c
+		}
+		if c := y.s.Updated.Compare(x.s.Updated); c != 0 {
+			return c
+		}
+		return strings.Compare(x.s.ID, y.s.ID)
+	})
+	list := make([]*agentSession, len(nodes))
+	var sizes []int
+	for i, n := range nodes {
+		list[i] = n.s
+		if i == 0 || n.root != nodes[i-1].root {
+			sizes = append(sizes, 0)
+		}
+		sizes[len(sizes)-1]++
+	}
+	return list, sizes
+}
+
 func (a *agents) focus() error {
 	a.mu.Lock()
-	list := a.sorted()
+	list := a.ranked()
 	if len(list) == 0 {
 		a.cursor = nil
 		a.mu.Unlock()
@@ -341,10 +414,38 @@ func (a *agents) showStrip(s agentSession) {
 	}
 	rec, _ := a.desktop.record(s.Host)
 	a.strip(agentStripImage(rec.Title, filepath.Base(s.Cwd)))
+	list := a.sorted()
+	a.row = make([]string, len(list))
+	for i, l := range list {
+		r, _ := a.desktop.record(l.Host)
+		a.row[i] = cmp.Or(titleEmoji(r.Title), agentRowDot[l.Kind], "⚪")
+		if l.ID == s.ID {
+			a.rowTarget = float64(i)
+		}
+	}
+	if !a.rowShown {
+		o, err := readOrientation()
+		if err != nil {
+			log.Printf("agents: %v", err)
+		}
+		a.rowTurn, a.rowMirror = upright(o, false), stripFlipped(o, false)
+		a.rowOffset = a.rowTarget
+	}
+	a.rowShown = true
+	select {
+	case a.rowWake <- struct{}{}:
+	default:
+	}
 	if a.stripOff != nil {
 		a.stripOff.Stop()
 	}
-	a.stripOff = time.AfterFunc(agentStripFor, func() { a.strip("") })
+	a.stripOff = time.AfterFunc(agentStripFor, func() {
+		a.mu.Lock()
+		a.rowShown = false
+		a.mu.Unlock()
+		a.overlay.show("agents", false)
+		a.strip("")
+	})
 }
 
 func agentStripImage(title, cwd string) string {
@@ -353,6 +454,43 @@ func agentStripImage(title, cwd string) string {
 		return calImage(w, h, true, calText{text: cwd, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB})
 	}
 	return calImage(w, h, true, calText{text: title, tail: " " + cwd, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB, tailRGB: grayRGB})
+}
+
+var agentRowDot = map[string]string{agentInput: "🟡", agentDone: "⚪"}
+
+func (a *agents) animateRow() {
+	for range a.rowWake {
+		ticker := time.NewTicker(time.Second / animationHz)
+		for {
+			a.mu.Lock()
+			if !a.rowShown {
+				a.mu.Unlock()
+				break
+			}
+			d := a.rowTarget - a.rowOffset
+			if math.Abs(d) < 0.01 {
+				a.rowOffset = a.rowTarget
+			} else {
+				a.rowOffset += d * 0.3
+			}
+			row, offset, done := a.row, a.rowOffset, a.rowOffset == a.rowTarget
+			turn, mirror := a.rowTurn, a.rowMirror
+			a.mu.Unlock()
+			uri, err := emojiPNG(emojiColumn(row, offset, turn, mirror), emojiRingY(mirror))
+			if err != nil {
+				log.Print(err)
+				break
+			}
+			a.vars.set("emoji_l", uri)
+			a.vars.set("emoji_r", "")
+			a.overlay.show("agents", true)
+			if done {
+				break
+			}
+			<-ticker.C
+		}
+		ticker.Stop()
+	}
 }
 
 func (a *agents) addFront() {
@@ -435,7 +573,7 @@ end tell`
 
 func (a *agents) publish() {
 	a.mu.Lock()
-	list := a.sorted()
+	list, sizes := a.grouped()
 	cursor := ""
 	if a.cursor != nil {
 		cursor = a.cursor.ID
@@ -461,7 +599,7 @@ func (a *agents) publish() {
 	}
 	t := a.slideT()
 	a.mu.Unlock()
-	a.vars.set("agents_svg", agentsSVG(dots, current, prev, t))
+	a.vars.set("agents_svg", agentsSVG(dots, sizes, current, prev, t))
 }
 
 func (a *agents) slideT() float64 {
@@ -558,11 +696,31 @@ func itermUID(s string) string {
 	return ""
 }
 
-func agentDot(i, n int) (x, y float64) {
-	rows := (n + 3) / 4
-	row, col := i/4, i%4
-	inRow := min(4, n-row*4)
-	return 50 + (float64(col)-float64(inRow-1)/2)*22, 50 + (float64(row)-float64(rows-1)/2)*22
+type agentPos struct{ x, y, r float64 }
+
+func agentLayout(sizes []int) []agentPos {
+	m := len(sizes)
+	cols := int(math.Ceil(math.Sqrt(float64(m))))
+	rows := (m + cols - 1) / cols
+	cell := 88 / float64(max(cols, rows))
+	var out []agentPos
+	for g, k := range sizes {
+		row, col := g/cols, g%cols
+		inRow := min(cols, m-row*cols)
+		cx := 50 + (float64(col)-float64(inRow-1)/2)*cell
+		cy := 50 + (float64(row)-float64(rows-1)/2)*cell
+		if k == 1 {
+			out = append(out, agentPos{cx, cy, cell * 0.36})
+			continue
+		}
+		ring := cell * 0.27
+		r := min(cell*0.2, math.Pi*ring/float64(k)*0.9)
+		for i := range k {
+			a := -math.Pi/2 + 2*math.Pi*float64(i)/float64(k)
+			out = append(out, agentPos{cx + ring*math.Cos(a), cy + ring*math.Sin(a), r})
+		}
+	}
+	return out
 }
 
 type agentDotSpec struct {
@@ -612,7 +770,7 @@ func agentShape(b *strings.Builder, x, y, r float64, paint string) {
 	fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" %s/>`, x, y, r, paint)
 }
 
-func agentsSVG(dots []agentDotSpec, current, prev int, t float64) string {
+func agentsSVG(dots []agentDotSpec, sizes []int, current, prev int, t float64) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
 	switch n := len(dots); {
@@ -620,44 +778,39 @@ func agentsSVG(dots []agentDotSpec, current, prev int, t float64) string {
 		fmt.Fprintf(&b, `<circle cx="50" cy="50" r="7" fill="none" stroke="%s" stroke-width="2.5"/>`, gray)
 	case n > agentMaxDots:
 		fill := "#fff"
-		if dots[0].kind == agentInput {
-			fill = amber
+		for _, d := range dots {
+			if d.kind == agentInput {
+				fill = amber
+			}
 		}
 		fmt.Fprintf(&b, `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="56" fill="%s">%d</text>`, fill, n)
 	default:
-		e := t * t * (3 - 2*t)
+		pos := agentLayout(sizes)
 		for i, dot := range dots {
-			x, y := agentDot(i, n)
-			r := float64(agentDotR)
-			if i == current {
-				r += (agentActiveR - agentDotR) * e
-			}
-			if i == prev {
-				r += (agentActiveR - agentDotR) * (1 - e)
-			}
+			p := pos[i]
 			if dot.emoji != "" {
-				agentEmoji(&b, x, y, r, dot)
+				agentEmoji(&b, p.x, p.y, p.r, dot)
 				continue
 			}
-			fill := gray
 			switch dot.kind {
 			case agentInput:
-				fill = amber
+				agentShape(&b, p.x, p.y, p.r, `fill="`+amber+`"`)
 			case agentDone:
-				fill = "#fff"
+				agentShape(&b, p.x, p.y, p.r, `fill="#fff"`)
 			case agentRead:
-				agentShape(&b, x, y, r-1, `fill="none" stroke="`+gray+`" stroke-width="2"`)
-				continue
+				agentShape(&b, p.x, p.y, p.r-1, `fill="none" stroke="`+gray+`" stroke-width="2"`)
+			default:
+				agentShape(&b, p.x, p.y, p.r, `fill="`+gray+`"`)
 			}
-			agentShape(&b, x, y, r, `fill="`+fill+`"`)
 		}
 		if current >= 0 {
-			x, y := agentDot(current, n)
+			e := t * t * (3 - 2*t)
+			p := pos[current]
 			if prev >= 0 {
-				px, py := agentDot(prev, n)
-				x, y = px+(x-px)*e, py+(y-py)*e
+				q := pos[prev]
+				p = agentPos{q.x + (p.x-q.x)*e, q.y + (p.y-q.y)*e, q.r + (p.r-q.r)*e}
 			}
-			fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="11.5" fill="none" stroke="#fff" stroke-width="1.5"/>`, x, y)
+			fmt.Fprintf(&b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="#fff" stroke-width="1.5"/>`, p.x, p.y, p.r+2.5)
 		}
 	}
 	b.WriteString(`</svg>`)

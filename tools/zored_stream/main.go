@@ -292,6 +292,7 @@ func main() {
 	}
 	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir))
 	ag.strip = us.cover
+	ag.overlay = overlay
 	ch := newChoice(v, func() (*choiceCard, choiceTarget, string, error) { return readChoiceCard(ag) })
 	go ch.run()
 	var choicePolled time.Time
@@ -304,6 +305,7 @@ func main() {
 	ag.expire()
 	ag.publish()
 	go ag.animateSlide()
+	go ag.animateRow()
 	go every(agentFrontFreq, ag.watchFront)
 	go every(agentCheckFreq, ag.expire)
 	go serve(*agentsAddr, func(mux *http.ServeMux) {
