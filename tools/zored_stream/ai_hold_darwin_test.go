@@ -27,3 +27,21 @@ func TestAIHoldAfterTurnDoesNothing(t *testing.T) {
 		t.Fatal("hold fired after a turn")
 	}
 }
+
+func TestAIHoldEndsPress(t *testing.T) {
+	a := &aiSwitch{}
+	a.down()
+	a.hold()
+	if a.holding() {
+		t.Fatal("press still held after the hold fired")
+	}
+}
+
+func TestAILostReleaseExpires(t *testing.T) {
+	a := &aiSwitch{}
+	a.down()
+	a.heldAt = a.heldAt.Add(-2 * aiHeldMax)
+	if a.holding() {
+		t.Fatal("press without release never expired")
+	}
+}

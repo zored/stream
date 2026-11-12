@@ -42,6 +42,8 @@ var (
 	errNoMenuItem = errors.New("menu item not found")
 )
 
+const aiHeldMax = 8 * time.Second
+
 type aiChoice struct{ model, effort string }
 
 type aiSwitch struct {
@@ -53,6 +55,7 @@ type aiSwitch struct {
 	polled  time.Time
 	vars    *vars
 	held    bool
+	heldAt  time.Time
 	turned  bool
 	preview time.Time
 	known   int
@@ -79,7 +82,7 @@ func (a *aiSwitch) show(c aiChoice, state string) {
 func (a *aiSwitch) turn(d int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.turned = true
+	a.turned, a.heldAt = true, time.Now()
 	a.index = min(max(a.index+d, 0), len(aiModels)*len(aiEfforts)-1)
 	a.schedule()
 }
@@ -99,7 +102,7 @@ func (a *aiSwitch) slide(y float64) {
 func (a *aiSwitch) down() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.held, a.turned = true, false
+	a.held, a.turned, a.heldAt = true, false, time.Now()
 	return nil
 }
 
@@ -116,13 +119,17 @@ func (a *aiSwitch) hold() (fire bool) {
 	if !a.held || a.turned {
 		return false
 	}
-	a.turned = true
+	a.turned, a.held = true, false
 	return true
 }
 
 func (a *aiSwitch) holding() bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if a.held && time.Since(a.heldAt) > aiHeldMax {
+		log.Printf("ai: press without release for %s, dropped", aiHeldMax)
+		a.held = false
+	}
 	return a.held
 }
 
