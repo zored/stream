@@ -66,14 +66,14 @@ func TestAgentLayout(t *testing.T) {
 func TestAgentGroups(t *testing.T) {
 	at := func(m int) time.Time { return time.Unix(int64(m)*60, 0) }
 	nodes := []agentNode{
-		{&agentSession{ID: "old", Updated: at(1)}, "old", 0},
-		{&agentSession{ID: "parent", Updated: at(2)}, "parent", 0},
-		{&agentSession{ID: "child", Updated: at(3)}, "parent", 1},
-		{&agentSession{ID: "grandchild", Updated: at(4)}, "parent", 2},
-		{&agentSession{ID: "child2", Updated: at(5)}, "parent", 1},
-		{&agentSession{ID: "mid", Updated: at(4)}, "mid", 0},
+		{&agentSession{ID: "old"}, "old", 0, at(1)},
+		{&agentSession{ID: "parent"}, "parent", 0, at(2)},
+		{&agentSession{ID: "child"}, "parent", 1, at(3)},
+		{&agentSession{ID: "grandchild"}, "parent", 2, at(4)},
+		{&agentSession{ID: "child2"}, "parent", 1, at(5)},
+		{&agentSession{ID: "mid"}, "mid", 0, at(4)},
 	}
-	list, sizes := agentGroups(nodes)
+	list, sizes := agentGroups(nodes, nil)
 	var ids []string
 	for _, s := range list {
 		ids = append(ids, s.ID)
@@ -81,6 +81,72 @@ func TestAgentGroups(t *testing.T) {
 	want := []string{"grandchild", "child2", "child", "parent", "mid", "old"}
 	if !slices.Equal(ids, want) || !slices.Equal(sizes, []int{4, 1, 1}) {
 		t.Errorf("got %v %v, want %v [4 1 1]", ids, sizes, want)
+	}
+}
+
+func testKnob(t *testing.T, ids ...string) (*agents, chan string) {
+	t.Helper()
+	a, _ := testAgents(t)
+	opened := make(chan string, 16)
+	a.openAfter = 30 * time.Millisecond
+	a.open = func(s agentSession) error {
+		opened <- s.ID
+		return nil
+	}
+	for i, id := range ids {
+		a.sessions[id] = &agentSession{ID: id, Kind: agentRead, Updated: time.Unix(int64(len(ids)-i), 0)}
+	}
+	return a, opened
+}
+
+func (a *agents) cursorID() string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.cursor.ID
+}
+
+func TestAgentKnobWrapsAndOpensAfterStop(t *testing.T) {
+	a, opened := testKnob(t, "a", "b", "c")
+	var walk []string
+	for _, d := range []int{1, 1, 1, 1, -1, -1} {
+		a.move(d)
+		walk = append(walk, a.cursorID())
+	}
+	if want := []string{"a", "b", "c", "a", "c", "b"}; !slices.Equal(walk, want) {
+		t.Fatalf("walk %v, want %v", walk, want)
+	}
+	select {
+	case id := <-opened:
+		if id != "b" {
+			t.Fatalf("opened %q, want b", id)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("chat not opened after the knob stopped")
+	}
+	select {
+	case id := <-opened:
+		t.Fatalf("opened %q on a step in between", id)
+	case <-time.After(100 * time.Millisecond):
+	}
+}
+
+func TestAgentKnobOrderFrozenWhileBrowsing(t *testing.T) {
+	a, _ := testKnob(t, "a", "b", "c")
+	a.move(1)
+	a.move(1)
+	a.mu.Lock()
+	a.sessions["b"].Updated = time.Unix(100, 0)
+	a.mu.Unlock()
+	a.move(1)
+	if got := a.cursorID(); got != "c" {
+		t.Fatalf("a fresher chat reordered the ring mid-browse: cursor %q, want c", got)
+	}
+	a.mu.Lock()
+	a.browsedAt = time.Time{}
+	list := a.sorted()
+	a.mu.Unlock()
+	if list[0].ID != "b" {
+		t.Fatalf("order stayed frozen after the browse: %v", list[0].ID)
 	}
 }
 

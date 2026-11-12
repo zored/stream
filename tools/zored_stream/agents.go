@@ -33,6 +33,7 @@ const (
 	agentReadFor   = time.Minute
 	agentManual    = 2 * time.Second
 	agentStripFor  = 2 * time.Second
+	agentOpenAfter = 150 * time.Millisecond
 	agentCheckFreq = 10 * time.Second
 )
 
@@ -112,8 +113,17 @@ type agents struct {
 	contextErr           string
 	pins                 *agentPins
 	browsedAt            time.Time
+	order                *agentOrder
+	opener               *time.Timer
+	openAfter            time.Duration
+	open                 func(agentSession) error
 	clickArm             bool
 	sidebar              chan sidebarPin
+}
+
+type agentOrder struct {
+	at    map[string]time.Time
+	fresh map[string]time.Time
 }
 
 type sidebarPin struct {
@@ -123,7 +133,7 @@ type sidebarPin struct {
 
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions, pins *agentPins) *agents {
 	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, slide: make(chan struct{}, 1), rowWake: make(chan struct{}, 1),
-		desktop: desktop, pins: pins, sidebar: make(chan sidebarPin, 16)}
+		desktop: desktop, pins: pins, sidebar: make(chan sidebarPin, 16), openAfter: agentOpenAfter, open: agentSession.open}
 }
 
 func (s *agentSession) desktopDone() bool {
@@ -330,6 +340,7 @@ type agentNode struct {
 	s     *agentSession
 	root  string
 	depth int
+	at    time.Time
 }
 
 func (a *agents) sorted() []*agentSession {
@@ -338,6 +349,33 @@ func (a *agents) sorted() []*agentSession {
 }
 
 func (a *agents) grouped() ([]*agentSession, []int) {
+	if a.order != nil && !a.browsing() {
+		a.order = nil
+	}
+	var keep map[string]time.Time
+	nodes := a.nodes()
+	if a.order != nil {
+		keep = a.order.fresh
+		for i, n := range nodes {
+			if t, ok := a.order.at[n.s.ID]; ok {
+				nodes[i].at = t
+			}
+		}
+	}
+	return agentGroups(nodes, keep)
+}
+
+func (a *agents) freeze() {
+	nodes := a.nodes()
+	at := make(map[string]time.Time, len(nodes))
+	for _, n := range nodes {
+		at[n.s.ID] = n.at
+	}
+	a.order = &agentOrder{at: at, fresh: agentFresh(nodes, nil)}
+	a.browsedAt = time.Now()
+}
+
+func (a *agents) nodes() []agentNode {
 	nodes := make([]agentNode, 0, len(a.sessions))
 	for _, s := range a.sessions {
 		root, depth := s.ID, 0
@@ -351,18 +389,26 @@ func (a *agents) grouped() ([]*agentSession, []int) {
 				root, depth = rec.parent(), depth+1
 			}
 		}
-		nodes = append(nodes, agentNode{s, root, depth})
+		nodes = append(nodes, agentNode{s, root, depth, s.Updated})
 	}
-	return agentGroups(nodes)
+	return nodes
 }
 
-func agentGroups(nodes []agentNode) ([]*agentSession, []int) {
+func agentFresh(nodes []agentNode, keep map[string]time.Time) map[string]time.Time {
 	fresh := map[string]time.Time{}
 	for _, n := range nodes {
-		if n.s.Updated.After(fresh[n.root]) {
-			fresh[n.root] = n.s.Updated
+		if n.at.After(fresh[n.root]) {
+			fresh[n.root] = n.at
 		}
 	}
+	for root, t := range keep {
+		fresh[root] = t
+	}
+	return fresh
+}
+
+func agentGroups(nodes []agentNode, keep map[string]time.Time) ([]*agentSession, []int) {
+	fresh := agentFresh(nodes, keep)
 	slices.SortFunc(nodes, func(x, y agentNode) int {
 		if x.root != y.root {
 			if c := fresh[y.root].Compare(fresh[x.root]); c != 0 {
@@ -373,7 +419,7 @@ func agentGroups(nodes []agentNode) ([]*agentSession, []int) {
 		if c := y.depth - x.depth; c != 0 {
 			return c
 		}
-		if c := y.s.Updated.Compare(x.s.Updated); c != 0 {
+		if c := y.at.Compare(x.at); c != 0 {
 			return c
 		}
 		return strings.Compare(x.s.ID, y.s.ID)
@@ -418,7 +464,14 @@ func (a *agents) focus() error {
 
 func (a *agents) step(d int) {
 	a.addFront()
+	a.move(d)
+}
+
+func (a *agents) move(d int) {
 	a.mu.Lock()
+	if !a.browsing() {
+		a.freeze()
+	}
 	list := a.sorted()
 	if len(list) == 0 {
 		a.mu.Unlock()
@@ -440,10 +493,13 @@ func (a *agents) familyStep(d int) {
 	}
 	fam := a.desktop.family(a.cursor.Host)
 	i := slices.IndexFunc(fam, func(r desktopRecord) bool { return r.SessionID == a.cursor.Host })
-	j := min(max(i+d, 0), len(fam)-1)
+	j := agentStep(i, d, len(fam))
 	if i < 0 || j == i {
 		a.mu.Unlock()
 		return
+	}
+	if !a.browsing() {
+		a.freeze()
 	}
 	host := fam[j].SessionID
 	var next *agentSession
@@ -466,14 +522,25 @@ func (a *agents) goTo(s *agentSession) {
 	a.cursor = s
 	a.manual = time.Now()
 	a.browsedAt = a.manual
-	target := *s
-	a.showStrip(target)
-	go func() {
-		log.Printf("agents: knob %s %s %s", target.ID, target.Kind, filepath.Base(target.Cwd))
-		if err := target.open(); err != nil {
-			log.Printf("agents: %v", err)
-		}
-	}()
+	a.showStrip(*s)
+	if a.opener != nil {
+		a.opener.Stop()
+	}
+	a.opener = time.AfterFunc(a.openAfter, a.openCursor)
+}
+
+func (a *agents) openCursor() {
+	a.mu.Lock()
+	if a.cursor == nil {
+		a.mu.Unlock()
+		return
+	}
+	target, idle := *a.cursor, time.Since(a.browsedAt)
+	a.mu.Unlock()
+	log.Printf("agents: knob %s %s %s, %s after the last step", target.ID, target.Kind, filepath.Base(target.Cwd), idle.Round(time.Millisecond))
+	if err := a.open(target); err != nil {
+		log.Printf("agents: %v", err)
+	}
 }
 
 func (a *agents) browsing() bool {
