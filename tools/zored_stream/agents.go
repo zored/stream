@@ -822,7 +822,7 @@ func agentEmoji(b *strings.Builder, x, y, r float64, dot agentDotSpec) {
 		opacity = 0.4
 	}
 	size := r * 2.1
-	fmt.Fprintf(b, `<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Apple Color Emoji" font-size="%.1f" opacity="%g">%s</text>`,
+	fmt.Fprintf(b, `<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Apple Color Emoji" font-size="%.1f" opacity="%g" filter="url(#shade)">%s</text>`,
 		x, y+size*0.5, size, opacity, html.EscapeString(dot.emoji))
 }
 
@@ -849,6 +849,7 @@ func agentsSVG(dots []agentDotSpec, sizes []int, current, prev int, t float64, c
 		}
 		fmt.Fprintf(&b, `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="JetBrains Mono" font-size="56" fill="%s">%d</text>`, fill, n)
 	default:
+		b.WriteString(`<defs><filter id="shade" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.6"/></filter></defs>`)
 		pos := agentLayout(sizes)
 		for i, dot := range dots {
 			p := pos[i]
