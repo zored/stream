@@ -137,3 +137,10 @@ func TestAgentsSVGEmoji(t *testing.T) {
 		t.Fatalf("want amber-backed emoji and a hollow dot: %s", svg)
 	}
 }
+
+func TestAgentRowPos(t *testing.T) {
+	want := []float64{0, emojiPitch, 2*emojiPitch + agentGroupGap, 3*emojiPitch + 2*agentGroupGap}
+	if got := agentRowPos([]int{2, 1, 1}); !slices.Equal(got, want) {
+		t.Errorf("got %v want %v", got, want)
+	}
+}

@@ -103,6 +103,7 @@ type agents struct {
 	rowTurn              float64
 	rowMirror            bool
 	rowTitle             string
+	rowPos               []float64
 	overlay              *stripOverlay
 }
 
@@ -416,13 +417,14 @@ func (a *agents) showStrip(s agentSession) {
 	rec, _ := a.desktop.record(s.Host)
 	a.rowTitle = agentStripImage(rec.Title, filepath.Base(s.Cwd))
 	a.strip(a.rowTitle)
-	list := a.sorted()
+	list, sizes := a.grouped()
 	a.row = make([]string, len(list))
+	a.rowPos = agentRowPos(sizes)
 	for i, l := range list {
 		r, _ := a.desktop.record(l.Host)
 		a.row[i] = cmp.Or(titleEmoji(r.Title), agentRowDot[l.Kind], "⚪")
 		if l.ID == s.ID {
-			a.rowTarget = float64(i)
+			a.rowTarget = a.rowPos[i]
 		}
 	}
 	if !a.rowShown {
@@ -458,6 +460,38 @@ func agentStripImage(title, cwd string) string {
 	return calImage(w, h, true, calText{text: title, tail: " " + cwd, x: 4, y: 3, w: w - 8, h: 44, size: 15, rgb: whiteRGB, tailRGB: grayRGB})
 }
 
+const agentGroupGap = 18
+
+func agentRowPos(sizes []int) []float64 {
+	var pos []float64
+	y := 0.0
+	for g, k := range sizes {
+		if g > 0 {
+			y += agentGroupGap
+		}
+		for range k {
+			pos = append(pos, y)
+			y += emojiPitch
+		}
+	}
+	return pos
+}
+
+func agentColumn(row []string, pos []float64, offset, turn float64, mirror bool) []emojiGlyph {
+	var out []emojiGlyph
+	for i, e := range row {
+		y := emojiTop + pos[i] - offset
+		if y < -emojiPitch || y > stripDrawH+emojiPitch {
+			continue
+		}
+		if mirror {
+			y = stripDrawH - y
+		}
+		out = append(out, emojiGlyph{text: e, y: y, size: emojiSize, alpha: 1, turn: turn})
+	}
+	return out
+}
+
 var agentRowDot = map[string]string{agentInput: "🟡", agentDone: "⚪"}
 
 func (a *agents) animateRow() {
@@ -470,15 +504,15 @@ func (a *agents) animateRow() {
 				break
 			}
 			d := a.rowTarget - a.rowOffset
-			if math.Abs(d) < 0.01 {
+			if math.Abs(d) < 0.5 {
 				a.rowOffset = a.rowTarget
 			} else {
 				a.rowOffset += d * 0.3
 			}
-			row, offset, done := a.row, a.rowOffset, a.rowOffset == a.rowTarget
+			row, pos, offset, done := a.row, a.rowPos, a.rowOffset, a.rowOffset == a.rowTarget
 			turn, mirror, title := a.rowTurn, a.rowMirror, a.rowTitle
 			a.mu.Unlock()
-			uri, err := emojiPNG(emojiColumn(row, offset, turn, mirror), emojiRingY(mirror))
+			uri, err := emojiPNG(agentColumn(row, pos, offset, turn, mirror), emojiRingY(mirror))
 			if err != nil {
 				log.Print(err)
 				break
