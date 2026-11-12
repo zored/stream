@@ -591,17 +591,18 @@ func titleEmoji(title string) string {
 }
 
 func agentEmoji(b *strings.Builder, x, y, r float64, dot agentDotSpec) {
-	opacity := 1.0
+	stroke, opacity := gray, 1.0
 	switch dot.kind {
 	case agentInput:
-		fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>`, x, y, r+1, amber)
-	case agentWorking:
-		opacity = 0.5
+		stroke = amber
+	case agentDone:
+		stroke = "#fff"
 	case agentRead:
-		opacity = 0.25
+		opacity = 0.4
 	}
+	fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="%s" stroke-width="1.5" opacity="%g"/>`, x, y, r+1, stroke, opacity)
 	fmt.Fprintf(b, `<text x="%.1f" y="%.1f" dy="0.35em" text-anchor="middle" font-family="Apple Color Emoji" font-size="%.1f" opacity="%g">%s</text>`,
-		x, y, r*1.7, opacity, html.EscapeString(dot.emoji))
+		x, y+r*0.2, r*2.1, opacity, html.EscapeString(dot.emoji))
 }
 
 func agentShape(b *strings.Builder, x, y, r float64, paint string) {

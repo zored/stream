@@ -192,7 +192,7 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 - hold 400 ms → `/agent/new`: open a new session.
 - draws `agents_svg` (pure Go SVG): one dot per session, up to 16 in a 4×4 grid, amber = `input`, white = `done`, gray =
   `working`, hollow gray = `read`; circles for top-level, squares for children; the cursor dot is bigger with a white ring
-  that slides 150 ms; a count when > 16; a hollow gray circle when none. A Desktop chat whose title starts with an emoji shows that emoji instead of the dot: amber disc behind = needs input, full = done, 50% = working, 25% = read; no emoji in the title (CLI, `misc:`) → the dot.
+  that slides 150 ms; a count when > 16; a hollow gray circle when none. A Desktop chat whose title starts with an emoji shows that emoji instead of the dot: ringed amber = needs input, white = done, gray = working, gray and dimmed = read; no emoji in the title (CLI, `misc:`) → the dot.
 - Win: keep, Codex as the source (see the agents module). Focus = bring the Codex window / Windows Terminal to front.
 
 #### тайл ряд 3, колонка 1 — mic in a call / unread chats (`2/2`)
