@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/base64"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 )
@@ -85,5 +87,31 @@ func TestAgentStep(t *testing.T) {
 		if got := agentStep(c.i, c.d, c.n); got != c.want {
 			t.Errorf("agentStep(%d,%d,%d) = %d, want %d", c.i, c.d, c.n, got, c.want)
 		}
+	}
+}
+
+func TestTitleEmoji(t *testing.T) {
+	for title, want := range map[string]string{
+		"🟢 59599: зелёный | 15 окт 🎫": "🟢",
+		"⚙️ суть | 28 окт":            "⚙️",
+		"👩‍💻 код":                     "👩‍💻",
+		"misc: суть":                  "",
+		"":                            "",
+	} {
+		if got := titleEmoji(title); got != want {
+			t.Errorf("titleEmoji(%q) = %q, want %q", title, got, want)
+		}
+	}
+}
+
+func TestAgentsSVGEmoji(t *testing.T) {
+	uri := agentsSVG([]agentDotSpec{{agentInput, "🟢"}, {agentRead, ""}}, -1, -1, 1)
+	raw, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(uri, "data:image/svg+xml;base64,"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	svg := string(raw)
+	if !strings.Contains(svg, ">🟢</text>") || !strings.Contains(svg, `fill="`+amber+`"`) || !strings.Contains(svg, `stroke="`+gray+`"`) {
+		t.Fatalf("want amber-backed emoji and a hollow dot: %s", svg)
 	}
 }

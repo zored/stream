@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"os/exec"
@@ -40,14 +41,14 @@ var (
 )
 
 type agentSession struct {
-	ID    string    `json:"id"`
-	Kind  string    `json:"kind"`
-	Since time.Time `json:"since"`
-	Cwd   string    `json:"cwd"`
-	Host  string    `json:"host,omitempty"`
-	ITerm string    `json:"iterm,omitempty"`
-	App   string    `json:"app,omitempty"`
-	Pid   int       `json:"pid,omitempty"`
+	ID      string    `json:"id"`
+	Kind    string    `json:"kind"`
+	Since   time.Time `json:"since"`
+	Cwd     string    `json:"cwd"`
+	Host    string    `json:"host,omitempty"`
+	ITerm   string    `json:"iterm,omitempty"`
+	App     string    `json:"app,omitempty"`
+	Pid     int       `json:"pid,omitempty"`
 	Updated time.Time `json:"updated"`
 	Child   bool      `json:"child,omitempty"`
 	choicePayload
@@ -334,7 +335,6 @@ func (a *agents) step(d int) {
 	a.publish()
 }
 
-
 func (a *agents) showStrip(s agentSession) {
 	if a.strip == nil {
 		return
@@ -433,7 +433,6 @@ const itermFocus = `tell application id "com.googlecode.iterm2"
 	error "iTerm2 session not found"
 end tell`
 
-
 func (a *agents) publish() {
 	a.mu.Lock()
 	list := a.sorted()
@@ -451,7 +450,8 @@ func (a *agents) publish() {
 	dots := make([]agentDotSpec, len(list))
 	current, prev := -1, -1
 	for i, s := range list {
-		dots[i] = agentDotSpec{s.Kind}
+		rec, _ := a.desktop.record(s.Host)
+		dots[i] = agentDotSpec{s.Kind, titleEmoji(rec.Title)}
 		switch s.ID {
 		case a.ringTo:
 			current = i
@@ -463,7 +463,6 @@ func (a *agents) publish() {
 	a.mu.Unlock()
 	a.vars.set("agents_svg", agentsSVG(dots, current, prev, t))
 }
-
 
 func (a *agents) slideT() float64 {
 	return min(1, float64(time.Since(a.ringAt))/float64(agentSlide))
@@ -567,7 +566,42 @@ func agentDot(i, n int) (x, y float64) {
 }
 
 type agentDotSpec struct {
-	kind string
+	kind  string
+	emoji string
+}
+
+var emojiSet = sync.OnceValue(func() map[string]bool {
+	set := map[string]bool{}
+	for _, g := range emojiGroups {
+		for _, e := range g {
+			set[e] = true
+		}
+	}
+	return set
+})
+
+func titleEmoji(title string) string {
+	r := []rune(strings.TrimSpace(title))
+	for n := min(len(r), 10); n > 0; n-- {
+		if emojiSet()[string(r[:n])] {
+			return string(r[:n])
+		}
+	}
+	return ""
+}
+
+func agentEmoji(b *strings.Builder, x, y, r float64, dot agentDotSpec) {
+	opacity := 1.0
+	switch dot.kind {
+	case agentInput:
+		fmt.Fprintf(b, `<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>`, x, y, r+1, amber)
+	case agentWorking:
+		opacity = 0.5
+	case agentRead:
+		opacity = 0.25
+	}
+	fmt.Fprintf(b, `<text x="%.1f" y="%.1f" dy="0.35em" text-anchor="middle" font-family="Apple Color Emoji" font-size="%.1f" opacity="%g">%s</text>`,
+		x, y, r*1.7, opacity, html.EscapeString(dot.emoji))
 }
 
 func agentShape(b *strings.Builder, x, y, r float64, paint string) {
@@ -596,6 +630,10 @@ func agentsSVG(dots []agentDotSpec, current, prev int, t float64) string {
 			}
 			if i == prev {
 				r += (agentActiveR - agentDotR) * (1 - e)
+			}
+			if dot.emoji != "" {
+				agentEmoji(&b, x, y, r, dot)
+				continue
 			}
 			fill := gray
 			switch dot.kind {
