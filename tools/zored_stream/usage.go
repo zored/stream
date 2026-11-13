@@ -37,6 +37,7 @@ const (
 	stripSessionW      = 32
 	tilePx             = 90
 	stripAllowed       = "#48484A"
+	stripFable         = "#BF5AF2"
 	stripClockFont     = 12.8
 	stripDaysFont      = 10
 )
@@ -44,7 +45,7 @@ const (
 var (
 	aiStateColors = map[string]string{"ok": "#fff", "pending": gray, "preview": gray, "idle": "#fff", "other": amber, "error": red}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
-	levelColors   = map[string]string{"low": "#99F299", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666", "over": "#B3261E"}
+	levelColors   = map[string]string{"low": "#fff", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666", "over": "#B3261E"}
 )
 
 type limit struct {
@@ -101,6 +102,7 @@ type stripFrame struct {
 	stale   bool
 	session float64
 	week    float64
+	fable   float64
 	allowed float64
 	weekLvl string
 	left5h  string
@@ -437,14 +439,14 @@ func stripFrameFor(limits []limit, label stripLabel, now time.Time) stripFrame {
 			f.left5h = clockLeft(s.ResetsAt.Sub(now))
 		}
 	}
-	week := scopedFor(limits, label.model)
-	if week == nil {
-		week = findLimit(limits, "weekly_all")
-	}
+	week := findLimit(limits, "weekly_all")
 	if current(week, now) {
 		f.week, f.allowed, f.weekLvl = week.Percent, allowedPct(*week, now), weekLevelOf(dayPct(*week, now))
 		if week.ResetsAt != nil {
 			f.leftW = daysLeft(week.ResetsAt.Sub(now))
+		}
+		if fable := scopedFor(limits, "fable"); current(fable, now) {
+			f.fable = min(fable.Percent, week.Percent)
 		}
 	}
 	return f
@@ -504,6 +506,9 @@ func aiStripSVG(f stripFrame) string {
 	sessionBar := rect(0, w5, f.session, sessionColor)
 	k := min(float64(h)/svgMinWidth, float64(w5)/svgHeight)
 	weekBar := rect(w5, w-w5, f.week, weekColor)
+	if !f.stale && f.fable > 0 {
+		weekBar += rect(w5, w-w5, f.fable, stripFable)
+	}
 	clip := sessionBar
 	if f.weekLvl != "over" {
 		clip += weekBar

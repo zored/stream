@@ -240,8 +240,8 @@ unless the track or player changed or playback was started meanwhile.
 
 ## Right strip — AI limits + model
 
-- shows, edge to edge: a wide bar bottom-up = Claude 5h session usage; next to it a narrow bar = weekly usage of the selected model (Fable has its own week, the rest share one), over a dark gray bar = how far the week may be by tonight;
-  5h bar light green < 50, white, yellow > 80, red > 90; weekly bar (of today's allowance) light green < 50, white, red > 80, dark red = over;
+- shows, edge to edge: a wide bar bottom-up = Claude 5h session usage; next to it a narrow bar = weekly usage of all models, Fable's share purple from the bottom, over a dark gray bar = how far the week may be by tonight;
+  5h bar white, yellow > 80, red > 90; weekly bar (of today's allowance) white, red > 80, dark red = over;
   at the bottom, rotated: time left in the 5h window (`1:20`) under the model, time left in the week (`1d 5h`) in the narrow bar; the model rotated (reads bottom-up) with effort dots (low 1 … max 5) over the wide bar, white, black where the bar is under them; a red dot in the corner = the last fetch failed
 - model white, gray while previewing; effort dots white, amber = outside the knob's list, red = switch failed; changes show at once
 - slide: changes model + effort relative to the current one, like a mouse wheel: ~30 px per stop, up = Sonnet·Low → Fable·High, stops at the ends *(on the device: assumed)*

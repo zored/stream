@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -69,12 +71,40 @@ func TestStripFrame(t *testing.T) {
 	if f.session != 30 || f.week != 30 || f.allowed != 40 || f.weekLvl != "normal" || f.failed {
 		t.Errorf("opus: got %+v", f)
 	}
+	if f.fable != 30 || f.left5h != "1:00" || f.leftW != "5d 9h" {
+		t.Errorf("fable capped by the week: got %+v", f)
+	}
 	f = stripFrameFor(limits, stripLabel{model: "fable"}, now)
-	if f.week != 50 || f.weekLvl != "over" || f.left5h != "1:00" || f.leftW != "5d 9h" {
-		t.Errorf("fable: got %+v", f)
+	if f.week != 30 || f.weekLvl != "normal" {
+		t.Errorf("fable selected keeps weekly_all: got %+v", f)
+	}
+	limits[2].Percent = 10
+	if f := stripFrameFor(limits, stripLabel{}, now); f.fable != 10 {
+		t.Errorf("fable share: got %+v", f)
+	}
+	limits[2].ResetsAt = ptr(now.Add(-time.Minute))
+	if f := stripFrameFor(limits, stripLabel{}, now); f.fable != 0 {
+		t.Errorf("fable after its reset: got %+v", f)
 	}
 	if f := stripFrameFor(nil, stripLabel{}, now); !f.failed {
 		t.Errorf("no limits: got %+v", f)
+	}
+}
+
+func TestStripSVGColors(t *testing.T) {
+	svg := func(f stripFrame) string {
+		b, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(aiStripSVG(f), "data:image/svg+xml;base64,"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(b)
+	}
+	s := svg(stripFrame{session: 10, week: 20, fable: 5, allowed: 40, weekLvl: weekLevelOf(20)})
+	if strings.Contains(s, "#99F299") || !strings.Contains(s, stripFable) {
+		t.Errorf("want no green and a fable segment: %s", s)
+	}
+	if s := svg(stripFrame{session: 10, week: 20, fable: 5, weekLvl: "low", stale: true}); strings.Contains(s, stripFable) {
+		t.Errorf("stale shows fable: %s", s)
 	}
 }
 
