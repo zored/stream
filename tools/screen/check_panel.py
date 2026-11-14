@@ -64,6 +64,10 @@ if currentScreen.safeAreaInsets.top > 0,
     require(panel.hit(NSPoint(x: RowLayout.width(panel.frames) / 2, y: 10)) == nil, "camera gap must not hit a control")
 }
 
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+require(panel.isHidden && panel.slide == 1, "fresh panel must start hidden above the screen")
+require(!panel.window.isVisible && !panel.isAnimating, "fresh panel must not show a frame before a reveal")
+
 let rest = fixtureFrames()
 let hoverTarget = fixtureFrames(cursorX: rest[1].x + rest[1].width / 2)[1].scale
 panel.show()

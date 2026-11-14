@@ -20,7 +20,7 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
             self?.panel.frame(id: id, data: data, image: image)
             if CommandLine.arguments.contains("--probe") { log("KEY-STATE \(id.id)") }
         }
-        panel.onStripDoubleClick = { [weak self] in self?.hideByUser() }
+        panel.onStripDoubleClick = { [weak self] in self?.conceal() }
         for number in [SIGINT, SIGTERM] {
             signal(number, SIG_IGN)
             let source = DispatchSource.makeSignalSource(signal: number, queue: .main)
@@ -55,9 +55,9 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
         plugged = isPlugged
         userHidden = false
         stopReveal()
-        if ScreenVisibility.shouldShow(devicePlugged: isPlugged, userHidden: userHidden) {
+        if ScreenVisibility.revealArmed(devicePlugged: isPlugged) {
             if !asleep { connection.connect() }
-            panel.show()
+            conceal()
         } else {
             panel.releaseAll()
             panel.hide()
@@ -65,7 +65,7 @@ final class ScreenApp: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func hideByUser() {
+    private func conceal() {
         panel.releaseAll()
         panel.hide()
         userHidden = true

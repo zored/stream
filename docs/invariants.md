@@ -106,7 +106,7 @@ Not covered by tests; run them after touching the area.
 - Dictation: all four gestures; music paused and resumed with Yandex Music (F8, F9)
 - Strips, haptics, LED colours, the 6 % inset: only on the device, ask the user (D1–D3)
 - Idle CPU after a minute with nothing moving (P2)
-- Screen panel: hidden and disconnected while the controller is plugged, shown when unplugged; a USB change clears a user hide. Check release outside the pressed control, strip double click and the 0.6 s top-edge peek/retract, display changes, Companion restart; see [screen.md](screen.md)
+- Screen panel: hidden and disconnected while the controller is plugged; unplugged (and at process start) it connects but stays hidden until the top-edge peek. Check release outside the pressed control, strip double click and the 0.6 s top-edge peek/retract, display changes, Companion restart; see [screen.md](screen.md)
 - Keep-awake hold → sleep: never verified, ask first (F16, S4)
 - Wi-fi: hold = power, pick + join through Control Center, Viscosity reconnect after the join (F21)
 - Headphones: toggle both ways, auto-route when Logi / the USB camera appear

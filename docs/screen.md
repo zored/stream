@@ -1,6 +1,6 @@
 # Screen panel
 
-An on-screen controller panel for macOS, shown only while the USB controller is unplugged.
+An on-screen controller panel for macOS, available only while the USB controller is unplugged; it starts hidden above the screen.
 **Verified** = observed here, **assumed** = read or reasoned, not checked.
 
 ## What it is
@@ -88,9 +88,9 @@ and exits with status 1; launchd restarts it. An intentional disconnect sends `R
 
 ## When it shows
 
-- USB controller plugged (IOKit matched/terminated, VID `0x1532`, PID `0x0D06`) → the row slides up, Satellite sends `REMOVE-DEVICE` and disconnects. Unplugged → Satellite connects and the row slides down. Verified 2026-11-09: launch with the controller plugged logs `device plugged=true`, keeps no `:16622` socket.
-- Double click on a strip slides the row up over 120 ms and hides it. Any USB change clears this user hide: plugging hides anyway, unplugging always shows.
-- Hidden by the user, a global `mouseMoved` monitor runs (assumed: needs no Accessibility). Cursor ≤ 2 pt from the top of the primary display starts a peek at once: the row jumps (invisibly) to tiles touching the top edge, then over 0.6 s slides down with a cubic ease-out (fast start, ~42 % of the way in the first 0.1 s) until 10 pt of each resting tile is visible. After 0.6 s the panel shows completely. Cursor more than 14 pt below the top during the peek → the row flies back up in 80 ms; the next touch of the edge starts a new 0.6 s peek. The peek ignores mouse input.
+- USB controller plugged (IOKit matched/terminated, VID `0x1532`, PID `0x0D06`) → the row slides up, Satellite sends `REMOVE-DEVICE` and disconnects. Unplugged, including the first USB check at process start → Satellite connects and the row stays hidden above the screen with the top-edge reveal armed, as after a strip double click. A fresh panel is never ordered on screen before a peek, so no expanded frame flashes. Verified 2026-11-09: launch with the controller plugged logs `device plugged=true`, keeps no `:16622` socket.
+- Double click on a strip slides the row up over 120 ms and hides it. Plugging hides the row without the reveal; unplugging hides it with the reveal armed.
+- Hidden (unplug or strip double click), a global `mouseMoved` monitor runs (assumed: needs no Accessibility). Cursor ≤ 2 pt from the top of the primary display starts a peek at once: the row jumps (invisibly) to tiles touching the top edge, then over 0.6 s slides down with a cubic ease-out (fast start, ~42 % of the way in the first 0.1 s) until 10 pt of each resting tile is visible. After 0.6 s the panel shows completely. Cursor more than 14 pt below the top during the peek → the row flies back up in 80 ms; the next touch of the edge starts a new 0.6 s peek. The peek ignores mouse input.
 - Input is disabled during every transition.
 - Idle CPU target ≈ 0: USB notifications, frames and mouse events drive the panel (P2). There is no cursor polling: the 0.6 s reveal is a one-shot `DispatchWorkItem`, so a cursor resting at the edge needs no events. A primary-screen CADisplayLink drives hover/visibility transitions at the refresh rate reported by AppKit and is invalidated when settled. A two-second Satellite heartbeat runs only while connected because Companion closes idle sockets after five seconds; disconnect cancels it. The five-second probe exit is diagnostic only.
 - Measured 2026-11-09: with the controller plugged the installed app used 0.01 s CPU in 30 s (`ps`). The AppKit regression spends ~0.08 s CPU during one 0.6 s peek at the display refresh rate. The user confirmed USB hide/show and the 0.6 s peek on the device and desktop (2026-11-09).
@@ -110,7 +110,7 @@ the LaunchAgent plist passes `plutil -lint`. The plugged-device probe received a
 - With the controller unplugged, tile 4 press must log `Button 1/0/3 pressed`; wheel on tile 1 changes volume;
   right click on tile 12 toggles scroll mode; middle click on tile 7 presses кнопка 7; left-strip drag changes volume.
 - Release outside the pressed tile: confirm no control stays pressed.
-- USB transitions (ask the user to handle the cable): plug → the row slides up and the log shows `device plugged=true`; unplug → it slides down, frames arrive. A user hide does not survive either change.
+- USB transitions (ask the user to handle the cable): plug → the row slides up and the log shows `device plugged=true`; unplug → it stays hidden, frames arrive, the top-edge peek brings it down.
 - Double click a strip with the emoji picker closed: hide without changing state. Hold the cursor at the top edge: a 10 pt sliver slides in over 0.6 s, then the full row. Move away before 0.6 s: the sliver flies back up.
   If macOS asks for Accessibility, stop for the user to grant permission.
 - Change the primary display or disconnect it: the panel follows the primary display.
@@ -126,7 +126,7 @@ the LaunchAgent plist passes `plutil -lint`. The plugged-device probe received a
 
 Shutdown regression: `python3 tools/screen/check_shutdown.py` builds a temporary app against an isolated TCP server, delays REMOVE-DEVICE and checks it arrives before EOF with exit 0. Verified RED→GREEN. Termination first cancels the AppKit request, drains disconnect asynchronously, then requests termination again; `terminateLater` stalled this command-line AppKit runloop in the regression.
 
-Panel regression: `python3 tools/screen/check_panel.py` compiles the real AppKit panel with a fixed cursor fixture and posts an in-process focus-loss notification. It checks hover interpolation, collapse on focus loss, animated hide/reveal, the slow peek, fast retract and show after a settled peek. On 2026-11-09 one of 15 runs failed with an uncaptured message; the next 14 passed. The original implementation reproduced the stuck magnification before the fix.
+Panel regression: `python3 tools/screen/check_panel.py` compiles the real AppKit panel with a fixed cursor fixture and posts an in-process focus-loss notification. It checks that a fresh panel starts hidden and ordered out with no animation, hover interpolation, collapse on focus loss, animated hide/reveal, the slow peek, fast retract and show after a settled peek. On 2026-11-09 one of 15 runs failed with an uncaptured message; the next 14 passed. The original implementation reproduced the stuck magnification before the fix.
 
 Verified after the animation update: full `make test`, AppKit panel regression (including unsupported clicks during collapse), shutdown regression, signed release build and LaunchAgent restart. Visual quality of glass/refraction is still unverified; native screenshot attempts timed out. P2 permits a display link only while the panel is transitioning; the runtime check confirms it stops after hover, focus reset and visibility animations.
 

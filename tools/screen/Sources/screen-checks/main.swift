@@ -105,9 +105,8 @@ check(wheelSteps.consume(delta: 1, precise: false, inverted: true) == -1, "undo 
 check(wheelSteps.consume(delta: 0.5, precise: false, inverted: false) == 0, "fractional mouse delta retained")
 check(wheelSteps.consume(delta: 0.5, precise: false, inverted: false) == 1, "fractional mouse deltas accumulate")
 
-check(!ScreenVisibility.shouldShow(devicePlugged: true, userHidden: false), "panel hidden with controller plugged")
-check(ScreenVisibility.shouldShow(devicePlugged: false, userHidden: false), "panel visible unplugged")
-check(!ScreenVisibility.shouldShow(devicePlugged: false, userHidden: true), "user hide wins while unplugged")
+check(!ScreenVisibility.revealArmed(devicePlugged: true), "plugged controller keeps the panel off")
+check(ScreenVisibility.revealArmed(devicePlugged: false), "unplugged controller starts hidden with the top-edge reveal armed")
 check(Reveal.step(distanceFromTop: 2, peeking: false) == .start, "top edge starts the peek")
 check(Reveal.step(distanceFromTop: 3, peeking: false) == .none, "below the edge does not peek")
 check(Reveal.step(distanceFromTop: Reveal.band, peeking: true) == .none, "peek band keeps the peek")

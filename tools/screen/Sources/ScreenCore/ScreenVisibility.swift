@@ -1,7 +1,5 @@
 public enum ScreenVisibility {
-    public static func shouldShow(devicePlugged: Bool, userHidden: Bool) -> Bool {
-        !devicePlugged && !userHidden
-    }
+    public static func revealArmed(devicePlugged: Bool) -> Bool { !devicePlugged }
 }
 
 public enum RevealStep: Equatable, Sendable {
