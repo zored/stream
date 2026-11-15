@@ -224,6 +224,7 @@ no AppleScript). The Karabiner VirtualHID route needs a root client and was not 
 
 - EventKit in-process (`calendar_darwin.m`): events ±7 days (cancelled dropped) and incomplete reminders with a due date up to +7 days, polled every minute; past events drop out, overdue reminders stay.
 - Access: `requestFullAccessTo{Events,Reminders}` (macOS 14+), usage strings in the embedded `Info.plist`; the first poll blocks until the prompt is answered.
+- One `EKEventStore`, created lazily; `cal_items` and `cal_set_done` hold a mutex around it, so the startup poll, the minute ticker and a done-toggle never race on the store or the grants. The file stops the build without ARC (`#error`): the reminder fetch keeps its result in a `__block` variable, and without ARC that array is freed before the loop reads it. That was the 10 startup SIGSEGVs on 2026-11-03.
 - Notes (`EKCalendarItem.notes`) go to the list strip, gray.
 - Soon glow: the day tile gets a dark green background (`soonBgRGB`, `cal_canvas_fill`) while the first non-reminder event is ≤ 5 min ahead or running (`calGlow`); a tap, knob turn or act stores its id+start in `dismissed`, so it never comes back for that event. The glow is part of the card's frame key: re-render only on the edge, at most 1 min late (poll).
 - Done toggles `EKReminder.completed` + `saveReminder:commit:`; reminders completed since midnight are listed too.

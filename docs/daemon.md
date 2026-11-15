@@ -93,6 +93,18 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
   `com.zored.stream.zored_stream`. `make zored_stream` also installs the LaunchAgent, log `~/Library/Logs/zored-stream/zored_stream.log`.
 - `CGO_LDFLAGS=` in front of `make` while the stale environment is around.
 
+## cgo and ObjC memory
+
+- `#cgo CFLAGS: -fobjc-arc` is package-wide: cgo compiles every `.m` with the merged flags. Without it, `__block` results
+  from completion handlers are not retained and the next read hits freed memory (`calendar_darwin.m` has an `#error` guard).
+- Crash logs: a Go `SIGSEGV … during cgo execution` dump has `pc`, `lr` and `r1` (the selector for `objc_msgSend`). On the
+  same boot, `atos -p $(pgrep -x zored_stream) <pc>` names system frames (the shared cache has one address per boot), and
+  `sel_getName((SEL)<r1>)` names the selector.
+- `TestCanvasConcurrentStress` renders `calPNG` + `chatsLayersPNG` from 8 goroutines; `CAL_STRESS=<rounds>` makes it longer, and
+  `NSZombieEnabled=YES MallocScribble=1 MallocCheckHeapStart=1000 MallocCheckHeapEach=1000` or
+  `DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib` on the test binary catch use-after-free. `TestCalFetchConcurrent` needs
+  Calendars + Reminders access for the test binary, so it runs only with `CAL_EVENTKIT=1`.
+
 ## Migration
 
 Each step keeps the old helper until the new path is verified on the device. Modules keep their old ports, so a switch is

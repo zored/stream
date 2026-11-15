@@ -3,8 +3,14 @@
 #import <ImageIO/ImageIO.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include "calendar_darwin.h"
 
+#if !__has_feature(objc_arc)
+#error "calendar_darwin.m needs ARC: __block results from EventKit completions must be retained"
+#endif
+
+static pthread_mutex_t store_lock = PTHREAD_MUTEX_INITIALIZER;
 static EKEventStore *store;
 static int granted_events, granted_reminders;
 
@@ -37,7 +43,7 @@ static char *ensure(void) {
     return NULL;
 }
 
-char *cal_items(double from, double to, char **err) {
+static char *items_locked(double from, double to, char **err) {
     @autoreleasepool {
         if ((*err = ensure())) return NULL;
         [store refreshSourcesIfNecessary];
@@ -87,7 +93,7 @@ char *cal_items(double from, double to, char **err) {
     }
 }
 
-char *cal_set_done(const char *id, int done) {
+static char *set_done_locked(const char *id, int done) {
     @autoreleasepool {
         char *err = ensure();
         if (err) return err;
@@ -99,6 +105,20 @@ char *cal_set_done(const char *id, int done) {
         if (![store saveReminder:r commit:YES error:&e]) return dup_error(e.localizedDescription);
         return NULL;
     }
+}
+
+char *cal_items(double from, double to, char **err) {
+    pthread_mutex_lock(&store_lock);
+    char *out = items_locked(from, to, err);
+    pthread_mutex_unlock(&store_lock);
+    return out;
+}
+
+char *cal_set_done(const char *id, int done) {
+    pthread_mutex_lock(&store_lock);
+    char *err = set_done_locked(id, done);
+    pthread_mutex_unlock(&store_lock);
+    return err;
 }
 
 typedef struct {
