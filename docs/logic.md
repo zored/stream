@@ -293,7 +293,7 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 #### крутилка справа, ряд 3 — scroll (`2/7`, `:47121`)
 
 Before the scroller, each input is offered to timers, then calendar, then chats (knob capture, mac only). Chats while
-browsing: turn = scroll the shown message by half a line (eased at 60 Hz while moving), press = open the chat. Scroller (`scroll.go`):
+browsing: turn = scroll the shown message by half a line (eased at 60 Hz while moving), press = open the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
 
 | Input | Mode | Effect |
 |---|---|---|
@@ -447,7 +447,7 @@ scroller mode, pressed/turned, held modifier, release timer, app-windows deadlin
 - **Order** (F13): top-level before children, then newest activity first, then id.
 - **Pins**: Desktop's `starred-local-code-sessions` in `claude_desktop_config.json` plus 30 s pending toggles; toggled by a click while browsing; a pinned, not archived chat is never expired and is added as `read` when missing; drawn with a pink disc behind the dot. Mirror to Desktop's sidebar via AX (`More options for <title>` → `Pin`/`Unpin`), mac only, best effort. Win: keep the set, no sidebar mirror.
 - **Focus**: Desktop chat → `claude://code/continue?session=<id>` via `LSOpenCFURLRef` (Win: `ShellExecute`); iTerm2 → AppleScript select; else `open -b <bundle>`;
-  new session → `open claude://code/new`. The chat in front becomes the cursor (polled 1 s while Claude is "hot", 3 s cold).
+  new session → `claude://code/new` the same way. The chat in front becomes the cursor (polled 1 s while Claude is "hot", 3 s cold).
 - Win (Codex): feed `/agent/event` from Codex `notify` (`agent-turn-complete` → send as `Stop` = `done`) and, if Codex hooks
   give approvals, as `PermissionRequest` = `input`; map Codex's session id to `session_id`. Pid check: `OpenProcess` +
   `GetExitCodeProcess` instead of `syscall.Kill(pid, 0)`. Focus: `SetForegroundWindow` on the Windows Terminal / Codex app

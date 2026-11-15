@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os/exec"
 	"slices"
 	"strings"
 	"sync"
@@ -75,7 +74,7 @@ type chats struct {
 }
 
 func newChats(v *vars, release func(), strip func(string)) *chats {
-	return &chats{vars: v, release: release, strip: strip, byApp: map[string][]chatEntry{}, opener: openURL,
+	return &chats{vars: v, release: release, strip: strip, byApp: map[string][]chatEntry{}, opener: launchURL,
 		kick: make(chan struct{}, 1), hidden: map[string]time.Time{}}
 }
 
@@ -441,15 +440,13 @@ func (c *chats) act(i int) error {
 	c.browseTill = time.Time{}
 	c.publishLocked()
 	c.mu.Unlock()
-	log.Printf("chats: open %s %s", e.app, e.id)
-	return c.opener(e.open)
-}
-
-func openURL(url string) error {
-	if url == "" {
-		return fmt.Errorf("chats: no url to open")
+	if e.open == "" {
+		return fmt.Errorf("chats: %s %s has no url to open", e.app, e.id)
 	}
-	return exec.Command("open", url).Run()
+	start := time.Now()
+	err := c.opener(e.open)
+	log.Printf("chats: open %s %s in %s", e.app, e.id, time.Since(start).Round(time.Millisecond))
+	return err
 }
 
 func chatsInitial(title string) string {
