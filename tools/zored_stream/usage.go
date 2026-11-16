@@ -37,7 +37,7 @@ const (
 	stripSessionW      = 32
 	tilePx             = 90
 	stripAllowed       = "#48484A"
-	stripFable         = "#BF5AF2"
+	stripFable         = "#D24DFF"
 	stripClockFont     = 12.8
 	stripDaysFont      = 10
 )
@@ -446,7 +446,7 @@ func stripFrameFor(limits []limit, label stripLabel, now time.Time) stripFrame {
 			f.leftW = daysLeft(week.ResetsAt.Sub(now))
 		}
 		if fable := scopedFor(limits, "fable"); current(fable, now) {
-			f.fable = min(fable.Percent, week.Percent)
+			f.fable = week.Percent * min(fable.Percent, 100) / 100
 		}
 	}
 	return f

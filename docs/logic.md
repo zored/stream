@@ -317,7 +317,7 @@ posted once at start (covers a crash).
 One 48×258 SVG `ai_strip_svg` (pure Go `aiStripSVG`), each cell shows its third.
 
 - full bleed, no inset: left 32 px bar bottom-up = 5 h session %, right 16 px bar = `weekly_all` %, with a purple
-  `#BF5AF2` segment from the bottom = Fable `weekly_scoped` %, capped by `weekly_all`, hidden when stale; behind the weekly bar a dark gray bar up
+  `#D24DFF` segment from the bottom = `weekly_all × min(Fable weekly_scoped, 100) / 100`, hidden when stale; behind the weekly bar a dark gray bar up
   to where the week may be today (`100 × workday index / 5`, `allowedPct`).
 - bar colours (`levelColors`, as the Hammerspoon overlay): 5 h by its %: ≤ 80 white (`low` is white too), > 80 yellow, > 90 red;
   the weekly bar by `dayPct` (`weekLevelOf`): ≤ 80 white, > 80 red, > 100 dark red.

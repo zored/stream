@@ -56,8 +56,9 @@ the daemon (`ai_strip_svg`, `aiStripSVG`); each cell shows its third (`gen_pages
 
 - left, 32 px: the 5 h session bar, bottom-up.
 - right, 16 px: the weekly bar of all models (`weekly_all`), whatever model is selected. Inside it, bottom-up, a purple
-  `#BF5AF2` segment = Fable's `weekly_scoped` %, capped by the weekly bar (assumed: Fable usage counts in `weekly_all` and both
-  % share one scale; the API gives no absolute numbers). Since 2026-11-13. Behind it a dark gray bar up to how far the week may be by the end of today:
+  `#D24DFF` segment = Fable's `weekly_scoped` % as a share of the weekly bar: `week × fable / 100`, Fable capped at 100
+  (week 30 %, Fable 50 % → 15, Fable 100 % → the whole weekly bar). Since 2026-11-16; before, both % sat on one 0–100 scale
+  and the colour was `#BF5AF2`. Since 2026-11-13. Behind it a dark gray bar up to how far the week may be by the end of today:
   `100 × workdays since the window start / 5` (Mon–Fri, 1…5). There is one 5 h limit for all models (verified: no scoped `session`).
 - colours as the Hammerspoon overlay: ≤ 80 white (no green since 2026-11-13), > 80 yellow `#FFD94D`, > 90 red `#FF6666` (5 h bar,
   by its %). The weekly bar goes by `d` (its % of today's allowance, `weekLevelOf`): ≤ 80 white, > 80 red

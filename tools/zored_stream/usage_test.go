@@ -71,16 +71,18 @@ func TestStripFrame(t *testing.T) {
 	if f.session != 30 || f.week != 30 || f.allowed != 40 || f.weekLvl != "normal" || f.failed {
 		t.Errorf("opus: got %+v", f)
 	}
-	if f.fable != 30 || f.left5h != "1:00" || f.leftW != "5d 9h" {
-		t.Errorf("fable capped by the week: got %+v", f)
+	if f.fable != 15 || f.left5h != "1:00" || f.leftW != "5d 9h" {
+		t.Errorf("fable as a share of the week: got %+v", f)
 	}
 	f = stripFrameFor(limits, stripLabel{model: "fable"}, now)
 	if f.week != 30 || f.weekLvl != "normal" {
 		t.Errorf("fable selected keeps weekly_all: got %+v", f)
 	}
-	limits[2].Percent = 10
-	if f := stripFrameFor(limits, stripLabel{}, now); f.fable != 10 {
-		t.Errorf("fable share: got %+v", f)
+	for _, c := range []struct{ fable, want float64 }{{100, 30}, {120, 30}, {0, 0}, {10, 3}} {
+		limits[2].Percent = c.fable
+		if f := stripFrameFor(limits, stripLabel{}, now); f.fable != c.want {
+			t.Errorf("fable %v of week 30: want %v, got %+v", c.fable, c.want, f)
+		}
 	}
 	limits[2].ResetsAt = ptr(now.Add(-time.Minute))
 	if f := stripFrameFor(limits, stripLabel{}, now); f.fable != 0 {
