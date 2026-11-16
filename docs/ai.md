@@ -55,17 +55,18 @@ No tile (removed 2026-11-02). The whole right strip is one 48×258 SVG (the draw
 the daemon (`ai_strip_svg`, `aiStripSVG`); each cell shows its third (`gen_pages.py` `ai_strip`). Since 2026-11-12, full bleed:
 
 - left, 32 px: the 5 h session bar, bottom-up.
-- right, 16 px: the weekly bar of all models (`weekly_all`), whatever model is selected. Inside it, bottom-up, a purple
-  `#D24DFF` segment = Fable's `weekly_scoped` % as a share of the weekly bar: `week × fable / 100`, Fable capped at 100
+- right, 16 px: the weekly bar of all models (`weekly_all`), whatever model is selected. Inside it, bottom-up, a lighter
+  segment = Fable's `weekly_scoped` % as a share of the weekly bar: `week × fable / 100`, Fable capped at 100
   (week 30 %, Fable 50 % → 15, Fable 100 % → the whole weekly bar). Since 2026-11-16; before, both % sat on one 0–100 scale
-  and the colour was `#BF5AF2`. Since 2026-11-13. Behind it a dark gray bar up to how far the week may be by the end of today:
+  and the segment was purple. Since 2026-11-13. Behind it a near-black `#1C1C1E` bar up to how far the week may be by the end of today:
   `100 × workdays since the window start / 5` (Mon–Fri, 1…5). There is one 5 h limit for all models (verified: no scoped `session`).
-- colours as the Hammerspoon overlay: ≤ 80 white (no green since 2026-11-13), > 80 yellow `#FFD94D`, > 90 red `#FF6666` (5 h bar,
-  by its %). The weekly bar goes by `d` (its % of today's allowance, `weekLevelOf`): ≤ 80 white, > 80 red
-  `#FF6666` (near today's limit), > 100 dark red `#B3261E` (over it).
+- colours, the quiet scheme (user's pick 2026-11-16, `stripSession`, `stripWeek`, `stripFable`; the overlay keeps its own):
+  5 h bar white, > 90 red `#FF453A`. The weekly bar goes by `d` (its % of today's allowance, `weekLevelOf`): ≤ 80 dark gray
+  `#48484A` with the Fable segment `#AEAEB2`; > 80 gray `#8E8E93` (near today's limit) with Fable white; > 100 red `#FF453A`
+  (over it) with Fable white. Red is the only colour.
 - the rotated model + effort dots sit over the 5 h bar: white outside it, black where the bar is under them. On the same line,
   at the bottom edge, time left in the 5 h window (`1:20`); in the weekly bar, at the bottom, time left in the week (`1d 5h`,
-  `5h` under a day, `40m` under an hour). Same inversion; over a dark red weekly bar the text stays white.
+  `5h` under a day, `40m` under an hour). Same inversion over the 5 h bar, the Fable segment and a gray weekly bar; over a dark gray or red weekly bar the text stays white.
 - no animation: a model or effort change redraws at once.
 
 Bars over 100 % stay full. A red dot in the corner means the last fetch failed. The calendar list covers the whole strip while open (`usage.cover`, see controls.md, clock).

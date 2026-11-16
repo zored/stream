@@ -316,13 +316,13 @@ posted once at start (covers a crash).
 
 One 48×258 SVG `ai_strip_svg` (pure Go `aiStripSVG`), each cell shows its third.
 
-- full bleed, no inset: left 32 px bar bottom-up = 5 h session %, right 16 px bar = `weekly_all` %, with a purple
-  `#D24DFF` segment from the bottom = `weekly_all × min(Fable weekly_scoped, 100) / 100`, hidden when stale; behind the weekly bar a dark gray bar up
+- full bleed, no inset: left 32 px bar bottom-up = 5 h session %, right 16 px bar = `weekly_all` %, with a lighter
+  segment from the bottom = `weekly_all × min(Fable weekly_scoped, 100) / 100`, hidden when stale; behind the weekly bar a `#1C1C1E` bar up
   to where the week may be today (`100 × workday index / 5`, `allowedPct`).
-- bar colours (`levelColors`, as the Hammerspoon overlay): 5 h by its %: ≤ 80 white (`low` is white too), > 80 yellow, > 90 red;
-  the weekly bar by `dayPct` (`weekLevelOf`): ≤ 80 white, > 80 red, > 100 dark red.
+- bar colours (`stripSession`, `stripWeek`, `stripFable`): 5 h by its %: white, > 90 red `#FF453A`; the weekly bar by `dayPct`
+  (`weekLevelOf`): ≤ 80 `#48484A` + Fable `#AEAEB2`, > 80 `#8E8E93` + Fable white, > 100 `#FF453A` + Fable white.
 - text at the bottom edge, rotated like the model: time left in the 5 h window `h:mm` on the model's line, time left in the week
-  in the weekly bar (`1d 5h`, `5h`, `40m`); inverted over the bars except a dark red weekly bar.
+  in the weekly bar (`1d 5h`, `5h`, `40m`); inverted over the 5 h bar, the Fable segment and a gray (`#8E8E93`) weekly bar.
 - rotated model + effort dots (1–5) centred over the 5 h bar: white outside it, black where the bar is under them; model gray
   while previewing, dots amber / red for other / error. No animation: a model or effort change redraws at once.
 - stale (F10): last fetch failed, never happened, or older than 2 intervals → gray bars; a limit past its `resets_at` → empty.

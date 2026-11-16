@@ -36,8 +36,7 @@ const (
 	stripDrawH         = 258
 	stripSessionW      = 32
 	tilePx             = 90
-	stripAllowed       = "#48484A"
-	stripFable         = "#D24DFF"
+	stripAllowed       = "#1C1C1E"
 	stripClockFont     = 12.8
 	stripDaysFont      = 10
 )
@@ -46,6 +45,10 @@ var (
 	aiStateColors = map[string]string{"ok": "#fff", "pending": gray, "preview": gray, "idle": "#fff", "other": amber, "error": red}
 	aiEffortDots  = []string{"low", "medium", "high", "extra", "max"}
 	levelColors   = map[string]string{"low": "#fff", "normal": "#fff", "high": "#FFD94D", "critical": "#FF6666", "over": "#B3261E"}
+	stripAlarm    = "#FF453A"
+	stripSession  = map[string]string{"low": "#fff", "normal": "#fff", "high": "#fff", "critical": stripAlarm}
+	stripWeek     = map[string]string{"low": "#48484A", "normal": "#48484A", "critical": gray, "over": stripAlarm}
+	stripFable    = map[string]string{"low": "#AEAEB2", "normal": "#AEAEB2", "critical": "#fff", "over": "#fff"}
 )
 
 type limit struct {
@@ -496,7 +499,7 @@ func aiStripSVG(f stripFrame) string {
 		bh := float64(h) * min(max(pct, 0), 100) / 100
 		return fmt.Sprintf(`<rect x="%d" y="%.1f" width="%d" height="%.1f" fill="%s"/>`, x, h-bh, width, bh, color)
 	}
-	sessionColor, weekColor := levelColors[levelOf(f.session)], levelColors[f.weekLvl]
+	sessionColor, weekColor := stripSession[levelOf(f.session)], stripWeek[f.weekLvl]
 	if f.stale {
 		sessionColor, weekColor = gray, gray
 	}
@@ -506,12 +509,14 @@ func aiStripSVG(f stripFrame) string {
 	sessionBar := rect(0, w5, f.session, sessionColor)
 	k := min(float64(h)/svgMinWidth, float64(w5)/svgHeight)
 	weekBar := rect(w5, w-w5, f.week, weekColor)
-	if !f.stale && f.fable > 0 {
-		weekBar += rect(w5, w-w5, f.fable, stripFable)
-	}
 	clip := sessionBar
-	if f.weekLvl != "over" {
+	if weekColor == gray {
 		clip += weekBar
+	}
+	if !f.stale && f.fable > 0 {
+		fableBar := rect(w5, w-w5, f.fable, stripFable[f.weekLvl])
+		weekBar += fableBar
+		clip += fableBar
 	}
 	label := func(ink string) string {
 		fill := "#fff"

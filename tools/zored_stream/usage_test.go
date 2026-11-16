@@ -101,11 +101,25 @@ func TestStripSVGColors(t *testing.T) {
 		}
 		return string(b)
 	}
-	s := svg(stripFrame{session: 10, week: 20, fable: 5, allowed: 40, weekLvl: weekLevelOf(20)})
-	if strings.Contains(s, "#99F299") || !strings.Contains(s, stripFable) {
-		t.Errorf("want no green and a fable segment: %s", s)
+	for _, c := range []struct{ week, fable string }{{"low", "#AEAEB2"}, {"normal", "#AEAEB2"}, {"critical", "#fff"}, {"over", "#fff"}} {
+		s := svg(stripFrame{session: 10, week: 20, fable: 5, allowed: 40, weekLvl: c.week})
+		want := fmt.Sprintf(`<rect x="32" y="245.1" width="16" height="12.9" fill="%s"/>`, c.fable)
+		if !strings.Contains(s, want) || !strings.Contains(s, `fill="`+stripWeek[c.week]+`"`) {
+			t.Errorf("week %s: want fable %s and week %s: %s", c.week, c.fable, stripWeek[c.week], s)
+		}
 	}
-	if s := svg(stripFrame{session: 10, week: 20, fable: 5, weekLvl: "low", stale: true}); strings.Contains(s, stripFable) {
+	for session, color := range map[float64]string{85: "#fff", 95: stripAlarm} {
+		s := svg(stripFrame{session: session, week: 20, weekLvl: "low"})
+		if !strings.Contains(s, fmt.Sprintf(`width="32" height="%.1f" fill="%s"`, 258*session/100, color)) {
+			t.Errorf("session %v: want %s: %s", session, color, s)
+		}
+	}
+	for _, old := range []string{"#99F299", "#FFD94D", "#FF6666", "#B3261E", "#D24DFF"} {
+		if s := svg(stripFrame{session: 85, week: 90, fable: 5, allowed: 40, weekLvl: "over"}); strings.Contains(s, old) {
+			t.Errorf("old colour %s: %s", old, s)
+		}
+	}
+	if s := svg(stripFrame{session: 10, week: 20, fable: 5, weekLvl: "low", stale: true}); strings.Contains(s, "#AEAEB2") {
 		t.Errorf("stale shows fable: %s", s)
 	}
 }
