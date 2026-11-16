@@ -12,10 +12,9 @@ SIGN ?= zored-stream
 USAGE_PROXY ?= http://squid.ai-proxy.vk.team:8083
 
 define install-agent
-	mkdir -p $(HOME)/Library/Logs/zored-stream
-	sed 's|@HOME@|$(HOME)|g; s|@USAGE_PROXY@|$(USAGE_PROXY)|g' tools/$(1)/com.zored.stream.$(1).plist > $(AGENTS)/com.zored.stream.$(1).plist
-	if launchctl print $(DOMAIN)/com.zored.stream.$(1) >/dev/null 2>&1; then launchctl kickstart -k $(DOMAIN)/com.zored.stream.$(1); \
-	else launchctl bootstrap $(DOMAIN) $(AGENTS)/com.zored.stream.$(1).plist; fi
+	mkdir -p $(HOME)/Library/Logs/zored-stream $(SHARE)/agents
+	sed 's|@HOME@|$(HOME)|g; s|@USAGE_PROXY@|$(USAGE_PROXY)|g' tools/$(1)/com.zored.stream.$(1).plist > $(SHARE)/agents/com.zored.stream.$(1).plist
+	tools/launch_agent.sh $(1) $(SHARE)/agents/com.zored.stream.$(1).plist $(DOMAIN)
 endef
 
 define uninstall-agent

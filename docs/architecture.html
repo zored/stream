@@ -116,7 +116,7 @@ svg .g{stroke:var(--ok)!important}svg text.g{fill:var(--ok)}
 <ul>
 <li><code>vars.set(name, value)</code> пропускает неизменённое, <code>forget()</code> + <code>every(resendEvery)</code> пересылает всё раз в 10 с. <span class="v">verified</span></li>
 <li>Loud fail: кривые флаги, нечитаемый <code>scroll-mode</code>, нет аудиоустройства → exit; <code>KeepAlive</code> поднимает (<code>ThrottleInterval</code> 5 с); проваленное действие = <code>409</code> + строка в логе (<code>A9</code>). <span class="a">assumed</span></li>
-<li>LaunchAgent <code>com.zored.stream.zored_stream</code>, лог <code>~/Library/Logs/zored-stream/zored_stream.log</code>, рестарт через <code>launchctl kickstart -k</code>. <span class="a">assumed</span></li>
+<li>LaunchAgent <code>com.zored.stream.zored_stream</code>, лог <code>~/Library/Logs/zored-stream/zored_stream.log</code>, рестарт через <code>tools/launch_agent.sh</code>: <code>kickstart -k</code>, при новом plist или не поднявшемся процессе <code>bootout</code> + <code>bootstrap</code>. <span class="a">assumed</span></li>
 <li>Подпись: self-signed сертификат <code>zored-stream</code> (<code>make zored_stream-cert</code>), identifier <code>com.zored.stream.zored_stream</code> → TCC держит Accessibility после пересборки (<code>A11</code>). CI собирает с <code>SIGN=-</code>. <span class="v">verified</span> цели Makefile</li>
 <li>Тикеры анимаций 60 Hz только пока что-то движется; поллы редкие (<code>P1</code>, <code>P2</code>). <span class="a">assumed</span></li>
 </ul>

@@ -17,8 +17,12 @@ Replaced the Swift CLI `mediakey` (Companion `exec`, deleted 2026-11-03).
 ## zored_stream — volume and Now Playing
 
 Modules of the [one daemon](daemon.md) (`tools/zored_stream/`, was the separate `streamd`). `make zored_stream` builds it,
-installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with `launchctl kickstart -k`
-(a `bootout` + `bootstrap` pair races). Log: `~/Library/Logs/zored-stream/zored_stream.log`.
+installs the LaunchAgent `com.zored.stream.zored_stream` and (re)starts it with `tools/launch_agent.sh`: same plist →
+`launchctl kickstart -k`, changed plist → `bootout`, wait until unloaded (a pair without the wait races), `bootstrap`. Then it
+waits up to 6 s for `state = running`; if not, one `bootout` + `bootstrap`, else it fails loudly with launchd's last lines.
+Why: on 2026-11-16 a `kickstart -k` after reinstalling left the job in `spawn failed`, exit 78, launchd logging
+`Unable to get updated LWCR … error 0x3` every 5 s; `bootout` + `bootstrap` fixed it (verified). The rendered plist is
+staged in `~/.local/share/zored-stream/agents/`; `make screen` goes the same way. Log: `~/Library/Logs/zored-stream/zored_stream.log`.
 
 - HTTP on `127.0.0.1:47113`: `POST /volume/up`, `/volume/down` (acceleration 1 → 4 % per detent by tick interval),
   `/volume/mute`, `/volume/drag?dy=<px>` (0.4 %/px). Companion knobs call it with `curl -fsS -m 1 -X POST …`.
