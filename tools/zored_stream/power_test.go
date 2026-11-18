@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/base64"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -33,9 +35,7 @@ func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
 		postVar, screensOff, locked = post, displaysAsleep, screenLocked
 		amphStart, amphEnd, userActivity, systemSleep, displayHold = startAmphetamine, endAmphetamine, declareUserActivity, sleepSystem, bridgeDisplay
 	})
-	var guard []bool
 	p := newPower(&vars{sent: map[string]string{}})
-	p.guard = &clamshellGuard{set: func(disabled bool) error { guard = append(guard, disabled); return nil }}
 	for range 2 {
 		if err := p.down(); err != nil {
 			t.Fatal(err)
@@ -46,9 +46,6 @@ func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
 	}
 	if got := strings.Join(calls, ","); got != "hold,start,hold,end,active" {
 		t.Errorf("calls = %s, want hold,start,hold,end,active", got)
-	}
-	if len(guard) != 1 || !guard[0] || p.guard.n != 1 {
-		t.Errorf("right after the session ends: clamshell calls = %v, holds = %d, want [true] and 1 hold until the bridge passes", guard, p.guard.n)
 	}
 }
 
@@ -136,77 +133,21 @@ func TestSleepMoonIsHollow(t *testing.T) {
 	}
 }
 
-func TestClamshellGuardSpansOverlappingBridges(t *testing.T) {
-	var calls []bool
-	g := &clamshellGuard{set: func(disabled bool) error { calls = append(calls, disabled); return nil }}
-	for range 2 {
-		if err := g.hold(); err != nil {
+func TestDaemonNeverWritesClamshellSleep(t *testing.T) {
+	files, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range files {
+		if strings.HasSuffix(f, "_test.go") {
+			continue
+		}
+		b, err := os.ReadFile(f)
+		if err != nil {
 			t.Fatal(err)
 		}
-	}
-	if err := g.release(); err != nil {
-		t.Fatal(err)
-	}
-	if len(calls) != 1 || !calls[0] {
-		t.Fatalf("after one of two releases: calls = %v, want [true]", calls)
-	}
-	if err := g.release(); err != nil {
-		t.Fatal(err)
-	}
-	if len(calls) != 2 || calls[1] {
-		t.Fatalf("calls = %v, want [true false]", calls)
-	}
-	if err := g.release(); err == nil {
-		t.Error("release without hold: want an error")
-	}
-}
-
-func TestSessionHoldsClamshellAcrossAmphetamineRestart(t *testing.T) {
-	postVar = func(string, string) error { return nil }
-	screensOff = func() (bool, error) { return false, nil }
-	locked = func() (bool, error) { return false, nil }
-	t.Cleanup(func() { postVar, screensOff, locked = post, displaysAsleep, screenLocked })
-	var guard []bool
-	p := newPower(&vars{sent: map[string]string{}})
-	p.guard = &clamshellGuard{set: func(disabled bool) error { guard = append(guard, disabled); return nil }}
-	p.session = amphSession{active: true}
-	p.guardSession()
-	p.guardSession()
-	if len(guard) != 1 || !guard[0] {
-		t.Fatalf("session on: clamshell calls = %v, want [true]", guard)
-	}
-	p.session = amphSession{}
-	p.guardSession()
-	p.session = amphSession{active: true}
-	p.guardSession()
-	if len(guard) != 1 || p.guard.n != 2 {
-		t.Fatalf("restart: clamshell calls = %v, holds = %d, want still disabled with 2 holds", guard, p.guard.n)
-	}
-}
-
-func TestClamshellOffDropsEveryHold(t *testing.T) {
-	var guard []bool
-	p := newPower(&vars{sent: map[string]string{}})
-	p.guard = &clamshellGuard{set: func(disabled bool) error { guard = append(guard, disabled); return nil }}
-	p.session = amphSession{active: true}
-	p.guardSession()
-	if err := p.guard.hold(); err != nil {
-		t.Fatal(err)
-	}
-	if err := p.clamshellOff(); err != nil {
-		t.Fatal(err)
-	}
-	if len(guard) != 2 || guard[1] || p.guard.n != 0 || p.guarding {
-		t.Fatalf("exit with a session and a bridge: clamshell calls = %v, holds = %d, guarding = %v, want [true false], 0, false", guard, p.guard.n, p.guarding)
-	}
-	if err := p.clamshellOff(); err != nil {
-		t.Fatal(err)
-	}
-	if len(guard) != 3 || guard[2] {
-		t.Fatalf("start with no holds: clamshell calls = %v, want sleep turned back on anyway", guard)
-	}
-	p.guardSession()
-	if len(guard) != 4 || !guard[3] {
-		t.Fatalf("first poll after start sees the session: clamshell calls = %v, want it disabled again", guard)
+		if strings.Contains(string(b), "kPMSetClamshellSleepState") {
+			t.Errorf("%s: writes the shared clamshell-sleep bit; it clobbers powerd's desktop mode and sleeps a lid-closed Mac (invariants S8)", f)
+		}
 	}
 }

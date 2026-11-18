@@ -70,31 +70,10 @@ type power struct {
 	apply    *time.Timer
 	downAt   time.Time
 	timers   []*time.Timer
-	guard    *clamshellGuard
-	guarding bool
 }
 
 func newPower(v *vars) *power {
-	return &power{vars: v, guard: clamshell}
-}
-
-// guardSession keeps clamshell sleep off for a whole Amphetamine session: Amphetamine drops its closed-display mode on every end or restart, its menu included.
-func (p *power) guardSession() {
-	switch want := p.session.active; {
-	case want && !p.guarding:
-		if err := p.guard.hold(); err != nil {
-			log.Print(err)
-			return
-		}
-		p.guarding = true
-	case !want && p.guarding:
-		p.guarding = false
-		time.AfterFunc(amphBridgeFor, func() {
-			if err := p.guard.release(); err != nil {
-				log.Print(err)
-			}
-		})
-	}
+	return &power{vars: v}
 }
 
 func (p *power) publish() {
@@ -160,7 +139,6 @@ func (p *power) poll() {
 	}
 	p.session, p.readAt = s, time.Now()
 	p.until = time.Now().Add(s.left)
-	p.guardSession()
 	p.publishLocked()
 }
 
@@ -215,7 +193,6 @@ func (p *power) start() error {
 	p.session = amphSession{active: true, left: awakeDefault, timed: true}
 	p.until = time.Now().Add(awakeDefault)
 	p.editTill = time.Now().Add(awakeEditFor)
-	p.guardSession()
 	return nil
 }
 
@@ -232,7 +209,6 @@ func (p *power) end() error {
 		return err
 	}
 	p.session = amphSession{}
-	p.guardSession()
 	return nil
 }
 
@@ -278,58 +254,12 @@ func (p *power) applyLength() {
 	}
 }
 
-// restartAmphetamine bridges the gap: Amphetamine drops the old display assertion and its closed-display mode before the new session; with the lid closed the Mac clamshell-sleeps in it.
+// restartAmphetamine bridges the gap: Amphetamine drops the old display assertion before the new session.
 func restartAmphetamine(d time.Duration) error {
 	if err := displayHold(amphBridgeFor); err != nil {
 		return err
 	}
 	return amphStart(d)
-}
-
-type clamshellGuard struct {
-	mu  sync.Mutex
-	n   int
-	set func(disabled bool) error
-}
-
-func (g *clamshellGuard) hold() error {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	if g.n == 0 {
-		if err := g.set(true); err != nil {
-			return err
-		}
-	}
-	g.n++
-	return nil
-}
-
-func (g *clamshellGuard) release() error {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	if g.n == 0 {
-		return errors.New("clamshell guard released without hold")
-	}
-	g.n--
-	if g.n == 0 {
-		return g.set(false)
-	}
-	return nil
-}
-
-// off drops every hold: clamshell sleep is the kernel's state and outlives the daemon, so start and exit put it back.
-func (g *clamshellGuard) off() error {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	g.n = 0
-	return g.set(false)
-}
-
-func (p *power) clamshellOff() error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.guarding = false
-	return p.guard.off()
 }
 
 func (p *power) stopTimers() {
