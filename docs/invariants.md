@@ -74,6 +74,7 @@ nothing automatic, **doc** = a written rule only. *(unconfirmed)* = taken from a
 | S5 | Firmware: flash or send update commands only after explicit confirmation in chat; vendor binaries stay out of git | bricking risk | doc | a dead device |
 | S6 | Secrets stay out of the repo: the Companion REST key lives in `~/.config/zored-stream/companion-token`, the Claude token only in the keychain | public repo | doc; no tokens in the logs *(unconfirmed)* | leaked credentials |
 | S7 | Keys go to a specific pid when the target is known (`CGEventPostToPid` for Claude); only scroll, Ctrl+Tab and emoji typing (into the focused field, by definition) use the HID tap, by design | a key aimed at Claude must not hit the app the user just switched to | code `ai_darwin.go`, `scroll_darwin.go` | shortcuts fired into the wrong app |
+| S8 | Clamshell sleep (`kPMSetClamshellSleepState`, kernel state that outlives the daemon) is off only while an Amphetamine session is on or a 5 s bridge runs; it is turned back on 5 s after the session ends, on every daemon start and on SIGINT/SIGTERM | a closed lid must still sleep the Mac when keep-awake is off; a stuck bit keeps a laptop awake in a bag | test `TestClamshellOffDropsEveryHold`, `TestClamshellGuardSpansOverlappingBridges`, `TestSessionHoldsClamshellAcrossAmphetamineRestart`; code `main.go` (start, signal) | lid-closed sleep never happens again until a reboot; a crash (SIGKILL, panic) still leaves it off until the next daemon start (LaunchAgent restarts it) |
 
 ## Style (device)
 

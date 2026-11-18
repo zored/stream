@@ -350,6 +350,9 @@ func main() {
 	vol.bar.publish()
 	go vol.bar.animate()
 	pw := newPower(v)
+	if err := pw.clamshellOff(); err != nil {
+		log.Fatal(err)
+	}
 	pw.publish()
 	hp := newHeadphones(v)
 	hp.publish()
@@ -522,6 +525,9 @@ func main() {
 		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 		<-stop
 		sc.release()
+		if err := pw.clamshellOff(); err != nil {
+			log.Fatal(err)
+		}
 		os.Exit(0)
 	}()
 	go serve(*scrollAddr, func(mux *http.ServeMux) {

@@ -142,6 +142,7 @@ var clamshell = &clamshellGuard{set: func(disabled bool) error {
 	if r := C.clamshellSleepDisabled(flag); r != C.kIOReturnSuccess {
 		return fmt.Errorf("kPMSetClamshellSleepState %v: 0x%x", disabled, uint32(r))
 	}
+	log.Printf("power: clamshell sleep disabled=%v", disabled)
 	return nil
 }}
 

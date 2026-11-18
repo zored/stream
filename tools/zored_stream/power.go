@@ -317,6 +317,21 @@ func (g *clamshellGuard) release() error {
 	return nil
 }
 
+// off drops every hold: clamshell sleep is the kernel's state and outlives the daemon, so start and exit put it back.
+func (g *clamshellGuard) off() error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.n = 0
+	return g.set(false)
+}
+
+func (p *power) clamshellOff() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.guarding = false
+	return p.guard.off()
+}
+
 func (p *power) stopTimers() {
 	for _, t := range p.timers {
 		t.Stop()

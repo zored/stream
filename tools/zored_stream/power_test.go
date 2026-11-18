@@ -183,3 +183,30 @@ func TestSessionHoldsClamshellAcrossAmphetamineRestart(t *testing.T) {
 		t.Fatalf("restart: clamshell calls = %v, holds = %d, want still disabled with 2 holds", guard, p.guard.n)
 	}
 }
+
+func TestClamshellOffDropsEveryHold(t *testing.T) {
+	var guard []bool
+	p := newPower(&vars{sent: map[string]string{}})
+	p.guard = &clamshellGuard{set: func(disabled bool) error { guard = append(guard, disabled); return nil }}
+	p.session = amphSession{active: true}
+	p.guardSession()
+	if err := p.guard.hold(); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.clamshellOff(); err != nil {
+		t.Fatal(err)
+	}
+	if len(guard) != 2 || guard[1] || p.guard.n != 0 || p.guarding {
+		t.Fatalf("exit with a session and a bridge: clamshell calls = %v, holds = %d, guarding = %v, want [true false], 0, false", guard, p.guard.n, p.guarding)
+	}
+	if err := p.clamshellOff(); err != nil {
+		t.Fatal(err)
+	}
+	if len(guard) != 3 || guard[2] {
+		t.Fatalf("start with no holds: clamshell calls = %v, want sleep turned back on anyway", guard)
+	}
+	p.guardSession()
+	if len(guard) != 4 || !guard[3] {
+		t.Fatalf("first poll after start sees the session: clamshell calls = %v, want it disabled again", guard)
+	}
+}
