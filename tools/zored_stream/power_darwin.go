@@ -34,6 +34,19 @@ static IOReturn holdDisplay(IOPMAssertionID *id) {
 	return IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleDisplaySleep, kIOPMAssertionLevelOn, CFSTR("zored_stream keep-awake restart"), id);
 }
 
+static IOReturn clamshellSleepDisabled(int disabled) {
+	io_service_t root = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPMrootDomain"));
+	if (root == MACH_PORT_NULL) return kIOReturnNotFound;
+	io_connect_t conn = MACH_PORT_NULL;
+	IOReturn r = IOServiceOpen(root, mach_task_self(), 0, &conn);
+	IOObjectRelease(root);
+	if (r != kIOReturnSuccess) return r;
+	uint64_t in = disabled;
+	r = IOConnectCallScalarMethod(conn, kPMSetClamshellSleepState, &in, 1, NULL, NULL);
+	IOServiceClose(conn);
+	return r;
+}
+
 static int screensAsleep(void) {
 	CGDirectDisplayID ids[16];
 	uint32_t n = 0;
@@ -80,6 +93,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -120,12 +134,32 @@ func declareUserActivity() error {
 	return nil
 }
 
+var clamshell = &clamshellGuard{set: func(disabled bool) error {
+	flag := C.int(0)
+	if disabled {
+		flag = 1
+	}
+	if r := C.clamshellSleepDisabled(flag); r != C.kIOReturnSuccess {
+		return fmt.Errorf("kPMSetClamshellSleepState %v: 0x%x", disabled, uint32(r))
+	}
+	return nil
+}}
+
 func bridgeDisplay(d time.Duration) error {
 	var id C.IOPMAssertionID
 	if r := C.holdDisplay(&id); r != C.kIOReturnSuccess {
 		return fmt.Errorf("IOPMAssertionCreateWithName: 0x%x", uint32(r))
 	}
-	time.AfterFunc(d, func() { C.IOPMAssertionRelease(id) })
+	if err := clamshell.hold(); err != nil {
+		C.IOPMAssertionRelease(id)
+		return err
+	}
+	time.AfterFunc(d, func() {
+		C.IOPMAssertionRelease(id)
+		if err := clamshell.release(); err != nil {
+			log.Print(err)
+		}
+	})
 	return nil
 }
 

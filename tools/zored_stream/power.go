@@ -20,6 +20,9 @@ const (
 	awakePollEvery   = 2 * time.Second
 	awakeRereadEvery = 30 * time.Second
 	amphBridgeFor    = 5 * time.Second
+	lockSize         = 18.0
+	lockCX           = 94 - lockSize/2
+	lockCY           = 6 + lockSize/2
 )
 
 var (
@@ -67,10 +70,31 @@ type power struct {
 	apply    *time.Timer
 	downAt   time.Time
 	timers   []*time.Timer
+	guard    *clamshellGuard
+	guarding bool
 }
 
 func newPower(v *vars) *power {
-	return &power{vars: v}
+	return &power{vars: v, guard: clamshell}
+}
+
+// guardSession keeps clamshell sleep off for a whole Amphetamine session: Amphetamine drops its closed-display mode on every end or restart, its menu included.
+func (p *power) guardSession() {
+	switch want := p.session.active; {
+	case want && !p.guarding:
+		if err := p.guard.hold(); err != nil {
+			log.Print(err)
+			return
+		}
+		p.guarding = true
+	case !want && p.guarding:
+		p.guarding = false
+		time.AfterFunc(amphBridgeFor, func() {
+			if err := p.guard.release(); err != nil {
+				log.Print(err)
+			}
+		})
+	}
 }
 
 func (p *power) publish() {
@@ -97,14 +121,13 @@ func (p *power) publishLocked() {
 		state = "arm"
 	case dark:
 		state = "sleep"
-	case lock:
-		state = "lock"
 	case !p.session.active:
 		state = "off"
 	case p.session.timed:
 		left = awakeLeft(max(0, time.Until(p.until)), time.Now().Before(p.editTill))
 	}
-	p.vars.set("power_svg", p.frame.render(state+"\n"+left, func() string { return powerSVG(state, left) }))
+	lock = lock && (state == "on" || state == "off")
+	p.vars.set("power_svg", p.frame.render(fmt.Sprint(state, "\n", left, lock), func() string { return powerSVG(state, left, lock) }))
 }
 
 func (p *power) poll() {
@@ -137,6 +160,7 @@ func (p *power) poll() {
 	}
 	p.session, p.readAt = s, time.Now()
 	p.until = time.Now().Add(s.left)
+	p.guardSession()
 	p.publishLocked()
 }
 
@@ -191,6 +215,7 @@ func (p *power) start() error {
 	p.session = amphSession{active: true, left: awakeDefault, timed: true}
 	p.until = time.Now().Add(awakeDefault)
 	p.editTill = time.Now().Add(awakeEditFor)
+	p.guardSession()
 	return nil
 }
 
@@ -207,6 +232,7 @@ func (p *power) end() error {
 		return err
 	}
 	p.session = amphSession{}
+	p.guardSession()
 	return nil
 }
 
@@ -252,12 +278,43 @@ func (p *power) applyLength() {
 	}
 }
 
-// restartAmphetamine bridges the gap: Amphetamine drops the old display assertion before the new one, and with HID idle past displaysleep the screen goes dark in it.
+// restartAmphetamine bridges the gap: Amphetamine drops the old display assertion and its closed-display mode before the new session; with the lid closed the Mac clamshell-sleeps in it.
 func restartAmphetamine(d time.Duration) error {
 	if err := displayHold(amphBridgeFor); err != nil {
 		return err
 	}
 	return amphStart(d)
+}
+
+type clamshellGuard struct {
+	mu  sync.Mutex
+	n   int
+	set func(disabled bool) error
+}
+
+func (g *clamshellGuard) hold() error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.n == 0 {
+		if err := g.set(true); err != nil {
+			return err
+		}
+	}
+	g.n++
+	return nil
+}
+
+func (g *clamshellGuard) release() error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.n == 0 {
+		return errors.New("clamshell guard released without hold")
+	}
+	g.n--
+	if g.n == 0 {
+		return g.set(false)
+	}
+	return nil
 }
 
 func (p *power) stopTimers() {
@@ -277,14 +334,15 @@ func awakeLeft(left time.Duration, editing bool) string {
 		captionY, stripFont, captionSize, fill, minutes/60, minutes%60)
 }
 
-func powerSVG(state, below string) string {
+func powerSVG(state, below string, lock bool) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
+	if lock {
+		b.WriteString(iconAt("lock-fill", gray, lockCX, lockCY, lockSize))
+	}
 	switch state {
 	case "sleep":
-		b.WriteString(iconAt("moon-fill", "#fff", 50, 50, iconSize))
-	case "lock":
-		b.WriteString(iconAt("lock-fill", "#fff", 50, 50, iconSize))
+		b.WriteString(iconAt("moon", "#fff", 50, 50, iconSize))
 	case "arm":
 		b.WriteString(iconAt("moon-fill", "#fff", 50, iconCY, iconSize))
 	case "on":
