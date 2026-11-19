@@ -254,7 +254,6 @@ func main() {
 			}
 			hints.turn("r1", d)
 			switch {
-			case cs.turn(d):
 			case ai.holding():
 				ai.markTurned()
 				ag.familyStep(d)
@@ -276,9 +275,6 @@ func main() {
 		})
 		handle(mux, "/ai/down", func() error {
 			hints.press("r1", true)
-			if took, err := cs.knob(true); took {
-				return err
-			}
 			ag.armClick()
 			ag.hideStrip()
 			return ai.down()
@@ -291,9 +287,6 @@ func main() {
 		})
 		handle(mux, "/ai/up", func() error {
 			hints.press("r1", false)
-			if took, err := cs.knob(false); took {
-				return err
-			}
 			if ai.up() {
 				return nil
 			}
@@ -420,10 +413,26 @@ func main() {
 			play: func() error { return postMediaKey(mediaKeys["play"]) },
 			like: ym.pressAndPoll(true),
 		}
-		handle(mux, "/seek/forward", func() error { return tk.turn(1) })
-		handle(mux, "/seek/back", func() error { return tk.turn(-1) })
-		handle(mux, "/track/down", tk.down)
-		handle(mux, "/track/up", tk.up)
+		seekTurn := func(d int) error {
+			hints.turn("l1", d)
+			if cs.msgTurn(d) {
+				return nil
+			}
+			return tk.turn(d)
+		}
+		trackPress := func(down bool, act func() error) func() error {
+			return func() error {
+				hints.press("l1", down)
+				if took, err := cs.knob(down); took {
+					return err
+				}
+				return act()
+			}
+		}
+		handle(mux, "/seek/forward", func() error { return seekTurn(1) })
+		handle(mux, "/seek/back", func() error { return seekTurn(-1) })
+		handle(mux, "/track/down", trackPress(true, tk.down))
+		handle(mux, "/track/up", trackPress(false, tk.up))
 	})
 	sc, err := newScroller(*scrollModeFile)
 	if err != nil {
@@ -474,10 +483,11 @@ func main() {
 	hints.own("l0", sw.isOpen)
 	hints.own("r0", sw.isOpen)
 	hints.own("r0", wf.capturing)
-	hints.own("r1", cs.capturing)
+	hints.own("l0", cs.capturing)
+	hints.own("l1", cs.capturing)
+	hints.own("l2", cs.capturing)
 	hints.own("r2", tm.capturing)
 	hints.own("r2", cal.capturing)
-	hints.own("r2", cs.capturing)
 	go hints.run()
 	for _, md := range []mode{
 		{"wifi", wf.capturing, wf.close},
@@ -540,16 +550,13 @@ func main() {
 				if took, err := cal.knob(down); took {
 					return err
 				}
-				if took, err := cs.knob(down); took {
-					return err
-				}
 				return sc.hold(down)
 			}
 		}
 		turn := func(direction int) func() error {
 			return func() error {
 				hints.turn("r2", direction)
-				if tm.turn(direction) || cal.turn(direction) || cs.msgTurn(direction) {
+				if tm.turn(direction) || cal.turn(direction) {
 					return nil
 				}
 				return sc.turn(direction)
@@ -617,14 +624,14 @@ func main() {
 	go serve(*volumeAddr, func(mux *http.ServeMux) {
 		handle(mux, "/volume/up", func() error {
 			hints.turn("l0", 1)
-			if pk.turn(emojiLeft, 1) {
+			if pk.turn(emojiLeft, 1) || cs.turn(1) {
 				return nil
 			}
 			return vol.step(1)
 		})
 		handle(mux, "/volume/down", func() error {
 			hints.turn("l0", -1)
-			if pk.turn(emojiLeft, -1) {
+			if pk.turn(emojiLeft, -1) || cs.turn(-1) {
 				return nil
 			}
 			return vol.step(-1)
@@ -634,12 +641,16 @@ func main() {
 			if took, err := pk.press(emojiLeft); took {
 				return err
 			}
+			if took, err := cs.knob(true); took {
+				return err
+			}
 			return vol.toggleMute()
 		})
 		handle(mux, "/volume/release", func() error {
 			hints.press("l0", false)
 			pk.release(emojiLeft)
-			return nil
+			_, err := cs.knob(false)
+			return err
 		})
 		handle(mux, "/nowplaying/show", func() error { np.glyph.show(); return nil })
 		handle(mux, "/nowplaying/next", func() error { sk.show(1); return nil })

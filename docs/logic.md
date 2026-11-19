@@ -61,7 +61,7 @@ device ──serial── Companion (+ Loupedeck module fork) ──exec curl─
 | `frame` | `frame.go` | caches a rendered image by a string key; re-renders only when the key changes |
 | orientation | `orientation.go`, `stripflip.go`, fork `src/orientation.ts` | the device can stand at 0/90/180/270° (file `~/.config/zored-stream/orientation`, missing = 90, written only by the fork on a 3 s hold of крутилка справа, ряд 1). Everything upstream of the fork draws and reads touches for 0° (A12); the daemon reads the file only for `strip_flip` (left-strip bars mirrored at 90/180) and the emoji glyph turn. Portable as is |
 | one mode at a time `tileModes` | `modes.go` | mac only. Modes `{name, active(), close()}`: wi-fi pick, emoji, window switcher, chats browse, weather browse, calendar list, timer edit. After every daemon POST `check()` compares who is active with the last check; if one just opened, every mode that was already open is closed (`close` = its timeout: timer edit commits on the next tick, wi-fi `closePick` drops a pending join). Modes opening in the same request all stay |
-| knob hint `knobHints` | `knobhint.go` | mac only. One image layer `hint` on top of the strip cells `hint_l0`, `hint_l2`, `hint_r0`, `hint_r1`, `hint_r2` (48×86 SVG, empty SVG when hidden). Knobs a tile can take: left 3, right 1–3; a strip the fork turns 180° is drawn into mirrored slots, so the hint for knob row r goes to cell 2 − r there (at 90° the weather hint is `hint_l0`). Owners per knob: l2 weather browse (not while chats browse), r0 wi-fi pick, r1 chats browse, r2 timer edit + calendar list + chats browse; emoji is not an owner. Every daemon POST kicks a 60 Hz loop that runs while any hint shows: it asks the owners, shows / hides the chevron, and steps two springs (k = 360, c = 17): angle (each detent +650 °/s in the turn direction, clamp ±70°, clockwise = clockwise) and scale (target 1.4 while the knob is pressed, 1 after; a click < 400 ms without a turn kicks +9/s). Opacity 30 %, 100 % while the knob is held or for 0.7 s after a turn / press (eases in 0.25, out 0.08 per frame). The chevron sits 5 px from the outer edge; for the top / bottom knob its center is 10 px from the top / bottom of the cell (middle knob: centered), in the knob's own frame, white with a black halo, pointing at the knob; turned 180° when the fork turns that strip (`stripFlipped`, orientation read when it appears). Turns and presses of a hidden hint are ignored |
+| knob hint `knobHints` | `knobhint.go` | mac only. One image layer `hint` on top of the strip cells `hint_l0`, `hint_l1`, `hint_l2`, `hint_r0`, `hint_r1`, `hint_r2` (48×86 SVG, empty SVG when hidden). Knobs a tile can take: left 1–3, right 1–3; a strip the fork turns 180° is drawn into mirrored slots, so the hint for knob row r goes to cell 2 − r there (at 90° the weather hint is `hint_l0`). Owners per knob: l0 window switcher + chats browse, l1 chats browse, l2 weather browse + chats browse, r0 window switcher + wi-fi pick, r2 timer edit + calendar list; emoji is not an owner. Every daemon POST kicks a 60 Hz loop that runs while any hint shows: it asks the owners, shows / hides the chevron, and steps two springs (k = 360, c = 17): angle (each detent +650 °/s in the turn direction, clamp ±70°, clockwise = clockwise) and scale (target 1.4 while the knob is pressed, 1 after; a click < 400 ms without a turn kicks +9/s). Opacity 30 %, 100 % while the knob is held or for 0.7 s after a turn / press (eases in 0.25, out 0.08 per frame). The chevron sits 5 px from the outer edge; for the top / bottom knob its center is 10 px from the top / bottom of the cell (middle knob: centered), in the knob's own frame, white with a black halo, pointing at the knob; turned 180° when the fork turns that strip (`stripFlipped`, orientation read when it appears). Turns and presses of a hidden hint are ignored |
 | palette | `palette.go`, top of `gen_pages.py` | white values, gray `#8E8E93` secondary, green `#30D158`, amber `#FFD60A`, red `#FF453A` (D1); content inset 6 % (D2) |
 
 ### Holds and haptics
@@ -109,6 +109,7 @@ Each entry: **input → daemon route → what the daemon does → variables → 
 - turn → `/volume/up` | `/volume/down`: if the emoji picker is open, it scrolls the left emoji column instead (`em.turn`).
   Else `volume += accel.step(dir)` (1–4 %), clamped 0–100; any step > 0 while muted unmutes; writes the system volume;
   `bar.show("volume", level)` (level = 0 while muted).
+- chats browsing (after the emoji picker): turn → `cs.turn`, scroll the shown message by half a line, past its end walk its photos; `/volume/mute` / `/volume/release` → `cs.knob` (the release opens the chat), no mute.
 - press → `/volume/mute`: emoji picker open → types the left top emoji; window switcher open → a press starts (release `/volume/release` = click, hold = close window / quit app). Else toggles mute, shows the bar.
 - external changes (keyboard, OS slider) arrive by OS notification, not a poll, and also show the bar.
 - variables: `volume` (`"0"…"100"` or `MUTE`, not drawn), `bar_*`.
@@ -117,6 +118,8 @@ Each entry: **input → daemon route → what the daemon does → variables → 
   endpoint; notifications via `IAudioEndpointVolumeCallback` + `IMMNotificationClient` (default device change) *(assumed)*.
 
 #### крутилка слева, ряд 2 — seek / track (`1/0`, `:47119`)
+
+Chats browsing first: turn → `cs.msgTurn`, the next / previous unread message of the picked chat (clamped), the tile badge = messages after it, the sender's small avatar in groups, the strip shows it from the top; `/track/down|up` → `cs.knob` (the release opens the chat), `trackKnob` sees nothing.
 
 State machine `trackKnob` (`trackknob.go`):
 
@@ -277,13 +280,11 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 
 #### крутилка справа, ряд 2 — agents walk / AI model (`1/7`, `:47117`)
 
-- turn → `/ai/turn?d=±1`: chats browsing (mac) → `cs.turn`: scroll the shown message by half a line, past its end walk its
-  photos (swapped with крутилка справа, ряд 3 on 2026-11-19); else if the knob is held
+- turn → `/ai/turn?d=±1`: if the knob is held
   → walk the family of the ringed chat in tree order (`agents.familyStep`, wraps); else → agents walk: adds the Claude chat
   in front as a hollow dot if missing, moves the cursor by `d` (wraps) over the order frozen at the browse start (`agents.freeze`, kept while `browsing()`), opens the session
   under the cursor 150 ms after the last step (`agentOpenAfter`, timer reset per step; family walk too), shows its title + folder
   on the right strip for 2 s.
-- chats browsing (mac): `/ai/down` / `/ai/up` go to `cs.knob` (the release opens the chat shown) and skip everything below.
 - press → `/ai/down` (also hides the chats ring and title cover, `agents.hideStrip`, so the model label shows); hold 400 ms (Companion `held`, mac only) → `/ai/hold`: if no turn happened since the press → new Code session (`claude://code/new`) and the release is consumed (the press ends there); a press with no turn or release for 8 s (`aiHeldMax`) is dropped; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
   (`/agent/focus`), with the browse state taken at `/ai/down` (`armClick`), so a click within 2 s of a turn pins.
 - mac model switch (F12): 9 stops Sonnet·Low … Fable·High, applied 400 ms after the knob rests, only on Claude Desktop's
@@ -295,8 +296,7 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 
 #### крутилка справа, ряд 3 — scroll (`2/7`, `:47121`)
 
-Before the scroller, each input is offered to timers, then calendar, then chats (knob capture, mac only). Chats while
-browsing (swapped with крутилка справа, ряд 2 on 2026-11-19): turn = `cs.msgTurn`, the next / previous unread message of the picked chat (clamped), the tile badge = messages after it, the sender's small avatar in groups, the strip shows it from the top; press = open the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
+Before the scroller, each input is offered to timers, then calendar (knob capture, mac only); chats browse no longer takes this knob (since 2026-11-19 it lives on the three left knobs). Opening a chat: `tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`. Scroller (`scroll.go`):
 
 | Input | Mode | Effect |
 |---|---|---|
