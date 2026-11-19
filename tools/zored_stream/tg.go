@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gotd/td/session"
@@ -22,6 +23,7 @@ const (
 	tgDebounce       = 2 * time.Second
 	tgPoll           = 30 * time.Second
 	tgCallTimeout    = 30 * time.Second
+	tgPhotoWant      = 700
 	tgMutedHistEvery = time.Minute
 )
 
@@ -78,7 +80,7 @@ func tgChats(ctx context.Context, push func([]chatEntry)) error {
 		if _, err := api.UpdatesGetState(ctx); err != nil {
 			return fmt.Errorf("tg getState: %w", err)
 		}
-		av := &tgAvatars{c: c, cache: map[int64][]byte{}, home: c.Config().ThisDC}
+		av := &tgAvatars{c: c, ctx: ctx, cache: map[int64][]byte{}, home: c.Config().ThisDC}
 		hist := map[string]tgHist{}
 		for {
 			callCtx, cancel := context.WithTimeout(ctx, tgCallTimeout)
@@ -330,12 +332,23 @@ func tgUnread(ctx context.Context, api *tg.Client, av *tgAvatars, peer tg.InputP
 	}
 	group := !strings.HasPrefix(key, "u")
 	var out []chatMsg
+	var album int64
 	for _, mc := range mm.GetMessages() {
 		m, ok := mc.(*tg.Message)
 		if !ok || m.Out || dl.UnreadCount > 0 && m.ID <= dl.ReadInboxMaxID {
 			continue
 		}
-		cm := chatMsg{text: tgText(m)}
+		photos := av.messagePhotos(m)
+		if m.GroupedID != 0 && m.GroupedID == album && len(out) > 0 {
+			last := &out[len(out)-1]
+			last.photos = append(last.photos, photos...)
+			if strings.TrimSpace(m.Message) != "" {
+				last.text = tgText(m)
+			}
+			continue
+		}
+		album = m.GroupedID
+		cm := chatMsg{text: tgText(m), photos: photos}
 		if from, ok := m.FromID.(*tg.PeerUser); ok && group {
 			if u := users[from.UserID]; u != nil {
 				if p, ok := u.Photo.(*tg.UserProfilePhoto); ok {
@@ -349,7 +362,62 @@ func tgUnread(ctx context.Context, api *tg.Client, av *tgAvatars, peer tg.InputP
 		}
 	}
 	slices.Reverse(out)
+	for i := range out {
+		slices.Reverse(out[i].photos)
+	}
 	return out, nil
+}
+
+// messagePhotos: the message's photo at the smallest size that still fills the tile grid.
+func (a *tgAvatars) messagePhotos(m *tg.Message) []chatPhoto {
+	media, ok := m.Media.(*tg.MessageMediaPhoto)
+	if !ok {
+		return nil
+	}
+	p, ok := media.Photo.(*tg.Photo)
+	if !ok {
+		return nil
+	}
+	size := tgPhotoSize(p.Sizes)
+	if size == "" {
+		log.Printf("tg: photo %d has no sizes", p.ID)
+		return nil
+	}
+	loc := &tg.InputPhotoFileLocation{ID: p.ID, AccessHash: p.AccessHash, FileReference: p.FileReference, ThumbSize: size}
+	dc := p.DCID
+	return []chatPhoto{{key: "tg/" + strconv.FormatInt(p.ID, 10), fetch: func(ctx context.Context) ([]byte, error) {
+		rpc, err := a.rpc(dc)
+		if err != nil {
+			return nil, err
+		}
+		var buf bytes.Buffer
+		if _, err := downloader.NewDownloader().Download(rpc, loc).Stream(ctx, &buf); err != nil {
+			return nil, fmt.Errorf("tg: photo download: %w", err)
+		}
+		return buf.Bytes(), nil
+	}}}
+}
+
+// tgPhotoSize picks the smallest size at least tgPhotoWant px on its long side, else the largest.
+func tgPhotoSize(sizes []tg.PhotoSizeClass) string {
+	best, bestSide := "", 0
+	for _, s := range sizes {
+		var t string
+		var w, h int
+		switch s := s.(type) {
+		case *tg.PhotoSize:
+			t, w, h = s.Type, s.W, s.H
+		case *tg.PhotoSizeProgressive:
+			t, w, h = s.Type, s.W, s.H
+		default:
+			continue
+		}
+		side := max(w, h)
+		if best == "" || bestSide < tgPhotoWant && side > bestSide || side >= tgPhotoWant && side < bestSide {
+			best, bestSide = t, side
+		}
+	}
+	return best
 }
 
 func tgReader(api *tg.Client, peer tg.InputPeerClass, dl *tg.Dialog) func(context.Context) error {
@@ -410,9 +478,32 @@ func tgPeer(d tg.MessagesDialogsClass, key string) (tg.InputPeerClass, int64, in
 
 type tgAvatars struct {
 	c     *telegram.Client
+	ctx   context.Context
 	home  int
+	mu    sync.Mutex
 	cache map[int64][]byte
 	dcs   map[int]telegram.CloseInvoker
+}
+
+// rpc: the client of a file's DC; photos load from the chats goroutine, avatars from the dialogs loop.
+func (a *tgAvatars) rpc(dc int) (downloader.Client, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if dc == a.home || dc == 0 {
+		return a.c.API(), nil
+	}
+	if a.dcs == nil {
+		a.dcs = map[int]telegram.CloseInvoker{}
+	}
+	inv, ok := a.dcs[dc]
+	if !ok {
+		var err error
+		if inv, err = a.c.DC(a.ctx, dc, 1); err != nil {
+			return nil, fmt.Errorf("tg: dc %d: %w", dc, err)
+		}
+		a.dcs[dc] = inv
+	}
+	return tg.NewClient(inv), nil
 }
 
 func (a *tgAvatars) get(ctx context.Context, d tg.MessagesDialogsClass, key string) []byte {
@@ -424,24 +515,16 @@ func (a *tgAvatars) get(ctx context.Context, d tg.MessagesDialogsClass, key stri
 }
 
 func (a *tgAvatars) photo(ctx context.Context, key string, peer tg.InputPeerClass, photoID int64, dc int) []byte {
-	if b, ok := a.cache[photoID]; ok {
+	a.mu.Lock()
+	b, ok := a.cache[photoID]
+	a.mu.Unlock()
+	if ok {
 		return b
 	}
-	var rpc downloader.Client = a.c.API()
-	if dc != a.home {
-		if a.dcs == nil {
-			a.dcs = map[int]telegram.CloseInvoker{}
-		}
-		inv, ok := a.dcs[dc]
-		if !ok {
-			var err error
-			if inv, err = a.c.DC(ctx, dc, 1); err != nil {
-				log.Printf("tg: avatar dc %d: %v", dc, err)
-				return nil
-			}
-			a.dcs[dc] = inv
-		}
-		rpc = tg.NewClient(inv)
+	rpc, err := a.rpc(dc)
+	if err != nil {
+		log.Printf("tg: avatar %s: %v", key, err)
+		return nil
 	}
 	var buf bytes.Buffer
 	loc := &tg.InputPeerPhotoFileLocation{Peer: peer, PhotoID: photoID}
@@ -449,6 +532,8 @@ func (a *tgAvatars) photo(ctx context.Context, key string, peer tg.InputPeerClas
 		log.Printf("tg: avatar %s: %v", key, err)
 		return nil
 	}
+	a.mu.Lock()
 	a.cache[photoID] = buf.Bytes()
+	a.mu.Unlock()
 	return buf.Bytes()
 }

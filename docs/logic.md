@@ -202,6 +202,8 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 
 - mac: posts `:47130/tile/22/down|up`; the `tile_22` slot routes to the call layer (`/mic/down|up` logic) while
   `call_mic ≠ none`, else to the chats layer. Draws the call layers when `tile_22 == call`, `unread_svg` when `unread`.
+- Chat photo (mac only): while browsing, outside a call, the shown photo of the shown message is published at `:47130 GET /photo` (long poll: `?v=<last v>` answers at once when the state moved on, else after ≤ 25 s; `{v, id, keep}`, `id` empty = none, `keep` = tiles left to Companion, `[{row: 2, column: 2}]`). The module fork polls it, fetches `GET /photo/image?id&w&h` (raw RGB, cropped to fill w×h; the fork asks the grid as the user sees it, 350×260 or 260×350), turns it for the device, cuts it into the 11 tiles and draws them past Companion; Companion's pictures of those tiles are kept and come back when the photo goes. A touch on a covered tile is eaten by the fork and posts `/photo/close` (back to the text). The daemon loads the shown message's photos ahead (Telegram `upload.getFile` of the smallest size ≥ 700 px, an album = one message; VK WorkSpace `files/info/<id>/?previews=800` then that preview), keeps 40, retries a failed one after 30 s.
+- Win: no photos; the fork's poll fails quietly once (one warning) and retries every 2 s.
 - Chats layer: `down` arms the 400 ms read hold (see крутилка слева, ряд 3), `up` = tap unless the hold fired. The hold is timed
   in the daemon, not in Companion, so the call layer keeps getting `up` for push-to-talk.
 - Win: the windows profile draws only the call layers and posts straight to `:47114/mic/down|up` (no slot).
@@ -293,7 +295,7 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 #### крутилка справа, ряд 3 — scroll (`2/7`, `:47121`)
 
 Before the scroller, each input is offered to timers, then calendar, then chats (knob capture, mac only). Chats while
-browsing: turn = scroll the shown message by half a line (eased at 60 Hz while moving), press = open the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
+browsing: turn = scroll the shown message by half a line (eased at 60 Hz while moving); at the end of a message with photos the next clockwise detent shows photo 0 over the tiles, more detents walk to the last, counter-clockwise past 0 = back to the text (photos: see тайл ряд 3, колонка 1); press = open the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
 
 | Input | Mode | Effect |
 |---|---|---|
@@ -362,7 +364,7 @@ All addresses are `127.0.0.1:<port>`, set by a flag with that default in `main.g
 | 47127 | `-input` | keyboard layout | `/input/next` | `input_svg` | off |
 | 47128 | `-emoji` | emoji picker | `/emoji/tile`, `/emoji/{start,end}?s=&y=` | `emoji_on`, `emoji_l`, `emoji_r`, `emoji_tile` | off |
 | 47129 | `-timers` | timers + alarms | `/timer/{down,up}` | `timer_svg`, `timer_ring` | off |
-| 47130 | `-unread` | unread chats, `tile_22`, left knob 3 | `/tile/22/{down,up}`, `/knob/{down,up,forward,back}` | `unread_svg`, `tile_22` | off (but see §5) |
+| 47130 | `-unread` | unread chats, `tile_22`, left knob 3 | `/tile/22/{down,up}`, `/knob/{down,up,forward,back}`, `GET /photo`, `GET /photo/image`, `/photo/close` | `unread_svg`, `tile_22` | off (but see §5) |
 | 47132 | `-switch` | window switcher | `/switch/tile/{down,up}` | `switch_tile` (+ shared `emoji_on`, `emoji_l`, `emoji_r`) | off |
 | 47131 | `-weather` | weather, `tile_23` | `/tile/23/press` | `weather_svg`, `tile_23` | off |
 

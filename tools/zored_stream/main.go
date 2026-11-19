@@ -443,6 +443,7 @@ func main() {
 		})
 	})
 	cs = newChats(v, sc.release, us.cover)
+	cs.blocked = c.inCall
 	go cs.animate()
 	go cs.run(context.Background(), "tg", tgChats)
 	go cs.run(context.Background(), "vkws", vkwsChats)
@@ -489,6 +490,7 @@ func main() {
 	go serve(*unreadAddr, func(mux *http.ServeMux) {
 		handle(mux, "/tile/22/down", tile22.press)
 		handle(mux, "/tile/22/up", tile22.up)
+		cs.photos.serve(mux, cs.closePhoto)
 		var wxKnob atomic.Bool
 		handle(mux, "/knob/down", func() error {
 			hints.press("l2", true)

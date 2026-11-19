@@ -30,6 +30,7 @@ const (
 type chatMsg struct {
 	text   string
 	sender []byte
+	photos []chatPhoto
 }
 
 type chatEntry struct {
@@ -71,11 +72,14 @@ type chats struct {
 	holding    bool
 	held       bool
 	hidden     map[string]time.Time
+	photo      int
+	photos     *photos
+	blocked    func() bool
 }
 
 func newChats(v *vars, release func(), strip func(string)) *chats {
 	return &chats{vars: v, release: release, strip: strip, byApp: map[string][]chatEntry{}, opener: launchURL,
-		kick: make(chan struct{}, 1), hidden: map[string]time.Time{}}
+		kick: make(chan struct{}, 1), hidden: map[string]time.Time{}, photo: -1, photos: newPhotos(), blocked: func() bool { return false }}
 }
 
 func (c *chats) run(ctx context.Context, app string, src chatSource) {
@@ -158,6 +162,7 @@ func (c *chats) publish() {
 }
 
 func (c *chats) publishLocked() {
+	c.photoLocked()
 	now := time.Now()
 	var svg string
 	if c.sliding {
@@ -256,7 +261,50 @@ func (c *chats) markReadLocked() {
 }
 
 func (c *chats) resetMsgLocked() {
-	c.msg, c.scrollTo, c.scrollAt = 0, 0, 0
+	c.msg, c.scrollTo, c.scrollAt, c.photo = 0, 0, 0, -1
+}
+
+func (c *chats) photosLocked() []chatPhoto {
+	if c.pick >= len(c.list) {
+		return nil
+	}
+	msgs := c.list[c.pick].msgs
+	if len(msgs) == 0 {
+		return nil
+	}
+	return msgs[min(max(c.msg, 0), len(msgs)-1)].photos
+}
+
+// photoLocked publishes the photo the fork spreads over the tiles; the shown message's photos load ahead while browsing.
+func (c *chats) photoLocked() {
+	if !c.browsing() || c.blocked() {
+		c.photos.show("")
+		return
+	}
+	ps := c.photosLocked()
+	for _, ph := range ps {
+		c.photos.load(ph, c.publish)
+	}
+	if c.photo < 0 || c.photo >= len(ps) || !c.photos.cached(ps[c.photo].key) {
+		c.photos.show("")
+		return
+	}
+	c.photos.show(ps[c.photo].key)
+}
+
+// closePhoto: a tap on a tile under the photo goes back to the message text.
+func (c *chats) closePhoto() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.photo < 0 {
+		return nil
+	}
+	c.photo = -1
+	if c.browsing() {
+		c.browseTill = time.Now().Add(chatsBrowseFor)
+	}
+	c.publishLocked()
+	return nil
 }
 
 func (c *chats) press() error {
@@ -320,6 +368,11 @@ func (c *chats) turn(direction int) bool {
 	}
 	lines := chatsTextLines(chatsView(c.list[c.pick], c.msg).text, stripDrawH-8, chatsTextSize)
 	top := max(float64(lines)*chatsLineH-chatsTextView, 0)
+	if n := len(c.photosLocked()); n > 0 && (c.photo >= 0 || direction > 0 && c.scrollTo >= top) {
+		c.photo = min(c.photo+direction, n-1)
+		c.publishLocked()
+		return true
+	}
 	c.scrollTo = min(max(c.scrollTo+float64(direction)*chatsLineH/2, 0), top)
 	select {
 	case c.kick <- struct{}{}:
@@ -342,7 +395,7 @@ func (c *chats) msgTurn(direction int) bool {
 	n := len(c.list[c.pick].msgs)
 	to := min(max(c.msg+direction, 0), max(n-1, 0))
 	if to != c.msg {
-		c.msg, c.scrollTo, c.scrollAt = to, 0, 0
+		c.msg, c.scrollTo, c.scrollAt, c.photo = to, 0, 0, -1
 		c.publishLocked()
 	}
 	return true

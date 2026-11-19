@@ -25,6 +25,7 @@ const (
 	vkwsTail        = 50
 	vkwsScanWorkers = 6
 	vkwsAvatarSize  = "64"
+	vkwsPreview     = "800"
 	vkwsBackoff     = 5 * time.Second
 )
 
@@ -200,6 +201,7 @@ type vkwsDialog struct {
 
 type vkwsMsg struct {
 	text, sender string
+	images       []string
 }
 
 type vkwsRawMsg struct {
@@ -215,6 +217,21 @@ type vkwsRawMsg struct {
 		MediaType string `json:"mediaType"`
 		Text      string `json:"text"`
 	} `json:"parts"`
+	Filesharing []struct {
+		ID   string `json:"id"`
+		Mime string `json:"mime"`
+	} `json:"filesharing"`
+}
+
+// images: file ids of the pictures attached to the message.
+func (m vkwsRawMsg) images() []string {
+	var ids []string
+	for _, f := range m.Filesharing {
+		if strings.HasPrefix(f.Mime, "image/") && f.ID != "" {
+			ids = append(ids, f.ID)
+		}
+	}
+	return ids
 }
 
 func (m vkwsRawMsg) text() string {
@@ -271,7 +288,7 @@ func parseVkwsHistory(sn string, b []byte) (vkwsDialog, error) {
 	for _, m := range msgs {
 		if m.MsgID > res.Yours.LastRead && !m.Outgoing && m.Class != "event" {
 			d.unread++
-			d.msgs = append(d.msgs, vkwsMsg{text: m.text(), sender: m.sender(sn)})
+			d.msgs = append(d.msgs, vkwsMsg{text: m.text(), sender: m.sender(sn), images: m.images()})
 		}
 	}
 	if res.UnreadCnt > d.unread {
@@ -465,6 +482,55 @@ func (c *vkwsClient) avatar(ctx context.Context, sn string) ([]byte, error) {
 	return nil, fmt.Errorf("vkws: avatar http %d", code)
 }
 
+// image downloads the vkwsPreview px preview of a shared file: files/info hands out the preview links.
+func (c *vkwsClient) image(ctx context.Context, id string) ([]byte, error) {
+	q := url.Values{"aimsid": {c.s.AIMSID}, "previews": {vkwsPreview}}
+	b, code, err := c.get(ctx, fmt.Sprintf("%s/api/v%d/files/info/%s/?%s", c.s.BaseURL, c.s.APIVersion, url.PathEscape(id), q.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("vkws: files/info: %w", err)
+	}
+	if code != http.StatusOK {
+		return nil, fmt.Errorf("vkws: files/info http %d", code)
+	}
+	u, err := parseVkwsPreview(b)
+	if err != nil {
+		return nil, err
+	}
+	img, code, err := c.get(ctx, u)
+	if err != nil {
+		return nil, fmt.Errorf("vkws: preview: %w", err)
+	}
+	if code != http.StatusOK {
+		return nil, fmt.Errorf("vkws: preview http %d", code)
+	}
+	return img, nil
+}
+
+func parseVkwsPreview(b []byte) (string, error) {
+	var r struct {
+		Status struct {
+			Code int `json:"code"`
+		} `json:"status"`
+		Result struct {
+			Previews map[string]string `json:"previews"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(b, &r); err != nil {
+		return "", fmt.Errorf("vkws: decode files/info: %w", err)
+	}
+	switch r.Status.Code {
+	case 20000:
+	case 40001, 40100, 40101, 40102:
+		return "", errVkwsSession
+	default:
+		return "", fmt.Errorf("vkws: files/info status %d", r.Status.Code)
+	}
+	if u := r.Result.Previews[vkwsPreview]; u != "" {
+		return u, nil
+	}
+	return "", fmt.Errorf("vkws: files/info has no %s preview", vkwsPreview)
+}
+
 func vkwsOpenURL(base, sn string) string {
 	return base + "/profile/" + url.PathEscape(sn)
 }
@@ -561,6 +627,9 @@ func (st *vkwsState) entries(ctx context.Context) []chatEntry {
 		msgs := make([]chatMsg, 0, len(d.msgs))
 		for _, m := range d.msgs {
 			cm := chatMsg{text: m.text}
+			for _, id := range m.images {
+				cm.photos = append(cm.photos, chatPhoto{key: "vkws/" + id, fetch: func(ctx context.Context) ([]byte, error) { return st.c.image(ctx, id) }})
+			}
 			if m.sender != "" {
 				cm.sender = st.avatar(ctx, m.sender)
 			}
