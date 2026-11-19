@@ -217,3 +217,24 @@ func (timeoutErr) Error() string {
 }
 func (timeoutErr) Timeout() bool   { return true }
 func (timeoutErr) Temporary() bool { return true }
+
+func TestStripTextNoHalo(t *testing.T) {
+	b, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(aiStripSVG(stripFrame{
+		label: stripLabel{model: "fable", effort: "medium", state: "ok"}, session: 95, week: 44, fable: 18, allowed: 80,
+		weekLvl: "low", left5h: "0:18", leftW: "1d 4h"}), "data:image/svg+xml;base64,"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	for _, want := range []string{
+		`<clipPath id="rest"><rect x="0" y="0" width="32" height="12.9"/><rect x="32" y="0" width="16" height="211.6"/></clipPath>`,
+		`<g clip-path="url(#rest)"><g transform`,
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("want %s: %s", want, s)
+		}
+	}
+	if i := strings.Index(s, `fill="#fff">fable`); i < 0 || i < strings.Index(s, `clip-path="url(#rest)"`) {
+		t.Errorf("white label outside the rest clip: %s", s)
+	}
+}

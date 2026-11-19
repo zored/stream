@@ -509,15 +509,19 @@ func aiStripSVG(f stripFrame) string {
 	sessionBar := rect(0, w5, f.session, sessionColor)
 	k := min(float64(h)/svgMinWidth, float64(w5)/svgHeight)
 	weekBar := rect(w5, w-w5, f.week, weekColor)
-	clip := sessionBar
+	inverted := 0.0
 	if weekColor == gray {
-		clip += weekBar
+		inverted = f.week
 	}
 	if !f.stale && f.fable > 0 {
-		fableBar := rect(w5, w-w5, f.fable, stripFable[f.weekLvl])
-		weekBar += fableBar
-		clip += fableBar
+		weekBar += rect(w5, w-w5, f.fable, stripFable[f.weekLvl])
+		inverted = max(inverted, f.fable)
 	}
+	top := func(x, width int, pct float64) string {
+		return fmt.Sprintf(`<rect x="%d" y="0" width="%d" height="%.1f"/>`, x, width, float64(h)*(100-min(max(pct, 0), 100))/100)
+	}
+	clip := rect(0, w5, f.session, "#fff") + rect(w5, w-w5, inverted, "#fff")
+	rest := top(0, w5, f.session) + top(w5, w-w5, inverted)
 	label := func(ink string) string {
 		fill := "#fff"
 		if ink != "" {
@@ -533,9 +537,9 @@ func aiStripSVG(f stripFrame) string {
 		dot = fmt.Sprintf(`<circle cx="%d" cy="4" r="3" fill="%s"/>`, w-4, red)
 	}
 	return dataURI(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d">`+
-		`<defs><clipPath id="bar">%s</clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
-		`%s%s%s%s<g clip-path="url(#bar)">%s</g>%s</svg>`,
-		w, h, clip, w, h,
+		`<defs><clipPath id="bar">%s</clipPath><clipPath id="rest">%s</clipPath></defs><rect width="%d" height="%d" fill="#000"/>`+
+		`%s%s%s<g clip-path="url(#rest)">%s</g><g clip-path="url(#bar)">%s</g>%s</svg>`,
+		w, h, clip, rest, w, h,
 		rect(w5, w-w5, f.allowed, stripAllowed), weekBar, sessionBar,
 		label(""), label("#000"), dot))
 }

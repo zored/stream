@@ -67,6 +67,11 @@ the daemon (`ai_strip_svg`, `aiStripSVG`); each cell shows its third (`gen_pages
 - the rotated model + effort dots sit over the 5 h bar: white outside it, black where the bar is under them. On the same line,
   at the bottom edge, time left in the 5 h window (`1:20`); in the weekly bar, at the bottom, time left in the week (`1d 5h`,
   `5h` under a day, `40m` under an hour). Same inversion over the 5 h bar, the Fable segment and a gray weekly bar; over a dark gray or red weekly bar the text stays white.
+  The white text is clipped to the area outside the bars (`rest`), the black copy to the bars (`bar`). Before 2026-11-19 the
+  white text was drawn everywhere and the black copy over it, so antialiased edges let white bleed through: on a red 5 h bar
+  the glyphs looked hollow and gray (user's screenshot, verified with `rsvg-convert` at 1×).
+- a red 5 h bar is the spent 5 h limit (> 90 %), not a fetch error: on 2026-11-19 it was red with `0:18` while Claude Code said
+  "You've hit your 5-hour limit · resets 2:50pm" (verified in the transcripts). A failed fetch is the red dot and gray bars.
 - no animation: a model or effort change redraws at once.
 
 Bars over 100 % stay full. A red dot in the corner means the last fetch failed. The calendar list covers the whole strip while open (`usage.cover`, see controls.md, clock).
