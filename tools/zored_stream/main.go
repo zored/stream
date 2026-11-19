@@ -498,6 +498,9 @@ func main() {
 				wxKnob.Store(true)
 				return wx.press()
 			}
+			if took, err := cs.knob(true); took {
+				return err
+			}
 			return cs.down()
 		})
 		handle(mux, "/knob/up", func() error {
@@ -505,10 +508,16 @@ func main() {
 			if wxKnob.Swap(false) {
 				return nil
 			}
+			if took, err := cs.knob(false); took {
+				return err
+			}
 			return cs.up()
 		})
 		knobTurn := func(direction int) error {
 			hints.turn("l2", direction)
+			if cs.turn(direction) {
+				return nil
+			}
 			if !cs.browsing() && wx.turn(direction) {
 				return nil
 			}
@@ -534,7 +543,7 @@ func main() {
 				if took, err := cal.knob(down); took {
 					return err
 				}
-				if took, err := cs.knob(down); took {
+				if took, err := cs.pickKnob(down); took {
 					return err
 				}
 				return sc.hold(down)
@@ -543,7 +552,7 @@ func main() {
 		turn := func(direction int) func() error {
 			return func() error {
 				hints.turn("r2", direction)
-				if tm.turn(direction) || cal.turn(direction) || cs.turn(direction) {
+				if tm.turn(direction) || cal.turn(direction) || cs.step(direction) {
 					return nil
 				}
 				return sc.turn(direction)
