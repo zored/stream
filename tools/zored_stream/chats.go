@@ -61,7 +61,6 @@ type chats struct {
 	covered    bool
 	pick       int
 	knobDown   bool
-	pickDown   bool
 	opener     func(url string) error
 	slideGen   int
 	sliding    bool
@@ -482,27 +481,6 @@ func (c *chats) knob(down bool) (bool, error) {
 	i := c.pick
 	c.mu.Unlock()
 	return true, c.act(i)
-}
-
-// pickKnob: крутилка справа, ряд 3 while browsing presses like the chats tile: a hold marks the chat read, a click opens it.
-func (c *chats) pickKnob(down bool) (bool, error) {
-	c.mu.Lock()
-	if down {
-		c.pickDown = c.browsing()
-		took := c.pickDown
-		c.mu.Unlock()
-		if !took {
-			return false, nil
-		}
-		return true, c.down()
-	}
-	took := c.pickDown
-	c.pickDown = false
-	c.mu.Unlock()
-	if !took {
-		return false, nil
-	}
-	return true, c.up()
 }
 
 func (c *chats) act(i int) error {

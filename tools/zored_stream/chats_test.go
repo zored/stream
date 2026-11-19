@@ -188,29 +188,3 @@ func TestChatsHoldMarksReadAndEatsRelease(t *testing.T) {
 		t.Fatalf("tap in browse must open, opened %q", opened)
 	}
 }
-
-func TestChatsPickKnobPressesLikeTheTile(t *testing.T) {
-	postVar = func(string, string) error { return nil }
-	t.Cleanup(func() { postVar = post })
-	c := newChats(&vars{sent: map[string]string{}}, func() {}, func(string) {})
-	var opened string
-	c.opener = func(url string) error { opened = url; return nil }
-	now := time.Now()
-	c.set("tg", []chatEntry{{app: "tg", id: "a", unread: 1, at: now, open: "a"}, {app: "tg", id: "b", unread: 1, at: now.Add(-time.Minute), open: "b"}})
-	if took, _ := c.pickKnob(true); took {
-		t.Fatal("outside browse the knob scrolls")
-	}
-	if took, _ := c.pickKnob(false); took {
-		t.Fatal("outside browse the knob scrolls")
-	}
-	c.knobTurn(1)
-	if !c.step(1) || c.pick != 1 {
-		t.Fatalf("pick=%d", c.pick)
-	}
-	if took, err := c.pickKnob(true); !took || err != nil {
-		t.Fatal(took, err)
-	}
-	if took, err := c.pickKnob(false); !took || err != nil || opened != "b" {
-		t.Fatal(took, err, opened)
-	}
-}

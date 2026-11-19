@@ -61,7 +61,7 @@ device ──serial── Companion (+ Loupedeck module fork) ──exec curl─
 | `frame` | `frame.go` | caches a rendered image by a string key; re-renders only when the key changes |
 | orientation | `orientation.go`, `stripflip.go`, fork `src/orientation.ts` | the device can stand at 0/90/180/270° (file `~/.config/zored-stream/orientation`, missing = 90, written only by the fork on a 3 s hold of крутилка справа, ряд 1). Everything upstream of the fork draws and reads touches for 0° (A12); the daemon reads the file only for `strip_flip` (left-strip bars mirrored at 90/180) and the emoji glyph turn. Portable as is |
 | one mode at a time `tileModes` | `modes.go` | mac only. Modes `{name, active(), close()}`: wi-fi pick, emoji, window switcher, chats browse, weather browse, calendar list, timer edit. After every daemon POST `check()` compares who is active with the last check; if one just opened, every mode that was already open is closed (`close` = its timeout: timer edit commits on the next tick, wi-fi `closePick` drops a pending join). Modes opening in the same request all stay |
-| knob hint `knobHints` | `knobhint.go` | mac only. One image layer `hint` on top of the strip cells `hint_l0`, `hint_l2`, `hint_r0`, `hint_r1`, `hint_r2` (48×86 SVG, empty SVG when hidden). Knobs a tile can take: left 3, right 1–3; a strip the fork turns 180° is drawn into mirrored slots, so the hint for knob row r goes to cell 2 − r there (at 90° the weather hint is `hint_l0`). Owners per knob: l2 weather browse (not while chats browse), r0 wi-fi pick, r1 chats browse, r2 timer edit + calendar list + chats browse (switches chats since 2026-11-19; the message scroll sits on l2, the chats knob itself, so no hint there); emoji is not an owner. Every daemon POST kicks a 60 Hz loop that runs while any hint shows: it asks the owners, shows / hides the chevron, and steps two springs (k = 360, c = 17): angle (each detent +650 °/s in the turn direction, clamp ±70°, clockwise = clockwise) and scale (target 1.4 while the knob is pressed, 1 after; a click < 400 ms without a turn kicks +9/s). Opacity 30 %, 100 % while the knob is held or for 0.7 s after a turn / press (eases in 0.25, out 0.08 per frame). The chevron sits 5 px from the outer edge; for the top / bottom knob its center is 10 px from the top / bottom of the cell (middle knob: centered), in the knob's own frame, white with a black halo, pointing at the knob; turned 180° when the fork turns that strip (`stripFlipped`, orientation read when it appears). Turns and presses of a hidden hint are ignored |
+| knob hint `knobHints` | `knobhint.go` | mac only. One image layer `hint` on top of the strip cells `hint_l0`, `hint_l2`, `hint_r0`, `hint_r1`, `hint_r2` (48×86 SVG, empty SVG when hidden). Knobs a tile can take: left 3, right 1–3; a strip the fork turns 180° is drawn into mirrored slots, so the hint for knob row r goes to cell 2 − r there (at 90° the weather hint is `hint_l0`). Owners per knob: l2 weather browse (not while chats browse), r0 wi-fi pick, r1 chats browse, r2 timer edit + calendar list + chats browse; emoji is not an owner. Every daemon POST kicks a 60 Hz loop that runs while any hint shows: it asks the owners, shows / hides the chevron, and steps two springs (k = 360, c = 17): angle (each detent +650 °/s in the turn direction, clamp ±70°, clockwise = clockwise) and scale (target 1.4 while the knob is pressed, 1 after; a click < 400 ms without a turn kicks +9/s). Opacity 30 %, 100 % while the knob is held or for 0.7 s after a turn / press (eases in 0.25, out 0.08 per frame). The chevron sits 5 px from the outer edge; for the top / bottom knob its center is 10 px from the top / bottom of the cell (middle knob: centered), in the knob's own frame, white with a black halo, pointing at the knob; turned 180° when the fork turns that strip (`stripFlipped`, orientation read when it appears). Turns and presses of a hidden hint are ignored |
 | palette | `palette.go`, top of `gen_pages.py` | white values, gray `#8E8E93` secondary, green `#30D158`, amber `#FFD60A`, red `#FF453A` (D1); content inset 6 % (D2) |
 
 ### Holds and haptics
@@ -141,13 +141,12 @@ Skip arrow (`skip.go`): `np_skip` = `1`/`-1` while flying, `0` after; `np_skip_x
 
 #### крутилка слева, ряд 3 — chats / weather (`2/0`, `:47130`, mac-only feature)
 
-- turn → `/knob/forward|back`: chats browsing → scroll the shown message by half a line, past its end walk its photos
-  (`cs.turn`; was on крутилка справа, ряд 3 until 2026-11-19). Else weather browsing → weather walks the forecast. Else
-  the chats browse opens on the first chat.
-- press → `/knob/down`: weather browsing → back to now (and the matching `/knob/up` is swallowed); chats browsing → `cs.knob`
-  (the release opens the chat shown); else = tap on the chats tile (`up` opens the browse).
-- release → `/knob/up`: the same owner as its `down`.
-- hold: none on this knob since 2026-11-19; the read hold moved to крутилка справа, ряд 3.
+- turn → `/knob/forward|back`: if chats are not browsing and the weather tile is browsing → weather walks the forecast. Else
+  chats browse (first turn opens the browse on the first chat, then one chat per detent).
+- press → `/knob/down`: weather browsing → back to now (and the matching `/knob/up` is swallowed); else = tap on the chats tile.
+- release → `/knob/up`: chats tile release.
+- hold: the chats `down` arms a 400 ms daemon timer while browsing; when it fires the picked chat is marked read (source
+  call async, the chat hidden at once, browse moves on) and the matching `up` does nothing. Outside browse no timer: `up` = tap.
 - Win: the windows page still has this knob and posts to `:47130`, but no chats/weather variables exist there. Either drop
   `2/0` from the windows profile, or serve `:47130 /knob/*` with `409` *(decision open, see §5)*.
 
@@ -296,7 +295,7 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 #### крутилка справа, ряд 3 — scroll (`2/7`, `:47121`)
 
 Before the scroller, each input is offered to timers, then calendar, then chats (knob capture, mac only). Chats while
-browsing (since 2026-11-19, swapped with крутилка слева, ряд 3): turn = `cs.step`, the next / previous chat with the slide; down / up = `cs.pickKnob` = the chats tile `down` / `up`: a 400 ms daemon timer marks the picked chat read (source call async, the chat hidden at once, browse moves on, the release does nothing), a shorter click opens the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
+browsing: turn = scroll the shown message by half a line (eased at 60 Hz while moving); at the end of a message with photos the next clockwise detent shows photo 0 over the tiles, more detents walk to the last, counter-clockwise past 0 = back to the text (photos: see тайл ряд 3, колонка 1); press = open the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
 
 | Input | Mode | Effect |
 |---|---|---|
