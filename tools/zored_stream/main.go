@@ -254,7 +254,7 @@ func main() {
 			}
 			hints.turn("r1", d)
 			switch {
-			case cs.msgTurn(d):
+			case cs.turn(d):
 			case ai.holding():
 				ai.markTurned()
 				ag.familyStep(d)
@@ -276,6 +276,9 @@ func main() {
 		})
 		handle(mux, "/ai/down", func() error {
 			hints.press("r1", true)
+			if took, err := cs.knob(true); took {
+				return err
+			}
 			ag.armClick()
 			ag.hideStrip()
 			return ai.down()
@@ -288,6 +291,9 @@ func main() {
 		})
 		handle(mux, "/ai/up", func() error {
 			hints.press("r1", false)
+			if took, err := cs.knob(false); took {
+				return err
+			}
 			if ai.up() {
 				return nil
 			}
@@ -543,7 +549,7 @@ func main() {
 		turn := func(direction int) func() error {
 			return func() error {
 				hints.turn("r2", direction)
-				if tm.turn(direction) || cal.turn(direction) || cs.turn(direction) {
+				if tm.turn(direction) || cal.turn(direction) || cs.msgTurn(direction) {
 					return nil
 				}
 				return sc.turn(direction)

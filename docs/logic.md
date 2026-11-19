@@ -277,12 +277,13 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 
 #### крутилка справа, ряд 2 — agents walk / AI model (`1/7`, `:47117`)
 
-- turn → `/ai/turn?d=±1`: chats browsing (mac) → next / previous unread message of the picked chat (clamped), the tile
-  badge = messages after it, the sender's small avatar in groups, the strip shows it from the top; else if the knob is held
+- turn → `/ai/turn?d=±1`: chats browsing (mac) → `cs.turn`: scroll the shown message by half a line, past its end walk its
+  photos (swapped with крутилка справа, ряд 3 on 2026-11-19); else if the knob is held
   → walk the family of the ringed chat in tree order (`agents.familyStep`, wraps); else → agents walk: adds the Claude chat
   in front as a hollow dot if missing, moves the cursor by `d` (wraps) over the order frozen at the browse start (`agents.freeze`, kept while `browsing()`), opens the session
   under the cursor 150 ms after the last step (`agentOpenAfter`, timer reset per step; family walk too), shows its title + folder
   on the right strip for 2 s.
+- chats browsing (mac): `/ai/down` / `/ai/up` go to `cs.knob` (the release opens the chat shown) and skip everything below.
 - press → `/ai/down` (also hides the chats ring and title cover, `agents.hideStrip`, so the model label shows); hold 400 ms (Companion `held`, mac only) → `/ai/hold`: if no turn happened since the press → new Code session (`claude://code/new`) and the release is consumed (the press ends there); a press with no turn or release for 8 s (`aiHeldMax`) is dropped; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
   (`/agent/focus`), with the browse state taken at `/ai/down` (`armClick`), so a click within 2 s of a turn pins.
 - mac model switch (F12): 9 stops Sonnet·Low … Fable·High, applied 400 ms after the knob rests, only on Claude Desktop's
@@ -295,7 +296,7 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 #### крутилка справа, ряд 3 — scroll (`2/7`, `:47121`)
 
 Before the scroller, each input is offered to timers, then calendar, then chats (knob capture, mac only). Chats while
-browsing: turn = scroll the shown message by half a line (eased at 60 Hz while moving); at the end of a message with photos the next clockwise detent shows photo 0 over the tiles, more detents walk to the last, counter-clockwise past 0 = back to the text (photos: see тайл ряд 3, колонка 1); press = open the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
+browsing (swapped with крутилка справа, ряд 2 on 2026-11-19): turn = `cs.msgTurn`, the next / previous unread message of the picked chat (clamped), the tile badge = messages after it, the sender's small avatar in groups, the strip shows it from the top; press = open the chat (`tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`). Scroller (`scroll.go`):
 
 | Input | Mode | Effect |
 |---|---|---|
