@@ -30,10 +30,6 @@ static IOReturn userActive(void) {
 	return r;
 }
 
-static IOReturn holdDisplay(IOPMAssertionID *id) {
-	return IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleDisplaySleep, kIOPMAssertionLevelOn, CFSTR("zored_stream keep-awake restart"), id);
-}
-
 static int screensAsleep(void) {
 	CGDirectDisplayID ids[16];
 	uint32_t n = 0;
@@ -81,9 +77,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"strconv"
 	"strings"
-	"time"
 )
 
 func sleepSystem() error {
@@ -120,27 +114,12 @@ func declareUserActivity() error {
 	return nil
 }
 
-func bridgeDisplay(d time.Duration) error {
-	var id C.IOPMAssertionID
-	if r := C.holdDisplay(&id); r != C.kIOReturnSuccess {
-		return fmt.Errorf("IOPMAssertionCreateWithName: 0x%x", uint32(r))
-	}
-	time.AfterFunc(d, func() { C.IOPMAssertionRelease(id) })
-	return nil
-}
-
 func amphetamine(command string) (string, error) {
 	out, err := exec.Command("/usr/bin/osascript", "-e", `tell application "Amphetamine" to `+command).CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("amphetamine %q: %w: %s", command, err, strings.TrimSpace(string(out)))
 	}
 	return strings.TrimSpace(string(out)), nil
-}
-
-type amphSession struct {
-	active bool
-	left   time.Duration
-	timed  bool
 }
 
 func amphetamineAsserted() (bool, error) {
@@ -153,21 +132,23 @@ func amphetamineAsserted() (bool, error) {
 	return false, errors.New("IOPMCopyAssertionsByProcess failed")
 }
 
-func readAmphetamine() (amphSession, error) {
-	out, err := amphetamine("return {session is active, session time remaining}")
+func amphetamineActive() (bool, error) {
+	out, err := amphetamine("session is active")
 	if err != nil {
-		return amphSession{}, err
+		return false, err
 	}
-	active, left, ok := strings.Cut(out, ", ")
-	seconds, err := strconv.Atoi(left)
-	if !ok || err != nil {
-		return amphSession{}, fmt.Errorf("amphetamine session: %q", out)
+	switch out {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
 	}
-	return amphSession{active: active == "true", left: time.Duration(seconds) * time.Second, timed: seconds > 0}, nil
+	return false, fmt.Errorf("amphetamine session is active: %q", out)
 }
 
-func startAmphetamine(d time.Duration) error {
-	_, err := amphetamine(fmt.Sprintf("start new session with options {duration:%d, interval:minutes, displaySleepAllowed:false}", int(d/time.Minute)))
+// startAmphetamine is the right click on Amphetamine's menu bar icon: no options = Default Duration and Allow Display Sleep from its settings.
+func startAmphetamine() error {
+	_, err := amphetamine("start new session")
 	return err
 }
 

@@ -225,17 +225,17 @@ svg .g{stroke:var(--ok)!important}svg text.g{fill:var(--ok)}
 <div class="wrap"><svg viewBox="0 0 900 140" width="900">
 <line x1="40" y1="70" x2="860" y2="70"/><text class="m" x="40" y="95">0</text><text class="m" x="300" y="95">1 с</text><text class="m" x="560" y="95">3 с</text>
 <line x1="300" y1="60" x2="300" y2="80"/><line x1="560" y1="60" x2="560" y2="80"/>
-<text x="60" y="55">tap: toggle 1 ч сессии</text><text class="r" x="320" y="55">release: end + IOPMSleepSystem</text><text x="580" y="55">release: ничего</text>
-<text class="m" x="40" y="125">после включения 5 с: крутилка справа, ряд 1 = длина 15 мин…12 ч, рестарт сессии через 500 мс после последнего поворота</text>
+<text x="60" y="55">tap: toggle default-сессии</text><text class="r" x="320" y="55">release: end + IOPMSleepSystem</text><text x="580" y="55">release: ничего</text>
+<text class="m" x="40" y="125">tap: session is active → start new session (без опций, как правый клик) или end session; без крутилки и рестартов</text>
 </svg></div>
 <p><code>power.go</code>: тайминги в демоне (не 400 мс hold Companion), состояние из Amphetamine через <code>osascript</code> каждые 2 с (<code>F16</code>, <code>S4</code>). Сон ни разу не триггерился. <span class="a">assumed</span></p>
 
 <h3 id="capture">4.8 Захват крутилки справа, ряд 1</h3>
-<p>Крутилка по умолчанию = яркость Mac (hold = яркость контроллера). Power и wi-fi временно её перехватывают: <span class="v">verified</span> в <code>main.go</code>:</p>
-<pre><code>/brightness/up:  if pw.turn(1) || wf.turn(1) { return br.level() }  else br.turn(1)</code></pre>
+<p>Крутилка по умолчанию = яркость Mac (hold = яркость контроллера). Wi-fi и emoji временно её перехватывают: <span class="v">verified</span> в <code>main.go</code>:</p>
+<pre><code>/brightness/up:  if wf.turn(1) || pk.turn(emojiRight, 1) { return br.level() }  else br.turn(1)</code></pre>
 <div class="wrap"><svg viewBox="0 0 900 120" width="900">
 <rect class="b" x="10" y="35" width="150" height="50" rx="8"/><text x="20" y="64">/brightness/up</text>
-<rect class="k" x="220" y="10" width="200" height="40" rx="8"/><text x="230" y="35">pw.turn: 5 с после вкл</text>
+<rect class="k" x="220" y="10" width="200" height="40" rx="8"/><text x="230" y="35">pk.turn: emoji открыт</text>
 <rect class="k" x="220" y="70" width="200" height="40" rx="8"/><text x="230" y="95">wf.turn: 5 с после touch</text>
 <rect class="b" x="500" y="35" width="200" height="50" rx="8"/><text x="510" y="64">br.turn: DisplayServices</text>
 <line x1="160" y1="55" x2="218" y2="30" marker-end="url(#ar)"/><line x1="160" y1="65" x2="218" y2="90" marker-end="url(#ar)"/><line x1="420" y1="60" x2="498" y2="60" marker-end="url(#ar)"/><text class="m" x="430" y="54">false, false</text>

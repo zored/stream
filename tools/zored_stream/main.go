@@ -366,14 +366,14 @@ func main() {
 	go serve(*brightnessAddr, func(mux *http.ServeMux) {
 		handleValue(mux, "/brightness/up", func() (int, error) {
 			hints.turn("r0", 1)
-			if pw.turn(1) || wf.turn(1) || pk.turn(emojiRight, 1) {
+			if wf.turn(1) || pk.turn(emojiRight, 1) {
 				return br.level(), nil
 			}
 			return br.turn(1)
 		})
 		handleValue(mux, "/brightness/down", func() (int, error) {
 			hints.turn("r0", -1)
-			if pw.turn(-1) || wf.turn(-1) || pk.turn(emojiRight, -1) {
+			if wf.turn(-1) || pk.turn(emojiRight, -1) {
 				return br.level(), nil
 			}
 			return br.turn(-1)
@@ -466,7 +466,6 @@ func main() {
 	hints.own("l2", func() bool { return wx.browsing() && !cs.capturing() })
 	hints.own("l0", sw.isOpen)
 	hints.own("r0", sw.isOpen)
-	hints.own("r0", pw.sizing)
 	hints.own("r0", wf.capturing)
 	hints.own("r1", cs.capturing)
 	hints.own("r2", tm.capturing)
@@ -475,7 +474,6 @@ func main() {
 	go hints.run()
 	for _, md := range []mode{
 		{"wifi", wf.capturing, wf.close},
-		{"awake", pw.sizing, pw.close},
 		{"emoji", em.isOpen, em.close},
 		{"switch", sw.isOpen, sw.close},
 		{"chats", cs.capturing, cs.close},

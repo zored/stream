@@ -9,43 +9,77 @@ import (
 	"time"
 )
 
-func TestAwakeLeft(t *testing.T) {
-	for left, want := range map[time.Duration]string{
-		time.Hour:                                ">1:00<",
-		time.Hour + 41*time.Minute + time.Second: ">1:42<",
-		30 * time.Second:                         ">0:01<",
-	} {
-		if got := awakeLeft(left, false); !strings.Contains(got, want) {
-			t.Errorf("awakeLeft(%v) = %s, want %s", left, got, want)
-		}
-	}
-}
-
-func TestTapOffWakesDisplayWithoutSleep(t *testing.T) {
+func fakeAmphetamine(t *testing.T, running *bool) *[]string {
 	var calls []string
-	amphStart = func(time.Duration) error { calls = append(calls, "start"); return nil }
-	amphEnd = func() error { calls = append(calls, "end"); return nil }
+	amphActive = func() (bool, error) { return *running, nil }
+	amphStart = func() error { calls = append(calls, "start"); *running = true; return nil }
+	amphEnd = func() error { calls = append(calls, "end"); *running = false; return nil }
 	userActivity = func() error { calls = append(calls, "active"); return nil }
 	systemSleep = func() error { calls = append(calls, "sleep"); return nil }
-	displayHold = func(time.Duration) error { calls = append(calls, "hold"); return nil }
 	postVar = func(string, string) error { return nil }
 	screensOff = func() (bool, error) { return false, nil }
 	locked = func() (bool, error) { return false, nil }
 	t.Cleanup(func() {
 		postVar, screensOff, locked = post, displaysAsleep, screenLocked
-		amphStart, amphEnd, userActivity, systemSleep, displayHold = startAmphetamine, endAmphetamine, declareUserActivity, sleepSystem, bridgeDisplay
+		amphActive, amphStart, amphEnd, userActivity, systemSleep = amphetamineActive, startAmphetamine, endAmphetamine, declareUserActivity, sleepSystem
 	})
-	p := newPower(&vars{sent: map[string]string{}})
-	for range 2 {
-		if err := p.down(); err != nil {
-			t.Fatal(err)
-		}
-		if err := p.up(); err != nil {
-			t.Fatal(err)
-		}
+	return &calls
+}
+
+func tapPower(t *testing.T, p *power) {
+	t.Helper()
+	if err := p.down(); err != nil {
+		t.Fatal(err)
 	}
-	if got := strings.Join(calls, ","); got != "hold,start,hold,end,active" {
-		t.Errorf("calls = %s, want hold,start,hold,end,active", got)
+	if err := p.up(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTapTogglesWithoutRestart(t *testing.T) {
+	running := false
+	calls := fakeAmphetamine(t, &running)
+	p := newPower(&vars{sent: map[string]string{}})
+	for range 3 {
+		tapPower(t, p)
+	}
+	if got := strings.Join(*calls, ","); got != "start,end,active,start" {
+		t.Errorf("calls = %s, want start,end,active,start", got)
+	}
+}
+
+func TestTapEndsSessionStartedElsewhere(t *testing.T) {
+	running := false
+	calls := fakeAmphetamine(t, &running)
+	p := newPower(&vars{sent: map[string]string{}})
+	running = true
+	tapPower(t, p)
+	running = false
+	tapPower(t, p)
+	if got := strings.Join(*calls, ","); got != "end,active,start" {
+		t.Errorf("calls = %s, want end,active,start: a tap on a stale tile must not restart a running session", got)
+	}
+}
+
+func TestHoldSleeps(t *testing.T) {
+	running := true
+	calls := fakeAmphetamine(t, &running)
+	p := newPower(&vars{sent: map[string]string{}})
+	p.active = true
+	p.downAt = time.Now().Add(-2 * time.Second)
+	if err := p.up(); err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(*calls, ","); got != "end,sleep" {
+		t.Errorf("calls = %s, want end,sleep", got)
+	}
+	*calls = nil
+	p.downAt = time.Now().Add(-4 * time.Second)
+	if err := p.up(); err != nil {
+		t.Fatal(err)
+	}
+	if len(*calls) != 0 {
+		t.Errorf("release past 3 s: calls = %v, want none", *calls)
 	}
 }
 
@@ -73,14 +107,14 @@ func TestAmphetamineSuppressesScreensOff(t *testing.T) {
 	locked = func() (bool, error) { return false, nil }
 	t.Cleanup(func() { postVar, screensOff, locked = post, displaysAsleep, screenLocked })
 	p := newPower(&vars{sent: map[string]string{}})
-	p.session = amphSession{active: true}
+	p.active = true
 	p.publish()
-	if sent["screen_off"] != "0" || sent["power_svg"] != powerSVG("on", "", false) {
+	if sent["screen_off"] != "0" || sent["power_svg"] != powerSVG("on", false) {
 		t.Errorf("active session, screens off: screen_off = %q, want 0 and the filled sun", sent["screen_off"])
 	}
-	p.session = amphSession{}
+	p.active = false
 	p.publish()
-	if sent["screen_off"] != "1" || sent["power_svg"] != powerSVG("sleep", "", false) {
+	if sent["screen_off"] != "1" || sent["power_svg"] != powerSVG("sleep", false) {
 		t.Errorf("no session, screens off: screen_off = %q, want 1 and the moon", sent["screen_off"])
 	}
 }
@@ -93,24 +127,24 @@ func TestScreensOffMoonThenLock(t *testing.T) {
 	t.Cleanup(func() { postVar, screensOff, locked = post, displaysAsleep, screenLocked })
 	p := newPower(&vars{sent: map[string]string{}})
 	p.publish()
-	if sent["screen_off"] != "1" || sent["power_svg"] != powerSVG("sleep", "", false) {
-		t.Errorf("screen_off = %q, power_svg sleep = %v", sent["screen_off"], sent["power_svg"] == powerSVG("sleep", "", false))
+	if sent["screen_off"] != "1" || sent["power_svg"] != powerSVG("sleep", false) {
+		t.Errorf("screen_off = %q, power_svg sleep = %v", sent["screen_off"], sent["power_svg"] == powerSVG("sleep", false))
 	}
 	screensOff = func() (bool, error) { return false, nil }
 	p.publish()
-	if sent["screen_off"] != "0" || sent["power_svg"] != powerSVG("off", "", true) {
+	if sent["screen_off"] != "0" || sent["power_svg"] != powerSVG("off", true) {
 		t.Errorf("locked after wake: screen_off = %q, want 0 and the sun with the lock beside it", sent["screen_off"])
 	}
 	locked = func() (bool, error) { return false, nil }
 	p.publish()
-	if sent["power_svg"] != powerSVG("off", "", false) {
+	if sent["power_svg"] != powerSVG("off", false) {
 		t.Error("unlocked: want the sun without the lock")
 	}
 }
 
 func TestLockSitsBesideTheSun(t *testing.T) {
 	for _, state := range []string{"on", "off"} {
-		svg, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(powerSVG(state, "", true), "data:image/svg+xml;base64,"))
+		svg, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(powerSVG(state, true), "data:image/svg+xml;base64,"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -128,7 +162,7 @@ func TestLockSitsBesideTheSun(t *testing.T) {
 }
 
 func TestSleepMoonIsHollow(t *testing.T) {
-	if powerSVG("sleep", "", false) != dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`+iconAt("moon", "#fff", 50, 50, iconSize)+`</svg>`) {
+	if powerSVG("sleep", false) != dataURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`+iconAt("moon", "#fff", 50, 50, iconSize)+`</svg>`) {
 		t.Error("screens-off moon: want the outline moon, centered")
 	}
 }

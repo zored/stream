@@ -12,24 +12,18 @@ import (
 const (
 	sleepArmAfter    = time.Second
 	sleepCancelAfter = 3 * time.Second
-	awakeDefault     = time.Hour
-	awakeStep        = 15 * time.Minute
-	awakeMax         = 12 * time.Hour
-	awakeEditFor     = 5 * time.Second
-	awakeApplyAfter  = 500 * time.Millisecond
 	awakePollEvery   = 2 * time.Second
 	awakeRereadEvery = 30 * time.Second
-	amphBridgeFor    = 5 * time.Second
 	lockSize         = 18.0
 	lockCX           = 94 - lockSize/2
 	lockCY           = 6 + lockSize/2
 )
 
 var (
+	amphActive   = amphetamineActive
 	amphStart    = startAmphetamine
 	amphEnd      = endAmphetamine
 	userActivity = declareUserActivity
-	displayHold  = bridgeDisplay
 	systemSleep  = sleepSystem
 	screensOff   = displaysAsleep
 	locked       = screenLocked
@@ -59,17 +53,13 @@ func (a *activity) touch() {
 }
 
 type power struct {
-	mu       sync.Mutex
-	frame    frame
-	vars     *vars
-	session  amphSession
-	readAt   time.Time
-	until    time.Time
-	editTill time.Time
-	accel    accel
-	apply    *time.Timer
-	downAt   time.Time
-	timers   []*time.Timer
+	mu     sync.Mutex
+	frame  frame
+	vars   *vars
+	active bool
+	readAt time.Time
+	downAt time.Time
+	timers []*time.Timer
 }
 
 func newPower(v *vars) *power {
@@ -88,57 +78,45 @@ func (p *power) publishLocked() {
 	if err != nil {
 		log.Print(err)
 	}
-	dark = dark && !p.session.active
+	dark = dark && !p.active
 	lock, err := locked()
 	if err != nil {
 		log.Print(err)
 	}
 	p.vars.set("screen_off", map[bool]string{true: "1", false: "0"}[dark])
-	state, left := "on", ""
+	state := "on"
 	switch {
 	case !p.downAt.IsZero() && held >= sleepArmAfter && held < sleepCancelAfter:
 		state = "arm"
 	case dark:
 		state = "sleep"
-	case !p.session.active:
+	case !p.active:
 		state = "off"
-	case p.session.timed:
-		left = awakeLeft(max(0, time.Until(p.until)), time.Now().Before(p.editTill))
 	}
 	lock = lock && (state == "on" || state == "off")
-	p.vars.set("power_svg", p.frame.render(fmt.Sprint(state, "\n", left, lock), func() string { return powerSVG(state, left, lock) }))
+	p.vars.set("power_svg", p.frame.render(fmt.Sprint(state, lock), func() string { return powerSVG(state, lock) }))
 }
 
 func (p *power) poll() {
-	p.mu.Lock()
-	busy := p.apply != nil || time.Now().Before(p.editTill)
-	p.mu.Unlock()
-	if busy {
-		return
-	}
 	asserted, err := amphetamineAsserted()
 	if err != nil {
 		log.Print(err)
 		return
 	}
 	p.mu.Lock()
-	fresh := !p.readAt.IsZero() && asserted == p.session.active && (!asserted || time.Since(p.readAt) < awakeRereadEvery)
+	fresh := !p.readAt.IsZero() && asserted == p.active && (!asserted || time.Since(p.readAt) < awakeRereadEvery)
 	p.mu.Unlock()
 	if fresh {
 		return
 	}
-	s, err := readAmphetamine()
+	active, err := amphActive()
 	if err != nil {
 		log.Print(err)
 		return
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.apply != nil || time.Now().Before(p.editTill) {
-		return
-	}
-	p.session, p.readAt = s, time.Now()
-	p.until = time.Now().Add(s.left)
+	p.active, p.readAt = active, time.Now()
 	p.publishLocked()
 }
 
@@ -166,16 +144,7 @@ func (p *power) up() error {
 	defer p.publishLocked()
 	switch {
 	case held < sleepArmAfter:
-		if !p.session.active {
-			return p.start()
-		}
-		if err := displayHold(amphBridgeFor); err != nil {
-			return err
-		}
-		if err := p.end(); err != nil {
-			return err
-		}
-		return userActivity()
+		return p.toggle()
 	case held < sleepCancelAfter:
 		if err := p.end(); err != nil {
 			return err
@@ -186,80 +155,35 @@ func (p *power) up() error {
 	return nil
 }
 
-func (p *power) start() error {
-	if err := restartAmphetamine(awakeDefault); err != nil {
+// toggle asks Amphetamine first: "start new session" over a running one ends it and starts again, and every end can sleep a lid-closed Mac.
+func (p *power) toggle() error {
+	active, err := amphActive()
+	if err != nil {
 		return err
 	}
-	p.session = amphSession{active: true, left: awakeDefault, timed: true}
-	p.until = time.Now().Add(awakeDefault)
-	p.editTill = time.Now().Add(awakeEditFor)
-	return nil
+	p.active, p.readAt = active, time.Now()
+	if !active {
+		if err := amphStart(); err != nil {
+			return err
+		}
+		p.active = true
+		return nil
+	}
+	if err := p.end(); err != nil {
+		return err
+	}
+	return userActivity()
 }
 
 func (p *power) end() error {
-	if p.apply != nil {
-		p.apply.Stop()
-		p.apply = nil
-	}
-	p.editTill = time.Time{}
-	if !p.session.active {
+	if !p.active {
 		return nil
 	}
 	if err := amphEnd(); err != nil {
 		return err
 	}
-	p.session = amphSession{}
+	p.active = false
 	return nil
-}
-
-func (p *power) close() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.editTill = time.Time{}
-	p.publishLocked()
-}
-
-func (p *power) sizing() bool {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	return p.session.active && p.session.timed && time.Now().Before(p.editTill)
-}
-
-func (p *power) turn(direction int) bool {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if !p.session.active || !p.session.timed || !time.Now().Before(p.editTill) {
-		return false
-	}
-	left := time.Until(p.until).Round(awakeStep) + time.Duration(p.accel.step(direction))*awakeStep
-	p.until = time.Now().Add(max(awakeStep, min(awakeMax, left)))
-	p.editTill = time.Now().Add(awakeEditFor)
-	if p.apply != nil {
-		p.apply.Stop()
-	}
-	p.apply = time.AfterFunc(awakeApplyAfter, p.applyLength)
-	p.publishLocked()
-	return true
-}
-
-func (p *power) applyLength() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.apply = nil
-	if !p.session.active {
-		return
-	}
-	if err := restartAmphetamine(time.Until(p.until).Round(time.Minute)); err != nil {
-		log.Print(err)
-	}
-}
-
-// restartAmphetamine bridges the gap: Amphetamine drops the old display assertion before the new session.
-func restartAmphetamine(d time.Duration) error {
-	if err := displayHold(amphBridgeFor); err != nil {
-		return err
-	}
-	return amphStart(d)
 }
 
 func (p *power) stopTimers() {
@@ -269,17 +193,7 @@ func (p *power) stopTimers() {
 	p.timers = nil
 }
 
-func awakeLeft(left time.Duration, editing bool) string {
-	minutes := int((left + time.Minute - 1) / time.Minute)
-	fill := gray
-	if editing {
-		fill = "#fff"
-	}
-	return fmt.Sprintf(`<text x="50" y="%g" text-anchor="middle" font-family="%s" font-size="%g" fill="%s">%d:%02d</text>`,
-		captionY, stripFont, captionSize, fill, minutes/60, minutes%60)
-}
-
-func powerSVG(state, below string, lock bool) string {
+func powerSVG(state string, lock bool) string {
 	var b strings.Builder
 	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`)
 	if lock {
@@ -295,7 +209,6 @@ func powerSVG(state, below string, lock bool) string {
 	default:
 		b.WriteString(iconAt("sun", "#fff", 50, iconCY, iconSize))
 	}
-	b.WriteString(below)
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
 }

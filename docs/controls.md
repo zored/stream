@@ -22,8 +22,8 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 ([companion.md](companion.md)).
 
 Everywhere: a short haptic tap on every press of a knob, tile or button, no haptics while sliding along a strip.
-One temporary tile mode at a time: opening one (wi-fi pick, keep-awake length, emoji picker, chats browse, weather browse, day list, timer edit) closes any other open one, as its timeout would (a timer being set starts, a wi-fi pick not yet joined is dropped).
-Knob hint: while a tile has taken a knob for a while (wi-fi, keep-awake, chats, weather, day, clock), a small white chevron sits at the outer edge of the strip next to that knob, pointing at it, 30 % opaque (100 % while turning or held);
+One temporary tile mode at a time: opening one (wi-fi pick, emoji picker, chats browse, weather browse, day list, timer edit) closes any other open one, as its timeout would (a timer being set starts, a wi-fi pick not yet joined is dropped).
+Knob hint: while a tile has taken a knob for a while (wi-fi, chats, weather, day, clock), a small white chevron sits at the outer edge of the strip next to that knob, pointing at it, 30 % opaque (100 % while turning or held);
 every detent swings it in the turn direction and it springs back, it grows while the knob is held and pulses on a click; gone when the knob is given back. Not for the emoji picker (it owns both strips anyway) ([logic.md](logic.md#shared-primitives-all-portable-go))
 Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed; the release after it does nothing. The haptic list (`companion/hold-controls.txt`) is generated from every control with a hold. Exceptions timed on release: keep-awake sleep, push-to-talk, dictation.
 
@@ -104,10 +104,9 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 ### тайл ряд 1, колонка 4 — keep awake / sleep
 
-- shows: outline sun = off; filled sun + time left `h:mm` below = an Amphetamine session, the display won't sleep; white moon = release now to sleep; a small gray lock in the top-right corner, the sun kept = the screen is locked; hollow white moon, centered = the screens are off with no keep-awake session (the rest of the device goes black until they wake) or the Mac sleeps (the module fork draws it as Companion closes the surface)
-- touch shorter than 1 s: keep-awake on for 1 h / off
-- right after turning on, крутилка справа, ряд 1 sets the length for 5 s (time turns white): 15 min per detent, 15 min – 12 h;
-  every turn extends the 5 s, then the knob is brightness again
+- shows: outline sun = off; filled sun = an Amphetamine session (the Mac won't idle-sleep; the display may, per Amphetamine's settings); white moon = release now to sleep; a small gray lock in the top-right corner, the sun kept = the screen is locked; hollow white moon, centered = the screens are off with no keep-awake session (the rest of the device goes black until they wake) or the Mac sleeps (the module fork draws it as Companion closes the surface)
+- touch shorter than 1 s: keep-awake on / off, the same as a right click on Amphetamine's menu bar icon (its default session: Default Duration and Allow Display Sleep from Amphetamine's settings, now infinite). A session already running, started anywhere, is ended, never restarted
+- no knob: крутилка справа, ряд 1 stays brightness
 - hold 1–3 s, then release: keep-awake off, the Mac sleeps; past 3 s the moon goes away and release does nothing
 - no second haptic: the moon is the cue
 
@@ -255,7 +254,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 1 — brightness
 
-- turn: Mac display brightness (built-in display); while the emoji picker is open, its categories; for 5 s after keep-awake turns on, its length instead (тайл ряд 1, колонка 4); for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
+- turn: Mac display brightness (built-in display); while the emoji picker is open, its categories; for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
 - press + turn: the controller's own brightness, never below 10 %
 - hold 3 s without a turn: the picture turns 90° clockwise, then again every 2 s while held: device orientation 90° → 0° → 270° → 180° → 90° (how far the device itself is turned clockwise; 90° by default), a haptic tap on each switch; survives restarts.
   90°: tile pictures turn 90° counter-clockwise, the left strip (track) 180°, the right strip stays. 180°: everything 180°. 270°: tiles 90° clockwise, the right strip 180°, the left stays.

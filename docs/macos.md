@@ -84,7 +84,7 @@ The device has no HID interface, so it can't wake a sleeping Mac (verified: pres
 
 - System sleep: Companion logs `Power: Suspending` and closes the surface; the module fork's `close()` blanks the device (verified: black while asleep, 2026-11-11 logs), then draws a hollow white crescent on тайл ряд 1, колонка 4 (`src/moon.ts`, the Bootstrap moon as two circles minus the same crescent inset by its 1.03-unit stroke, no SVG renderer). The hollow moon is not yet checked on the device. On `Power: Resuming` Companion reopens the surface, blanks it and redraws the pages. The daemon can't draw it: Companion tears the surface down in the same milliseconds as the sleep notice. Any other close (Companion quit, module reload) leaves the moon too. Verified 2026-11-12 on the device.
 - Screens off (display sleep, the Mac awake): `power.go` asks `CGDisplayIsAsleep` for every online display each second; all asleep and no Amphetamine session → `screen_off = 1` and `power_svg` = the same hollow white moon (Bootstrap `moon`) centered. Every other MEDIA control gets a top black box and a black LED while `screen_off == 1` (`gen_pages.py` `dark_when_screen_off`). A press still runs its action and wakes the screen (any daemon POST declares activity). While an Amphetamine session is active none of this happens: `screen_off` stays 0 and the tile keeps the keep-awake sun (the lock still shows; the fork's moon on system sleep or a Companion close is untouched). Not yet checked on the device.
-- Lock screen: `CGSessionCopyCurrentDictionary` `CGSSessionScreenIsLocked` each second → a gray (#8E8E93) `lock-fill`, 18 px, in the top-right corner inside the 6% inset, beside the sun, which keeps showing the keep-awake state (hollow / filled, time left). Not yet checked on the device. Order: hold-to-sleep moon, screens-off moon (both without the lock), then the sun with the lock when locked.
+- Lock screen: `CGSessionCopyCurrentDictionary` `CGSSessionScreenIsLocked` each second → a gray (#8E8E93) `lock-fill`, 18 px, in the top-right corner inside the 6% inset, beside the sun, which keeps showing the keep-awake state (hollow / filled). Not yet checked on the device. Order: hold-to-sleep moon, screens-off moon (both without the lock), then the sun with the lock when locked.
 
 ## zored_stream — headphones
 
@@ -115,35 +115,32 @@ keeps the on/off state itself, so a change from the monitor menu puts it out of 
 ## zored_stream — keep awake and sleep
 
 `power.go`, `power_darwin.go`, `:47122`: `POST /power/down`, `/power/up` from тайл ряд 1, колонка 4; variable `power_svg` = the whole tile
-(sun hollow / filled, time left in JetBrains Mono, moon while armed).
+(sun hollow / filled, moon while armed; no time, no knob).
 
-- Keep-awake = an [Amphetamine](https://apps.apple.com/app/amphetamine/id937984704) session, driven by `osascript`
-  (`Amphetamine.sdef`): `start new session with options {duration:N, interval:minutes, displaySleepAllowed:false}`, `end session`,
-  `session is active`, `session time remaining`. The session shows in Amphetamine's menu; ending it there turns the tile off.
-- State comes from Amphetamine. Every 2 s the daemon checks in-process (`IOPMCopyAssertionsByProcess`, no fork) for an assertion named `Amphetamine…`; `osascript` runs only when that flips, or every 30 s while a session is on (external extensions) (`-3` remaining = no session, `0` = infinite: sun without time,
-  `-1`/`-2` = Trigger / app session: same). Time left ticks locally every second between polls.
-- Press = 1 h session or end. For 5 s after turning on, `/brightness/up|down` (`:47118`) set the length instead: ±15 min with the knob
-  acceleration, 15 min – 12 h, each turn restarts the 5 s; 500 ms after the last turn the session restarts with the new length
-  (verified: 1:00 → 1:45, Amphetamine 6300 s, display sleep not allowed).
+- Keep-awake = Amphetamine's default session, the same one a right click on its menu bar icon starts or ends
+  (`Status Item Click` = 0: "Right click (left click shows menu)", "↳ Uses Default Duration"; verified in its settings and `en.lproj`).
+  Driven by `osascript` (`Amphetamine.sdef`): `start new session` without options takes "default duration/display sleep allowed" from
+  Amphetamine's settings, `end session`, `session is active`. With today's settings that is an infinite session (`Default Duration` = 0)
+  with display sleep allowed: one `PreventUserIdleSystemSleep` "Amphetamine (Single-Use - System)", no display assertion
+  (verified 2026-11-19, `pmset -g assertions`, `session time remaining` = 0). That the right click runs exactly this code path is *(assumed)*:
+  same settings, the click itself was not traced.
+- A tap asks `session is active` first and then starts or ends, never `start new session` over a running one: that call ends the
+  session and starts again, and every end can sleep a lid-closed Mac (below). The session shows in Amphetamine's menu; ending it there turns the tile off.
+- State comes from Amphetamine. Every 2 s the daemon checks in-process (`IOPMCopyAssertionsByProcess`, no fork) for an assertion named `Amphetamine…`; `osascript session is active` runs only when that flips, or every 30 s while a session is on.
+- Removed 2026-11-19 (sunflip): the 1 h session with `displaySleepAllowed:false`, the length knob (крутилка справа, ряд 1, restart 500 ms after the last turn) and the time left on the tile. Each length change was an Amphetamine end + start, and those restarts slept the lid-closed Mac (13:31:50, 13:31:51 on 2026-11-18). The 5 s `PreventUserIdleDisplaySleep` bridge for that restart went with it.
 - First run: macOS asks to let `zored_stream` control Amphetamine (Automation); until allowed, `osascript` hangs and the tile stays off.
 - Amphetamine must be running *(assumed: `tell application` launches it otherwise)*.
-- Tap off first takes the same 5 s `PreventUserIdleDisplaySleep` bridge as a start, then ends the session, then declares activity: `osascript end session` takes hundreds of ms, and with HID idle past `displaysleep` the screen went dark in that gap (`pmset -g log` 2026-11-12 00:19, 00:34: "Display is turned off" → "on" 2 s later, no system sleep) *(assumed fix: not yet confirmed on the device)*.
-- Tap off also calls `IOPMAssertionDeclareUserActivity`: the session's display assertion hid the idle timer, so with no keyboard
-  or mouse input for longer than `displaysleep` the screen went dark the moment the session ended and looked like sleep
-  (verified in `pmset -g log`: Amphetamine release and "Display is turned off" in the same second, no system sleep).
+- Tap off ends the session and then calls `IOPMAssertionDeclareUserActivity`: when sessions held a display assertion, the screen went dark
+  the moment one ended with no input for longer than `displaysleep` (verified in `pmset -g log`: Amphetamine release and "Display is turned off" in the same second, no system sleep).
 - Any controller input keeps the Mac awake: every `POST` to any daemon port (except `/agent/event`, the Claude hooks) calls
   a zero-move `kCGEventMouseMoved` at the cursor (resets `HIDIdleTime`, verified 6.6 s → 0.4 s) plus `IOPMAssertionDeclareUserActivity` (a fresh "zored_stream controller" each time). `UserIsActive` alone does not reset the display idle timer: with HID idle past `displaysleep` the screen still went dark the moment Amphetamine released its assertion (tap off, length change; 2026-11-04/05), at most once per 5 s
   (`power.go` `touched`; verified in `pmset -g assertions`). Every control posts (`curl` or the fork's `fetch`) except a bare tap on a
   strip cell (cols 1, 6) without a drag.
-- Every session start or length change first takes its own `PreventUserIdleDisplaySleep` ("zored_stream keep-awake restart",
-  released after 5 s): "start new session" releases the old display assertion before creating the new one, and with HID idle past
-  `displaysleep` the screen went dark in that gap (`pmset -g log` 2026-11-04 22:20, 22:25, 2026-11-05 00:30: Amphetamine Released →
-  "Display is turned off" in the same second, back on 2–4 s later, no system sleep). A fresh `UserIsActive` declared right before did
-  not stop it (00:30:56).
 - Lid closed (clamshell, external display, AC): every Amphetamine session end or restart put the Mac to sleep (DarkWake, display off 1–3 s, apps get `kIOMessageSystemWillSleep`: Viscosity drops the VPN) — tap off, a length change, the same from Amphetamine's own menu. Idle-sleep and display assertions do not stop it (2026-11-17 15:40:23, 23:09:01; 2026-11-18 00:26–00:29, 13:31:10, 13:31:51).
 - Cause (verified 2026-11-18 in the unified log, `log show --predicate 'process == "kernel" AND eventMessage CONTAINS "PMRD"'`): clamshell sleep is gated by one kernel bit, `setClamShellSleepDisable` mask `2`, written through `kPMSetClamshellSleepState` by three parties, last writer wins: powerd (its decision from desktop mode with AC and lid-close assertions, "EvaluateClamshell. Disable : …", sent only when that decision changes; verified for the assertions case 11:34:19, the desktop-mode case is assumed), Amphetamine's closed-display mode (2 on session start, 0 on every end, including the end inside "start new session"), and, until this fix, the daemon. Kernel `desktopMode` stays 0 on this M3 Pro, so with the bit at 0 the kernel logs `clamshell closed 1, disabled 0/0, desktopMode 0, ac 1` and `sleep reason Clamshell Sleep` in the same millisecond as Amphetamine's `2->0`.
 - What saves some ends: Amphetamine's Power Protect (`pmset disablesleep` through its sudoers helper) — `System sleep prevented by kPMUserDisabledAllSleep` (11:35:22, 13:31:50). Its enable/disable scripts run async; on a quick end+start the disable wins and leaves `SleepDisabled 0` inside the next session (13:31:50.348 disable, .411 enable, one prefs change), so the next end sleeps (13:31:51.664).
 - The 2026-11-18 attempt (`9a2306d`, `7618940`): the daemon set the bit for the whole session. Removed: Amphetamine overwrote it at the end (13:31:46 daemon `0->2`, 13:31:51.664 Amphetamine `2->0` → sleep), and the daemon's own `0` on release, start and exit wiped powerd's desktop-mode `2` the same way. S8 now forbids writing it.
+- The default session writes the bit too (verified 2026-11-19 15:10, lid open, three taps through the daemon): `0->2` with Amphetamine's "a session is active and cdm is enabled" on each start, `2->0` on the end, then a `0->0` 4 ms later (powerd, assumed); no `sleep reason`. So one tap off with the lid closed still drops the bit; what is gone is the extra end inside every restart. The right-click path writes the same *(assumed: same code)*.
 - Fix on the user's side: turn Amphetamine's closed-display mode off (Amphetamine → Settings → Closed-Display Mode → allow sleep when the display is closed; `defaults` key `Allow Closed-Display Sleep` = 1) so Amphetamine stops writing the bit and powerd's desktop mode keeps the lid-closed Mac awake on AC with the monitor *(assumed: probe in the lidsleep report)*. After any clobber powerd re-sends only when its decision flips: unplug and replug AC.
 - Sleep = end the session, then `IOPMSleepSystem` (cgo), no root, no `pmset sleepnow` *(assumed: not triggered during development)*.
 - Timing lives in the daemon (press 1 s → `arm`, 3 s → cancel), not in Companion's 400 ms hold, so no second haptic.
