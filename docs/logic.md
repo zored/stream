@@ -187,19 +187,12 @@ Three cells draw one 270 px tall picture (`gen_pages.py` `volume_cell`), bottom 
 - Win: keep; swipes `l`/`r` only. Drop `u`/`d` from the action map; whether the fork then treats the `400` as "no swipe" is
   *(assumed, check the fork)* — safer to answer `404` for `u`/`d` on Windows.
 
-#### тайл ряд 2, колонка 4 — agents waiting (`1/5`, `:47120`)
+#### тайл ряд 2, колонка 4 — Orca workspaces (`1/5`, `:47120`)
 
-- release (short press) → `/agent/focus`: list sorted by state (input, done, working, read), inside a state oldest update first; focus
-  the first entry after the cursor in that order (wraps; no cursor → the first). A `done` CLI session becomes `read` when
-  focused. Empty list → open a new session.
-- release within 2 s of a knob step (browsing) → the same `/agent/focus` toggles the pin of the chat under the ring (`agents.click`); see the agents module.
-- hold 400 ms → `/agent/new`: open a new session.
-- draws `agents_svg` (pure Go SVG): one dot per session, up to 16 in a 4×4 grid, amber = `input`, white = `done`, gray =
-  `working`, hollow gray = `read`; circles for top-level, squares for children; the cursor dot is bigger with a white ring
-  that slides 150 ms; a count when > 16; a hollow gray circle when none. A 4 px bar along the top edge = context of the ringed chat
-  (`context.go`): the last `message.usage` (input + cache read + cache creation) in `~/.claude/projects/*/<id>.jsonl`, over a
-  1M window (200k for Haiku), coloured like the AI strip levels; no bar when the transcript has no usage yet. A Desktop chat whose title starts with an emoji shows that emoji instead of the dot: drawn over the status dot (amber / white / gray, hollow and dimmed when read); no emoji in the title (CLI, `misc:`) → the dot. Layout (since 2026-11-12): sessions of one family (a parent and the chats it spawned, by `spawnedFrom`) with 2+ on the tile sit together on a small circle; families are ordered freshest update first, inside a family children first (deepest level first, then by update), the parent last; the knob walks the same order, the press still goes by state. Dots grow when there are few and shrink to fit; the white ring follows the active one. On a knob step the left strip shows the emoji column of that order (picker layers: `emoji_l`, families split by an 18 px gap; `emoji_r` carries the title, since `emoji_on` blacks out both strips) for 2 s, the right strip the title.
-- Win: keep, Codex as the source (see the agents module). Focus = bring the Codex window / Windows Terminal to front.
+- release (short press) → `/agent/focus` = `orca.tap`: outside browse → open the browse on the first workspace; while browsing → open the shown chat (see the orca module).
+- hold 400 ms → `/agent/new`: new Claude Desktop Code session (`claude://code/new`).
+- draws `agents_svg` with the unread chats renderer (`chatsTileImage` / `chatsPickImage`, CoreText PNG): a workspace is a `chatEntry` with its name, the count of chats with `activity.unread` and the newest chat `activity.sortAt`; gray `robot` icon when empty, amber when the last `orca worktree ps` failed. The agents module no longer draws this tile (`agents.orcaTile`).
+- Win: not ported; Orca on Windows not checked.
 
 #### тайл ряд 3, колонка 1 — mic in a call / unread chats (`2/2`)
 
@@ -278,15 +271,10 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
   panel; DB at `%APPDATA%\companion\v5.1\db.sqlite` read with a pure-Go SQLite or Companion's API ([windows.md](windows.md)).
   Do not call wi-fi / emoji hooks: they are not wired on Windows.
 
-#### крутилка справа, ряд 2 — agents walk / AI model (`1/7`, `:47117`)
+#### крутилка справа, ряд 2 — Orca workspaces / AI model (`1/7`, `:47117`)
 
-- turn → `/ai/turn?d=±1`: if the knob is held
-  → walk the family of the ringed chat in tree order (`agents.familyStep`, wraps); else → agents walk: adds the Claude chat
-  in front as a hollow dot if missing, moves the cursor by `d` (wraps) over the order frozen at the browse start (`agents.freeze`, kept while `browsing()`), opens the session
-  under the cursor 150 ms after the last step (`agentOpenAfter`, timer reset per step; family walk too), shows its title + folder
-  on the right strip for 2 s.
-- press → `/ai/down` (also hides the chats ring and title cover, `agents.hideStrip`, so the model label shows); hold 400 ms (Companion `held`, mac only) → `/ai/hold`: if no turn happened since the press → new Code session (`claude://code/new`) and the release is consumed (the press ends there); a press with no turn or release for 8 s (`aiHeldMax`) is dropped; release → `/ai/up`: if the press was used for a model switch → nothing; else = the agents tile press
-  (`/agent/focus`), with the browse state taken at `/ai/down` (`armClick`), so a click within 2 s of a turn pins.
+- turn → `/ai/turn?d=±1`: `orca.step(d)`: opens the browse (first detent: `d` > 0 → the first workspace, < 0 → the last) or moves to the next / previous workspace, wraps, resets to its freshest chat; a turn while held marks the press as turned (no hold action).
+- press → `/ai/down`; hold 400 ms (Companion `held`, mac only) → `/ai/hold`: if no turn happened since the press → new Code session (`claude://code/new`) and the release is consumed; a press with no turn or release for 8 s (`aiHeldMax`) is dropped; release → `/ai/up`: if the press was used → nothing; else `orca.tap` (same as the tile).
 - mac model switch (F12): 9 stops Sonnet·Low … Fable·High, applied 400 ms after the knob rests, only on Claude Desktop's
   new-chat screen in front; elsewhere a 5 s gray preview. Variables `ai_model`, `ai_effort`, `ai_state`
   (`ok`/`pending`/`preview`/`idle`/`other`/`error`).
@@ -296,7 +284,7 @@ Each action is a sequential group: the exec writes the daemon's reply (controlle
 
 #### крутилка справа, ряд 3 — scroll (`2/7`, `:47121`)
 
-Before the scroller, each input is offered to timers, then calendar (knob capture, mac only); chats browse no longer takes this knob (since 2026-11-19 it lives on the three left knobs). Opening a chat: `tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`. Scroller (`scroll.go`):
+Before the scroller, each input is offered to the Orca browse (turn = next / previous chat of the shown workspace, press + release = open it; only while the browse is open), then timers, then calendar (knob capture, mac only); chats browse no longer takes this knob (since 2026-11-19 it lives on the three left knobs). Opening a chat: `tg://` or the VK WorkSpace profile link via `LSOpenCFURLRef`, Win: `ShellExecute`. Scroller (`scroll.go`):
 
 | Input | Mode | Effect |
 |---|---|---|
@@ -435,6 +423,15 @@ the windows page depends on it.
 Behaviour in §3. State: brightness `controller` flag + controller level; seek `target`, last send time, pending flag;
 scroller mode, pressed/turned, held modifier, release timer, app-windows deadline.
 
+#### orca (no port of its own; routes on 47117, 47120, 47121)
+
+- **Source**: `/Applications/Orca.app/Contents/Resources/bin/orca worktree ps --json` every 15 s (`orcaPoll`) and once when a browse opens; 10 s timeout; a failure is logged once per new message and keeps the last list. Workspaces: not archived, with ≥ 1 agent whose `activity.listed`; chat = `activity.title` (else `conversationName`), text = `lastAssistantMessage` (cut to 200 chars by Orca, verified) else `prompt`, `activity.unread`, `activity.sortAt`. Workspaces sorted by their newest chat `sortAt` (`lastActivityAt` lags by minutes), chats by `sortAt`, both newest first (`orcaParse`, test `TestOrcaParseOrdersByChatActivity`).
+- **Chat icon**: the card's sender disc (`chatEntry.sender`, bottom-left) = `orcaIconPNG`: the emoji the chat name starts with (`titleEmoji`, rendered by CoreText), else the model logo by `agentType` (`claude` → `claude`, `codex` → `openai`, Bootstrap Icons 1.13.1, white, SVG → PNG through `NSImage`), cached per key; no icon for other agents.
+- **Reply scroll**: крутилка справа, ряд 1 (`/brightness/up|down`, before wi-fi and the picker; press/release = open) moves the strip half a line per detent, eased at 60 Hz only while moving (P1, P2), clamped to the text; the name and the reply scroll together. At an end it counts detents like chats (`chatsPushTurns` = 3, `chatsPushIdle` 1.5 s): two ease a 2 px white bar along the bottom (forward) or top (back) edge to 1/3 and 2/3, the third calls `moveChatLocked` (back lands at the end of the reply). `moveChatLocked` (also крутилка справа, ряд 3) walks the chats through the workspaces in a loop: past the last chat the next workspace's first, before the first the previous workspace's last; one workspace wraps its own chats. The full reply comes from `orca agent read orca_session_id:<id> --json` (last `message` entry with `role: assistant`, ~0.3 s), fetched once per chat + `lastAssistantMessage` (a new reply refetches), cache cleared past 200 entries; until it lands the 200-char cut from `ps` is shown.
+- **Browse**: 5 s (`chatsBrowseFor`), extended by each turn; one tile mode (F26, name `orca`); hints on `r0`, `r1` and `r2`; the right strip is covered through `usage.cover` while it is open.
+- **Open** (`orca.open`, in a goroutine, logged with its duration): a folder workspace that is not active → `409` (the CLI cannot activate it); Orca to the front first (`LSOpenCFURLRef` on `file:///Applications/Orca.app`; the reopen switches Orca back to its last front workspace, so it must precede the activate; `activateWithOptions:` from the daemon returned NO, verified 2026-11-23); git workspace → `orca worktree activate --worktree id:<worktreeId> --json` (also when already active, since the cached `isActive` may be stale); then poll the AX tree of `com.stablyai.orca` (after `AXManualAccessibility`) every 100 ms for 6 s for an `AXButton` whose `AXTitle` ends with `<chat> Close tab <chat>` and `AXPress` it (the close button has that text only in `AXDescription`). A miss logs the window count, the nodes walked and every `AXButton` title seen.
+- Win: not ported.
+
 #### agents (47120)
 
 - **Input**: `POST /agent/event`, body = Claude Code hook JSON
@@ -466,7 +463,7 @@ scroller mode, pressed/turned, held modifier, release timer, app-windows deadlin
 | 47120 | choice mode | AX of Claude Desktop / iTerm2 every 0.5 s | settle 300 ms, keep 3 polls | none |
 | 47122 | keep-awake, sleep | Amphetamine via `osascript`, IOPM assertions every 2 s, re-read 30 s | tap < 1 s toggles the default session; sleep arm 1 s, cancel 3 s | `SetThreadExecutionState`, `SetSuspendState` |
 | 47123 | headphones | IOBluetooth + CoreAudio, poll 2 s | connect wait 10 s, error shown 3 s | Bluetooth + `IPolicyConfig` (undocumented) |
-| 47124 | wi-fi + Viscosity | CoreWLAN, `ipconfig`, Control Center via `osascript`, poll 3 s, internet probe 15 s | pick 5 s, join after 1 s, link wait 15 s, VPN 1 s after, retry once after 20 s | `netsh wlan`, WLAN API |
+| 47124 | wi-fi + Viscosity | CoreWLAN, private CoreWiFi (SSID, list, join), `ipconfig` (router), Control Center via `osascript` (join fallback), poll 3 s, internet probe 15 s | pick 5 s, join after 1 s, link wait 15 s, VPN 1 s after, retry once after 20 s | `netsh wlan`, WLAN API |
 | 47125 | KVM | Wake-on-LAN UDP + `m1ddc` | LED white 0.3 s | WOL is portable; DDC via `dxva2` |
 | 47126 | calendar | EventKit, poll 1 min; CoreText PNG text | list 5 s, horizon 7 days, glow from 5 min before an event | Outlook / Graph |
 | 47127 | layout | Text Input Sources, notification on the main run loop | crossfade 0.3 s | `ActivateKeyboardLayout`, `WM_INPUTLANGCHANGE` |

@@ -1,2 +1,2 @@
-Bootstrap Icons 1.11.3 (MIT), https://icons.getbootstrap.com
+Bootstrap Icons 1.13.1 (MIT), https://icons.getbootstrap.com (claude.svg, openai.svg from 1.13.1, the rest fetched at 1.11.3)
 Update: tools/zored_stream/icons/fetch.sh

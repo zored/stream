@@ -98,9 +98,6 @@ func TestAgentClickPinsWhileBrowsing(t *testing.T) {
 	if !a.pins.has("local_p") {
 		t.Fatal("click while browsing did not pin")
 	}
-	if p := <-a.sidebar; p != (sidebarPin{"🎛 chat", true}) {
-		t.Errorf("sidebar got %+v", p)
-	}
 	a.armClick()
 	if err := a.armedClick(); err != nil {
 		t.Fatal(err)

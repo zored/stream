@@ -10,7 +10,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
           left                         tiles                           right
         knob strip   колонка 1   колонка 2   колонка 3   колонка 4   strip knob
 ряд 1   VOL   ┐      headphones  wi-fi       en/ru       awake       ┐     SUN
-ряд 2   SEEK  ├trk   play/cover  emoji       ·           agents      ├ai   AI
+ряд 2   SEEK  ├trk   play/cover  emoji       ·           orca        ├ai   AI
 ряд 3   CHATS ┘      mic/chats   cam/weather day / call  clock+timer ┘     SCROLL
 
         кнопка 1  2      3       4        5   6        7          8
@@ -23,7 +23,7 @@ Unconfirmed points are marked *(assumed)*; everything else was read in the code 
 
 Everywhere: a short haptic tap on every press of a knob, tile or button, no haptics while sliding along a strip.
 One temporary tile mode at a time: opening one (wi-fi pick, emoji picker, chats browse, weather browse, day list, timer edit) closes any other open one, as its timeout would (a timer being set starts, a wi-fi pick not yet joined is dropped).
-Knob hint: while a tile has taken a knob for a while (wi-fi, chats, weather, day, clock), a small white chevron sits at the outer edge of the strip next to that knob, pointing at it, 30 % opaque (100 % while turning or held);
+Knob hint: while a tile has taken a knob for a while (wi-fi, chats, weather, day, clock, Orca on all three right knobs), a small white chevron sits at the outer edge of the strip next to that knob, pointing at it, 30 % opaque (100 % while turning or held);
 every detent swings it in the turn direction and it springs back, it grows while the knob is held and pulses on a click; gone when the knob is given back. Not for the emoji picker (it owns both strips anyway) ([logic.md](logic.md#shared-primitives-all-portable-go))
 Hold = 400 ms: the action and a second haptic fire at 400 ms while still pressed; the release after it does nothing. The haptic list (`companion/hold-controls.txt`) is generated from every control with a hold. Exceptions timed on release: keep-awake sleep, push-to-talk, dictation.
 
@@ -36,9 +36,9 @@ MEDIA page, `row/col` ([grid](companion.md)):
 | Used | Free |
 |---|---|
 | left knobs `0/0` volume, `1/0` seek (press + turn = tracks, click = play / pause, hold = like), `2/0` chats browse; left strip `0–2/1` track + bar | — |
-| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/4` window switcher, `1/5` agents waiting, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | — |
+| tiles `0/2` headphones, `0/3` wi-fi, `0/4` keyboard layout, `0/5` keep-awake, `1/2` play (hold = like, swipes), `1/3` emoji, `1/4` window switcher, `1/5` Orca workspaces, `2/2` mic / chats, `2/3` camera (call) / weather, `2/4` hang up / date + calendar, `2/5` clock + timers | — |
 | buttons `3/0` KVM, `3/1` call layer (tap toggles, hold peeks), `3/2` mic / `3/3` camera / `3/4` hang up in a call, `3/4` calendar outside a call, `3/6` dictation; all of `3/0–3/7` in choice mode | buttons `3/5`, `3/7`; `3/2`, `3/3` outside a call |
-| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness (hold 3 s = device orientation), `1/7` AI model, `2/7` scroll / Ctrl+Tab | — |
+| right strip `0–2/6` AI limits + model, right knobs `0/7` brightness (hold 3 s = device orientation), `1/7` Orca workspaces / AI model, `2/7` scroll / Ctrl+Tab (Orca chats while its browse is open) | — |
 
 
 ## Left knobs
@@ -97,7 +97,7 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 - shows: the current network name under the fan (white, cut to 10 chars); while joining, the target name in gray (up to 15 s); a phone instead of the wi-fi icon on an iPhone hotspot (router in 172.20.10.0/28, filled when joined); gray crossed wi-fi = off; one white arc = on, not joined; full wi-fi = joined; plus a yellow dot = no internet (captive.apple.com probe every 15 s); red for 3 s = failed; an eye top-right = Viscosity VPN: white eye connected, yellow eye connecting, red crossed eye all down, none when Viscosity is not running
 - hold 400 ms: wi-fi on / off
-- touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`) instead of the model, yellow while the list loads. Each turn extends the 5 s. List: what the Wi-Fi details of Control Center show (iPhone hotspots, then known networks in range); Control Center flashes and the list loads in ~3 s; meanwhile the strip is yellow and the knob already turns through the previous list. If the pick is gone from the fresh list, the first network is picked; a pause on a yellow pick joins after the load. Names keep their case (`zored_5G` ≠ `zored_5g`) A 1 s pause switches: drop the current Wi-Fi, disconnect Viscosity, join the pick, wait for its link, 1 s later connect `Barbos_SE` (flag `-wifi-vpn`; one retry if not connected in 20 s). The join itself: the daemon clicks it in the Wi-Fi details of Control Center (it flashes for ~1.5 s), macOS fills the password itself
+- touch: for 5 s крутилка справа, ряд 1 picks a network; the right strip shows the current network (or `offline`) instead of the model, yellow while the list loads. Each turn extends the 5 s. List: iPhone hotspots (in range, or joined in the last 30 days), then known networks in range, each A–Z; it comes from the system scan cache at once (no Control Center), then a fresh scan (~2 s) replaces it unless the pick is gone from it. Names keep their case (`zored_5G` ≠ `zored_5g`) A 1 s pause switches: disconnect Viscosity, join the pick, wait for its link, 1 s later connect `Barbos_SE` (flag `-wifi-vpn`; one retry if not connected in 20 s). The join itself: in-process (~1 s), macOS supplies the saved password; only if that fails (a hotspot not on air yet) the daemon drops the Wi-Fi and clicks the network in the Wi-Fi details of Control Center (it flashes for ~1.5 s)
 
 ### тайл ряд 1, колонка 3 — keyboard layout
 - shows the current layout as a small flag: 🇬🇧 / 🇷🇺 (other languages: the code, white), crossfades in 0.3 s on a switch; follows ⌃Space and any other switch
@@ -155,19 +155,14 @@ Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md
 
 [windows-switch.md](windows-switch.md)
 
-### тайл ряд 2, колонка 4 — agents waiting
+### тайл ряд 2, колонка 4 — Orca workspaces
 
-- shows: one dot per Claude Code session: amber = needs input, white = done and unread (a Desktop chat stays white while its sidebar shows the blue dot), gray = working, up to 16 in a 4×4 grid; the active one (chat in front, else last focused) is bigger with a white ring,
-  the ring slides over in 150 ms; a number above 16; a hollow gray circle when none; a Desktop chat whose title starts with an emoji shows it instead of the dot (over the status dot; only the active one has a ring) Layout (since 2026-11-12): sessions of one family (a parent and the chats it spawned, by `spawnedFrom`) with 2+ on the tile sit together on a small circle; families are ordered freshest update first, inside a family children first (deepest level first, then by update), the parent last; the knob walks the same order, the press still goes by state. Dots grow when there are few and shrink to fit; the white ring follows the active one. On a knob step the left strip shows the emoji column of that order (picker layers: `emoji_l`, families split by an 18 px gap; `emoji_r` carries the title, since `emoji_on` blacks out both strips) for 2 s, the right strip the title.
-- order: needs input, done, working, read; inside a group oldest update first; all circles
-- press (on release): focus the next session in that order, next press moves on and wraps;
-  none waiting → opens a new Code session
-- hold: new Claude Desktop Code session
-- крутилка справа, ряд 2: turn moves the ring at once and wraps both ways (past the last chat → the first, before the first → the last), the right strip shows the chat title white + folder gray for 2 s (as the calendar list), the chat opens 150 ms after the knob stops (hollow dots of read chats help to step back); the order stays put while the title is up; click = tile press
-- a chat read in Desktop (or a CLI one focused) stays for 1 min at the end as a hollow gray circle
-- pin (since 2026-11-12): while the chat title is on the right strip (2 s after a knob step), a click on this tile or on крутилка справа, ряд 2 pins or unpins the chat under the ring instead of moving on; the title stays 2 s more, so a second click undoes it. A pinned chat has a pink disc behind its dot and never leaves the tile (shown as read when nothing else holds it), until unpinned or archived. Children are pinned one by one; a parent's pin does not keep its children. Only Claude Desktop chats; the same Pin/Unpin is pressed in Desktop's sidebar in the background (~0.2 s, the menu flashes); a chat with no sidebar row stays pinned on the tile only.
+- shows: up to 4 Orca workspaces with chats, freshest chat activity first (`activity.sortAt` of their chats), drawn like the unread chats tile (тайл ряд 3, колонка 1): the workspace name in lowercase lines on dark gray, red badge = chats with unread activity, dark badge = age of the latest chat activity (`5m`, `3h`); a small disc bottom-left = the chat's icon: the emoji its name starts with, else the logo of its model (Claude / OpenAI for Codex, white); the freshest chat on the tile, the shown chat while browsing; one fills the tile, two on a diagonal, 3–4 in a 2×2 grid, a gray `+` when there are more; gray robot = no workspace with chats, amber robot = `orca` CLI failed. Refreshed every 15 s, and at once when a browse opens
+- tap: browse for 5 s (every turn below extends it): the tile shows the workspace card over the whole square, the right strip the chat: name white, then its last reply (or the prompt while it has none) gray, 2 lines; крутилка справа, ряд 1 scrolls the reply smoothly, half a line per detent (the full reply loads in the background, the name scrolls away with it), a new chat starts at the top; past the end (or before the start) two detents grow a white bar on the strip edge (bottom forward, top back) and the third moves on like крутилка справа, ряд 3, back landing at the end of the previous reply; a turn the other way or 1.5 s idle drops the bar
+- while browsing: крутилка справа, ряд 2 walks the workspaces (the first detent opens the browse, in a loop both ways, a new workspace starts on its freshest chat); крутилка справа, ряд 3 walks the chats, freshest first, past the last one into the next workspace's first, before the first into the previous workspace's last, in a loop; a second tap, the click of крутилка справа, ряд 2 or the press of крутилка справа, ряд 3 opens the chat in Orca (the workspace is activated first, Orca comes to the front, then the chat tab is pressed). A folder workspace that is not the active one fails loudly (the CLI cannot activate it)
+- hold: new Claude Desktop Code session (unchanged)
 
-A knob turn with the chat in front not on the tile adds it as a hollow dot for 1 min. [agents.md](agents.md)
+[orca.md](orca.md)
 
 ### тайл ряд 3, колонка 1 — microphone in a call, unread chats otherwise
 
@@ -256,7 +251,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 ### крутилка справа, ряд 1 — brightness
 
-- turn: Mac display brightness (built-in display); while the emoji picker is open, its categories; for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
+- turn: Mac display brightness (built-in display); while the Orca browse is open (тайл ряд 2, колонка 4), scrolls the shown reply half a line per detent, press opens the chat; while the emoji picker is open, its categories; for 5 s after a touch on wi-fi (тайл ряд 1, колонка 2), the network
 - press + turn: the controller's own brightness, never below 10 %
 - hold 3 s without a turn: the picture turns 90° clockwise, then again every 2 s while held: device orientation 90° → 0° → 270° → 180° → 90° (how far the device itself is turned clockwise; 90° by default), a haptic tap on each switch; survives restarts.
   90°: tile pictures turn 90° counter-clockwise, the left strip (track) 180°, the right strip stays. 180°: everything 180°. 270°: tiles 90° clockwise, the right strip 180°, the left stays.
@@ -265,13 +260,10 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 
 [macos.md](macos.md)
 
-### крутилка справа, ряд 2 — agent chats, AI model + effort
+### крутилка справа, ряд 2 — Orca workspaces, AI model + effort
 
-- turn: walks the agent chats (see тайл ряд 2, колонка 4); click: same as that tile, so within 2 s of a turn it pins / unpins the chat under the ring
-
-- press: hides the chat ring and the chat title from the strips at once, so the model + effort label shows
-- hold 400 ms without a turn (haptic): new Code session, as a hold on the agents tile; the release then does nothing, and turns after it walk the chats again; a press with no release for 8 s (lost `up`) is dropped, so a plain turn never stays on the model switch
-- press + turn: walks the family of the chat under the ring, parent → children (tree order, freshest child first; clockwise = deeper), stops at the ends; each step opens the chat and shows its title; a chat not on the tile joins as a hollow dot for 1 min
+- turn: walks the Orca workspaces of тайл ряд 2, колонка 4 (opens its browse); click: same as a tap on that tile (browse, or open the shown chat)
+- hold 400 ms without a turn (haptic): new Claude Desktop Code session; the release then does nothing; a press with no release for 8 s (lost `up`) is dropped
 - model + effort: only by the right strip slide; applies 400 ms after it rests, only on the Claude Desktop new-chat screen in front;
   elsewhere it previews for 5 s (gray label, the strip shows that model's limits), then shows the real model again
 
@@ -283,6 +275,7 @@ Limits refresh every 15 min; the daemon renews the Claude Code login token itsel
 - wheel mode, turn: mouse wheel under the cursor, clockwise = down; 1 / 2 / 4 / 8 lines per detent by speed
 - tab mode, turn: Ctrl held, clockwise = Tab, counter-clockwise = Shift+Tab; Ctrl is released 500 ms after the last detent
 - press + turn: wheel mode = horizontal wheel, clockwise = right; tab mode = Cmd held while pressed, clockwise = Cmd+Tab, counter-clockwise = Cmd+Shift+Tab (the system app switcher), release picks; for 3 s after that (extended by each detent) a turn without press = Cmd+` / Cmd+Shift+` through windows of the picked app, then back to Ctrl+Tab; no mode switch
+- while the Orca browse is open (тайл ряд 2, колонка 4): turn walks the chats of the shown workspace, press opens the chat; scroll is back when it closes
 - while the clock list is open: turn scrolls the list, press = clock hold
 - while a timer is being set (clock tap): turn sets it, press starts it; scroll is back after
 
@@ -319,7 +312,7 @@ From the plan in [windows.md](windows.md); nothing runs on Windows yet.
 | volume, track, seek knobs, left strip, play tile, clock, brightness, scroll | same; no Yandex Music hold or swipes up/down; brightness = monitor over DDC/CI |
 | mic tile + кнопка 2 | system mic mute (proposal) |
 | keyboard layout, wi-fi, headphones, keep-awake, emoji, camera, day / hang-up tiles, timers, кнопки 1, 3, 4, 7 | dropped, free (the clock stays, no timers) |
-| agents tile | Codex sessions |
+| Orca tile | Codex sessions *(assumed: Orca on Windows not checked)* |
 | right strip, крутилка справа, ряд 2 | Codex limits; model switch later (the knob is still on the windows page, its daemon module isn't) |
 | choice mode | off (no Claude Desktop) |
 

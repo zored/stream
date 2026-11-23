@@ -132,7 +132,11 @@ static int match_attr(AXUIElementRef element, const void *context) {
     if (!ok) return 0;
     CFStringRef value = copy_string(element, q->attr);
     if (!value) return 0;
-    ok = q->prefix ? CFStringHasPrefix(value, q->text) : CFEqual(value, q->text);
+    switch (q->prefix) {
+    case AX_MATCH_PREFIX: ok = CFStringHasPrefix(value, q->text); break;
+    case AX_MATCH_SUFFIX: ok = CFStringHasSuffix(value, q->text); break;
+    default: ok = CFEqual(value, q->text);
+    }
     CFRelease(value);
     return ok;
 }

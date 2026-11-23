@@ -19,6 +19,7 @@ Status, plan and master session: `/master` skill, kept in `~/git/github.com/zore
 - `docs/windows-switch.md` — window switcher on two strips: `switcher` module of `zored_stream`, AX windows, raise timings
 - `docs/unread.md` — unread Telegram / VK WorkSpace on tile `2/2`: Dock badges via AX
 - `docs/weather.md` — weather on tile `2/3` outside a call: Open-Meteo, forecast browse on крутилка слева, ряд 3
+- `docs/orca.md` — Orca workspaces + chats on tile `1/5` and the right knobs: `orca` CLI poll, open a chat via AX tab press
 - `docs/ymusic.md` — Yandex Music like/dislike via Accessibility, `zored_stream` module, dead ends
 - `docs/windows.md` — port plan: what carries over, what needs a Windows build
 - `docs/logic.md` — behaviour spec for porting: every control and daemon module (input → route → state → variables → drawing), Windows mapping, symbols a Windows build must provide, docs that disagree with the code

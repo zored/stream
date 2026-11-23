@@ -242,6 +242,7 @@ func main() {
 	go dict.run()
 	go every(dictatePollEvery, dict.poll)
 	var ag *agents
+	oc := newOrca(v, us.cover)
 	var cs *chats
 	go serve(*aiAddr, func(mux *http.ServeMux) {
 		handle(mux, "/dictation/down", func() error { return dict.push(true) })
@@ -253,13 +254,10 @@ func main() {
 				return
 			}
 			hints.turn("r1", d)
-			switch {
-			case ai.holding():
+			if ai.holding() {
 				ai.markTurned()
-				ag.familyStep(d)
-			default:
-				ag.step(d)
 			}
+			oc.step(d)
 			w.WriteHeader(http.StatusNoContent)
 		})
 		mux.HandleFunc("POST /ai/slide", func(w http.ResponseWriter, r *http.Request) {
@@ -275,8 +273,6 @@ func main() {
 		})
 		handle(mux, "/ai/down", func() error {
 			hints.press("r1", true)
-			ag.armClick()
-			ag.hideStrip()
 			return ai.down()
 		})
 		handle(mux, "/ai/hold", func() error {
@@ -290,7 +286,7 @@ func main() {
 			if ai.up() {
 				return nil
 			}
-			return ag.armedClick()
+			return oc.tap()
 		})
 	})
 	configDir, err := os.UserConfigDir()
@@ -298,8 +294,7 @@ func main() {
 		log.Fatal(err)
 	}
 	ag = newAgents(v, *agentsTTL, newDesktopSessions(configDir), newPins(filepath.Join(configDir, "Claude", "claude_desktop_config.json")))
-	go ag.syncSidebar(sidebarPinChat)
-	ag.strip = us.cover
+	ag.orcaTile = true
 	ag.contexts, ag.onContext = newContexts(home), us.setContext
 	ag.overlay = overlay
 	ch := newChoice(v, func() (*choiceCard, choiceTarget, string, error) { return readChoiceCard(ag) })
@@ -320,7 +315,7 @@ func main() {
 	go serve(*agentsAddr, func(mux *http.ServeMux) {
 		mux.HandleFunc("POST /agent/event", ag.serveEvent)
 		mux.HandleFunc("GET /agents", ag.serveJSON)
-		handle(mux, "/agent/focus", ag.click)
+		handle(mux, "/agent/focus", oc.tap)
 		handle(mux, "/agent/new", newChat)
 		mux.HandleFunc("GET /choice", ch.serveJSON)
 		mux.HandleFunc("POST /choice/{edge}", func(w http.ResponseWriter, r *http.Request) {
@@ -365,20 +360,23 @@ func main() {
 	go serve(*brightnessAddr, func(mux *http.ServeMux) {
 		handleValue(mux, "/brightness/up", func() (int, error) {
 			hints.turn("r0", 1)
-			if wf.turn(1) || pk.turn(emojiRight, 1) {
+			if oc.scroll(1) || wf.turn(1) || pk.turn(emojiRight, 1) {
 				return br.level(), nil
 			}
 			return br.turn(1)
 		})
 		handleValue(mux, "/brightness/down", func() (int, error) {
 			hints.turn("r0", -1)
-			if wf.turn(-1) || pk.turn(emojiRight, -1) {
+			if oc.scroll(-1) || wf.turn(-1) || pk.turn(emojiRight, -1) {
 				return br.level(), nil
 			}
 			return br.turn(-1)
 		})
 		handleValue(mux, "/brightness/hold", func() (int, error) {
 			hints.press("r0", true)
+			if took, err := oc.knob(true); took {
+				return br.level(), err
+			}
 			if took, err := pk.press(emojiRight); took {
 				return br.level(), err
 			}
@@ -386,6 +384,9 @@ func main() {
 		})
 		handleValue(mux, "/brightness/release", func() (int, error) {
 			hints.press("r0", false)
+			if took, err := oc.knob(false); took {
+				return br.level(), err
+			}
 			if pk.release(emojiRight) {
 				return br.level(), nil
 			}
@@ -488,6 +489,13 @@ func main() {
 	hints.own("l2", cs.capturing)
 	hints.own("r2", tm.capturing)
 	hints.own("r2", cal.capturing)
+	hints.own("r0", oc.capturing)
+	hints.own("r1", oc.capturing)
+	hints.own("r2", oc.capturing)
+	tileModes.add(mode{"orca", oc.capturing, oc.close})
+	go oc.poll()
+	go oc.animate()
+	go every(pollEvery, oc.expire)
 	go hints.run()
 	for _, md := range []mode{
 		{"wifi", wf.capturing, wf.close},
@@ -544,6 +552,9 @@ func main() {
 		press := func(down bool) func() error {
 			return func() error {
 				hints.press("r2", down)
+				if took, err := oc.knob(down); took {
+					return err
+				}
 				if took, err := tm.knob(down); took {
 					return err
 				}
@@ -556,7 +567,7 @@ func main() {
 		turn := func(direction int) func() error {
 			return func() error {
 				hints.turn("r2", direction)
-				if tm.turn(direction) || cal.turn(direction) {
+				if oc.chatStep(direction) || tm.turn(direction) || cal.turn(direction) {
 					return nil
 				}
 				return sc.turn(direction)
@@ -608,6 +619,7 @@ func main() {
 		np.tint.publish()
 		us.publish()
 		ag.publish()
+		oc.republish()
 		pw.publish()
 		hp.publish()
 		wf.publish()

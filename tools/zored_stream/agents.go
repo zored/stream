@@ -83,6 +83,7 @@ type hookEvent struct {
 }
 
 type agents struct {
+	orcaTile             bool
 	mu                   sync.Mutex
 	sessions             map[string]*agentSession
 	cursor               *agentSession
@@ -118,7 +119,6 @@ type agents struct {
 	openAfter            time.Duration
 	open                 func(agentSession) error
 	clickArm             bool
-	sidebar              chan sidebarPin
 }
 
 type agentOrder struct {
@@ -126,14 +126,9 @@ type agentOrder struct {
 	fresh map[string]time.Time
 }
 
-type sidebarPin struct {
-	title string
-	on    bool
-}
-
 func newAgents(v *vars, ttl time.Duration, desktop *desktopSessions, pins *agentPins) *agents {
 	return &agents{sessions: map[string]*agentSession{}, ttl: ttl, vars: v, slide: make(chan struct{}, 1), rowWake: make(chan struct{}, 1),
-		desktop: desktop, pins: pins, sidebar: make(chan sidebarPin, 16), openAfter: agentOpenAfter, open: agentSession.open}
+		desktop: desktop, pins: pins, openAfter: agentOpenAfter, open: agentSession.open}
 }
 
 func (s *agentSession) desktopDone() bool {
@@ -587,33 +582,12 @@ func (a *agents) togglePin() error {
 		return fmt.Errorf("agents: pin %s: not a Desktop chat", s.ID)
 	}
 	on := a.pins.toggle(s.Host)
-	rec, _ := a.desktop.record(s.Host)
 	a.browsedAt = time.Now()
 	a.showStrip(s)
 	a.mu.Unlock()
 	a.publish()
 	log.Printf("agents: pin %s %v %s in %s", s.Host, on, filepath.Base(s.Cwd), time.Since(start).Round(time.Microsecond))
-	if rec.Title == "" {
-		log.Printf("agents: pin %s: no title, sidebar left as is", s.Host)
-		return nil
-	}
-	select {
-	case a.sidebar <- sidebarPin{rec.Title, on}:
-	default:
-		log.Printf("agents: pin %s: sidebar queue full, sidebar left as is", s.Host)
-	}
 	return nil
-}
-
-func (a *agents) syncSidebar(pin func(title string, on bool) error) {
-	for p := range a.sidebar {
-		start := time.Now()
-		if err := pin(p.title, p.on); err != nil {
-			log.Printf("agents: sidebar pin %q %v: %v", p.title, p.on, err)
-			continue
-		}
-		log.Printf("agents: sidebar pin %q %v in %s", p.title, p.on, time.Since(start).Round(time.Millisecond))
-	}
 }
 
 func (a *agents) showStrip(s agentSession) {
@@ -852,7 +826,9 @@ func (a *agents) publish() {
 	if a.onContext != nil {
 		a.onContext(ctx)
 	}
-	a.vars.set("agents_svg", agentsSVG(dots, sizes, current, prev, t, ctx))
+	if !a.orcaTile {
+		a.vars.set("agents_svg", agentsSVG(dots, sizes, current, prev, t, ctx))
+	}
 }
 
 func (a *agents) cursorContext() *chatContext {
