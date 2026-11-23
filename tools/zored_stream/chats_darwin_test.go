@@ -43,7 +43,10 @@ func TestChatsTextStripScrolls(t *testing.T) {
 	if chatsTextLines("short", stripDrawH-8, chatsTextSize) != 1 {
 		t.Fatal("short text must be one line")
 	}
-	if chatsTextStrip(long, 0) == chatsTextStrip(long, chatsLineH) {
+	if chatsTextStrip(long, 0, 0) == chatsTextStrip(long, chatsLineH, 0) {
 		t.Fatal("offset must move the text")
+	}
+	if chatsTextStrip("short", 0, 0) == chatsTextStrip("short", 0, 0.5) || chatsTextStrip("short", 0, 0.5) == chatsTextStrip("short", 0, -0.5) {
+		t.Fatal("push bar must show on its edge")
 	}
 }

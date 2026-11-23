@@ -25,6 +25,9 @@ const (
 	chatsTextSize   = 12
 	chatsLineH      = chatsTextSize * 1.25
 	chatsTextView   = 46
+	chatsPushTurns  = 3
+	chatsPushIdle   = 1500 * time.Millisecond
+	chatsBarH       = 2.0
 )
 
 type chatMsg struct {
@@ -75,6 +78,10 @@ type chats struct {
 	photo      int
 	photos     *photos
 	blocked    func() bool
+	push       int
+	pushTo     float64
+	pushAt     float64
+	pushGen    int
 }
 
 func newChats(v *vars, release func(), strip func(string)) *chats {
@@ -184,9 +191,9 @@ func (c *chats) publishLocked() {
 
 func (c *chats) stripLocked() string {
 	if c.pick >= len(c.list) {
-		return chatsTextStrip("·", 0)
+		return chatsTextStrip("·", 0, 0)
 	}
-	return chatsTextStrip(chatsView(c.list[c.pick], c.msg).text, c.scrollAt)
+	return chatsTextStrip(chatsView(c.list[c.pick], c.msg).text, c.scrollAt, c.pushAt)
 }
 
 // down arms the hold: 400 ms held while browsing marks the picked chat read and eats the release.
@@ -261,7 +268,73 @@ func (c *chats) markReadLocked() {
 }
 
 func (c *chats) resetMsgLocked() {
-	c.msg, c.scrollTo, c.scrollAt, c.photo = 0, 0, 0, -1
+	c.msg = 0
+	c.resetScrollLocked()
+}
+
+func (c *chats) resetScrollLocked() {
+	c.scrollTo, c.scrollAt, c.photo = 0, 0, -1
+	c.push, c.pushTo, c.pushAt = 0, 0, 0
+	c.pushGen++
+}
+
+func (c *chats) msgCount() int {
+	return max(len(c.list[c.pick].msgs), 1)
+}
+
+// moveMsgLocked walks the messages through the chats in a loop: past the last message comes the next chat's first, before the first the previous chat's last; toEnd lands at the end of the text.
+func (c *chats) moveMsgLocked(direction int, toEnd bool) {
+	to := c.msg + direction
+	switch n := c.msgCount(); {
+	case to >= 0 && to < n:
+		c.msg = to
+		c.resetScrollLocked()
+	case len(c.list) == 1:
+		c.msg = (to%n + n) % n
+		c.resetScrollLocked()
+	default:
+		c.stepLocked(direction, direction < 0, toEnd)
+		return
+	}
+	if toEnd {
+		c.scrollTo = chatsScrollEnd(chatsView(c.list[c.pick], c.msg).text)
+		c.scrollAt = c.scrollTo
+	}
+	c.publishLocked()
+}
+
+func (c *chats) kickLocked() {
+	select {
+	case c.kick <- struct{}{}:
+	default:
+	}
+}
+
+// pushLocked counts the detents past an end of the shown message; the bar grows on each, the last one moves on.
+func (c *chats) pushLocked(direction int) {
+	if c.push*direction < 0 {
+		c.push = 0
+	}
+	c.push += direction
+	if c.push*direction >= chatsPushTurns {
+		c.moveMsgLocked(direction, direction < 0)
+		return
+	}
+	c.pushTo = float64(c.push) / chatsPushTurns
+	c.pushGen++
+	gen := c.pushGen
+	time.AfterFunc(chatsPushIdle, func() { c.pushIdle(gen) })
+	c.kickLocked()
+}
+
+func (c *chats) pushIdle(gen int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if gen != c.pushGen {
+		return
+	}
+	c.push, c.pushTo = 0, 0
+	c.kickLocked()
 }
 
 func (c *chats) photosLocked() []chatPhoto {
@@ -366,18 +439,26 @@ func (c *chats) turn(direction int) bool {
 	if c.pick >= len(c.list) || c.sliding {
 		return true
 	}
-	lines := chatsTextLines(chatsView(c.list[c.pick], c.msg).text, stripDrawH-8, chatsTextSize)
-	top := max(float64(lines)*chatsLineH-chatsTextView, 0)
-	if n := len(c.photosLocked()); n > 0 && (c.photo >= 0 || direction > 0 && c.scrollTo >= top) {
-		c.photo = min(c.photo+direction, n-1)
+	top := chatsScrollEnd(chatsView(c.list[c.pick], c.msg).text)
+	n := len(c.photosLocked())
+	atEnd := direction > 0 && (n > 0 && c.photo == n-1 || n == 0 && c.scrollTo >= top)
+	atStart := direction < 0 && c.photo < 0 && c.scrollTo <= 0
+	if atEnd || atStart {
+		c.pushLocked(direction)
+		return true
+	}
+	if c.push != 0 {
+		c.push, c.pushTo = 0, 0
+		c.pushGen++
+		c.kickLocked()
+	}
+	if n > 0 && (c.photo >= 0 || direction > 0 && c.scrollTo >= top) {
+		c.photo += direction
 		c.publishLocked()
 		return true
 	}
 	c.scrollTo = min(max(c.scrollTo+float64(direction)*chatsLineH/2, 0), top)
-	select {
-	case c.kick <- struct{}{}:
-	default:
-	}
+	c.kickLocked()
 	return true
 }
 
@@ -392,12 +473,7 @@ func (c *chats) msgTurn(direction int) bool {
 	if c.pick >= len(c.list) || c.sliding {
 		return true
 	}
-	n := len(c.list[c.pick].msgs)
-	to := min(max(c.msg+direction, 0), max(n-1, 0))
-	if to != c.msg {
-		c.msg, c.scrollTo, c.scrollAt, c.photo = to, 0, 0, -1
-		c.publishLocked()
-	}
+	c.moveMsgLocked(direction, false)
 	return true
 }
 
@@ -418,32 +494,48 @@ func (c *chats) scrollStep() bool {
 		return false
 	}
 	moving := ease(&c.scrollAt, c.scrollTo, 0.5)
+	moving = ease(&c.pushAt, c.pushTo, 0.02) || moving
 	c.strip(c.stripLocked())
 	return moving
 }
 
-// step moves to the next or previous chat while browsing.
+// step moves to the next or previous chat while browsing, in a loop.
 func (c *chats) step(direction int) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.browsing() {
 		return false
 	}
-	from, fromMsg := c.pick, c.msg
-	if n := len(c.list); n > 0 {
-		c.pick = min(max(c.pick+direction, 0), n-1)
-	}
 	c.browseTill = time.Now().Add(chatsBrowseFor)
+	c.stepLocked(direction, false, false)
+	return true
+}
+
+// stepLocked lands on the first message of the next or previous chat, or on its last one with last, scrolled to the end with toEnd.
+func (c *chats) stepLocked(direction int, last, toEnd bool) {
+	n := len(c.list)
+	if n == 0 {
+		c.publishLocked()
+		return
+	}
+	from, fromMsg := c.pick, c.msg
+	c.pick = ((c.pick+direction)%n + n) % n
 	if c.pick == from {
 		c.publishLocked()
-		return true
+		return
 	}
 	c.resetMsgLocked()
+	if last {
+		c.msg = c.msgCount() - 1
+	}
+	if toEnd {
+		c.scrollTo = chatsScrollEnd(chatsView(c.list[c.pick], c.msg).text)
+		c.scrollAt = c.scrollTo
+	}
 	c.slideGen++
 	c.sliding = true
 	c.strip(c.stripLocked())
-	go c.slide(c.slideGen, chatsView(c.list[from], fromMsg), chatsView(c.list[c.pick], 0), direction)
-	return true
+	go c.slide(c.slideGen, chatsView(c.list[from], fromMsg), chatsView(c.list[c.pick], c.msg), direction)
 }
 
 func (c *chats) slide(gen int, from, to chatEntry, direction int) {
@@ -597,7 +689,7 @@ func chatsLines(title string, n, width int) []string {
 
 func chatsTileImage(list []chatEntry, more bool, now time.Time) string {
 	if len(list) == 0 {
-		return unreadSVG(nil, now)
+		return chatsNoneImage()
 	}
 	layer := func(e chatEntry, d []chatsDisc, t []calText) chatsLayer {
 		if e.muted {
@@ -642,7 +734,7 @@ func chatsCard(e chatEntry, dx float64, now time.Time) ([]chatsDisc, []calText) 
 
 func chatsPickImage(list []chatEntry, pick, msg int, now time.Time) string {
 	if pick >= len(list) {
-		return unreadSVG(nil, now)
+		return chatsNoneImage()
 	}
 	d, t := chatsCard(chatsView(list[pick], msg), 0, now)
 	return chatsPNG(88, 88, d, t)
@@ -655,16 +747,30 @@ func chatsSlideImage(from, to chatEntry, step float64, direction int, now time.T
 	return chatsPNG(88, 88, append(d1, d2...), append(t1, t2...))
 }
 
+func chatsNoneImage() string {
+	return tileIcon("eye-closed", gray)
+}
+
 func chatsLine(s string) string {
 	return strings.Join(strings.Fields(s), " ")
 }
 
-func chatsTextStrip(text string, offset float64) string {
+func chatsTextStrip(text string, offset, bar float64) string {
 	const w, h = stripDrawH, stripDrawW
 	text = chatsLine(text)
 	if !utf8.ValidString(text) || text == "" {
 		text = "·"
 	}
 	lines := chatsTextLines(text, w-8, chatsTextSize)
-	return calImage(w, h, true, calText{text: text, x: 4, y: 1 - offset, w: w - 8, h: max(float64(lines)*chatsLineH, chatsTextView), size: chatsTextSize, rgb: whiteRGB})
+	uri, err := chatsStripPNG(w, h, calText{text: text, x: 4, y: 1 - offset, w: w - 8, h: max(float64(lines)*chatsLineH, chatsTextView), size: chatsTextSize, rgb: whiteRGB}, bar)
+	if err != nil {
+		log.Print(err)
+	}
+	return uri
+}
+
+// chatsScrollEnd is the last scroll offset of a message's text on the strip.
+func chatsScrollEnd(text string) float64 {
+	lines := chatsTextLines(chatsLine(text), stripDrawH-8, chatsTextSize)
+	return max(float64(lines)*chatsLineH-chatsTextView, 0)
 }

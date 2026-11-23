@@ -48,7 +48,7 @@ MEDIA page, `row/col` ([grid](companion.md)):
 - turn: system volume, 1 → 4 % per detent, faster turns step more
 - press: mute / unmute
 - shows: the left strip turns into a white volume bar while it changes
-- while the chats browse (тайл ряд 3, колонка 1), since 2026-11-19 the three left knobs read top to bottom: one message, the messages, the chats; a chevron by each: turn scrolls the shown message, past its end walks the message's photos over the tiles; press opens the chat
+- while the chats browse (тайл ряд 3, колонка 1), since 2026-11-19 the three left knobs read top to bottom: one message, the messages, the chats; a chevron by each: turn scrolls the shown message, past its end walks the message's photos over the tiles; past the end (or before the start) of the text and photos two detents grow a white bar on the strip edge (bottom forward, top back) and the third moves to the next message, through the chats in a loop; back lands at the end of the previous message's text; press opens the chat
 
 [macos.md](macos.md)
 
@@ -58,13 +58,13 @@ MEDIA page, `row/col` ([grid](companion.md)):
 - press + turn: previous / next track; a ⏪/⏩ flies across the bottom of the left strip
 - click (press and release without a turn): play / pause
 - hold ≥ 400 ms without a turn: Yandex Music like / remove like (only when Yandex Music is the Now Playing app); timed in the daemon, no second haptic
-- while the chats browse (тайл ряд 3, колонка 1): turn walks the unread messages of the shown chat; press opens the chat (no like, no tracks)
+- while the chats browse (тайл ряд 3, колонка 1): turn walks the unread messages, past the last one to the next chat's first, before the first to the previous chat's last, in a loop; press opens the chat (no like, no tracks)
 
 Players: Yandex Music verified; Chrome/YouTube, Music.app *(assumed)*. [macos.md](macos.md), [ymusic.md](ymusic.md)
 
 ### крутилка слева, ряд 3 — chats
 
-- turn: browse the unread chats of тайл ряд 3, колонка 1 (the first turn opens the first chat, then each detent moves one)
+- turn: browse the unread chats of тайл ряд 3, колонка 1 (the first turn opens the first chat, then each detent moves one, in a loop both ways)
 - press: same as a tap on that tile: browse, or open the chat shown; hold 400 ms while browsing marks the chat read
 - while the weather tile browses: turn walks the forecast, press returns to now
 
@@ -173,9 +173,9 @@ A knob turn with the chat in front not on the tile adds it as a hollow dot for 1
 
 - in a call: tap toggles the mic; hold ≥ 300 ms: push-to-talk (mic on while held; if it was on, muted while held)
 - in a call shows: white mic on red = on, white crossed mic on black = off, amber `…` = switching, amber `?` = unknown
-- no call: up to 4 unread chats (Telegram + VK WorkSpace, via their APIs, push), normal ones first, then muted (muted or archived in Telegram, muted or archived in VK WorkSpace), each group newest first; muted chats sit at 40% opacity with a gray count badge; one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid of squares on black: avatar, or without one the first words of the name in 2–3 lowercase lines on dark gray, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; small white eye = nothing unread
-- tap: browse for 5 s (any action below extends it), крутилка слева, ряд 3 scrolls the chats (same order) with a slide animation; the tile shows the chat's avatar at full opacity over the whole square, the right strip the first unread message in white, 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
-- while browsing: крутилка слева, ряд 2 walks the unread messages of that chat, oldest first, stops at the ends; the red badge counts the messages after the shown one (none on the last), a group chat shows the author's small avatar bottom-left; крутилка слева, ряд 1 scrolls the message smoothly, half a line per detent; past the end of a message with photos (a Telegram photo or album, VK WorkSpace image files) the next detent spreads its first photo over all square tiles but this one (its card stays on top), further detents walk the message's photos and stop at the last, turning back past the first returns to the text; a tap on any tile under the photo closes it and does nothing else; no photo in a call. The right knobs are not taken; the left ones work as before once browse closes
+- no call: up to 4 unread chats (Telegram + VK WorkSpace, via their APIs, push), normal ones first, then muted (muted or archived in Telegram, muted or archived in VK WorkSpace), each group newest first; muted chats sit at 40% opacity with a gray count badge; one fills the tile, two sit on a diagonal (top-left, bottom-right), 3–4 in a 2×2 grid of squares on black: avatar, or without one the first words of the name in 2–3 lowercase lines on dark gray, unread count in a red badge top-right (`99+` cap), age of the last message in a dark badge bottom-right (`5m`, `3h`, `2d`); a gray `+` on the right when there are more; gray closed eye = nothing unread
+- tap: browse for 5 s (any action below extends it), крутилка слева, ряд 3 scrolls the chats (same order, in a loop both ways) with a slide animation; the tile shows the chat's avatar at full opacity over the whole square, the right strip the first unread message in white, 3 lines; a second tap or the knob press opens that chat (Telegram `tg://`, VK WorkSpace profile link)
+- while browsing: крутилка слева, ряд 2 walks the unread messages of that chat, oldest first, past the ends into the next / previous chat (its last message going back), in a loop; the red badge counts the messages after the shown one (none on the last), a group chat shows the author's small avatar bottom-left; крутилка слева, ряд 1 scrolls the message smoothly, half a line per detent; past the end of a message with photos (a Telegram photo or album, VK WorkSpace image files) the next detent spreads its first photo over all square tiles but this one (its card stays on top), further detents walk the message's photos, turning back past the first returns to the text; past the last photo (or the text end without photos), and back past the text start, two detents grow a white bar on the strip edge and the third moves on like крутилка слева, ряд 2; a tap on any tile under the photo closes it and does nothing else; no photo in a call. The right knobs are not taken; the left ones work as before once browse closes
 - hold 400 ms while browsing (this tile or крутилка слева, ряд 3): marks the shown chat read in Telegram / VK WorkSpace, browse moves on to the next chat; the release does nothing; no second haptic. Outside browse a hold is a plain tap
 - кнопка 3 does the same in a call, крутилка слева, ряд 3 outside a call
 - [unread.md](unread.md) [vkcall.md](vkcall.md)

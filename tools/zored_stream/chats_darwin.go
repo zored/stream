@@ -9,6 +9,7 @@ import "C"
 import (
 	"cmp"
 	"log"
+	"math"
 	"unsafe"
 )
 
@@ -69,4 +70,21 @@ func chatsTextLines(text string, w, size float64) int {
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 	return int(C.cal_text_lines(s, C.double(w), C.double(size)))
+}
+
+// chatsStripPNG draws the message text with the push bar: bar > 0 grows along the bottom edge left to right, bar < 0 along the top edge right to left.
+func chatsStripPNG(w, h float64, t calText, bar float64) (string, error) {
+	c := C.cal_canvas_new(C.double(w), C.double(h), 4, 1)
+	s, tail := C.CString(t.text), C.CString(t.tail)
+	C.cal_canvas_text(c, s, tail, C.double(t.x), C.double(t.y), C.double(t.w), C.double(t.h), C.double(t.size), C.uint(t.rgb), C.uint(t.tailRGB), cBool(t.center))
+	C.free(unsafe.Pointer(s))
+	C.free(unsafe.Pointer(tail))
+	if bw := (w - 8) * min(math.Abs(bar), 1); bw > 0 {
+		y, x := h-chatsBarH, 4.0
+		if bar < 0 {
+			y, x = 0, w-4-bw
+		}
+		C.cal_canvas_rect(c, C.double(x), C.double(y), C.double(bw), chatsBarH, whiteRGB)
+	}
+	return canvasPNG(c)
 }

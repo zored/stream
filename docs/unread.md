@@ -10,6 +10,10 @@
 >
 > Strip: only the message text, white, JetBrains Mono 12, wrapped by characters; крутилка слева, ряд 1 moves the target half a line per detent (clamped to the text height, measured by `cal_text_lines`), the offset eases at 60 Hz only while it moves (P1, P2).
 >
+> Loop (since 2026-11-23): all three knobs go through the chats in a loop both ways. ряд 3 wraps the chats; ряд 2 past the last message lands on the next chat's first, before the first on the previous chat's last (one chat: wraps its own messages). ряд 1 at an end of the text and photos counts detents (`chatsPushTurns` = 3): the first two ease a white 2 px bar along the strip's bottom (forward) or top (back) edge to 1/3 and 2/3, the third moves on as ряд 2 does, back landing at the end of the text; a turn the other way or 1.5 s idle drops the bar. Detents during the 150 ms chat slide are swallowed. Nothing unread: a gray closed eye (`icons/eye-closed.svg`).
+>
+> Planned: unread mail in the same list (see [Mail](#mail-planned)).
+>
 > Photos (`photo.go`, fork `src/photo.ts`): a message carries its pictures. Telegram: `MessageMediaPhoto`, the smallest `PhotoSize` / `PhotoSizeProgressive` with a long side ≥ 700 px (else the largest), downloaded by `InputPhotoFileLocation` from the photo's DC; an album (same `grouped_id`) is one message with the caption of the photo that has one. VK WorkSpace: `filesharing[]` of `getHistory` with `mime image/*` (verified 19 ноя: png, jpeg, webp in the tail; the message `text` is the file link); `GET <base_url>/api/v151/files/info/<id>/?aimsid&previews=800` returns `result.previews["800"]`, a link that downloads without more auth (verified: 800 px png of a 4 MB original, 1 MB). While a message is shown in browse its photos load in the background (40 kept, a failure retried after 30 s, logged `photo <key>: …`). крутилка слева, ряд 1 past the end of the text walks them; the shown one goes to the fork over `:47130 GET /photo` (long poll) and `GET /photo/image?id&w&h` (raw RGB cropped to fill); the fork turns and cuts it over the 11 tiles around this one and eats a touch on them (`/photo/close`). Off outside browse and in a call. Decoding: Go `image/jpeg`, `image/png`, `x/image/webp`; anything else fails loudly with `415`.
 
 Module `unread` of `zored_stream`, port 47130 (`/tile/22/down`, `/tile/22/up`). Shares the mic tile through the `tile_22` slot (F23): a live call wins, otherwise the tile shows unread apps. Крутилка слева, ряд 3: `/knob/down`, `/knob/up` = the tile's tap, `/knob/forward`, `/knob/back` browse (a turn outside browse starts it).
@@ -30,3 +34,11 @@ Module `unread` of `zored_stream`, port 47130 (`/tile/22/down`, `/tile/22/up`). 
 
 - Notification banners (`com.apple.notificationcenterui`, subrole `AXNotificationCenterBanner`): title and body only, no app and no time (verified); attributing them by badge timing is fragile.
 - Notification Center database (`group.com.apple.usernoted/db2`): TCC-protected, `Operation not permitted` without Full Disk Access.
+
+## Mail (planned)
+
+- Source: VK WorkSpace mail, unread threads of Inbox (the `vkworkspace` MCP exposes `mail-unread`, `mail-read-thread`, `mail-mark-message`; the HTTP API behind it and whether the daemon's WIM session can call it: not checked).
+- Entry: one per thread, app `mail`, title = sender name, text = subject + snippet, messages = unread letters of the thread, oldest first; muted = newsletters (`List-Unsubscribe`) or not Inbox.
+- Sender icon, first hit wins: VK WorkSpace avatar of a colleague by email (`files/avatar/get`, as chat senders; assumed to accept an email), BIMI logo of the sender domain, the domain favicon, initials on dark gray like a chat without avatar.
+- Open: the thread in the web mail; hold = mark the thread read.
+- Check first: one `mail-unread` call for latency and fields, then whether a colleague avatar resolves by email.

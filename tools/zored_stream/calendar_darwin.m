@@ -258,6 +258,13 @@ void cal_canvas_fill(void *c, unsigned rgb) {
     CGContextFillRect(ctx, CGRectMake(-1e4, -1e4, 2e4, 2e4));
 }
 
+void cal_canvas_rect(void *c, double x, double y, double w, double h, unsigned rgb) {
+    CGContextRef ctx = ((canvas *)c)->ctx;
+    double H = ((canvas *)c)->h;
+    CGContextSetRGBFillColor(ctx, ((rgb >> 16) & 255) / 255.0, ((rgb >> 8) & 255) / 255.0, (rgb & 255) / 255.0, 1);
+    CGContextFillRect(ctx, CGRectMake(x, H - y - h, w, h));
+}
+
 void cal_canvas_ring(void *c, double cx, double cy, double r, double width, unsigned rgb) {
     CGContextRef ctx = ((canvas *)c)->ctx;
     double H = ((canvas *)c)->h;

@@ -34,7 +34,6 @@ func TestChatsBrowseThenOpenPick(t *testing.T) {
 		t.Fatalf("first press must browse, opened %q", opened)
 	}
 	c.step(1)
-	c.step(1)
 	if err := c.press(); err != nil || opened != "tg://b" {
 		t.Fatalf("opened %q, err %v", opened, err)
 	}
@@ -121,27 +120,94 @@ func TestChatsViewWalksMessagesBadgeIsRemainder(t *testing.T) {
 }
 
 func TestChatsMsgTurnOnlyWhileBrowsing(t *testing.T) {
+	c := chatsFixture(t)
+	if c.msgTurn(1) || c.turn(1) {
+		t.Fatal("knobs must pass through outside browse")
+	}
+	c.knobTurn(1)
+	if !c.msgTurn(1) || c.pick != 0 || c.msg != 1 {
+		t.Fatalf("pick=%d msg=%d", c.pick, c.msg)
+	}
+	c.msgTurn(1)
+	chatsSlid(c)
+	if c.pick != 1 || c.msg != 0 {
+		t.Fatalf("past the last message the next chat: pick=%d msg=%d", c.pick, c.msg)
+	}
+	c.msgTurn(1)
+	chatsSlid(c)
+	if c.pick != 0 || c.msg != 0 {
+		t.Fatalf("past the last chat the first: pick=%d msg=%d", c.pick, c.msg)
+	}
+	c.msgTurn(-1)
+	chatsSlid(c)
+	if c.pick != 1 || c.msg != 0 {
+		t.Fatalf("pick=%d msg=%d", c.pick, c.msg)
+	}
+	c.msgTurn(-1)
+	if c.pick != 0 || c.msg != 1 {
+		t.Fatalf("before the first message the previous chat's last: pick=%d msg=%d", c.pick, c.msg)
+	}
+	c.step(1)
+	if c.pick != 1 || c.msg != 0 {
+		t.Fatalf("pick=%d msg=%d", c.pick, c.msg)
+	}
+	c.step(1)
+	if c.pick != 0 {
+		t.Fatalf("chats loop: pick=%d", c.pick)
+	}
+	c.step(-1)
+	if c.pick != 1 {
+		t.Fatalf("chats loop back: pick=%d", c.pick)
+	}
+}
+
+func chatsFixture(t *testing.T) *chats {
 	postVar = func(string, string) error { return nil }
 	t.Cleanup(func() { postVar = post })
 	c := newChats(&vars{sent: map[string]string{}}, func() {}, func(string) {})
 	now := time.Now()
 	c.set("tg", []chatEntry{{id: "a", unread: 2, at: now, msgs: []chatMsg{{text: "1"}, {text: "2"}}}, {id: "b", unread: 1, at: now.Add(-time.Minute)}})
-	if c.msgTurn(1) || c.turn(1) {
-		t.Fatal("right knobs must pass through outside browse")
-	}
+	c.strip = func(string) {}
+	return c
+}
+
+func chatsSlid(c *chats) {
+	c.mu.Lock()
+	c.slideGen++
+	c.sliding = false
+	c.mu.Unlock()
+}
+
+func TestChatsPushPastEndMovesOn(t *testing.T) {
+	c := chatsFixture(t)
 	c.knobTurn(1)
-	if !c.msgTurn(1) || c.msg != 1 || !c.msgTurn(1) || c.msg != 1 {
-		t.Fatalf("msg=%d", c.msg)
+	for i := 1; i < chatsPushTurns; i++ {
+		c.turn(1)
+		if c.msg != 0 || c.push != i || c.pushTo <= 0 {
+			t.Fatalf("detent %d must only grow the bar: msg=%d push=%d", i, c.msg, c.push)
+		}
 	}
-	c.msgTurn(-1)
-	c.msgTurn(-1)
-	if c.msg != 0 {
-		t.Fatalf("msg=%d", c.msg)
+	c.turn(1)
+	if c.msg != 1 || c.push != 0 || c.pushTo != 0 {
+		t.Fatalf("msg=%d push=%d", c.msg, c.push)
 	}
-	c.msgTurn(1)
-	c.step(1)
-	if c.pick != 1 || c.msg != 0 {
-		t.Fatalf("pick=%d msg=%d", c.pick, c.msg)
+	for range chatsPushTurns {
+		c.turn(1)
+	}
+	chatsSlid(c)
+	if c.pick != 1 {
+		t.Fatalf("pushing past the last message moves to the next chat: pick=%d", c.pick)
+	}
+	c.turn(-1)
+	c.turn(1)
+	if c.push != 1 {
+		t.Fatalf("a turn back resets the push: push=%d", c.push)
+	}
+	for range chatsPushTurns {
+		c.turn(-1)
+	}
+	if c.pick != 0 || c.msg != 1 {
+		t.Fatalf("pushing back lands on the previous chat's last: pick=%d msg=%d", c.pick, c.msg)
 	}
 }
 

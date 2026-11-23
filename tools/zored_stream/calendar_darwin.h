@@ -4,6 +4,7 @@ void cal_canvas_glyph(void *c, const char *text, double cx, double cy, double si
 void cal_canvas_layer_begin(void *c, double alpha);
 void cal_canvas_layer_end(void *c);
 void cal_canvas_fill(void *c, unsigned rgb);
+void cal_canvas_rect(void *c, double x, double y, double w, double h, unsigned rgb);
 void cal_canvas_ring(void *c, double cx, double cy, double r, double width, unsigned rgb);
 void cal_canvas_text(void *c, const char *text, const char *tail, double x, double y, double w, double h, double size, unsigned rgb, unsigned tail_rgb, int center);
 int cal_text_lines(const char *text, double w, double size);
