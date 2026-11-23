@@ -516,7 +516,7 @@ func (o *orca) fetch(c orcaChat) {
 	}
 }
 
-// scroll moves the shown reply half a line per detent (крутилка справа, ряд 1), only while browsing.
+// scroll moves the shown reply a line per detent (крутилка справа, ряд 1), only while browsing.
 func (o *orca) scroll(d int) bool {
 	o.mu.Lock()
 	defer o.mu.Unlock()
@@ -533,7 +533,7 @@ func (o *orca) scroll(d int) bool {
 		o.push, o.pushTo = 0, 0
 		o.pushGen++
 	}
-	o.scrollTo = min(max(o.scrollTo+float64(d)*orcaLineH/2, 0), end)
+	o.scrollTo = min(max(o.scrollTo+float64(d)*orcaLineH, 0), end)
 	o.kickLocked()
 	return true
 }

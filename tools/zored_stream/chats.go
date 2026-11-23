@@ -25,7 +25,7 @@ const (
 	chatsTextSize   = 12
 	chatsLineH      = chatsTextSize * 1.25
 	chatsTextView   = 46
-	chatsPushTurns  = 3
+	chatsPushTurns  = 2
 	chatsPushIdle   = 1500 * time.Millisecond
 	chatsBarH       = 2.0
 )
@@ -457,7 +457,7 @@ func (c *chats) turn(direction int) bool {
 		c.publishLocked()
 		return true
 	}
-	c.scrollTo = min(max(c.scrollTo+float64(direction)*chatsLineH/2, 0), top)
+	c.scrollTo = min(max(c.scrollTo+float64(direction)*chatsLineH, 0), top)
 	c.kickLocked()
 	return true
 }

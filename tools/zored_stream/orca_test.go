@@ -244,13 +244,13 @@ func TestOrcaScrollPushesThroughChats(t *testing.T) {
 	if o.push != -1 {
 		t.Fatal("a turn back did not restart the count from the top")
 	}
-	o.scroll(1)
-	o.scroll(1)
-	o.scroll(1)
-	if o.space != "r1::/a" || o.chat != 1 || o.push != 0 || o.pushTo != 0 {
-		t.Fatalf("third detent did not move to the next chat: %s %d push %d", o.space, o.chat, o.push)
+	for range chatsPushTurns {
+		o.scroll(1)
 	}
-	for range 3 {
+	if o.space != "r1::/a" || o.chat != 1 || o.push != 0 || o.pushTo != 0 {
+		t.Fatalf("last detent did not move to the next chat: %s %d push %d", o.space, o.chat, o.push)
+	}
+	for range chatsPushTurns {
 		o.scroll(-1)
 	}
 	o.mu.Lock()
