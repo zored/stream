@@ -74,7 +74,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Keep-awake, sleep | `power.go`, `power_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47122` (`-power`) | keep-awake verified; sleep not triggered; Amphetamine read on IOPM assertion change |
 | Headphones | `headphones.go`, `headphones_darwin.{go,m,h}`, [macos.md](macos.md) | `127.0.0.1:47123` (`-headphones`) | see macos.md |
 | Media keys, tile swipes | `mediakey*.go`, `tileswipe.go`, `skip.go`, [macos.md](macos.md), [device.md](device.md#touch) | `127.0.0.1:47113` (`/key/*`, `/tile/swipe`) | see macos.md |
-| Wi-fi + Viscosity | `wifi.go`, `wifi_darwin.go` (CoreWLAN, Control Center via `osascript`), [macos.md](macos.md) | `127.0.0.1:47124` (`-wifi`) | see macos.md |
+| Wi-fi + Viscosity | `wifi.go`, `wifi_darwin.go` (CoreWLAN, private CoreWiFi, Control Center via `osascript` as the join fallback), [macos.md](macos.md) | `127.0.0.1:47124` (`-wifi`) | see macos.md |
 | KVM | `kvm.go` (Wake-on-LAN, `m1ddc`), [macos.md](macos.md) | `127.0.0.1:47125` (`-kvm`) | see macos.md |
 | Calendar + reminders, tile layers | `calendar.go`, `calendar_darwin.go` (EventKit), `layers.go` (`tile_24`), [macos.md](macos.md) | `127.0.0.1:47126` (`-calendar`, `/tile/24/press`) | see macos.md |
 | Keyboard layout | `input.go`, `input_darwin.go`, [macos.md](macos.md) | `127.0.0.1:47127` (`-input`) | see macos.md |

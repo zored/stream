@@ -11,16 +11,14 @@ func TestWifiLabel(t *testing.T) {
 }
 
 func TestIpconfigLink(t *testing.T) {
-	l, err := ipconfigLink("<dictionary> {\n  SSID : bo phone\n  Router : 172.20.10.1\n}")
-	if err != nil || l.ssid != "bo phone" || !l.phone() {
-		t.Errorf("hotspot: %+v, %v", l, err)
+	if l := ipconfigLink("<dictionary> {\n  SSID : bo phone\n  Router : 172.20.10.1\n}"); !l.phone() {
+		t.Errorf("hotspot: %+v", l)
 	}
-	l, err = ipconfigLink("  SSID : Момент и ВайФай\n  Router : 192.168.4.1\n")
-	if err != nil || l.ssid != "Момент и ВайФай" || l.phone() {
-		t.Errorf("router: %+v, %v", l, err)
+	if l := ipconfigLink("  SSID : <redacted>\n  Router : 192.168.4.1\n"); l.phone() || !l.router.IsValid() {
+		t.Errorf("router: %+v", l)
 	}
-	if _, err := ipconfigLink("  SSID : <redacted>\n"); err == nil {
-		t.Error("redacted SSID must fail")
+	if l := ipconfigLink("  SSID : <redacted>\n"); l.router.IsValid() {
+		t.Errorf("no router: %+v", l)
 	}
 }
 

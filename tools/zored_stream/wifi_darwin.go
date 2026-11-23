@@ -2,6 +2,7 @@ package main
 
 /*
 #cgo LDFLAGS: -framework CoreWLAN -framework Foundation
+#include <stdlib.h>
 #include "wifi_darwin.h"
 */
 import "C"
@@ -14,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 func wifiPower() (bool, error) {
@@ -42,7 +44,14 @@ func wifiCurrent() (wifiLink, error) {
 	if err != nil {
 		return wifiLink{}, fmt.Errorf("ipconfig getsummary: %w", err)
 	}
-	return ipconfigLink(string(out))
+	l := ipconfigLink(string(out))
+	var ssid *C.char
+	if C.wifi_ssid(&ssid) == 0 {
+		return wifiLink{}, errors.New("wi-fi: CoreWiFi has no CWFInterface")
+	}
+	defer C.free(unsafe.Pointer(ssid))
+	l.ssid = C.GoString(ssid)
+	return l, nil
 }
 
 const wifiMenu = `on run argv
@@ -128,21 +137,36 @@ func wifiMenuRun(args ...string) (string, error) {
 	return strings.TrimSuffix(string(out), "\n"), nil
 }
 
-func wifiMenuList() ([]string, error) {
-	out, err := wifiMenuRun("list")
-	if err != nil || out == "" {
-		return nil, err
+func wifiList(fresh bool) ([]string, error) {
+	flag := 0
+	if fresh {
+		flag = 1
 	}
-	return strings.Split(out, "\n"), nil
+	var failure *C.char
+	out := C.wifi_list(C.int(flag), &failure)
+	if failure != nil {
+		defer C.free(unsafe.Pointer(failure))
+		return nil, errors.New(C.GoString(failure))
+	}
+	defer C.free(unsafe.Pointer(out))
+	if list := C.GoString(out); list != "" {
+		return strings.Split(list, "\n"), nil
+	}
+	return nil, nil
 }
 
 func wifiJoin(ssid string) error {
+	name := C.CString(ssid)
+	defer C.free(unsafe.Pointer(name))
+	failure := C.wifi_join(name)
+	if failure == nil {
+		return nil
+	}
+	defer C.free(unsafe.Pointer(failure))
+	log.Printf("wi-fi join %q: %s, trying Control Center", ssid, C.GoString(failure))
+	C.wifi_disassociate()
 	_, err := wifiMenuRun("join", ssid)
 	return err
-}
-
-func wifiDisassociate() {
-	C.wifi_disassociate()
 }
 
 const viscosityState = `if application "Viscosity" is running then

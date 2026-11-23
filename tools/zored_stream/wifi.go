@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -165,9 +164,14 @@ func (w *wifi) touch() error {
 }
 
 func (w *wifi) scan() {
-	list, err := wifiMenuList()
+	list, err := wifiList(false)
 	if err == nil {
 		w.setList(list)
+		if list, err = wifiList(true); err == nil {
+			w.refreshList(list)
+			return
+		}
+		log.Print(err)
 		return
 	}
 	log.Print(err)
@@ -178,6 +182,17 @@ func (w *wifi) scan() {
 	}
 	w.mu.Unlock()
 	w.fail()
+}
+
+func (w *wifi) refreshList(list []string) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.cache = list
+	if !w.picking() || w.pick >= 0 && !slices.Contains(list, w.list[w.pick]) {
+		return
+	}
+	w.list, w.pick = list, keepPick(w.list, w.pick, list)
+	w.showLocked()
 }
 
 func (w *wifi) setList(list []string) {
@@ -300,27 +315,22 @@ func (l wifiLink) phone() bool {
 	return l.router.IsValid() && iphoneHotspot.Contains(l.router)
 }
 
-func ipconfigLink(summary string) (wifiLink, error) {
+func ipconfigLink(summary string) wifiLink {
 	var l wifiLink
 	for line := range strings.Lines(summary) {
 		k, v, ok := strings.Cut(strings.TrimSpace(line), " : ")
 		switch {
 		case !ok:
-		case k == "SSID" && v == "<redacted>":
-			return wifiLink{}, errors.New("ipconfig: SSID redacted, run sudo ipconfig setverbose 1")
-		case k == "SSID":
-			l.ssid = v
 		case k == "Router" && !l.router.IsValid():
 			if a, err := netip.ParseAddr(v); err == nil {
 				l.router = a
 			}
 		}
 	}
-	return l, nil
+	return l
 }
 
 func (w *wifi) switchNetwork(ssid string) error {
-	wifiDisassociate()
 	if w.vpnName != "" {
 		if err := vpnDisconnectAll(); err != nil {
 			return err
