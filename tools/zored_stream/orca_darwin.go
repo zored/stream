@@ -64,20 +64,20 @@ static char *orca_buttons(AXUIElementRef root, int max_nodes, int *nodes, int *w
 import "C"
 
 import (
+	"cmp"
 	"encoding/base64"
 	"fmt"
-	"strings"
-	"sync"
-	"cmp"
 	"log"
 	"math"
+	"os/exec"
+	"strings"
+	"sync"
 	"time"
 	"unsafe"
 )
 
 const (
-	orcaBundle = "com.stablyai.orca"
-	orcaApp    = "file:///Applications/Orca.app"
+	orcaBundle = "com.stablyai.orca.dev"
 )
 
 func orcaPid() (C.pid_t, error) {
@@ -91,7 +91,10 @@ func orcaPid() (C.pid_t, error) {
 }
 
 func orcaFront() error {
-	return launchURL(orcaApp)
+	if out, err := exec.Command("open", "-b", orcaBundle).CombinedOutput(); err != nil {
+		return fmt.Errorf("open -b %s: %w %s", orcaBundle, err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 // orcaPressTab presses the chat tab of the active workspace: an AXButton titled `[<status> ]<name> Close tab <name>`; the close button carries the same text only in AXDescription.

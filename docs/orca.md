@@ -1,12 +1,12 @@
 # Orca workspaces and chats
 
-тайл ряд 2, колонка 4 and the right knobs browse the workspaces and chats of [Orca](https://orca.stablyai.com) (`com.stablyai.orca`, 1.4.271).
+тайл ряд 2, колонка 4 and the right knobs browse the workspaces and chats of [Orca](https://orca.stablyai.com) (dev build `com.stablyai.orca.dev`, profile `~/Library/Application Support/orca-dev-copy`, 1.4.272).
 Module `orca` of `zored_stream` (`tools/zored_stream/orca.go`, `orca_darwin.go`). User side: [controls.md](controls.md#тайл-ряд-2-колонка-4--orca-workspaces).
 **Verified** = observed on this Mac, **assumed** = read, not checked.
 
 ## Source
 
-- `orca worktree ps --json` (`/Applications/Orca.app/Contents/Resources/bin/orca`, ~0.5 s wall, ~0.25 s CPU, verified 2026-11-23): `result.worktrees[]` with `worktreeId` (`<repoId>::<path>`), `displayName`, `workspaceKind` (`git` / `folder`), `isActive`, `isArchived`, `agents[]` with `orcaSessionId`, `conversationName`, `prompt`, `lastAssistantMessage` (cut to 200 chars, verified), `activity {listed, status, unread, sortAt, title}`.
+- `orca worktree ps --json` (`/Applications/Orca.app/Contents/Resources/bin/orca` with `ORCA_USER_DATA_PATH` = the dev profile; without it the CLI talks to the release app, verified 2026-11-27; ~0.5 s wall, ~0.25 s CPU, verified 2026-11-23): `result.worktrees[]` with `worktreeId` (`<repoId>::<path>`), `displayName`, `workspaceKind` (`git` / `folder`), `isActive`, `isArchived`, `agents[]` with `orcaSessionId`, `conversationName`, `prompt`, `lastAssistantMessage` (cut to 200 chars, verified), `activity {listed, status, unread, sortAt, title}`.
 - Order: a workspace by the newest `activity.sortAt` of its chats; `lastActivityAt` lags by minutes (verified by Robbo). Chats by `sortAt`. Unlisted chats and archived or chatless workspaces are left out.
 - Chat icon on the card: the emoji the chat name starts with, else the logo by `agentType` (`claude`, `codex` → OpenAI; Bootstrap Icons 1.13.1 `claude.svg`, `openai.svg`), white on the dark disc. Verified 2026-11-23 on the tile picture (Claude and OpenAI logos).
 - Poll every 15 s, and once when a browse opens. The shown chat's full last reply: `orca agent read orca_session_id:<id> --json` → the last `entries[]` item with `kind: message`, `role: assistant` (~0.3 s, verified 2026-11-23: 576 chars where `ps` had 200); крутилка справа, ряд 1 scrolls it; past its ends the push bar of the chats browse moves to the next / previous chat, through the workspaces (since 2026-11-24 one detent of bar, the second moves, `chatsPushTurns` = 2, a line per scroll detent; verified 2026-11-23 with 3 detents on the strip picture: top bar at 2/3, the last detent back landed at the end of the previous workspace's last reply).

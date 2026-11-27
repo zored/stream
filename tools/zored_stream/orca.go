@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -16,6 +18,7 @@ import (
 
 const (
 	orcaCLI      = "/Applications/Orca.app/Contents/Resources/bin/orca"
+	orcaProfile  = "Library/Application Support/orca-dev-copy"
 	orcaPoll     = 15 * time.Second
 	orcaTimeout  = 10 * time.Second
 	orcaTabWait  = 6 * time.Second
@@ -162,7 +165,12 @@ func newOrca(v *vars, strip func(string)) *orca {
 func orcaRun(args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), orcaTimeout)
 	defer cancel()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("orca: home dir: %w", err)
+	}
 	cmd := exec.CommandContext(ctx, orcaCLI, args...)
+	cmd.Env = append(os.Environ(), "ORCA_USER_DATA_PATH="+filepath.Join(home, orcaProfile))
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	out, err := cmd.Output()
