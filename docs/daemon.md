@@ -83,6 +83,7 @@ signing with a certificate (Apple Development or a self-signed code-signing cert
 | Window switcher | `switcher.go`, `switcher_darwin.go`, `switcher_darwin.m`, `picker.go` (input routing shared with emoji), [windows-switch.md](windows-switch.md) | `127.0.0.1:47132` (`-switch`) | see windows-switch.md |
 | Weather | `weather.go`, `layers.go` (`tile_23`), [weather.md](weather.md) | `127.0.0.1:47131` (`-weather`) | see weather.md |
 | Orientation (read-only) | `orientation.go`, `stripflip.go`; the fork owns it ([companion.md](companion.md#loupedeck-surface-module-fork), A12) | — (reads `~/.config/zored-stream/orientation`, publishes `strip_flip` with the bars, turns emoji glyphs) | verified on the device (user) |
+| Companion log prune | `logprune.go` | — (hourly, removes `companion-*.log` older than `-companion-logs-keep`, default 3 days, from `-companion-logs`; Companion itself keeps 7 days, ~0.7 GB/day) | unit-tested |
 
 - `make zored_stream-cert` runs `tools/zored_stream/cert.sh`: a self-signed `zored-stream` code-signing cert in the login keychain, trusted for code signing
   (asks for the password); rerunning it only re-applies the trust. Verified: the identity imports into the login keychain

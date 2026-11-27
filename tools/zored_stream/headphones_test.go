@@ -47,3 +47,13 @@ func TestSpeakersArrived(t *testing.T) {
 		t.Error("want no arrival for headphones")
 	}
 }
+
+func TestBuiltinRoute(t *testing.T) {
+	r, err := builtinRoute([]audioDevice{macOut, macIn, logi, camera, accentum})
+	if err != nil || r.output.id != 1 || r.input.id != 4 {
+		t.Fatalf("got %d/%d %v", r.output.id, r.input.id, err)
+	}
+	if _, err := builtinRoute([]audioDevice{logi, camera}); err == nil {
+		t.Fatal("want error without built-in speakers")
+	}
+}

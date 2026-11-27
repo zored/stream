@@ -22,7 +22,7 @@ const orcaFixture = `{"result":{"worktrees":[
   {"orcaSessionId":"d1","activity":{"listed":true,"sortAt":99999}}]}]}}`
 
 func TestOrcaParseOrdersByChatActivity(t *testing.T) {
-	spaces, err := orcaParse([]byte(orcaFixture))
+	spaces, _, err := orcaParse([]byte(orcaFixture), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,9 @@ func testOrca(t *testing.T) (*orca, *orcaCalls, *vars) {
 	}
 	o.front = func() error { calls.add("front"); return nil }
 	o.press = func(name string) error { calls.add("press " + name); calls.done <- struct{}{}; return nil }
-	spaces, err := orcaParse([]byte(orcaFixture))
+	o.markRead = func(name string) error { calls.add("read " + name); calls.done <- struct{}{}; return nil }
+	o.closeTab = func(name string) error { calls.add("close " + name); calls.done <- struct{}{}; return nil }
+	spaces, _, err := orcaParse([]byte(orcaFixture), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +123,7 @@ func TestOrcaKnobsCaptureOnlyWhileBrowsing(t *testing.T) {
 	}
 }
 
-func TestOrcaOpenActivatesThenPressesTab(t *testing.T) {
+func TestOrcaOpenPressesSidebarRow(t *testing.T) {
 	o, calls, _ := testOrca(t)
 	if err := o.tap(); err != nil || o.space != "r2::/b" {
 		t.Fatalf("first tap did not browse the freshest workspace: %v", err)
@@ -135,24 +137,24 @@ func TestOrcaOpenActivatesThenPressesTab(t *testing.T) {
 		t.Fatalf("release did not open: %v", err)
 	}
 	<-calls.done
-	want := []string{"front", "worktree activate --worktree id:r1::/a --json", "press old"}
+	want := []string{"front", "press old"}
 	if !slices.Equal(calls.calls, want) {
 		t.Fatalf("calls %v, want %v", calls.calls, want)
 	}
-	if o.capturing() {
-		t.Fatal("open did not close the browse")
+	if !o.capturing() || o.space != "r1::/a" || o.chat != 1 {
+		t.Fatal("open moved off the shown chat or closed the browse")
 	}
 }
 
-func TestOrcaFolderWorkspaceFailsLoudly(t *testing.T) {
+func TestOrcaFolderWorkspaceOpensBySidebarRow(t *testing.T) {
 	o, calls, _ := testOrca(t)
 	o.step(-1)
-	err := o.tap()
-	if err == nil || !strings.Contains(err.Error(), "cannot be activated") {
-		t.Fatalf("folder workspace: got %v", err)
+	if err := o.tap(); err != nil {
+		t.Fatalf("folder workspace: %v", err)
 	}
-	if len(calls.calls) != 0 {
-		t.Fatalf("folder workspace ran %v", calls.calls)
+	<-calls.done
+	if want := []string{"front", "press c"}; !slices.Equal(calls.calls, want) {
+		t.Fatalf("calls %v, want %v", calls.calls, want)
 	}
 }
 
@@ -215,7 +217,7 @@ func TestOrcaIconEmojiThenModel(t *testing.T) {
 	if orcaIconPNG(orcaChat{name: "tile"}) != nil {
 		t.Fatal("a chat with no emoji and no known model got an icon")
 	}
-	spaces, err := orcaParse([]byte(orcaFixture))
+	spaces, _, err := orcaParse([]byte(orcaFixture), nil)
 	if err != nil || spaces[0].chats[0].model != "" {
 		t.Fatalf("fixture has no agentType: %v", err)
 	}
@@ -258,5 +260,138 @@ func TestOrcaScrollPushesThroughChats(t *testing.T) {
 	o.mu.Unlock()
 	if o.chat != 0 || o.scrollTo != end {
 		t.Fatal("back did not land at the end of the previous chat's reply")
+	}
+}
+
+func TestOrcaChatKnobWalksAllChatsByActivity(t *testing.T) {
+	o, _, _ := testOrca(t)
+	o.spaces[0].chats = append(o.spaces[0].chats, orcaChat{id: "b2", name: "b2", at: time.UnixMilli(2000)})
+	o.step(1)
+	type pos struct {
+		space string
+		chat  int
+	}
+	var got []pos
+	for range 5 {
+		got = append(got, pos{o.space, o.chat})
+		o.chatStep(1)
+	}
+	want := []pos{{"r2::/b", 0}, {"r1::/a", 0}, {"r2::/b", 1}, {"r1::/a", 1}, {"f1", 0}}
+	if !slices.Equal(got, want) {
+		t.Fatalf("walk %v, want %v", got, want)
+	}
+	o.chatStep(-1)
+	if o.space != "f1" || o.chat != 0 {
+		t.Fatal("chat knob back did not loop to the stalest chat")
+	}
+}
+
+func TestOrcaPSAllReadsPairedHosts(t *testing.T) {
+	o, _, _ := testOrca(t)
+	local := strings.Replace(orcaFixture, `{"result":{`, `{"result":{"hostScope":{"omittedHostSelectors":[{"selector":"--environment ide"}]},`, 1)
+	remote := `{"result":{"worktrees":[{"worktreeId":"x::/app","displayName":"container","workspaceKind":"git","agents":[
+  {"orcaSessionId":"e1","conversationName":"aqa","stateStartedAt":4000},
+  {"orcaSessionId":"e2","conversationName":"spec","stateStartedAt":6000}]}]}}`
+	var calls []string
+	var mu sync.Mutex
+	o.run = func(args ...string) ([]byte, error) {
+		mu.Lock()
+		calls = append(calls, strings.Join(args, " "))
+		mu.Unlock()
+		if slices.Contains(args, "ide") {
+			return []byte(remote), nil
+		}
+		return []byte(local), nil
+	}
+	spaces, err := o.psAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(calls, "worktree ps --environment ide --json") {
+		t.Fatalf("calls %v, want the paired host read", calls)
+	}
+	c := spaces[0]
+	if c.name != "container" || len(c.chats) != 2 || c.chats[0].name != "spec" || !slices.Equal(c.env, []string{"--environment", "ide"}) {
+		t.Fatalf("paired workspace %+v, want first with chats by stateStartedAt", c)
+	}
+	o.spaces = spaces
+	o.step(1)
+	o.chatStep(1)
+	if o.space != "r2::/b" {
+		t.Fatalf("chat walk %s, want the local chat at 5000 after the remote one at 6000", o.space)
+	}
+}
+
+func TestOrcaPollKeepsShownChat(t *testing.T) {
+	o, _, _ := testOrca(t)
+	o.step(1)
+	o.chatStep(1)
+	if o.space != "r1::/a" || o.chat != 0 {
+		t.Fatalf("setup at %s/%d", o.space, o.chat)
+	}
+	o.scrollTo, o.scrollAt = 30, 30
+	fresh := strings.Replace(strings.Replace(orcaFixture, `"sortAt":1000,"title":"old"`, `"sortAt":8000,"title":"old"`, 1), `"prompt":"go"`, `"prompt":"go on"`, 1)
+	spaces, _, err := orcaParse([]byte(fresh), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	o.mu.Lock()
+	o.replaceLocked(spaces)
+	o.publishLocked()
+	c := o.shownLocked()
+	o.mu.Unlock()
+	if c.id != "a2" || o.scrollTo != 30 {
+		t.Fatalf("shown %s scroll %v, want a2 kept with its scroll after new activity", c.id, o.scrollTo)
+	}
+	o.mu.Lock()
+	o.replaceLocked(spaces[1:])
+	o.mu.Unlock()
+	if o.capturing() {
+		t.Fatal("browse kept a gone chat")
+	}
+}
+
+func TestOrcaReplyTLDRFirst(t *testing.T) {
+	for in, want := range map[string]string{
+		"done\n- a\n\n**TLDR**: push it\n": "push it\n\n\ndone\n• a",
+		"done\n\nTL;DR — nothing":           "nothing\n\n\ndone",
+		"**TLDR:** go":                       "\x01TLDR:\x01 go",
+		"no summary":                         "no summary",
+	} {
+		if got := orcaReply(in); got != want {
+			t.Errorf("orcaReply(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestOrcaHoldMarksRead(t *testing.T) {
+	o, calls, _ := testOrca(t)
+	if err := o.hold(); err != nil {
+		t.Fatal(err)
+	}
+	<-calls.done
+	o.step(1)
+	o.chatStep(1)
+	if err := o.hold(); err != nil {
+		t.Fatal(err)
+	}
+	<-calls.done
+	if want := []string{"read b", "read new"}; !slices.Equal(calls.calls, want) {
+		t.Fatalf("calls %v, want the freshest unread idle, the shown chat while browsing", calls.calls)
+	}
+}
+
+func TestOrcaCloseChatOnlyWhileBrowsing(t *testing.T) {
+	o, calls, _ := testOrca(t)
+	if err := o.closeChat(); err == nil {
+		t.Fatal("close outside browse did not fail")
+	}
+	o.step(1)
+	if err := o.closeChat(); err != nil {
+		t.Fatal(err)
+	}
+	<-calls.done
+	if want := []string{"front", "close b"}; !slices.Equal(calls.calls, want) {
+		t.Fatalf("calls %v, want %v", calls.calls, want)
 	}
 }

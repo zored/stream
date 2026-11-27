@@ -2,7 +2,7 @@
 
 enum { AX_BAR, AX_LIKE, AX_DISLIKE };
 enum { AX_CMD = 1, AX_SHIFT = 2 };
-enum { AX_MATCH_EXACT, AX_MATCH_PREFIX, AX_MATCH_SUFFIX };
+enum { AX_MATCH_EXACT, AX_MATCH_PREFIX, AX_MATCH_SUFFIX, AX_MATCH_CONTAINS };
 
 pid_t ax_app_pid(const char *bundle);
 int ax_trusted(int prompt);

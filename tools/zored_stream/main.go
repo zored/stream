@@ -133,6 +133,9 @@ func main() {
 	powerAddr := flag.String("power", "127.0.0.1:47122", "keep-awake + sleep HTTP address")
 	headphonesAddr := flag.String("headphones", "127.0.0.1:47123", "headphones toggle HTTP address")
 	wifiVPN := flag.String("wifi-vpn", "Barbos_SE", "Viscosity connection to bring up after a network switch; empty = leave VPNs alone")
+	wifiFallback := flag.String("wifi-fallback", "bo phone", "network to join when keep-awake is on and the last network has no internet; empty = none")
+	wifiCycle := flag.String("wifi-cycle", "bo phone,VK_Team,zored_smart", "networks a second and later touch on the wi-fi tile steps through while the pick is open; empty = touch only reopens the pick")
+	wifiRecover := flag.Bool("wifi-recover", true, "with keep-awake on and Wi-Fi joined to no network for 30 s, rejoin the last network, then -wifi-fallback")
 	wifiAddr := flag.String("wifi", "127.0.0.1:47124", "wi-fi power + network picker HTTP address")
 	calendarAddr := flag.String("calendar", "127.0.0.1:47126", "calendar + reminders HTTP address")
 	kvmAddr := flag.String("kvm", "127.0.0.1:47125", "monitor KVM input switch HTTP address")
@@ -152,9 +155,16 @@ func main() {
 	usageEvery := flag.Duration("usage-every", 15*time.Minute, "Claude usage fetch interval")
 	usageProxy := flag.String("usage-proxy", "", "HTTP proxy for api.anthropic.com and Open-Meteo")
 	npScript := flag.String("nowplaying-script", filepath.Join(home, ".local/share/zored-stream/nowplaying.pl"), "perl loader for the Now Playing dylib")
+	companionLogs := flag.String("companion-logs", filepath.Join(home, "Library/Application Support/companion/logs"), "Companion log dir pruned hourly")
+	companionLogsKeep := flag.Duration("companion-logs-keep", 3*24*time.Hour, "remove Companion logs older than this")
 	npLib := flag.String("nowplaying-lib", filepath.Join(home, ".local/lib/libnowplaying.dylib"), "Now Playing dylib")
 	flag.Parse()
 	log.SetPrefix("zored_stream: ")
+	lp := logPruner{dir: *companionLogs, keep: *companionLogsKeep}
+	go func() {
+		lp.prune()
+		every(logPruneEvery, lp.prune)
+	}()
 
 	c := &call{mic: unknown, cam: unknown, changed: make(chan struct{}, 1)}
 	go c.publish()
@@ -317,6 +327,8 @@ func main() {
 		mux.HandleFunc("GET /agents", ag.serveJSON)
 		handle(mux, "/agent/focus", oc.tap)
 		handle(mux, "/agent/new", newChat)
+		handle(mux, "/agent/read", oc.hold)
+		handle(mux, "/agent/close", oc.closeChat)
 		mux.HandleFunc("GET /choice", ch.serveJSON)
 		mux.HandleFunc("POST /choice/{edge}", func(w http.ResponseWriter, r *http.Request) {
 			b, err := strconv.Atoi(r.URL.Query().Get("b"))
@@ -351,7 +363,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	wf := newWifi(v, *wifiVPN, us.say)
+	wf := newWifi(v, *wifiVPN, *wifiFallback, splitList(*wifiCycle), func() bool { return *wifiRecover && pw.awake() }, us.say)
 	wf.poll()
 	br, err := newBrightness(vol.bar, *companionDB)
 	if err != nil {
@@ -598,7 +610,7 @@ func main() {
 		handle(mux, "/kvm/pip", kv.togglePIP)
 	})
 	go every(wifiPollEvery, wf.poll)
-	go every(wifiProbeEvery, wf.probe)
+	go every(wifiProbeEvery, func() { wf.probe() })
 	go serve(*wifiAddr, func(mux *http.ServeMux) {
 		handle(mux, "/wifi/touch", wf.touch)
 		handle(mux, "/wifi/power", wf.power)

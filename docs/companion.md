@@ -146,7 +146,7 @@ Fork commits (surface settings, `plugin_cfg_*`):
 
 - `hapticPressPattern`, `hapticHoldMs`: haptic on button/knob/tile press and a second one after the hold time (400 ms here,
   matches the long-press in `gen_pages.py`). `hapticHoldControls` limits the second one to listed control ids (generated `companion/hold-controls.txt`)
-  (Makefile `HAPTIC_HOLD_CONTROLS`, now `encoder-1-0` = the TRACK knob; knob ids: `encoder-<row>-<0|7>`, buttons `button-1…8`). The driver has `vibrate(pattern)`, upstream never calls it. Patterns: `LoupedeckVibratePattern` in `@loupedeck/core`.
+  (Makefile `HAPTIC_HOLD_CONTROLS`, now `encoder-1-0` = the TRACK knob; knob ids: `encoder-<row>-<0|7>`, buttons `button-1…8`). `hapticHoldExtra` adds later thresholds per control (`<id>:<ms>`, generated `companion/hold-extra.txt` from action sets longer than 400 ms, Makefile `HAPTIC_HOLD_EXTRA`). Release-time sets: on release Companion runs the set with the largest duration below the hold time unless it is in `runWhileHeld`, else `up` (read from 5.1.1 `main.js` `pressControl`). The driver has `vibrate(pattern)`, upstream never calls it. Patterns: `LoupedeckVibratePattern` in `@loupedeck/core`.
 - touch position in buttons mode: sliding a strip updates the fader value variables, upstream only did that in slider mode.
 - left strip swipe → `POST zored_stream /volume/drag?dy=<px>` (`:47113`); right strip → `POST /ai/slide?y=<px>` (`:47117`, absolute position).
 - orientation (`src/orientation.ts`): holding `encoder-0-7` 3 s without a turn, then every 2 s while held, steps 90 → 0 → 270 → 180 → 90 (device turned clockwise; each step turns the picture 90° clockwise),

@@ -71,6 +71,7 @@ type calText struct {
 	size         float64
 	rgb, tailRGB uint32
 	center       bool
+	rich         bool
 }
 
 func calPNG(w, h float64, rotate bool, bg uint32, texts []calText) (string, error) {

@@ -193,6 +193,98 @@ void cal_canvas_text(void *c, const char *text, const char *tail, double x, doub
     }
 }
 
+// rich_string reads text with \x01 (strong: bold, strong_rgb) and \x02 (code: strong_rgb) toggles.
+static NSAttributedString *rich_string(const char *text, CTFontRef font, CTFontRef bold, CGColorRef color, CGColorRef strong, CTParagraphStyleRef style) {
+    NSString *s = [NSString stringWithUTF8String:text];
+    NSMutableAttributedString *as = [[NSMutableAttributedString alloc] init];
+    BOOL on_strong = NO, on_code = NO;
+    NSUInteger start = 0;
+    for (NSUInteger i = 0; i <= s.length; i++) {
+        unichar ch = i < s.length ? [s characterAtIndex:i] : 0;
+        if (i < s.length && ch != 1 && ch != 2) continue;
+        if (i > start) {
+            NSDictionary *a = @{(id)kCTFontAttributeName: (__bridge id)(on_strong ? bold : font),
+                                (id)kCTForegroundColorAttributeName: (__bridge id)(on_strong || on_code ? strong : color),
+                                (id)kCTParagraphStyleAttributeName: (__bridge id)style};
+            [as appendAttributedString:[[NSAttributedString alloc] initWithString:[s substringWithRange:NSMakeRange(start, i - start)] attributes:a]];
+        }
+        if (ch == 1) on_strong = !on_strong;
+        if (ch == 2) on_code = !on_code;
+        start = i + 1;
+    }
+    return as;
+}
+
+static CTParagraphStyleRef rich_style(double size) {
+    CTLineBreakMode wrap = kCTLineBreakByWordWrapping;
+    CGFloat lh = size * 1.25;
+    CTParagraphStyleSetting ps[] = {{kCTParagraphStyleSpecifierLineBreakMode, sizeof wrap, &wrap},
+                                    {kCTParagraphStyleSpecifierMinimumLineHeight, sizeof lh, &lh},
+                                    {kCTParagraphStyleSpecifierMaximumLineHeight, sizeof lh, &lh}};
+    return CTParagraphStyleCreate(ps, 3);
+}
+
+void cal_canvas_rich(void *c, const char *text, double x, double y, double w, double h, double size, unsigned rgb, unsigned strong_rgb) {
+    @autoreleasepool {
+        CGContextRef ctx = ((canvas *)c)->ctx;
+        double H = ((canvas *)c)->h;
+        CTFontRef font = CTFontCreateWithName(CFSTR("JetBrains Mono"), size, NULL);
+        CTFontRef bold = CTFontCreateCopyWithSymbolicTraits(font, size, NULL, kCTFontBoldTrait, kCTFontBoldTrait);
+        if (!bold) bold = CFRetain(font);
+        CGColorRef color = rgb_color(rgb), strong = rgb_color(strong_rgb);
+        CTParagraphStyleRef style = rich_style(size);
+        CGFloat lh = size * 1.25;
+        NSAttributedString *as = rich_string(text, font, bold, color, strong, style);
+        CTFramesetterRef fs = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)as);
+        CGRect box = CGRectMake(x, H - y - h, w, h);
+        CGPathRef path = CGPathCreateWithRect(CGRectMake(x, box.origin.y - H, w, h + H), NULL);
+        CTFrameRef frame = CTFramesetterCreateFrame(fs, CFRangeMake(0, 0), path, NULL);
+        CFArrayRef lines = CTFrameGetLines(frame);
+        CFIndex n = CFArrayGetCount(lines);
+        CGPoint origins[n];
+        CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins);
+        double top = box.origin.y + h, ascent = CTFontGetAscent(font);
+        CGContextSaveGState(ctx);
+        CGContextClipToRect(ctx, box);
+        for (CFIndex i = 0; i < n; i++) {
+            CGContextSetTextPosition(ctx, x + origins[i].x, top - ascent - i * lh);
+            CTLineDraw(CFArrayGetValueAtIndex(lines, i), ctx);
+        }
+        CGContextRestoreGState(ctx);
+        CFRelease(frame);
+        CGPathRelease(path);
+        CFRelease(fs);
+        CFRelease(style);
+        CGColorRelease(color);
+        CGColorRelease(strong);
+        CFRelease(bold);
+        CFRelease(font);
+    }
+}
+
+int cal_rich_lines(const char *text, double w, double size) {
+    @autoreleasepool {
+        CTFontRef font = CTFontCreateWithName(CFSTR("JetBrains Mono"), size, NULL);
+        CTFontRef bold = CTFontCreateCopyWithSymbolicTraits(font, size, NULL, kCTFontBoldTrait, kCTFontBoldTrait);
+        if (!bold) bold = CFRetain(font);
+        CGColorRef color = rgb_color(0);
+        CTParagraphStyleRef style = rich_style(size);
+        NSAttributedString *as = rich_string(text, font, bold, color, color, style);
+        CTFramesetterRef fs = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)as);
+        CGPathRef path = CGPathCreateWithRect(CGRectMake(0, 0, w, 1e6), NULL);
+        CTFrameRef frame = CTFramesetterCreateFrame(fs, CFRangeMake(0, 0), path, NULL);
+        int n = (int)CFArrayGetCount(CTFrameGetLines(frame));
+        CFRelease(frame);
+        CGPathRelease(path);
+        CFRelease(fs);
+        CFRelease(style);
+        CGColorRelease(color);
+        CFRelease(bold);
+        CFRelease(font);
+        return n;
+    }
+}
+
 int cal_text_lines(const char *text, double w, double size) {
     @autoreleasepool {
         CTFontRef font = CTFontCreateWithName(CFSTR("JetBrains Mono"), size, NULL);

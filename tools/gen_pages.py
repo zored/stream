@@ -31,6 +31,7 @@ TIMERS = "http://127.0.0.1:47129"
 UNREAD = "http://127.0.0.1:47130"
 WEATHER_URL = "http://127.0.0.1:47131"
 HOLD_MS = 400
+LONG_HOLD_MS = 1500
 BOOTSTRAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zored_stream", "icons")
 HINTS = ("hint_l0", "hint_l1", "hint_l2", "hint_r0", "hint_r1", "hint_r2")
 CUSTOM_VARIABLES = {name: "" for name in (
@@ -169,10 +170,12 @@ def ai(path):
     return [post(f'"{AI}{path}"' if WINDOWS else f"'{AI}{path}'")]
 
 
-def button(style, down=(), up=(), left=None, right=None, held=None):
+def button(style, down=(), up=(), left=None, right=None, held=None, released=None):
     sets = {"down": list(down), "up": list(up)}
     if held:
         sets[str(HOLD_MS)] = list(held)
+    for ms, actions in (released or {}).items():
+        sets[str(ms)] = list(actions)
     rotary = left is not None or right is not None
     if rotary:
         sets["rotate_left"] = list(left or [])
@@ -427,7 +430,8 @@ def switch_tile():
 def agents_tile():
     return button([canvas(), box("box0", 0x000000),
                    image("dots", expr("$(custom:agents_svg)"), x=v(6), y=v(6), width=v(88), height=v(88))],
-                  up=[post(AGENTS + "/agent/focus")], held=[post(AGENTS + "/agent/new")])
+                  up=[post(AGENTS + "/agent/focus")],
+                  released={HOLD_MS: [post(AGENTS + "/agent/read")], LONG_HOLD_MS: [post(AGENTS + "/agent/close")]})
 
 
 def dictation_led():
@@ -593,6 +597,11 @@ def hold_controls(grid):
                   if str(HOLD_MS) in b["steps"]["0"]["action_sets"])
 
 
+def hold_extra(grid):
+    return sorted(f"{control_id(r, c)}:{k}" for (r, c), b in grid.items()
+                  for k in b["steps"]["0"]["action_sets"] if k.isdigit() and int(k) > HOLD_MS)
+
+
 def write(path, data):
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
@@ -606,4 +615,6 @@ for build in (test_page, media_page):
     if build is media_page:
         with open(os.path.join(out, "hold-controls.txt"), "w") as f:
             f.write(",".join(hold_controls(grid)) + "\n")
+        with open(os.path.join(out, "hold-extra.txt"), "w") as f:
+            f.write(",".join(hold_extra(grid)) + "\n")
 write(os.path.join(out, "custom-variables.json"), CUSTOM_VARIABLES)

@@ -60,6 +60,21 @@ static char *orca_buttons(AXUIElementRef root, int max_nodes, int *nodes, int *w
     CFRelease(seen);
     return buf;
 }
+static int orca_action(AXUIElementRef e, const char *name) {
+    CFStringRef a = CFStringCreateWithCString(NULL, name, kCFStringEncodingUTF8);
+    int code = AXUIElementPerformAction(e, a);
+    CFRelease(a);
+    return code;
+}
+
+// orca_cancel_menu closes the context menu holding item.
+static int orca_cancel_menu(AXUIElementRef item) {
+    CFTypeRef menu = NULL;
+    if (AXUIElementCopyAttributeValue(item, kAXParentAttribute, &menu) != kAXErrorSuccess || !menu) return -1;
+    int code = AXUIElementPerformAction(menu, kAXCancelAction);
+    CFRelease(menu);
+    return code;
+}
 */
 import "C"
 
@@ -97,29 +112,25 @@ func orcaFront() error {
 	return nil
 }
 
-// orcaPressTab presses the chat tab of the active workspace: an AXButton titled `[<status> ]<name> Close tab <name>`; the close button carries the same text only in AXDescription.
-func orcaPressTab(name string) error {
-	pid, err := orcaPid()
-	if err != nil {
-		return err
-	}
-	app := C.ax_app(pid)
-	defer C.ax_release(app)
-	cRole, cAttr, cText := C.CString("AXButton"), C.CString("AXTitle"), C.CString(name+" Close tab "+name)
+// orcaRow finds the chat's row in the sidebar outline: an AXRow titled `[<status>[ · Unread] ]<name> - <preview> <age>`, there for every workspace and host; waits up to orcaTabWait. The caller releases it.
+func orcaRow(app C.AXUIElementRef, name string) (C.AXUIElementRef, error) {
+	cRole, cAttr := C.CString("AXRow"), C.CString("AXTitle")
 	defer C.free(unsafe.Pointer(cRole))
 	defer C.free(unsafe.Pointer(cAttr))
-	defer C.free(unsafe.Pointer(cText))
+	queries := []struct {
+		text  string
+		match C.int
+	}{{" " + name + " - ", C.AX_MATCH_CONTAINS}, {name + " - ", C.AX_MATCH_PREFIX}}
 	deadline := time.Now().Add(orcaTabWait)
 	for {
 		var truncated C.int
-		tab := C.ax_find_attr(app, cRole, cAttr, cText, C.AX_MATCH_SUFFIX, axMaxNodes, &truncated)
-		if tab != 0 {
-			code := C.ax_press(tab)
-			C.ax_release(tab)
-			if code != 0 {
-				return fmt.Errorf("AXPress on tab %q: AXError %d", name, int(code))
+		for _, q := range queries {
+			cText := C.CString(q.text)
+			row := C.ax_find_attr(app, cRole, cAttr, cText, q.match, axMaxNodes, &truncated)
+			C.free(unsafe.Pointer(cText))
+			if row != 0 {
+				return row, nil
 			}
-			return nil
 		}
 		if time.Now().After(deadline) {
 			hint := ""
@@ -129,8 +140,116 @@ func orcaPressTab(name string) error {
 			var nodes, windows C.int
 			buttons := C.orca_buttons(app, axMaxNodes, &nodes, &windows)
 			defer C.free(unsafe.Pointer(buttons))
-			return fmt.Errorf("no tab %q in Orca after %s%s; %d windows, %d nodes, buttons: %s",
+			return 0, fmt.Errorf("no sidebar row %q in Orca after %s%s; %d windows, %d nodes, buttons: %s",
 				name, orcaTabWait, hint, int(windows), int(nodes), C.GoString(buttons))
+		}
+		time.Sleep(orcaTabEvery)
+	}
+}
+
+func orcaAXApp() (C.AXUIElementRef, error) {
+	pid, err := orcaPid()
+	if err != nil {
+		return 0, err
+	}
+	return C.ax_app(pid), nil
+}
+
+// orcaPressRow presses the chat's sidebar row: that switches workspace and tab in one go.
+func orcaPressRow(name string) error {
+	app, err := orcaAXApp()
+	if err != nil {
+		return err
+	}
+	defer C.ax_release(app)
+	row, err := orcaRow(app, name)
+	if err != nil {
+		return err
+	}
+	defer C.ax_release(row)
+	if code := C.ax_press(row); code != 0 {
+		return fmt.Errorf("AXPress on row %q: AXError %d", name, int(code))
+	}
+	return nil
+}
+
+// orcaCloseTab switches to the chat by its sidebar row, then presses its tab's close button (`Close tab <name>` in AXDescription); a pinned tab has none.
+func orcaCloseTab(name string) error {
+	if err := orcaPressRow(name); err != nil {
+		return err
+	}
+	app, err := orcaAXApp()
+	if err != nil {
+		return err
+	}
+	defer C.ax_release(app)
+	cRole, cAttr, cText := C.CString("AXButton"), C.CString("AXDescription"), C.CString("Close tab "+name)
+	defer C.free(unsafe.Pointer(cRole))
+	defer C.free(unsafe.Pointer(cAttr))
+	defer C.free(unsafe.Pointer(cText))
+	deadline := time.Now().Add(orcaMenuWait)
+	for {
+		var truncated C.int
+		if b := C.ax_find_attr(app, cRole, cAttr, cText, C.AX_MATCH_EXACT, axMaxNodes, &truncated); b != 0 {
+			code := C.ax_press(b)
+			C.ax_release(b)
+			if code != 0 {
+				return fmt.Errorf("AXPress on close of %q: AXError %d", name, int(code))
+			}
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("no close button for %q after %s (pinned tab?)", name, orcaMenuWait)
+		}
+		time.Sleep(orcaTabEvery)
+	}
+}
+
+const orcaMenuWait = time.Second
+
+// orcaMarkRead opens the context menu of the chat's sidebar row and presses `Mark Read`; a menu with `Mark Unread` means already read and is closed.
+func orcaMarkRead(name string) error {
+	app, err := orcaAXApp()
+	if err != nil {
+		return err
+	}
+	defer C.ax_release(app)
+	row, err := orcaRow(app, name)
+	if err != nil {
+		return err
+	}
+	defer C.ax_release(row)
+	cShow := C.CString("AXShowMenu")
+	defer C.free(unsafe.Pointer(cShow))
+	if code := C.orca_action(row, cShow); code != 0 {
+		return fmt.Errorf("AXShowMenu on row %q: AXError %d", name, int(code))
+	}
+	cRole, cAttr, cRead, cUnread := C.CString("AXMenuItem"), C.CString("AXTitle"), C.CString("Mark Read"), C.CString("Mark Unread")
+	defer C.free(unsafe.Pointer(cRole))
+	defer C.free(unsafe.Pointer(cAttr))
+	defer C.free(unsafe.Pointer(cRead))
+	defer C.free(unsafe.Pointer(cUnread))
+	deadline := time.Now().Add(orcaMenuWait)
+	for {
+		var truncated C.int
+		if item := C.ax_find_attr(app, cRole, cAttr, cRead, C.AX_MATCH_EXACT, axMaxNodes, &truncated); item != 0 {
+			code := C.ax_press(item)
+			C.ax_release(item)
+			if code != 0 {
+				return fmt.Errorf("AXPress on Mark Read of %q: AXError %d", name, int(code))
+			}
+			return nil
+		}
+		if item := C.ax_find_attr(app, cRole, cAttr, cUnread, C.AX_MATCH_EXACT, axMaxNodes, &truncated); item != 0 {
+			code := C.orca_cancel_menu(item)
+			C.ax_release(item)
+			if code != 0 {
+				return fmt.Errorf("close the menu of %q: AXError %d", name, int(code))
+			}
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("no Mark Read / Mark Unread in the menu of %q after %s", name, orcaMenuWait)
 		}
 		time.Sleep(orcaTabEvery)
 	}
@@ -187,9 +306,22 @@ func orcaLogoPNG(icon string) ([]byte, error) {
 }
 
 // orcaStripPNG draws the chat strip; bar > 0 grows along the bottom edge (forward push), < 0 along the top (back), as in chats.
+// orcaRichLines counts the wrapped lines of orcaMarkdown output.
+func orcaRichLines(text string, w, size float64) int {
+	s := C.CString(text)
+	defer C.free(unsafe.Pointer(s))
+	return int(C.cal_rich_lines(s, C.double(w), C.double(size)))
+}
+
 func orcaStripPNG(w, h, bar float64, texts ...calText) (string, error) {
 	c := C.cal_canvas_new(C.double(w), C.double(h), 4, 1)
 	for _, t := range texts {
+		if t.rich {
+			s := C.CString(t.text)
+			C.cal_canvas_rich(c, s, C.double(t.x), C.double(t.y), C.double(t.w), C.double(t.h), C.double(t.size), C.uint(t.rgb), whiteRGB)
+			C.free(unsafe.Pointer(s))
+			continue
+		}
 		s, tail := C.CString(t.text), C.CString(t.tail)
 		C.cal_canvas_text(c, s, tail, C.double(t.x), C.double(t.y), C.double(t.w), C.double(t.h), C.double(t.size), C.uint(t.rgb), C.uint(t.tailRGB), cBool(t.center))
 		C.free(unsafe.Pointer(s))

@@ -135,7 +135,7 @@ func switchHeadphones(on bool) error {
 		if err != nil {
 			return err
 		}
-		route, err := speakersRoute(devices)
+		route, err := builtinRoute(devices)
 		if err != nil {
 			return err
 		}
@@ -216,13 +216,21 @@ func headphonesRoute(devices []audioDevice) (audioRoute, error) {
 }
 
 func speakersRoute(devices []audioDevice) (audioRoute, error) {
-	out, ok := findDevice(devices, isSpeakers)
-	if !ok {
-		out, ok = findDevice(devices, func(d audioDevice) bool { return d.output && d.transport == "bltn" })
+	if out, ok := findDevice(devices, isSpeakers); ok {
+		return withMic(devices, out)
 	}
+	return builtinRoute(devices)
+}
+
+func builtinRoute(devices []audioDevice) (audioRoute, error) {
+	out, ok := findDevice(devices, func(d audioDevice) bool { return d.output && d.transport == "bltn" })
 	if !ok {
-		return audioRoute{}, errors.New("no speakers found")
+		return audioRoute{}, errors.New("no built-in speakers found")
 	}
+	return withMic(devices, out)
+}
+
+func withMic(devices []audioDevice, out audioDevice) (audioRoute, error) {
 	in, ok := findDevice(devices, isCameraMic)
 	if !ok {
 		in, ok = findDevice(devices, func(d audioDevice) bool { return d.input && d.transport == "bltn" })

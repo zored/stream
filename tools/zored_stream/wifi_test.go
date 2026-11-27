@@ -1,8 +1,55 @@
 package main
 
 import (
+	"slices"
 	"testing"
+	"time"
 )
+
+func TestRecoverTargets(t *testing.T) {
+	for _, c := range []struct {
+		last, fallback, ssid string
+		want                 []string
+	}{
+		{"home", "bo phone", "", []string{"home", "bo phone"}},
+		{"", "bo phone", "", []string{"bo phone"}},
+		{"bo phone", "bo phone", "", []string{"bo phone"}},
+		{"", "", "", nil},
+	} {
+		if got := recoverTargets(c.last, c.fallback, c.ssid); !slices.Equal(got, c.want) {
+			t.Errorf("recoverTargets(%q, %q, %q) = %q, want %q", c.last, c.fallback, c.ssid, got, c.want)
+		}
+	}
+}
+
+func TestRecoverDue(t *testing.T) {
+	awake := true
+	fresh := func() *wifi {
+		awake = true
+		return &wifi{fallback: "bo phone", awake: func() bool { return awake }, on: true, lostAt: time.Now().Add(-wifiLostFor)}
+	}
+	if !fresh().recoverDueLocked() {
+		t.Error("awake, no network for 30 s, wi-fi on: want recovery")
+	}
+	for name, spoil := range map[string]func(w *wifi){
+		"sun off":    func(*wifi) { awake = false },
+		"wi-fi off":  func(w *wifi) { w.on = false },
+		"online":     func(w *wifi) { w.online = true },
+		"just lost":  func(w *wifi) { w.lostAt = time.Now() },
+		"never lost": func(w *wifi) { w.lostAt = time.Time{} },
+		"joined":     func(w *wifi) { w.ssid = "home" },
+		"running":    func(w *wifi) { w.recovering = true },
+		"picking":    func(w *wifi) { w.pickTill = time.Now().Add(time.Minute) },
+		"joining":    func(w *wifi) { w.joining, w.joinTill = "x", time.Now().Add(time.Minute) },
+		"backoff":    func(w *wifi) { w.recoverAt = time.Now().Add(time.Minute) },
+	} {
+		w := fresh()
+		spoil(w)
+		if w.recoverDueLocked() {
+			t.Errorf("%s: recovery must not start", name)
+		}
+	}
+}
 
 func TestWifiLabel(t *testing.T) {
 	if got := wifiLabel("Момент и ВайФай 5G"); got != "Момент и ВайФа" {
@@ -55,5 +102,31 @@ func TestVPN(t *testing.T) {
 	}
 	if vpns, err := parseVPN("off\n"); err != nil || vpns != nil {
 		t.Errorf("off: %v %v", vpns, err)
+	}
+}
+
+func TestNextCycle(t *testing.T) {
+	cycle := splitList(" bo phone, VK_Team ,zored_smart,")
+	if len(cycle) != 3 || cycle[0] != "bo phone" || cycle[1] != "VK_Team" {
+		t.Fatalf("splitList: %q", cycle)
+	}
+	for cur, want := range map[string]string{"bo phone": "VK_Team", "VK_Team": "zored_smart", "zored_smart": "bo phone", "": "bo phone", "zored_5G": "bo phone"} {
+		if got := nextCycle(cycle, cur); got != want {
+			t.Errorf("nextCycle(%q) = %q, want %q", cur, got, want)
+		}
+	}
+}
+
+func TestTouchCyclesWhilePicking(t *testing.T) {
+	w := &wifi{on: true, ssid: "zored_smart", cycle: []string{"bo phone", "VK_Team", "zored_smart"}, strip: func(stripNote, time.Duration) {}}
+	w.list, w.pick, w.pickTill = []string{"VK_Team", "zored_smart"}, 1, time.Now().Add(wifiPickFor)
+	for _, want := range []string{"bo phone", "VK_Team", "zored_smart", "bo phone"} {
+		if err := w.touch(); err != nil {
+			t.Fatal(err)
+		}
+		w.join.Stop()
+		if got := w.list[w.pick]; got != want {
+			t.Fatalf("pick %q, want %q", got, want)
+		}
 	}
 }

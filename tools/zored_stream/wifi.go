@@ -20,6 +20,8 @@ const (
 	vpnRereadEvery  = 30 * time.Second
 	wifiPollEvery   = 3 * time.Second
 	wifiProbeEvery  = 15 * time.Second
+	wifiLostFor     = 30 * time.Second
+	wifiRecoverWait = time.Minute
 	wifiProbeURL    = "http://captive.apple.com/hotspot-detect.html"
 	wifiOffline     = "offline"
 	wifiNameMaxRune = 14
@@ -47,10 +49,19 @@ type wifi struct {
 	pick     int
 	join     *time.Timer
 	errorTil time.Time
+
+	awake      func() bool
+	fallback   string
+	last       string
+	lostAt     time.Time
+	recovering bool
+	recoverAt  time.Time
+	vpnOwed    bool
+	cycle      []string
 }
 
-func newWifi(v *vars, vpnName string, strip func(stripNote, time.Duration)) *wifi {
-	return &wifi{vars: v, vpnName: vpnName, strip: strip, online: true}
+func newWifi(v *vars, vpnName, fallback string, cycle []string, awake func() bool, strip func(stripNote, time.Duration)) *wifi {
+	return &wifi{vars: v, vpnName: vpnName, fallback: fallback, cycle: cycle, awake: awake, strip: strip, online: true}
 }
 
 func (w *wifi) publish() {
@@ -108,6 +119,14 @@ func (w *wifi) poll() {
 	}
 	changed := link.ssid != w.ssid
 	w.on, w.ssid, w.phone = on, link.ssid, link.phone()
+	switch {
+	case !on || link.ssid != "":
+		w.lostAt = time.Time{}
+	case w.lostAt.IsZero():
+		w.lostAt = time.Now()
+	}
+	lost := w.recoverDueLocked()
+	w.recovering = w.recovering || lost
 	if link.ssid != "" && link.ssid == w.joining {
 		w.joining = ""
 	}
@@ -116,19 +135,110 @@ func (w *wifi) poll() {
 	if changed {
 		go w.probe()
 	}
+	if lost {
+		go w.recover()
+	}
 }
 
-func (w *wifi) probe() {
+var wifiOnline = func() bool {
 	c := &http.Client{Timeout: 5 * time.Second}
 	resp, err := c.Get(wifiProbeURL)
-	online := err == nil && resp.StatusCode == http.StatusOK
-	if err == nil {
-		resp.Body.Close()
+	if err != nil {
+		return false
 	}
+	resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
+}
+
+func (w *wifi) probe() bool {
+	online := wifiOnline()
 	w.mu.Lock()
 	w.online = online
+	restore, ssid := false, w.ssid
+	if online {
+		if w.ssid != "" && w.ssid != w.fallback {
+			w.last = w.ssid
+		}
+		if w.vpnOwed {
+			w.vpnOwed, restore = false, true
+		}
+	}
 	w.publishLocked()
 	w.mu.Unlock()
+	if restore {
+		go w.restoreVPN(ssid)
+	}
+	return online
+}
+
+func (w *wifi) recoverDueLocked() bool {
+	now := time.Now()
+	return w.on && w.ssid == "" && !w.online && !w.lostAt.IsZero() && now.Sub(w.lostAt) >= wifiLostFor && !w.recovering && !w.picking() &&
+		!(w.joining != "" && now.Before(w.joinTill)) && !now.Before(w.recoverAt) &&
+		len(recoverTargets(w.last, w.fallback, w.ssid)) > 0 && w.awake()
+}
+
+func recoverTargets(last, fallback, ssid string) []string {
+	var targets []string
+	for _, t := range []string{last, fallback} {
+		if t != "" && t != ssid && !slices.Contains(targets, t) {
+			targets = append(targets, t)
+		}
+	}
+	return targets
+}
+
+// recover runs with the keep-awake session on once Wi-Fi has had no network for wifiLostFor: the last network, then the fallback hotspot.
+func (w *wifi) recover() {
+	defer func() {
+		w.mu.Lock()
+		w.recovering, w.recoverAt, w.joining = false, time.Now().Add(wifiRecoverWait), ""
+		w.publishLocked()
+		w.mu.Unlock()
+	}()
+	w.mu.Lock()
+	targets := recoverTargets(w.last, w.fallback, w.ssid)
+	w.mu.Unlock()
+	log.Printf("wi-fi recover: no network for %v, trying %q", wifiLostFor, targets)
+	if w.vpnName != "" {
+		if err := vpnDisconnectAll(); err != nil {
+			log.Print(err)
+			return
+		}
+		w.mu.Lock()
+		w.vpnOwed = true
+		w.mu.Unlock()
+	}
+	for _, ssid := range targets {
+		w.mu.Lock()
+		w.joining, w.joinTill = ssid, time.Now().Add(wifiJoinFor+wifiJoinFor)
+		w.publishLocked()
+		w.mu.Unlock()
+		if err := wifiJoin(ssid); err != nil {
+			log.Printf("wi-fi recover: %v", err)
+			continue
+		}
+		if w.waitOnline(ssid) {
+			log.Printf("wi-fi recover: online through %q", ssid)
+			return
+		}
+		log.Printf("wi-fi recover: %q has no internet", ssid)
+	}
+	w.fail()
+}
+
+func (w *wifi) waitOnline(ssid string) bool {
+	for deadline := time.Now().Add(wifiJoinFor); time.Now().Before(deadline); {
+		time.Sleep(time.Second)
+		if l, err := wifiCurrent(); err != nil || l.ssid != ssid || !l.router.IsValid() {
+			continue
+		}
+		w.poll()
+		if w.probe() {
+			return true
+		}
+	}
+	return false
 }
 
 func (w *wifi) power() error {
@@ -150,6 +260,11 @@ func (w *wifi) touch() error {
 		w.mu.Unlock()
 		return nil
 	}
+	if w.picking() && len(w.cycle) > 0 {
+		w.cycleLocked()
+		w.mu.Unlock()
+		return nil
+	}
 	w.list = slices.Clone(w.cache)
 	if w.ssid != "" && !slices.Contains(w.list, w.ssid) {
 		w.list = append([]string{w.ssid}, w.list...)
@@ -161,6 +276,29 @@ func (w *wifi) touch() error {
 	w.mu.Unlock()
 	go w.scan()
 	return nil
+}
+
+func (w *wifi) cycleLocked() {
+	cur := w.ssid
+	if w.pick >= 0 {
+		cur = w.list[w.pick]
+	}
+	next := nextCycle(w.cycle, cur)
+	if !slices.Contains(w.list, next) {
+		w.list = append(slices.Clone(w.list), next)
+	}
+	w.pick = slices.Index(w.list, next)
+	w.pickTill = time.Now().Add(wifiPickFor)
+	if w.join != nil {
+		w.join.Stop()
+	}
+	w.join = time.AfterFunc(wifiJoinAfter, w.joinPick)
+	w.showLocked()
+}
+
+func nextCycle(cycle []string, cur string) string {
+	i := slices.Index(cycle, cur)
+	return cycle[(i+1)%len(cycle)]
 }
 
 func (w *wifi) scan() {
@@ -335,6 +473,9 @@ func (w *wifi) switchNetwork(ssid string) error {
 		if err := vpnDisconnectAll(); err != nil {
 			return err
 		}
+		w.mu.Lock()
+		w.vpnOwed = false
+		w.mu.Unlock()
 		defer func() { go w.restoreVPN(ssid) }()
 	}
 	return wifiJoin(ssid)
@@ -500,4 +641,14 @@ func wifiSVG(state, ssid string, phone bool, vpn string) string {
 	}
 	b.WriteString(`</svg>`)
 	return dataURI(b.String())
+}
+
+func splitList(s string) []string {
+	var out []string
+	for _, f := range strings.Split(s, ",") {
+		if f = strings.TrimSpace(f); f != "" {
+			out = append(out, f)
+		}
+	}
+	return out
 }

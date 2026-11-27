@@ -2,7 +2,7 @@
  "version": 12,
  "type": "page",
  "page": {
-  "id": "wqInjUTtppNz5rgyfQxm8",
+  "id": "ABR7Ie6Yh_8ciKMA8Holm",
   "name": "MEDIA",
   "controls": {
    "0": {
@@ -1016,7 +1016,7 @@
         "down": [
          {
           "type": "action",
-          "id": "9XMZPsgkQNjCcw-1DjY9i",
+          "id": "n2FEXX9BQGpzKJEh1PLkZ",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1253,7 +1253,7 @@
         "up": [
          {
           "type": "action",
-          "id": "Xt1tCZjj-h_-NVOAg_rJt",
+          "id": "UQzGzTBQQRpPvhT6NZntI",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1280,7 +1280,7 @@
         "400": [
          {
           "type": "action",
-          "id": "UQzGzTBQQRpPvhT6NZntI",
+          "id": "p7tPRLhAAiH2GRmhC0EeE",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1517,7 +1517,7 @@
         "down": [
          {
           "type": "action",
-          "id": "p7tPRLhAAiH2GRmhC0EeE",
+          "id": "8zzxhcugey0pICBLd8xFu",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1696,7 +1696,7 @@
         "down": [
          {
           "type": "action",
-          "id": "8zzxhcugey0pICBLd8xFu",
+          "id": "Nf0DcLFWsgyZA9Nw5X72Q",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -1723,7 +1723,7 @@
         "up": [
          {
           "type": "action",
-          "id": "Nf0DcLFWsgyZA9Nw5X72Q",
+          "id": "FteBe65k3gRJx5wTKagZH",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4107,7 +4107,7 @@
         "down": [
          {
           "type": "action",
-          "id": "n2FEXX9BQGpzKJEh1PLkZ",
+          "id": "-9Ctfutp7uupreH1p3yL6",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4343,7 +4343,7 @@
         "down": [
          {
           "type": "action",
-          "id": "-9Ctfutp7uupreH1p3yL6",
+          "id": "eF5P9PJ9V8j0XtY--hKpe",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4370,7 +4370,7 @@
         "up": [
          {
           "type": "action",
-          "id": "eF5P9PJ9V8j0XtY--hKpe",
+          "id": "Xt1tCZjj-h_-NVOAg_rJt",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -4638,7 +4638,34 @@
           "definitionId": "exec",
           "options": {
            "path": {
-            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/new",
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/read",
+            "isExpression": false
+           },
+           "cwd": {
+            "value": "",
+            "isExpression": false
+           },
+           "timeout": {
+            "value": 2000,
+            "isExpression": false
+           },
+           "targetVariable": {
+            "value": null,
+            "isExpression": false
+           }
+          },
+          "upgradeIndex": null
+         }
+        ],
+        "1500": [
+         {
+          "type": "action",
+          "id": "9XMZPsgkQNjCcw-1DjY9i",
+          "connectionId": "internal",
+          "definitionId": "exec",
+          "options": {
+           "path": {
+            "value": "curl -fsS -m 1 -X POST http://127.0.0.1:47120/agent/close",
             "isExpression": false
            },
            "cwd": {
@@ -4659,9 +4686,7 @@
         ]
        },
        "options": {
-        "runWhileHeld": [
-         400
-        ]
+        "runWhileHeld": []
        }
       }
      },
@@ -8753,7 +8778,7 @@
         "down": [
          {
           "type": "action",
-          "id": "8jmrkllUzNPJY6CS8ZsyP",
+          "id": "f7k9xQwOdXw1Qb3tafqaL",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8780,7 +8805,7 @@
         "up": [
          {
           "type": "action",
-          "id": "f7k9xQwOdXw1Qb3tafqaL",
+          "id": "1w6V81qLrUqm_Yq0eB7DV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8807,7 +8832,7 @@
         "400": [
          {
           "type": "action",
-          "id": "1w6V81qLrUqm_Yq0eB7DV",
+          "id": "BoJoXiNj-b0uo0jRSctp5",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -8989,7 +9014,7 @@
         "down": [
          {
           "type": "action",
-          "id": "BoJoXiNj-b0uo0jRSctp5",
+          "id": "tNM4h_30k5rzbNPfAccl7",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9016,7 +9041,7 @@
         "up": [
          {
           "type": "action",
-          "id": "tNM4h_30k5rzbNPfAccl7",
+          "id": "DfEvaASc8m9uu4Dm5rhyn",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9196,7 +9221,7 @@
         "down": [
          {
           "type": "action",
-          "id": "DfEvaASc8m9uu4Dm5rhyn",
+          "id": "yK9rN837stCdSb4uOOBKY",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9223,7 +9248,7 @@
         "up": [
          {
           "type": "action",
-          "id": "yK9rN837stCdSb4uOOBKY",
+          "id": "Vr3ZMVC6MhWYxzSJerJlh",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9403,7 +9428,7 @@
         "down": [
          {
           "type": "action",
-          "id": "Vr3ZMVC6MhWYxzSJerJlh",
+          "id": "sGkbE15Cm9SHYOS-W34At",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9430,7 +9455,7 @@
         "up": [
          {
           "type": "action",
-          "id": "sGkbE15Cm9SHYOS-W34At",
+          "id": "xHQwMNTKuTn1ui4pSjZI0",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9610,7 +9635,7 @@
         "down": [
          {
           "type": "action",
-          "id": "xHQwMNTKuTn1ui4pSjZI0",
+          "id": "qc26706JsftfcZpxhSaDV",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9637,7 +9662,7 @@
         "up": [
          {
           "type": "action",
-          "id": "qc26706JsftfcZpxhSaDV",
+          "id": "pVNrSQy9qPf7BIHPMCrVM",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9817,7 +9842,7 @@
         "down": [
          {
           "type": "action",
-          "id": "pVNrSQy9qPf7BIHPMCrVM",
+          "id": "-yPVMPbWzLMGwQ3cpGr5-",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -9844,7 +9869,7 @@
         "up": [
          {
           "type": "action",
-          "id": "-yPVMPbWzLMGwQ3cpGr5-",
+          "id": "TtBVN9_5DOABuhLPDn81a",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -10024,7 +10049,7 @@
         "down": [
          {
           "type": "action",
-          "id": "TtBVN9_5DOABuhLPDn81a",
+          "id": "_I1aV8WrNGTETuS7s2d88",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -10051,7 +10076,7 @@
         "up": [
          {
           "type": "action",
-          "id": "_I1aV8WrNGTETuS7s2d88",
+          "id": "qoKuQn6qdTzCXyhghjF6v",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -10231,7 +10256,7 @@
         "down": [
          {
           "type": "action",
-          "id": "qoKuQn6qdTzCXyhghjF6v",
+          "id": "fpeNMzIziIk2GcY0Egcuv",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {
@@ -10258,7 +10283,7 @@
         "up": [
          {
           "type": "action",
-          "id": "fpeNMzIziIk2GcY0Egcuv",
+          "id": "wqInjUTtppNz5rgyfQxm8",
           "connectionId": "internal",
           "definitionId": "exec",
           "options": {

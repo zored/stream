@@ -8,6 +8,8 @@ void cal_canvas_rect(void *c, double x, double y, double w, double h, unsigned r
 void cal_canvas_ring(void *c, double cx, double cy, double r, double width, unsigned rgb);
 void cal_canvas_text(void *c, const char *text, const char *tail, double x, double y, double w, double h, double size, unsigned rgb, unsigned tail_rgb, int center);
 int cal_text_lines(const char *text, double w, double size);
+void cal_canvas_rich(void *c, const char *text, double x, double y, double w, double h, double size, unsigned rgb, unsigned strong_rgb);
+int cal_rich_lines(const char *text, double w, double size);
 void *cal_canvas_png(void *c, int *len, int jpeg);
 char *cal_set_done(const char *id, int done);
 int cal_canvas_avatar(void *c, const void *bytes, int len, double cx, double cy, double r, unsigned rgb, int square);

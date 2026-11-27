@@ -66,6 +66,12 @@ func newPower(v *vars) *power {
 	return &power{vars: v}
 }
 
+func (p *power) awake() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.active
+}
+
 func (p *power) publish() {
 	p.mu.Lock()
 	defer p.mu.Unlock()

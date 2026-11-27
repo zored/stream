@@ -135,6 +135,7 @@ static int match_attr(AXUIElementRef element, const void *context) {
     switch (q->prefix) {
     case AX_MATCH_PREFIX: ok = CFStringHasPrefix(value, q->text); break;
     case AX_MATCH_SUFFIX: ok = CFStringHasSuffix(value, q->text); break;
+    case AX_MATCH_CONTAINS: ok = CFStringFind(value, q->text, 0).location != kCFNotFound; break;
     default: ok = CFEqual(value, q->text);
     }
     CFRelease(value);
