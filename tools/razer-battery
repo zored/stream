@@ -1,0 +1,312 @@
+#!/usr/bin/swift
+import CoreBluetooth
+import Foundation
+import IOKit.hid
+import IOKit.usb
+
+let razerVID = 0x1532
+let razerBluetoothID = 0x068e
+
+struct Device: Encodable {
+    var model: String
+    var pid: Int?
+    var transport: String
+    var batteryPercent: Int? = nil
+    var error: String? = nil
+}
+
+func reportCRC(_ report: [UInt8]) -> UInt8 {
+    report[2..<88].reduce(0, ^)
+}
+
+func batteryRequest(_ transaction: UInt8) -> [UInt8] {
+    var report = [UInt8](repeating: 0, count: 90)
+    report[1] = transaction
+    report.replaceSubrange(5...7, with: [0x02, 0x07, 0x80])
+    report[88] = reportCRC(report)
+    return report
+}
+
+func batteryPercent(_ report: [UInt8], transaction: UInt8) -> Int? {
+    guard report.count == 90, report[0] == 0x02, report[1] == transaction,
+          report[2...4].allSatisfy({ $0 == 0 }), (2...80).contains(report[5]),
+          report[6] == 0x07, report[7] == 0x80, report[88] == reportCRC(report) else { return nil }
+    return (Int(report[9]) * 100 + 127) / 255
+}
+
+func ioError(_ status: IOReturn) -> String {
+    String(format: "0x%08x", UInt32(bitPattern: status))
+}
+
+// IOUSBLib UUID macros are unavailable in Swift.
+let usbUserClientID = CFUUIDCreateFromString(nil, "9DC7B780-9EC0-11D4-A54F-000A27052861" as CFString)!
+let pluginInterfaceID = CFUUIDCreateFromString(nil, "C244E858-109C-11D4-91D4-0050E4C6426F" as CFString)!
+let usbInterfaceID = CFUUIDCreateFromString(nil, "C809B8D8-0884-11D7-BB96-0003933E3E3E" as CFString)!
+
+func readUSBFeature(_ service: io_service_t, pid: Int?) -> (Int?, String?) {
+    let interface: UInt16 = [0x00cb, 0x00e5, 0x00e6].contains(pid ?? -1) ? 3 : 0
+    let delay = [0x0062, 0x0094, 0x00e0].contains(pid ?? -1) ? 0.4 : 0.06
+    var plugin: UnsafeMutablePointer<UnsafeMutablePointer<IOCFPlugInInterface>?>?
+    var score: Int32 = 0
+    let created = IOCreatePlugInInterfaceForService(service, usbUserClientID, pluginInterfaceID, &plugin, &score)
+    guard created == kIOReturnSuccess, let plugin, let pluginAPI = plugin.pointee?.pointee else {
+        return (nil, "USB plug-in: \(ioError(created))")
+    }
+    defer { IODestroyPlugInInterface(plugin) }
+
+    var raw: UnsafeMutableRawPointer?
+    let queried = pluginAPI.QueryInterface(plugin, CFUUIDGetUUIDBytes(usbInterfaceID), &raw)
+    guard queried == 0, let raw else { return (nil, "USB interface: \(ioError(queried))") }
+    let usb = raw.assumingMemoryBound(to: UnsafeMutablePointer<IOUSBDeviceInterface197>.self)
+    let api = usb.pointee.pointee
+    defer { _ = api.Release(usb) }
+    let opened = api.USBDeviceOpen(usb)
+    guard opened == kIOReturnSuccess else { return (nil, "USB open: \(ioError(opened))") }
+    defer { _ = api.USBDeviceClose(usb) }
+
+    func transfer(_ report: inout [UInt8], read: Bool) -> (IOReturn, Int) {
+        report.withUnsafeMutableBytes { bytes in
+            var request = IOUSBDevRequestTO(bmRequestType: read ? 0xa1 : 0x21, bRequest: read ? 0x01 : 0x09,
+                                            wValue: 0x0300, wIndex: interface, wLength: UInt16(bytes.count),
+                                            pData: bytes.baseAddress, wLenDone: 0,
+                                            noDataTimeout: 500, completionTimeout: 1000)
+            let status = api.DeviceRequestTO(usb, &request)
+            return (status, Int(request.wLenDone))
+        }
+    }
+
+    var lastError = "No response to OpenRazer command 07/80"
+    for transaction: UInt8 in [0x1f, 0x3f, 0xff] {
+        var request = batteryRequest(transaction)
+        let (sent, _) = transfer(&request, read: false)
+        guard sent == kIOReturnSuccess else {
+            return (nil, "HID SET_REPORT: \(ioError(sent))")
+        }
+
+        var report = [UInt8](repeating: 0, count: 90)
+        Thread.sleep(forTimeInterval: delay)
+        let (read, length) = transfer(&report, read: true)
+        guard read == kIOReturnSuccess else {
+            lastError = "HID GET_REPORT: \(ioError(read))"
+            continue
+        }
+        if length == 90, let percent = batteryPercent(report, transaction: transaction) {
+            return (percent, nil)
+        }
+        lastError = "OpenRazer 07/80: invalid or unsupported response (length \(length), status \(report[0]))"
+    }
+    return (nil, lastError)
+}
+
+func property(_ service: io_registry_entry_t, _ key: String) -> Any? {
+    IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue()
+}
+
+func usbDevices() -> [Device] {
+    var iterator: io_iterator_t = 0
+    let status = IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching("IOUSBHostDevice"), &iterator)
+    guard status == KERN_SUCCESS else {
+        stderrLine("Не удалось перечислить USB-устройства: \(ioError(status))")
+        exit(1)
+    }
+    defer { IOObjectRelease(iterator) }
+
+    var devices: [Device] = []
+    while case let service = IOIteratorNext(iterator), service != 0 {
+        defer { IOObjectRelease(service) }
+        guard property(service, "idVendor") as? Int == razerVID else { continue }
+        let pid = property(service, "idProduct") as? Int
+        let model = property(service, "USB Product Name") as? String ?? "Razer USB device"
+        let transport = model.range(of: "dongle|receiver|2[.]4", options: [.caseInsensitive, .regularExpression]) != nil
+            ? "USB/2.4 GHz" : "USB"
+        var device = Device(model: model, pid: pid, transport: transport)
+        if pid == 0x0d06 || pid == 0x0d09 {
+            device.error = "Stream Controller uses serial, not OpenRazer HID"
+        } else {
+            (device.batteryPercent, device.error) = readUSBFeature(service, pid: pid)
+        }
+        devices.append(device)
+    }
+    return devices
+}
+
+let batteryService = CBUUID(string: "180F")
+let batteryLevel = CBUUID(string: "2A19")
+let deviceInfo = CBUUID(string: "180A")
+let pnpID = CBUUID(string: "2A50")
+
+func isRazer(_ name: String?) -> Bool {
+    name?.range(of: "Razer ", options: [.caseInsensitive, .anchored]) != nil
+}
+
+final class BluetoothProbe: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+    private var central: CBCentralManager!
+    private var peripherals: [UUID: CBPeripheral] = [:]
+    private var devices: [UUID: Device] = [:]
+    private var rejected: Set<UUID> = []
+    private var levels: [UUID: Int] = [:]
+    private var unavailable = false
+
+    func read(_ hids: [Device]) -> [Device] {
+        central = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerOptionShowPowerAlertKey: false])
+        let deadline = Date().addingTimeInterval(6)
+        while !unavailable, Date() < deadline {
+            RunLoop.current.run(until: min(deadline, Date().addingTimeInterval(0.1)))
+        }
+        if central.state == .unknown || central.state == .resetting {
+            stderrLine("BLE недоступен: CoreBluetooth не завершил запуск.")
+        }
+        central.stopScan()
+        for peripheral in peripherals.values { central.cancelPeripheralConnection(peripheral) }
+        var remainingHIDs = hids
+        for (id, device) in devices {
+            if let match = remainingHIDs.firstIndex(where: { $0.model == device.model && ($0.pid == device.pid || device.pid == nil) }) {
+                devices[id]?.pid = device.pid ?? remainingHIDs[match].pid
+                remainingHIDs.remove(at: match)
+            }
+        }
+        return Array(devices.values) + remainingHIDs
+    }
+
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        switch central.state {
+        case .poweredOn:
+            for peripheral in central.retrieveConnectedPeripherals(withServices: [batteryService, deviceInfo, CBUUID(string: "1812")]) {
+                inspect(peripheral, name: peripheral.name, knownVendor: isRazer(peripheral.name))
+            }
+            central.scanForPeripherals(withServices: nil)
+        case .unknown, .resetting:
+            break
+        default:
+            stderrLine("BLE недоступен: \(central.state). Проверьте Bluetooth и разрешение для терминала.")
+            unavailable = true
+        }
+    }
+
+    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
+                        advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? peripheral.name
+        let manufacturer = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data
+        let vendor = manufacturer.map { $0.prefix(2).elementsEqual([0x8e, 0x06]) } ?? false
+        guard vendor || isRazer(name) else { return }
+        inspect(peripheral, name: name, knownVendor: true)
+    }
+
+    private func inspect(_ peripheral: CBPeripheral, name: String?, knownVendor: Bool) {
+        let id = peripheral.identifier
+        if knownVendor, devices[id] == nil, !rejected.contains(id) {
+            devices[id] = Device(model: name ?? "Razer BLE device", pid: nil, transport: "BLE", error: "BLE Battery Level not read")
+        }
+        guard peripherals[id] == nil else { return }
+        peripherals[id] = peripheral
+        peripheral.delegate = self
+        central.connect(peripheral)
+    }
+
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        peripheral.discoverServices([batteryService, deviceInfo])
+    }
+
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        devices[peripheral.identifier]?.error = error?.localizedDescription ?? "BLE connection failed"
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if let error { devices[peripheral.identifier]?.error = error.localizedDescription }
+        let services = peripheral.services ?? []
+        if !services.contains(where: { $0.uuid == batteryService }) {
+            devices[peripheral.identifier]?.error = error?.localizedDescription ?? "BLE Battery Service (180F) absent"
+        }
+        for service in services {
+            peripheral.discoverCharacteristics([service.uuid == batteryService ? batteryLevel : pnpID], for: service)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if service.uuid == batteryService, service.characteristics?.isEmpty != false {
+            devices[peripheral.identifier]?.error = error?.localizedDescription ?? "BLE Battery Level (2A19) absent"
+        }
+        for characteristic in service.characteristics ?? [] { peripheral.readValue(for: characteristic) }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        let id = peripheral.identifier
+        guard !rejected.contains(id) else { return }
+        let bytes = [UInt8](characteristic.value ?? Data())
+        if characteristic.uuid == pnpID, error == nil, bytes.count == 7 {
+            let vendor = Int(bytes[1]) | Int(bytes[2]) << 8
+            guard (bytes[0] == 1 && vendor == razerBluetoothID) || (bytes[0] == 2 && vendor == razerVID) else {
+                devices.removeValue(forKey: id)
+                rejected.insert(id)
+                return
+            }
+            if devices[id] == nil {
+                devices[id] = Device(model: peripheral.name ?? "Razer BLE device", pid: nil, transport: "BLE", error: "BLE Battery Level not read")
+            }
+            devices[id]?.pid = Int(bytes[3]) | Int(bytes[4]) << 8
+        } else if characteristic.uuid == batteryLevel {
+            if error == nil, bytes.count == 1, bytes[0] <= 100 {
+                levels[id] = Int(bytes[0])
+            } else {
+                devices[id]?.error = error?.localizedDescription ?? "Invalid BLE Battery Level (2A19)"
+            }
+        }
+        if let level = levels[id] {
+            devices[id]?.batteryPercent = level
+            devices[id]?.error = nil
+        }
+    }
+}
+
+func stderrLine(_ text: String) {
+    FileHandle.standardError.write(Data((text + "\n").utf8))
+}
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+if arguments == ["--self-test"] {
+    var response = batteryRequest(0x1f)
+    precondition(response[88] == 0x85)
+    response[0] = 0x02
+    response[9] = 128
+    response[88] = 0x05
+    precondition(batteryPercent(response, transaction: 0x1f) == 50)
+    precondition(batteryPercent(response, transaction: 0xff) == nil)
+    response[9] = 255
+    precondition(batteryPercent(response, transaction: 0x1f) == nil)
+    response[88] = 0x7a
+    precondition(batteryPercent(response, transaction: 0x1f) == 100)
+    print("OpenRazer report self-test: OK")
+    exit(0)
+}
+guard arguments.isEmpty || arguments == ["--json"] else {
+    stderrLine("Usage: tools/razer-battery [--json | --self-test]")
+    exit(2)
+}
+
+let manager = IOHIDManagerCreate(kCFAllocatorDefault, 0)
+IOHIDManagerSetDeviceMatching(manager, [kIOHIDVendorIDKey: razerVID] as CFDictionary)
+let hids = (IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> ?? []).map { $0 }
+let bluetoothHIDs = hids.compactMap { hid -> Device? in
+    guard let transport = IOHIDDeviceGetProperty(hid, kIOHIDTransportKey as CFString) as? String,
+          transport.hasPrefix("Bluetooth") else { return nil }
+    let model = IOHIDDeviceGetProperty(hid, kIOHIDProductKey as CFString) as? String ?? "Razer Bluetooth HID"
+    let pid = IOHIDDeviceGetProperty(hid, kIOHIDProductIDKey as CFString) as? Int
+    return Device(model: model, pid: pid, transport: transport, error: "BLE Battery Level not read")
+}
+let devices = (usbDevices() + BluetoothProbe().read(bluetoothHIDs)).sorted {
+    ($0.model, $0.transport, $0.pid ?? -1) < ($1.model, $1.transport, $1.pid ?? -1)
+}
+if devices.isEmpty {
+    stderrLine("Устройства Razer не найдены. Подключите кабель USB с передачей данных или донгл 2,4 ГГц, включите устройство либо подключите его по Bluetooth.")
+}
+if arguments == ["--json"] {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys]
+    FileHandle.standardOutput.write(try encoder.encode(devices) + Data([0x0a]))
+} else {
+    for device in devices {
+        let pid = device.pid.map { String(format: "0x%04x", $0) } ?? "не указан"
+        let battery = device.batteryPercent.map { "\($0)%" } ?? "не прочитан: \(device.error ?? "unknown")"
+        print("\(device.model) | PID \(pid) | \(device.transport) | заряд \(battery)")
+    }
+}
