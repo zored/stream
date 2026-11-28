@@ -13,8 +13,9 @@ const variable = 'battery_d100h_svg'
 const expression = { isExpression: true, value: '$(custom:battery_d100h_svg)' }
 const run = promisify(execFile)
 
-const tiles = { d100h: 'dial', xbox: 'xbox', sense_left: 'vr2 l', sense_right: 'vr2 r' }
+const tiles = { d100h: 'dial', xbox: 'xbox', sense_left: 'vr2 l', sense_right: 'vr2 r', steam: 'steam' }
 const gamepads = fileURLToPath(new URL('./gamepad-battery.ps1', import.meta.url))
+const steamSource = fileURLToPath(new URL('./battery-levels.steam.cs', import.meta.url))
 
 async function readDial() {
 	try {
@@ -34,10 +35,21 @@ async function readGamepads() {
 	return JSON.parse(stdout)
 }
 
+async function readSteam() {
+	const source = "'" + steamSource.replaceAll("'", "''") + "'"
+	const command = "$ErrorActionPreference = 'Stop'; Add-Type -Path " + source +
+		'; ConvertTo-Json -Compress -InputObject ([SteamBattery]::Read())'
+	const encoded = Buffer.from(command, 'utf16le').toString('base64')
+	const { stdout } = await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], {
+		windowsHide: true, timeout: 12000,
+	})
+	return { steam: JSON.parse(stdout) }
+}
+
 async function readLevels() {
 	const levels = Object.fromEntries(Object.keys(tiles).map(id => [id, null]))
 	const failures = []
-	await Promise.all([readDial, readGamepads].map(async read => {
+	await Promise.all([readDial, readGamepads, readSteam].map(async read => {
 		try {
 			for (const [id, percent] of Object.entries(await read())) {
 				if (!Object.hasOwn(levels, id) || (percent !== null && (!Number.isInteger(percent) || percent < 0 || percent > 100))) {
@@ -59,12 +71,13 @@ async function readLevels() {
 function tileImage(levels) {
 	const known = Object.entries(tiles).filter(([id]) => levels[id] != null)
 	const single = known.length === 1
+	const threeRows = known.length > 4
 	const cells = known.map(([id, label], index) => {
-		const x = single ? 44 : 22 + (index % 2) * 44
-		const y = single ? 25 : (known.length === 2 ? 32 : 12 + Math.floor(index / 2) * 44)
-		const labelSize = single ? 14 : 11
-		const valueSize = single ? 34 : 22
-		const valueY = y + (single ? 35 : 23)
+		const x = single || index === 4 ? 44 : 22 + (index % 2) * 44
+		const y = single ? 25 : (known.length === 2 ? 32 : 12 + Math.floor(index / 2) * (threeRows ? 28 : 44))
+		const labelSize = single ? 14 : (threeRows ? 9 : 11)
+		const valueSize = single ? 34 : (threeRows ? 16 : 22)
+		const valueY = y + (single ? 35 : (threeRows ? 15 : 23))
 		return '<text x="' + x + '" y="' + y + '" fill="#8e8e93" font-size="' + labelSize + '">' + label + '</text>' +
 			'<text x="' + x + '" y="' + valueY + '" fill="white" font-size="' + valueSize + '">' +
 			levels[id] + '</text>'
